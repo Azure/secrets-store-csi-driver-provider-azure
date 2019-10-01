@@ -15,7 +15,7 @@ spec:
       tolerations:
       containers:
         - name: provider-azure-installer
-          image: aramase/secrets-store-csi-driver-provider-azure:v0.0.5
+          image: aramase/secrets-store-csi-driver-provider-azure:v0.0.6
           imagePullPolicy: Always
           resources:
             requests:
@@ -31,9 +31,23 @@ spec:
           volumeMounts:
             - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
               name: providervol
+        - name: provider-log
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          args: [/bin/sh, -c, 'tail -n+1 -f /var/log/azure-provider.log']
+          volumeMounts:
+            - mountPath: "/var/log/azure-provider.log"
+              name: providerlog
+          env:
+            - name: PROVIDER_LOG_FILE
+              value: "/var/log/azure-provider.log"
       volumes:
         - name: providervol
           hostPath:
-              path: "/etc/kubernetes/secrets-store-csi-providers"
+            path: "/etc/kubernetes/secrets-store-csi-providers"
+        - name: providerlog
+          hostPath:
+            path: "/var/log/azure-provider.log"
+            type: FileOrCreate
       nodeSelector:
         beta.kubernetes.io/os: linux

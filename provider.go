@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
+	"k8s.io/klog"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	kvmgmt "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
@@ -19,7 +20,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
 )
 
@@ -98,7 +98,7 @@ type StringArray struct {
 
 // NewProvider creates a new Azure Key Vault Provider.
 func NewProvider() (*Provider, error) {
-	glog.V(2).Infof("NewAzureProvider")
+	klog.V(2).Infof("NewAzureProvider")
 	var p Provider
 	return &p, nil
 }
@@ -172,9 +172,9 @@ func GetCredential(secrets map[string]string) (string, string, error) {
 }
 
 func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL *string, err error) {
-	glog.V(5).Infof("subscriptionID: %s", p.SubscriptionID)
-	glog.V(5).Infof("vaultName: %s", p.KeyvaultName)
-	glog.V(5).Infof("resourceGroup: %s", p.ResourceGroup)
+	klog.V(5).Infof("subscriptionID: %s", p.SubscriptionID)
+	klog.V(5).Infof("vaultName: %s", p.KeyvaultName)
+	klog.V(5).Infof("resourceGroup: %s", p.ResourceGroup)
 
 	vaultsClient := kvmgmt.NewVaultsClient(p.SubscriptionID)
 	token, tokenErr := p.GetManagementToken(AuthGrantType(), cloudName)
@@ -219,7 +219,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 	// Then nmi makes an adal request to get a token for the resource in the request, returns the `token` and the `clientid` as a response to the CSI request.
 
 	if p.UsePodIdentity {
-		glog.V(0).Infof("azure: using pod identity to retrieve token")
+		klog.V(0).Infof("azure: using pod identity to retrieve token")
 
 		endpoint := fmt.Sprintf("%s?resource=%s", nmiendpoint, resource)
 		client := &http.Client{}
@@ -247,8 +247,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 			}
 
 			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
-			glog.V(0).Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
-			glog.V(0).Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
+			klog.V(0).Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
+			klog.V(0).Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
 
 			token := nmiResp.Token
 			clientID := nmiResp.ClientID
@@ -269,7 +269,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 	}
 	// When CSI driver is using a Service Principal clientid + client secret to retrieve token for resource
 	if len(p.AADClientSecret) > 0 {
-		glog.V(2).Infof("azure: using client_id+client_secret to retrieve access token")
+		klog.V(2).Infof("azure: using client_id+client_secret to retrieve access token")
 		return adal.NewServicePrincipalToken(
 			*oauthConfig,
 			p.AADClientID,
@@ -306,15 +306,17 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if usePodIdentityStr == "true" {
 		usePodIdentity = true
 	}
+
+	klog.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
 	if !usePodIdentity {
-		glog.V(0).Infof("not using pod identity to access keyvault")
+		klog.V(0).Infof("not using pod identity to access keyvault")
 		p.AADClientID, p.AADClientSecret, err = GetCredential(secrets)
 		if err != nil {
-			glog.V(0).Infof("missing client credential to access keyvault")
+			klog.V(0).Infof("missing client credential to access keyvault")
 			return err
 		}
 	} else {
-		glog.V(0).Infof("using pod identity to access keyvault")
+		klog.V(0).Infof("using pod identity to access keyvault")
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
@@ -323,28 +325,28 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if objectsStrings == "" {
 		return fmt.Errorf("objects is not set")
 	}
-	glog.V(5).Infof("objects: %s", objectsStrings)
+	klog.V(5).Infof("objects: %s", objectsStrings)
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		glog.V(0).Infof("unmarshal failed for objects")
+		klog.V(0).Infof("unmarshal failed for objects")
 		return err
 	}
-	glog.V(5).Infof("objects array: %v", objects.Array)
+	klog.V(5).Infof("objects array: %v", objects.Array)
 	keyVaultObjects := []KeyVaultObject{}
 	for i, object := range objects.Array {
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			glog.V(0).Infof("unmarshal failed for keyVaultObjects at index %d", i)
+			klog.V(0).Infof("unmarshal failed for keyVaultObjects at index %d", i)
 			return err
 		}
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
-	glog.V(5).Infof("unmarshaled keyVaultObjects: %v", keyVaultObjects)
-	glog.V(0).Infof("keyVaultObjects len: %d", len(keyVaultObjects))
+	klog.V(5).Infof("unmarshaled keyVaultObjects: %v", keyVaultObjects)
+	klog.V(0).Infof("keyVaultObjects len: %d", len(keyVaultObjects))
 
 	if len(keyVaultObjects) == 0 {
 		return fmt.Errorf("objects array is empty")
@@ -362,10 +364,10 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 		objectContent := []byte(content)
 		if err := ioutil.WriteFile(path.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
-			return errors.Wrapf(err, "Secrets Store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
+			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
 		}
-		glog.V(0).Infof("Secrets Store csi driver mounted %s", keyVaultObject.ObjectName)
-		glog.V(5).Infof("Mount point: %s", targetPath)
+		klog.V(0).Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)
+		klog.V(5).Infof("Mount point: %s", targetPath)
 	}
 
 	return nil

@@ -8,10 +8,10 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.6.0
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20190918130420-a8b05e9114ab
 	gopkg.in/yaml.v2 v2.2.2
+	k8s.io/klog v1.0.0
 )
