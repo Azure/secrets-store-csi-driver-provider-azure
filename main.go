@@ -72,9 +72,6 @@ func main() {
 
 func setupLogFile() (*os.File, error) {
 	fileName := os.Getenv("PROVIDER_LOG_FILE")
-	if fileName == "" {
-		return nil, fmt.Errorf("env var PROVIDER_LOG_FILE not set")
-	}
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("opening log file %s failed with error %+v", fileName, err)
