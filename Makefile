@@ -3,6 +3,7 @@ REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.2
+BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 
 GO111MODULE ?= on
 export GO111MODULE
@@ -10,15 +11,15 @@ export GO111MODULE
 .PHONY: build
 build: setup
 	@echo "Building..."
-	$Q GOOS=linux CGO_ENABLED=0 go build . 
+	$Q GOOS=linux CGO_ENABLED=0 go build -ldflags "-X main.BuildDate=$(BUILD_DATE) -X main.BuildVersion=$(IMAGE_VERSION)" . 
 
 image:
 # build inside docker container
 	@echo "Building docker image..."
-	$Q docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) .
+	$Q docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg IMAGE_VERSION="$(IMAGE_VERSION)" .
 
 push: image
-	docker push $(IMAGE_TAG)
+	docker push $(DOCKER_IMAGE):$(IMAGE_VERSION)
 
 setup:
 	@echo "Setup..."

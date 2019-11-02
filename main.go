@@ -17,6 +17,9 @@ var (
 	targetPath = pflag.String("targetPath", "", "Target path to write data.")
 	permission = pflag.String("permission", "", "File permission")
 	debug      = pflag.Bool("debug", false, "sets log to debug level")
+	version    = pflag.Bool("version", false, "prints the version information")
+
+	minDriverVersion = "v0.0.8"
 )
 
 // LogHook is used to setup custom hooks
@@ -33,6 +36,13 @@ func main() {
 	var err error
 
 	setupLogger()
+
+	if *version {
+		if err = printVersion(); err != nil {
+			log.Fatalf("failed to print version, err: %+v", err)
+		}
+		os.Exit(0)
+	}
 
 	err = json.Unmarshal([]byte(*attributes), &attrib)
 	if err != nil {
