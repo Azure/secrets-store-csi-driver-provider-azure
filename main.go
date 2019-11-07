@@ -70,8 +70,6 @@ func setupLogger() {
 	if *debug {
 		log.SetLevel(log.DebugLevel)
 	}
-	// set log formatter to json
-	//log.SetFormatter(&log.JSONFormatter{})
 
 	// add hook to send info, debug, warn level logs to stdout
 	log.AddHook(&LogHook{
