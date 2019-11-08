@@ -12,7 +12,8 @@ build: setup
 	@echo "Building..."
 	$Q GOOS=linux CGO_ENABLED=0 go build . 
 
-image: build
+image:
+# build inside docker container
 	@echo "Building docker image..."
 	$Q docker build --no-cache -t $(IMAGE_TAG) .
 
