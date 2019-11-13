@@ -17,6 +17,7 @@ steps:
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(modulePath)'
+    mkdir -p '$(GOPATH)/src/github.com/deislabs/secrets-store-csi-driver'
     shopt -s extglob
     mv !(gopath) '$(modulePath)'
     echo '##vso[task.prependpath]$(GOBIN)'
