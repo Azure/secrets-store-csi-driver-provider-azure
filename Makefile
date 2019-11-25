@@ -1,8 +1,8 @@
 IMAGE_NAME=secrets-store-csi-driver-provider-azure
-REGISTRY_NAME?=aramase
-IMAGE_VERSION?=v0.0.6
-IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
-IMAGE_TAG_LATEST=$(REGISTRY_NAME)/$(IMAGE_NAME):latest
+REGISTRY_NAME ?= upstreamk8sci
+REGISTRY ?= $(REGISTRY_NAME).azurecr.io
+DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
+IMAGE_VERSION ?= 0.0.1
 
 GO111MODULE ?= on
 export GO111MODULE
@@ -15,7 +15,7 @@ build: setup
 image:
 # build inside docker container
 	@echo "Building docker image..."
-	$Q docker build --no-cache -t $(IMAGE_TAG) .
+	$Q docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) .
 
 push: image
 	docker push $(IMAGE_TAG)
@@ -42,7 +42,7 @@ e2e-bootstrap:
 	# Create kind cluster
 	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
 	# Build image
-	REGISTRY_NAME="e2e" IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
+	DOCKER_IMAGE="e2e/secrets-store-csi-driver-provider-azure" IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
 	# Load image into kind cluster
 	kind load docker-image --name kind e2e/secrets-store-csi-driver-provider-azure:e2e-$$(git rev-parse --short HEAD)
 	# Set up tiller
