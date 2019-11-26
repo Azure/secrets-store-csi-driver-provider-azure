@@ -1,0 +1,52 @@
+trigger:
+ - master
+
+pr:
+  branches:
+    include:
+    - master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+variables:
+ GOBIN:  '$(GOPATH)/bin' # Go binaries path
+ GOROOT: '/usr/local/go1.13' # Go installation path
+ GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
+ modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+ GO111MODULE: 'on'
+ repo.path: $(GOPATH)/src/github.com/Azure/secrets-store-csi-driver-provider-azure
+
+steps:
+- script: |
+    mkdir -p '$(GOBIN)'
+    mkdir -p '$(GOPATH)/pkg'
+    mkdir -p '$(modulePath)'
+    mkdir -p '$(GOPATH)/src/github.com/deislabs/secrets-store-csi-driver'
+    shopt -s extglob
+    mv !(gopath) '$(modulePath)'
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    go version
+  displayName: 'Set up the Go workspace'
+- script: |
+    git clone https://github.com/deislabs/secrets-store-csi-driver.git $(GOPATH)/src/github.com/deislabs/secrets-store-csi-driver
+    sudo apt-get update && sudo apt-get install bats
+  workingDirectory: '$(modulePath)'
+  displayName: 'Set up workspace and install dependencies'
+- script: |
+    make e2e-bootstrap
+    export KUBECONFIG=$(kind get kubeconfig-path)
+    make e2e-azure
+  workingDirectory: '$(modulePath)'
+  displayName: "e2e-azure"
+  env:
+    AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+    AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+    KEY_NAME: $(KEY_NAME)
+    KEY_VERSION: $(KEY_VERSION)
+    KEYVAULT_NAME: $(KEYVAULT_NAME)
+    RESOURCE_GROUP: $(RESOURCE_GROUP)
+    SECRET_NAME: $(SECRET_NAME)
+    SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+    TENANT_ID: $(TENANT_ID)
