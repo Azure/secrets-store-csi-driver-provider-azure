@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/klog"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	kvmgmt "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
@@ -98,7 +98,7 @@ type StringArray struct {
 
 // NewProvider creates a new Azure Key Vault Provider.
 func NewProvider() (*Provider, error) {
-	klog.V(2).Infof("NewAzureProvider")
+	log.Debugf("NewAzureProvider")
 	var p Provider
 	return &p, nil
 }
@@ -172,9 +172,9 @@ func GetCredential(secrets map[string]string) (string, string, error) {
 }
 
 func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL *string, err error) {
-	klog.V(5).Infof("subscriptionID: %s", p.SubscriptionID)
-	klog.V(5).Infof("vaultName: %s", p.KeyvaultName)
-	klog.V(5).Infof("resourceGroup: %s", p.ResourceGroup)
+	log.Debugf("subscriptionID: %s", p.SubscriptionID)
+	log.Debugf("vaultName: %s", p.KeyvaultName)
+	log.Debugf("resourceGroup: %s", p.ResourceGroup)
 
 	vaultsClient := kvmgmt.NewVaultsClient(p.SubscriptionID)
 	token, tokenErr := p.GetManagementToken(AuthGrantType(), cloudName)
@@ -219,7 +219,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 	// Then nmi makes an adal request to get a token for the resource in the request, returns the `token` and the `clientid` as a response to the CSI request.
 
 	if p.UsePodIdentity {
-		klog.V(0).Infof("azure: using pod identity to retrieve token")
+		log.Infof("azure: using pod identity to retrieve token")
 
 		endpoint := fmt.Sprintf("%s?resource=%s", nmiendpoint, resource)
 		client := &http.Client{}
@@ -247,8 +247,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 			}
 
 			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
-			klog.V(0).Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
-			klog.V(0).Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
+			log.Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
+			log.Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
 
 			token := nmiResp.Token
 			clientID := nmiResp.ClientID
@@ -269,7 +269,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 	}
 	// When CSI driver is using a Service Principal clientid + client secret to retrieve token for resource
 	if len(p.AADClientSecret) > 0 {
-		klog.V(2).Infof("azure: using client_id+client_secret to retrieve access token")
+		log.Infof("azure: using client_id+client_secret to retrieve access token")
 		return adal.NewServicePrincipalToken(
 			*oauthConfig,
 			p.AADClientID,
@@ -307,16 +307,16 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		usePodIdentity = true
 	}
 
-	klog.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
+	log.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
 	if !usePodIdentity {
-		klog.V(0).Infof("not using pod identity to access keyvault")
+		log.Infof("not using pod identity to access keyvault")
 		p.AADClientID, p.AADClientSecret, err = GetCredential(secrets)
 		if err != nil {
-			klog.V(0).Infof("missing client credential to access keyvault")
+			log.Infof("missing client credential to access keyvault")
 			return err
 		}
 	} else {
-		klog.V(0).Infof("using pod identity to access keyvault")
+		log.Infof("using pod identity to access keyvault")
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
@@ -325,28 +325,28 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if objectsStrings == "" {
 		return fmt.Errorf("objects is not set")
 	}
-	klog.V(5).Infof("objects: %s", objectsStrings)
+	log.Infof("objects: %s", objectsStrings)
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		klog.V(0).Infof("unmarshal failed for objects")
+		log.Infof("unmarshal failed for objects")
 		return err
 	}
-	klog.V(5).Infof("objects array: %v", objects.Array)
+	log.Debugf("objects array: %v", objects.Array)
 	keyVaultObjects := []KeyVaultObject{}
 	for i, object := range objects.Array {
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			klog.V(0).Infof("unmarshal failed for keyVaultObjects at index %d", i)
+			log.Infof("unmarshal failed for keyVaultObjects at index %d", i)
 			return err
 		}
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
-	klog.V(5).Infof("unmarshaled keyVaultObjects: %v", keyVaultObjects)
-	klog.V(0).Infof("keyVaultObjects len: %d", len(keyVaultObjects))
+	log.Infof("unmarshaled keyVaultObjects: %v", keyVaultObjects)
+	log.Infof("keyVaultObjects len: %d", len(keyVaultObjects))
 
 	if len(keyVaultObjects) == 0 {
 		return fmt.Errorf("objects array is empty")
@@ -366,8 +366,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := ioutil.WriteFile(path.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
 			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
 		}
-		klog.V(0).Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)
-		klog.V(5).Infof("Mount point: %s", targetPath)
+		log.Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)
+		log.Infof("Mount point: %s", targetPath)
 	}
 
 	return nil

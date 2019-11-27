@@ -2,7 +2,7 @@ IMAGE_NAME=secrets-store-csi-driver-provider-azure
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-IMAGE_VERSION ?= 0.0.1
+IMAGE_VERSION ?= 0.0.2
 
 GO111MODULE ?= on
 export GO111MODULE

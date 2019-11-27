@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 
-	goflag "flag"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
-	"k8s.io/klog"
 )
 
 var (
@@ -17,64 +16,94 @@ var (
 	secrets    = pflag.String("secrets", "", "node publish ref secret")
 	targetPath = pflag.String("targetPath", "", "Target path to write data.")
 	permission = pflag.String("permission", "", "File permission")
+	debug      = pflag.Bool("debug", false, "sets log to debug level")
 )
 
-func init() {
-	os.Setenv("PROVIDER_LOG_FILE", "/var/log/azure-provider.log")
+// LogHook is used to setup custom hooks
+type LogHook struct {
+	Writer    io.Writer
+	Loglevels []log.Level
 }
 
 func main() {
-	klog.InitFlags(nil)
-
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	pflag.Parse()
 
 	var attrib, secret map[string]string
 	var filePermission os.FileMode
-	var f *os.File
 	var err error
 
-	// setup log file into which provider logs will be written to
-	if f, err = setupLogFile(); err != nil {
-		klog.Fatalf("[error]: %v", err)
-	}
-	defer f.Close()
-	os.Stdout = f
-	os.Stderr = f
+	setupLogger()
 
 	err = json.Unmarshal([]byte(*attributes), &attrib)
 	if err != nil {
-		klog.Fatalf("failed to unmarshal attributes, err: %v", err)
+		log.Fatalf("failed to unmarshal attributes, err: %v", err)
 	}
 	err = json.Unmarshal([]byte(*secrets), &secret)
 	if err != nil {
-		klog.Fatalf("failed to unmarshal secrets, err: %v", err)
+		log.Fatalf("failed to unmarshal secrets, err: %v", err)
 	}
 	err = json.Unmarshal([]byte(*permission), &filePermission)
 	if err != nil {
-		klog.Fatalf("failed to unmarshal file permission, err: %v", err)
+		log.Fatalf("failed to unmarshal file permission, err: %v", err)
 	}
 
 	provider, err := NewProvider()
 	if err != nil {
-		klog.Fatalf("[error] : %v", err)
+		log.Fatalf("[error] : %v", err)
 	}
 
 	ctx := context.Background()
 	err = provider.MountSecretsStoreObjectContent(ctx, attrib, secret, *targetPath, filePermission)
 	if err != nil {
-		klog.Fatalf("[error] : %v", err)
+		log.Fatalf("[error] : %v", err)
 	}
 
-	klog.Flush()
 	os.Exit(0)
 }
 
-func setupLogFile() (*os.File, error) {
-	fileName := os.Getenv("PROVIDER_LOG_FILE")
-	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, fmt.Errorf("opening log file %s failed with error %+v", fileName, err)
+// setupLogger sets up hooks to redirect stdout and stderr
+func setupLogger() {
+	log.SetOutput(ioutil.Discard)
+
+	// set log level
+	log.SetLevel(log.InfoLevel)
+	if *debug {
+		log.SetLevel(log.DebugLevel)
 	}
-	return f, nil
+
+	// add hook to send info, debug, warn level logs to stdout
+	log.AddHook(&LogHook{
+		Writer: os.Stdout,
+		Loglevels: []log.Level{
+			log.InfoLevel,
+			log.DebugLevel,
+			log.WarnLevel,
+		},
+	})
+
+	// add hook to send panic, fatal, error logs to stderr
+	log.AddHook(&LogHook{
+		Writer: os.Stderr,
+		Loglevels: []log.Level{
+			log.PanicLevel,
+			log.FatalLevel,
+			log.ErrorLevel,
+		},
+	})
+}
+
+// Fire is called when logging function with current hook is called
+// write to appropriate writer based on log level
+func (hook *LogHook) Fire(entry *log.Entry) error {
+	line, err := entry.String()
+	if err != nil {
+		return err
+	}
+	_, err = hook.Writer.Write([]byte(line))
+	return err
+}
+
+// Levels defines log levels at which hook is triggered
+func (hook *LogHook) Levels() []log.Level {
+	return hook.Loglevels
 }
