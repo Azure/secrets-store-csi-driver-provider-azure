@@ -43,7 +43,7 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
 1. Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
     ```yaml
-    apiVersion: secrets-store.csi.k8s.com/v1alpha1
+    apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
     kind: SecretProviderClass
     metadata:
       name: azure-kvname
