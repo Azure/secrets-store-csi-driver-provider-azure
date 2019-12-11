@@ -4,6 +4,7 @@ REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.3
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
+GO_FILES=$(shell go list ./...)
 
 GO111MODULE ?= on
 export GO111MODULE
@@ -28,6 +29,11 @@ setup:
 .PHONY: mod
 mod:
 	@go mod tidy
+
+.PHONY: unit-test
+unit-test:
+	go test $(GO_FILES) -v
+
 
 KIND_VERSION ?= 0.5.1
 KUBERNETES_VERSION ?= 1.15.3
