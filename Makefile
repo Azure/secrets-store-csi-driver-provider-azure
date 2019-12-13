@@ -78,7 +78,7 @@ unit-test:
 	go test $(GO_FILES) -v
 
 KIND_VERSION ?= 0.6.0
-KIND_K8S_VERSION ?= 1.16.3
+KIND_K8S_VERSION ?= 1.18.2
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
@@ -118,10 +118,12 @@ install-helm:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 .PHONY: e2e-local-bootstrap
-e2e-local-bootstrap:
-	kind create cluster --image kindest/node:v${KIND_K8S_VERSION} --config test/kind-config.yaml
+e2e-local-bootstrap: build
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
 	make image
-	kind load docker-image --name kind $(DOCKER_IMAGE):$(IMAGE_VERSION)
+	kind load --name kind docker-image $(DOCKER_IMAGE):$(IMAGE_VERSION)
+	# Create Dev namespace for local e2e-testing
+	kubectl create ns dev
 
 .PHONY: e2e-kind-cleanup
 e2e-kind-cleanup:

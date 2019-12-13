@@ -92,7 +92,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   metadata:
     name: azure-kvname
   spec:
-    provider: azure                   
+    provider: azure
     parameters:
       usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
       useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
@@ -151,8 +151,8 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 To ensure your application is using the Secrets Store CSI driver, update your deployment yaml to use the `secrets-store.csi.k8s.io` driver and reference the `SecretProviderClass` resource created in the previous step.
 
-Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
-    
+Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step.
+
   ```yaml
     volumes:
       - name: secrets-store-inline
@@ -189,7 +189,7 @@ To validate, once the pod is started, you should see the new mounted content at 
 ## Azure Key Vault Provider Features
 
 ### Secret Content is Mounted on Pod Start
-On pod start and restart, the driver will call the Azure provider binary to retrieve the secret content from the Azure Key Vault instance you have specified in the `SecretProviderClass` custom resource. Then the content will be mounted to the container's file system. 
+On pod start and restart, the driver will call the Azure provider binary to retrieve the secret content from the Azure Key Vault instance you have specified in the `SecretProviderClass` custom resource. Then the content will be mounted to the container's file system.
 
 To validate, once the pod is started, you should see the new mounted content at the volume path specified in your deployment yaml.
 
@@ -211,7 +211,7 @@ kind: SecretProviderClass
 metadata:
   name: my-provider
 spec:
-  provider: azure                             
+  provider: azure
   secretObjects:                              # [OPTIONAL] SecretObject defines the desired state of synced K8s secret objects
   - data:
     - key: username                           # data field to populate
@@ -219,7 +219,7 @@ spec:
     secretName: foosecret                     # name of the Kubernetes Secret object
     type: Opaque                              # type of the Kubernetes Secret object e.g. Opaque, kubernetes.io/tls
 ```
-> NOTE: Here is the list of supported Kubernetes Secret types: `Opaque`, `kubernetes.io/basic-auth`, `bootstrap.kubernetes.io/token`, `kubernetes.io/dockerconfigjson`, `kubernetes.io/dockercfg`, `kubernetes.io/ssh-auth`, `kubernetes.io/service-account-token`, `kubernetes.io/tls`.  
+> NOTE: Here is the list of supported Kubernetes Secret types: `Opaque`, `kubernetes.io/basic-auth`, `bootstrap.kubernetes.io/token`, `kubernetes.io/dockerconfigjson`, `kubernetes.io/dockercfg`, `kubernetes.io/ssh-auth`, `kubernetes.io/service-account-token`, `kubernetes.io/tls`.
 
 - Here is a sample [`SecretProviderClass` custom resource](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/azure/azure_synck8s_v1alpha1_secretproviderclass.yaml) that syncs a secret from Azure Key Vault to a Kubernetes secret.
 - To view an example of type `kubernetes.io/tls`, refer to the [ingress-controller-tls sample](sample/ingress-controller-tls/README.md#deploy-a-secretsproviderclass-resource)
@@ -287,7 +287,7 @@ please refer to [this guide](docs/custom-environments.md).
 
 ## Support
 
-Azure Key Vault Provider for Secrets Store CSI Driver is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/new/choose). The project maintainers will respond to the best of their abilities.  
+Azure Key Vault Provider for Secrets Store CSI Driver is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/new/choose). The project maintainers will respond to the best of their abilities.
 
 ## Presentations
 
