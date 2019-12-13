@@ -1,0 +1,26 @@
+{
+  "name": "Azure Key Vault provider for Secrets Store CSI driver",
+  "dockerFile": "Dockerfile",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${env:HOME}${env:USERPROFILE}/.azure,target=/home/vscode/.azure,type=bind"
+  ],
+  "workspaceMount": "src=${localWorkspaceFolder},dst=/go/src/secrets-store-csi-driver-provider-azure,type=bind,consistency=cached",
+  "workspaceFolder": "/go/src/secrets-store-csi-driver-provider-azure",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "runArgs": [
+    "--net=host",
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
+  "extensions": [
+    "ms-vscode.azurecli",
+    "golang.go"
+  ],
+  "remoteEnv": {
+    "DEVCONTAINER": "true"
+  }
+}

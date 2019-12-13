@@ -1,8 +1,8 @@
 # Getting Certificates and Keys using Azure Key Vault Provider
 
-> Note: This behavior was introduced in 0.0.6 release of Azure Key Vault Provider for Secrets Store CSI Driver. This is backward incompatible with the prior releases. 
+> Note: This behavior was introduced in 0.0.6 release of Azure Key Vault Provider for Secrets Store CSI Driver. This is backward incompatible with the prior releases.
 
-The Azure Key Vault Provider for Secrets Store CSI Driver has been designed to closely align with the current behavior of  [az keyvault certificate/secret/key download](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest).
+The Azure Key Vault Provider for Secrets Store CSI Driver has been designed to closely align with the current behavior of [az keyvault certificate/secret/key download](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest).
 
 [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) design makes sharp distinctions between Keys, Secrets and Certificates. The KeyVault service's Certificates features were designed making use of it's Keys and Secrets capabilities.
 
@@ -17,11 +17,11 @@ Knowing that the certificate is stored in a Key Vault certificate, we can retrie
 > Note: For chain of certificates, using object type `cert` only returns the Server certificate and not the entire chain.
 
 ```yaml
-        array:
-          - |
-            objectName: certName
-            objectType: cert
-            objectVersion: ""
+array:
+  - |
+    objectName: certName
+    objectType: cert
+    objectVersion: ""
 ```
 
 The contents of the file will be the certificate in PEM format.
@@ -31,11 +31,11 @@ The contents of the file will be the certificate in PEM format.
 Knowing that the public key is stored in a Key Vault key, we can retrieve it by using object type `key`
 
 ```yaml
-        array:
-          - |
-            objectName: certName
-            objectType: key
-            objectVersion: ""
+array:
+  - |
+    objectName: certName
+    objectType: key
+    objectVersion: ""
 ```
 
 The contents of the file will be the public key in PEM format.
@@ -45,11 +45,11 @@ The contents of the file will be the public key in PEM format.
 Knowing that the private key is stored in a Key Vault secret with the public certificate included, we can retrieve it by using object type `secret`
 
 ```yaml
-        array:
-          - |
-            objectName: certName
-            objectType: secret
-            objectVersion: ""
+array:
+  - |
+    objectName: certName
+    objectType: secret
+    objectVersion: ""
 ```
 
 The contents of the file will be the private key and certificate in PEM format.

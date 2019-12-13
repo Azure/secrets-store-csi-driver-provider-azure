@@ -63,12 +63,19 @@ setup() {
 }
 
 @test "install driver helm chart" {
+<<<<<<< HEAD
   run helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace dev --set windows.enabled=true \
       --set secrets-store-csi-driver.windows.enabled=true \
       --set image.repository=${PROVIDER_TEST_IMAGE} \
       --set image.tag=${IMAGE_TAG} \
       --set image.pullPolicy="IfNotPresent" \
       --dependency-update
+=======
+  run helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts 
+	run helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace dev --set windows.enabled=true
+  assert_success
+}
+>>>>>>> 17cba2d... bats and set up keyvault, Makefile comment changes
 
   assert_success
 }
