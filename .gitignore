@@ -4,6 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 *.env
+debug/certs
+pemCert.pem
 # User-specific files
 *.suo
 *.user
@@ -14,7 +16,7 @@
 *.userprefs
 
 # Build results
-[Dd]ebug/
+# [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
@@ -336,3 +338,6 @@ ASALocalRun/
 /_output*/
 /_output
 .DS_Store
+
+# The Launch.json file contains Secrets that shouldn't be tracked
+.vscode/launch.json

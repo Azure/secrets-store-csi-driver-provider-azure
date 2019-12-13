@@ -61,7 +61,8 @@ unit-test:
 	go test $(GO_FILES) -v
 
 KIND_VERSION ?= 0.6.0
-KIND_K8S_VERSION ?= 1.16.3
+KIND_K8S_VERSION ?= 1.18.2
+KIND_K8S_SHA=@sha256:7b27a6d0f2517ff88ba444025beae41491b016bc6af573ba467b70c5e8e0d85f
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
@@ -102,9 +103,23 @@ install-helm:
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap:
-	kind create cluster --image kindest/node:v${KIND_K8S_VERSION} --config test/kind-config.yaml
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}${KIND_K8S_SHA}
 	make image
-	kind load docker-image --name kind $(DOCKER_IMAGE):$(IMAGE_VERSION)
+	kind load --name kind docker-image $(DOCKER_IMAGE):$(IMAGE_VERSION)
+	# Create Dev namespace for local e2e-testing
+	kubectl create ns dev
+
+.PHONY: e2e-kind-cleanup
+e2e-kind-cleanup:
+	kind delete cluster --name kind
+
+.PHONY: setup-debug-launchjson
+setup-debug-launchjson:
+	chmod +x debug/build-args.sh && ./debug/build-args.sh
+
+.PHONY: setup-keyvault
+setup-keyvault:
+	chmod +x debug/set_up_keyvault.sh  && ./debug/set_up_keyvault.sh $(rg_name) $(azure_location) $(docker_user)
 
 .PHONY: e2e-kind-cleanup
 e2e-kind-cleanup:

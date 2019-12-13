@@ -14,15 +14,9 @@ The [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) will be used 
 
 Below are examples of how to quickly add a few objects to your Key Vault (make sure to add your own object name):
 
-💡 **Please add 2 Objects (Keys and/or Secrets) and 2 Certificates (1 PEM, and 1 PKCS12) to your Key Vault.**
+💡 **Please add 2 Objects (Keys and/or Secrets) and 3 Certificates (1 PEM, 1 ECC, and 1 PKCS12) to your Key Vault.**
 
-```bash
-az keyvault secret set --vault-name $KEYVAULT_NAME --name <secretNameHere> --value $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 40 | head -n 1)
-
-az keyvault key create --vault-name $KEYVAULT_NAME --name <keyNameHere>
-
-az keyvault certificate create --vault-name $KEYVAULT_NAME --name <certNameHere> -p "$(az keyvault certificate get-default-policy)"
-```
+For guidance on adding Secrets, Keys, and Certs to Key Vault, you can refer to [this guide](/docs/add-objects-keyvault). There are also examples of how to prepare your `secrets.env` file with these newly created objects.
 
 **Please keep track of the Key Vault Objects' name, type, and version** . You will be adding them to a `secrets.env` file for testing as described [here](/docs/testing.md#preparing-your-secrets)
 

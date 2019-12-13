@@ -39,9 +39,11 @@ _WIP_
 This guide will walk you through the steps to configure and run the Azure Key Vault provider for Secrets Store CSI driver on Kubernetes.
 
 ### Install the Secrets Store CSI Driver and the Azure Keyvault Provider
+
 **Prerequisites**
 
 Recommended Kubernetes version:
+
 - For Linux - v1.16.0+
 - For Windows - v1.18.0+
 
@@ -165,11 +167,11 @@ Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-pri
 
 #### Deploy your Kubernetes Resources
 
-  1. Deploy the SecretProviderClass yaml created previously. For example:
+1. Deploy the SecretProviderClass yaml created previously. For example:
 
-     `kubectl apply -f ./examples/v1alpha1_secretproviderclass.yaml`
+   `kubectl apply -f ./examples/v1alpha1_secretproviderclass.yaml`
 
-  1. Deploy the application yaml created previously. For example:
+1. Deploy the application yaml created previously. For example:
 
      `kubectl apply -f ./examples/nginx-pod-inline-volume-service-principal.yaml`
 
@@ -177,19 +179,20 @@ Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-pri
 
 To validate, once the pod is started, you should see the new mounted content at the volume path specified in your deployment yaml.
 
-  ```bash
-  ## show secrets held in secrets-store
-  kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
+```bash
+## show secrets held in secrets-store
+kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
 
-  ## print a test secret held in secrets-store
-  kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1
+## print a test secret held in secrets-store
+kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1
 
-  ```
+```
 
 ## Azure Key Vault Provider Features
 
 ### Secret Content is Mounted on Pod Start
-On pod start and restart, the driver will call the Azure provider binary to retrieve the secret content from the Azure Key Vault instance you have specified in the `SecretProviderClass` custom resource. Then the content will be mounted to the container's file system. 
+
+On pod start and restart, the driver will call the Azure provider binary to retrieve the secret content from the Azure Key Vault instance you have specified in the `SecretProviderClass` custom resource. Then the content will be mounted to the container's file system.
 
 To validate, once the pod is started, you should see the new mounted content at the volume path specified in your deployment yaml.
 
@@ -205,21 +208,23 @@ In some cases, you may want to create a Kubernetes Secret to mirror the mounted 
 > NOTE: Make sure the `objectName` in `secretObjects` matches the name of the mounted content. This could be the object name or the object alias.
 
 A `SecretProviderClass` custom resource should have the following components:
+
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
 metadata:
   name: my-provider
 spec:
-  provider: azure                             
-  secretObjects:                              # [OPTIONAL] SecretObject defines the desired state of synced K8s secret objects
-  - data:
-    - key: username                           # data field to populate
-      objectName: foo1                        # name of the mounted content to sync. this could be the object name or the object alias
-    secretName: foosecret                     # name of the Kubernetes Secret object
-    type: Opaque                              # type of the Kubernetes Secret object e.g. Opaque, kubernetes.io/tls
+  provider: azure
+  secretObjects: # [OPTIONAL] SecretObject defines the desired state of synced K8s secret objects
+    - data:
+        - key: username # data field to populate
+          objectName: foo1 # name of the mounted content to sync. this could be the object name or the object alias
+      secretName: foosecret # name of the Kubernetes Secret object
+      type: Opaque # type of the Kubernetes Secret object e.g. Opaque, kubernetes.io/tls
 ```
-> NOTE: Here is the list of supported Kubernetes Secret types: `Opaque`, `kubernetes.io/basic-auth`, `bootstrap.kubernetes.io/token`, `kubernetes.io/dockerconfigjson`, `kubernetes.io/dockercfg`, `kubernetes.io/ssh-auth`, `kubernetes.io/service-account-token`, `kubernetes.io/tls`.  
+
+> NOTE: Here is the list of supported Kubernetes Secret types: `Opaque`, `kubernetes.io/basic-auth`, `bootstrap.kubernetes.io/token`, `kubernetes.io/dockerconfigjson`, `kubernetes.io/dockercfg`, `kubernetes.io/ssh-auth`, `kubernetes.io/service-account-token`, `kubernetes.io/tls`.
 
 - Here is a sample [`SecretProviderClass` custom resource](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/azure/azure_synck8s_v1alpha1_secretproviderclass.yaml) that syncs a secret from Azure Key Vault to a Kubernetes secret.
 - To view an example of type `kubernetes.io/tls`, refer to the [ingress-controller-tls sample](sample/ingress-controller-tls/README.md#deploy-a-secretsproviderclass-resource)
@@ -231,17 +236,18 @@ Once the secret is created, you may wish to set an ENV VAR in your deployment to
 ```yaml
 spec:
   containers:
-  - image: nginx
-    name: nginx
-    env:
-    - name: SECRET_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: foosecret
-          key: username
+    - image: nginx
+      name: nginx
+      env:
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: foosecret
+              key: username
 ```
 Here is a sample [deployment yaml](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/azure/nginx-deployment-synck8s-azure.yaml) that creates an ENV VAR from the synced Kubernetes secret.
 
+Here is a sample [deployment yaml](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/nginx-deployment-synck8s-azure.yaml) that creates an ENV VAR from the synced Kubernetes secret.
 
 ## Troubleshooting
 
@@ -249,12 +255,12 @@ Here is a sample [deployment yaml](https://github.com/kubernetes-sigs/secrets-st
 
 To troubleshoot issues with the csi driver and the provider, you can look at logs from the `secrets-store` container of the csi driver pod running on the same node as your application pod:
 
-  ```bash
-  kubectl get pod -o wide
-  # find the secrets store csi driver pod running on the same node as your application pod
+```bash
+kubectl get pod -o wide
+# find the secrets store csi driver pod running on the same node as your application pod
 
-  kubectl logs csi-secrets-store-secrets-store-csi-driver-7x44t secrets-store
-  ```
+kubectl logs csi-secrets-store-secrets-store-csi-driver-7x44t secrets-store
+```
 
 ### For Azure Key Vault Provider version `0.0.9+`
 
@@ -282,7 +288,7 @@ please refer to [this guide](docs/custom-environments.md).
 
 ## Support
 
-Azure Key Vault Provider for Secrets Store CSI Driver is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/new/choose). The project maintainers will respond to the best of their abilities.  
+Azure Key Vault Provider for Secrets Store CSI Driver is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/new/choose). The project maintainers will respond to the best of their abilities.
 
 ## Presentations
 
