@@ -24,7 +24,7 @@ func TestPrintVersion(t *testing.T) {
 	go func() {
 		var buf bytes.Buffer
 		io.Copy(&buf, r)
-		outC <- buf.String()
+		outC <- strings.TrimSpace(buf.String())
 	}()
 
 	// back to normal state
@@ -36,7 +36,7 @@ func TestPrintVersion(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	expected := fmt.Sprintf(`{"version":"version","buildDate":"Now","minDriverVersion":"%s"}`, minDriverVersion)
-	if strings.EqualFold(out, expected) {
+	if !strings.EqualFold(out, expected) {
 		t.Fatalf("string doesn't match, expected %s, got %s", expected, out)
 	}
 }
