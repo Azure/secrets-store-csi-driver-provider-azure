@@ -74,7 +74,8 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     | provider       | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity | no       | specify access mode: service principal or pod identity          | "false"       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
-    | cloudName      | no       | Name of the azure cloud based on azure go sdk                   | ""            |
+    | cloudName      | no       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |

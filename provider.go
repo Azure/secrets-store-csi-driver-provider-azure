@@ -297,8 +297,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
-		log.Infof("cloudname is not valid")
-		return err
+		return fmt.Errorf("cloudName is not valid, error: %v", err)
 	}	
 
 	// defaults
