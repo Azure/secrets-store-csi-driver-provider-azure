@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: csi-secrets-store-provider-azure
+  name: csi-secrets-store-provider-azure
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: csi-secrets-store-provider-azure
+  template:
+    metadata:
+      labels:
+        app: csi-secrets-store-provider-azure
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: windows
+      containers:
+        - name: provider-azure-installer
+          image: aramase/secrets-store-csi-driver-provider-azure:windows03
+          imagePullPolicy: Always
+          # resources:
+          #   requests:
+          #     cpu: 50m
+          #     memory: 100Mi
+          #   limits:
+          #     cpu: 50m
+          #     memory: 100Mi
+          env:
+            - name: TARGET_DIR
+              value: "C:\\k\\secrets-store-csi-providers"
+          volumeMounts:
+            - mountPath: "C:\\k\\secrets-store-csi-providers"
+              name: providervol
+      volumes:
+        - name: providervol
+          hostPath:
+            path: "C:\\k\\secrets-store-csi-providers"
+            type: DirectoryOrCreate
