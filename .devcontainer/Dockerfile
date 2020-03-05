@@ -82,7 +82,7 @@ RUN apt-get autoremove -y \
     && rm -rf /tmp/downloads
 
 # Update this to "on" or "off" as appropriate
-ENV GO111MODULE=auto
+ENV GO111MODULE=on
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog

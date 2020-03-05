@@ -3,8 +3,13 @@
 	"dockerFile": "Dockerfile",
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-    "source=${env:HOME}${env:USERPROFILE}/.azure,target=/workspaces/secrets-store-csi-driver-provider-azure/.azure,type=bind"
-	],
+    "source=${env:HOME}${env:USERPROFILE}/.azure,target=/home/vscode/.azure,type=bind"
+  ],
+  "workspaceMount": "src=${localWorkspaceFolder},dst=/go/src/secrets-store-csi-driver-provider-azure,type=bind,consistency=cached",
+  "workspaceFolder": "/go/src/secrets-store-csi-driver-provider-azure",
+
+
+
 	// Use 'settings' to set *default* container specific settings.json values on container create.
 	// You can edit these settings after create using File > Preferences > Settings > Remote.
 	"settings": {
@@ -14,7 +19,7 @@
 	// your server accepts connections from all interfaces (0.0.0.0 or '*'), not just localhost.
 	"appPort": [],
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "docker --version && go version",
+	"postCreateCommand": "go version",
 	// Uncomment the next line if you will use a ptrace-based debugger like C++, Go, and Rust
 	"runArgs": [
 		"--cap-add=SYS_PTRACE",
