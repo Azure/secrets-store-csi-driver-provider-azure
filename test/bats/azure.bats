@@ -6,6 +6,7 @@ BATS_TESTS_DIR=test/bats/tests
 WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
+PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
 
 export SECRET_NAME=secret1
 export KEY_NAME=key1
@@ -19,14 +20,14 @@ setup() {
   fi
 }
 
-@test "install helm chart with e2e image" {
-  run helm install ${GOPATH}/src/github.com/deislabs/secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev \
-          --set image.pullPolicy="IfNotPresent" \
-          --set providers.azure.repository="e2e/secrets-store-csi-driver-provider-azure" \
-          --set providers.azure.tag=$IMAGE_TAG \
-          --set providers.azure.imagePullPolicy="IfNotPresent" \
-          --set providers.azure.enabled=true
+@test "install driver helm chart" {
+  run helm install ${GOPATH}/src/k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
   assert_success
+}
+
+@test "install azure provider with e2e image" {
+  yq w deployment/provider-azure-installer.yaml "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
+   | yq w - spec.template.spec.containers[0].imagePullPolicy "IfNotPresent" | kubectl apply -n dev -f -
 }
 
 @test "create azure k8s secret" {
