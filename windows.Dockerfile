@@ -6,10 +6,6 @@ ARG IMAGE_VERSION=0.0.3
 
 COPY ./_output/secrets-store-csi-driver-provider-azure.exe /secrets-store-csi-driver-provider-azure.exe
 COPY ./install_windows.ps1 /install_windows.ps1
-COPY ./test.ps1 /test.ps1
-
-RUN dir
-RUN "powershell C:\\test.ps1"
 
 USER ContainerAdministrator
 ENTRYPOINT ["powershell", "C:\\install_windows.ps1"]
