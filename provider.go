@@ -15,7 +15,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
-	kvmgmt "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -63,10 +62,6 @@ type Provider struct {
 	KeyvaultName string
 	// the name of the Azure Key Vault objects, since attributes can only be strings, this will be mapped to StringArray, which is an array of KeyVaultObject
 	Objects []KeyVaultObject
-	// the resourcegroup of the Azure Key Vault
-	ResourceGroup string
-	// subscriptionId to azure
-	SubscriptionID string
 	// tenantID in AAD
 	TenantID string
 	// POD AAD Identity flag
@@ -172,21 +167,20 @@ func GetCredential(secrets map[string]string) (string, string, error) {
 }
 
 func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL *string, err error) {
-	log.Debugf("subscriptionID: %s", p.SubscriptionID)
 	log.Debugf("vaultName: %s", p.KeyvaultName)
-	log.Debugf("resourceGroup: %s", p.ResourceGroup)
 
-	vaultsClient := kvmgmt.NewVaultsClient(p.SubscriptionID)
-	token, tokenErr := p.GetManagementToken(AuthGrantType(), cloudName)
-	if tokenErr != nil {
-		return nil, errors.Wrapf(tokenErr, "failed to get management token")
+	// See docs for validation spec: https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates#objects-identifiers-and-versioning
+	if match, _ := regexp.MatchString("[-a-zA-Z0-9]{3,24}", p.KeyvaultName); !match {
+		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
 	}
-	vaultsClient.Authorizer = token
-	vault, err := vaultsClient.Get(ctx, p.ResourceGroup, p.KeyvaultName)
+
+	vaultDnsSuffix, err := GetVaultDNSSuffix(cloudName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get vault %s", p.KeyvaultName)
+		return nil, err
 	}
-	return vault.Properties.VaultURI, nil
+	vaultDnsSuffixValue := *vaultDnsSuffix
+	vaultUri := "https://" + p.KeyvaultName + "." + vaultDnsSuffixValue + "/"
+	return &vaultUri, nil
 }
 
 // GetManagementToken retrieves a new service principal token
@@ -283,20 +277,12 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (err error) {
 	keyvaultName := attrib["keyvaultName"]
 	usePodIdentityStr := attrib["usePodIdentity"]
-	resourceGroup := attrib["resourceGroup"]
-	subscriptionID := attrib["subscriptionId"]
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
 	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
 
 	if keyvaultName == "" {
 		return fmt.Errorf("keyvaultName is not set")
-	}
-	if resourceGroup == "" {
-		return fmt.Errorf("resourceGroup is not set")
-	}
-	if subscriptionID == "" {
-		return fmt.Errorf("subscriptionId is not set")
 	}
 	if tenantID == "" {
 		return fmt.Errorf("tenantId is not set")
@@ -353,8 +339,6 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 	p.KeyvaultName = keyvaultName
 	p.UsePodIdentity = usePodIdentity
-	p.ResourceGroup = resourceGroup
-	p.SubscriptionID = subscriptionID
 	p.TenantID = tenantID
 
 	for _, keyVaultObject := range keyVaultObjects {
@@ -413,4 +397,14 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 
 func wrapObjectTypeError(err error, objectType string, objectName string, objectVersion string) error {
 	return errors.Wrapf(err, "failed to get objectType:%s, objectName:%s, objectVersion:%s", objectType, objectName, objectVersion)
+}
+
+func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
+	environment, err := ParseAzureEnvironment(cloudName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &environment.KeyVaultDNSSuffix, nil
 }
