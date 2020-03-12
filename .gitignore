@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Project-specific Files
+secrets-store-csi-driver-provider-azure
+
 # User-specific files
 *.suo
 *.user
@@ -11,6 +14,7 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+
 
 # Build results
 [Dd]ebug/
@@ -23,6 +27,9 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+
+# Environment Variables for User/Contributor
+*.env
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -222,7 +229,7 @@ ClientBin/
 *.publishsettings
 orleans.codegen.cs
 
-# Including strong name files can present a security risk 
+# Including strong name files can present a security risk
 # (https://github.com/github/gitignore/pull/2483#issue-259490424)
 #*.snk
 
@@ -318,7 +325,7 @@ __pycache__/
 # OpenCover UI analysis results
 OpenCover/
 
-# Azure Stream Analytics local run output 
+# Azure Stream Analytics local run output
 ASALocalRun/
 
 # MSBuild Binary and Structured Log
@@ -327,7 +334,7 @@ ASALocalRun/
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
 
-# MFractors (Xamarin productivity tool) working folder 
+# MFractors (Xamarin productivity tool) working folder
 .mfractor/
 
 # This is where the result of the go build goes
