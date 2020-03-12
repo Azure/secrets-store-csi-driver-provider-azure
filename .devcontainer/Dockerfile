@@ -7,6 +7,8 @@ FROM golang:1
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
+ENV JQ_VERSION='1.5'
+
 
 # This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
 # property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
@@ -69,6 +71,27 @@ RUN apt-get update \
   && chmod 0440 /etc/sudoers.d/$USERNAME \
   # Add write permission for /go/pkg
   && chmod -R a+w /go/pkg
+
+
+# Install jq utility
+RUN wget --no-check-certificate https://raw.githubusercontent.com/stedolan/jq/master/sig/jq-release.key -O /tmp/jq-release.key && \
+    wget --no-check-certificate https://raw.githubusercontent.com/stedolan/jq/master/sig/v${JQ_VERSION}/jq-linux64.asc -O /tmp/jq-linux64.asc && \
+    wget --no-check-certificate https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 -O /tmp/jq-linux64 && \
+    gpg --import /tmp/jq-release.key && \
+    gpg --verify /tmp/jq-linux64.asc /tmp/jq-linux64 && \
+    cp /tmp/jq-linux64 /usr/bin/jq && \
+    chmod +x /usr/bin/jq && \
+    rm -f /tmp/jq-release.key && \
+    rm -f /tmp/jq-linux64.asc && \
+    rm -f /tmp/jq-linux64
+
+#Install yq utility
+RUN apt-key adv --no-tty --keyserver keyserver.ubuntu.com --recv-keys CC86BB64 \
+  && apt-get install  -y software-properties-common \
+  && add-apt-repository ppa:rmescandon/yq \
+  && apt update \
+  && apt install yq -y
+
 # Install Azure CLI
 RUN apt-get install -y apt-transport-https curl gnupg2 lsb-release \
     && echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list \

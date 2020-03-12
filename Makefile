@@ -70,10 +70,9 @@ e2e-bootstrap:
 e2e-azure:
 	bats -t test/bats/azure.bats
 
-.PHONY: build-windows
-build-windows:
-	CGO_ENABLED=0 GOOS=windows go build -a -ldflags "-X main.BuildDate=$(BUILD_DATE) -X main.BuildVersion=$(IMAGE_VERSION)" -o _output/secrets-store-csi-driver-provider-azure.exe .
-
 .PHONY: build-container-windows
 build-container-windows: build-windows
 	docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg IMAGE_VERSION="$(IMAGE_VERSION)" -f windows.Dockerfile .=======.PHONY: azure-keyvaultcreate-keyvault:	# Create AAD App	$(eval clientId = $(shell bash -c "az ad app create --display-name "${DEMOAPP}ServicePrincipal" --identifier-uris "https://${DEMOAPP}ServicePrincipal" --query appId -o tsv"))	# Update the application group memebership claims	az ad app update --id $(clientId) --set groupMembershipClaims=All	# Create a service principal for the Azure AD application	az ad sp create --id $(clientId)	# Get the service principal secret	$(eval clientSecret = $(shell bash -c "az ad sp credential reset  --name $(clientId) --credential-description "APClientSecret"  --query password -o tsv"))	# Create Resource Group	az group create --name $(RESOURCEGROUP) --location westus	#create the key vault	az keyvault create --name $(KVNAME) --resource-group $(RESOURCEGROUP) --location westus	#	## Store ClientSecret and ClientId in Keyvault	#	# Set Client Secret and Client ID in KeyVault	az keyvault secret set --vault-name $(KVNAME) --name "clientSecret" --value $(clientSecret)	az keyvault secret set --vault-name $(KVNAME) --name "clientId" --value $(clientId)	# Show key in Keyvault	az keyvault secret show --name "clientSecret" --vault-name $(KVNAME)	az keyvault secret show --name "clientId" --vault-name $(KVNAME)delete-keyvault:	az group delete -n $(RESOURCEGROUP)>>>>>>> caedad5... AZ AD Creds stored inside AZ Keyvault in Make task
+
+setup-debug:
+	./debug/build-args.sh
