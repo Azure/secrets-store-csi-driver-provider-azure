@@ -16,3 +16,8 @@ if (!(Test-Path $azureProviderDir))
 
 Write-Output "Copying file to $azureProviderDir/provider-azure.exe"
 Copy-Item "C:\\secrets-store-csi-driver-provider-azure.exe" -Destination $azureProviderDir/provider-azure.exe
+
+while ($true) {
+    write-host 'install done, daemonset sleeping'
+    Start-Sleep -Seconds 60  
+}
