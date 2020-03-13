@@ -87,7 +87,7 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     volumes:
       - name: secrets-store-inline
         csi:
-          driver: secrets-store.csi.k8s.com
+          driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
             secretProviderClass: "azure-kvname"
