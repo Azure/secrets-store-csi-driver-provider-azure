@@ -3,36 +3,15 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# Project-specific Files
+# Project-specific Files (Executable)
 secrets-store-csi-driver-provider-azure
 
-# User-specific files
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
 
-# User-specific files (MonoDevelop/Xamarin Studio)
-*.userprefs
-
-
-# Build results
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-
-# Environment Variables for User/Contributor
+# Environment Variables and Secrets
 *.env
 
-# Launch JSON contains Env Vars
+# The Launch.json file contains Secrets that shouldn't be tracked
 .vscode/launch.json
-
 
 # Binaries for programs and plugins
 *.exe

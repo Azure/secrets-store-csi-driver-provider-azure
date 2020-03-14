@@ -4,6 +4,12 @@
 
 Azure Key Vault provider for Secret Store CSI driver allows you to get secret contents stored in Azure Key Vault instance and use the Secret Store CSI driver interface to mount them into Kubernetes pods.
 
+### Table of Contents
+- [Demo](#demo)
+- [Usage](#usage)
+  - [Option 1 - Service Principal](#option-1---service-principal)
+  - [Option 2 - Pod Identity](#option-2---pod-identity)
+- [Contributing](#contributing)
 ## Demo
 
 _WIP_
@@ -16,8 +22,8 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
 
 
-The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
-1. Service Principal 
+The Azure Key Vault Provider offers two modes for accessing a Key Vault instance:
+1. Service Principal
 1. Pod Identity
 
 ## OPTION 1 - Service Principal
@@ -204,7 +210,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```yaml
     usepodidentity: "true"
     ```
-    
+
 1. Update [this sample deployment](examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 1. Deploy your app
@@ -221,3 +227,19 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
+
+## Contributing
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+
+ For steps on how to contribute, please read the [Contribution Documentation](/docs/contributing.md).

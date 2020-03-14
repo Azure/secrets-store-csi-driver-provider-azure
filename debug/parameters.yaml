@@ -3,10 +3,10 @@ keyvaultName: "{{KEYVAULT_NAME}}"
 objects:  |
   array:
     - |
-      objectName: clientId
+      objectName: databasePassword
       objectType: secret
     - |
-      objectName: clientSecret
+      objectName: storageToken
       objectType: secret
 resourceGroup: "{{KEYVAULT_RESOURCE_GROUP}}"
 subscriptionId: "{{AZURE_SUBSCRIPTION_ID}}"
