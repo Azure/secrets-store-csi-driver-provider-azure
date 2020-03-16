@@ -5,6 +5,12 @@ DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.3
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
+ORG_PATH=github.com/Azure
+PROJECT_NAME := secrets-store-csi-driver-provider-azure
+REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
+
+BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
+BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
 
 GO111MODULE ?= on
 export GO111MODULE
@@ -12,7 +18,7 @@ export GO111MODULE
 .PHONY: build
 build: setup
 	@echo "Building..."
-	$Q GOOS=linux CGO_ENABLED=0 go build -ldflags "-X main.BuildDate=$(BUILD_DATE) -X main.BuildVersion=$(IMAGE_VERSION)" . 
+	$Q GOOS=linux CGO_ENABLED=0 go build -ldflags "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION)" -o _output/secrets-store-csi-driver-provider-azure ./cmd/
 
 image:
 # build inside docker container
@@ -22,9 +28,12 @@ image:
 push: image
 	docker push $(DOCKER_IMAGE):$(IMAGE_VERSION)
 
-setup:
+setup: clean
 	@echo "Setup..."
 	$Q go env
+
+clean:
+	-rm -rf _output
 
 .PHONY: mod
 mod:

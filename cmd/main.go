@@ -7,19 +7,20 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/azure"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
 
 var (
-	attributes = pflag.String("attributes", "", "volume attributes")
-	secrets    = pflag.String("secrets", "", "node publish ref secret")
-	targetPath = pflag.String("targetPath", "", "Target path to write data.")
-	permission = pflag.String("permission", "", "File permission")
-	debug      = pflag.Bool("debug", false, "sets log to debug level")
-	version    = pflag.Bool("version", false, "prints the version information")
-
-	minDriverVersion = "v0.0.8"
+	attributes  = pflag.String("attributes", "", "volume attributes")
+	secrets     = pflag.String("secrets", "", "node publish ref secret")
+	targetPath  = pflag.String("targetPath", "", "Target path to write data.")
+	permission  = pflag.String("permission", "", "File permission")
+	debug       = pflag.Bool("debug", false, "sets log to debug level")
+	versionInfo = pflag.Bool("version", false, "prints the version information")
 )
 
 // LogHook is used to setup custom hooks
@@ -37,8 +38,8 @@ func main() {
 
 	setupLogger()
 
-	if *version {
-		if err = printVersion(); err != nil {
+	if *versionInfo {
+		if err = version.PrintVersion(); err != nil {
 			log.Fatalf("failed to print version, err: %+v", err)
 		}
 		os.Exit(0)
@@ -57,7 +58,7 @@ func main() {
 		log.Fatalf("failed to unmarshal file permission, err: %v", err)
 	}
 
-	provider, err := NewProvider()
+	provider, err := azure.NewProvider()
 	if err != nil {
 		log.Fatalf("[error] : %v", err)
 	}

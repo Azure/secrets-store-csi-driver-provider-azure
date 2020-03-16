@@ -1,4 +1,4 @@
-package main
+package azure
 
 import (
 	"encoding/json"
@@ -169,8 +169,13 @@ func GetCredential(secrets map[string]string) (string, string, error) {
 func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL *string, err error) {
 	log.Debugf("vaultName: %s", p.KeyvaultName)
 
+	// Key Vault name must be a 3-24 character string
+	if len(p.KeyvaultName) < 3 || len(p.KeyvaultName) > 24 {
+		return nil, errors.Errorf("Invalid vault name: %q, must be between 3 and 24 chars", p.KeyvaultName)
+	}
 	// See docs for validation spec: https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates#objects-identifiers-and-versioning
-	if match, _ := regexp.MatchString("[-a-zA-Z0-9]{3,24}", p.KeyvaultName); !match {
+	isValid := regexp.MustCompile(`^[-A-Za-z0-9]+$`).MatchString
+	if !isValid(p.KeyvaultName) {
 		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
 	}
 
@@ -401,7 +406,6 @@ func wrapObjectTypeError(err error, objectType string, objectName string, object
 
 func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
 	environment, err := ParseAzureEnvironment(cloudName)
-
 	if err != nil {
 		return nil, err
 	}
