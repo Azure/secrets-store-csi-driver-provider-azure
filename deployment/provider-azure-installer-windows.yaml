@@ -21,13 +21,13 @@ spec:
         - name: provider-azure-installer
           image: aramase/secrets-store-csi-driver-provider-azure:win00
           imagePullPolicy: Always
-          # resources:
-          #   requests:
-          #     cpu: 50m
-          #     memory: 100Mi
-          #   limits:
-          #     cpu: 50m
-          #     memory: 100Mi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 200Mi
+            limits:
+              cpu: 100m
+              memory: 200Mi
           env:
             - name: TARGET_DIR
               value: "C:\\k\\secrets-store-csi-providers"

@@ -14,7 +14,7 @@ if (!(Test-Path $azureProviderDir))
     New-Item -path $azureProviderDir -type Directory
 }
 
-Write-Output "Copying file to $azureProviderDir/provider-azure.exe"
+Write-Output "Copying file to $azureProviderDir\provider-azure.exe"
 Copy-Item "C:\\secrets-store-csi-driver-provider-azure.exe" -Destination $azureProviderDir/provider-azure.exe
 
 while ($true) {
