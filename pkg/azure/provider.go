@@ -80,6 +80,8 @@ type Provider struct {
 type KeyVaultObject struct {
 	// the name of the Azure Key Vault objects
 	ObjectName string `json:"objectName" yaml:"objectName"`
+	// the alias of the Azure Key Vault objects
+	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
 	// the version of the Azure Key Vault objects
 	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
 	// the type of the Azure Key Vault objects
@@ -352,10 +354,16 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			return err
 		}
 		objectContent := []byte(content)
-		if err := ioutil.WriteFile(path.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
-			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
+		fileName := ""
+		if keyVaultObject.ObjectAlias != "" {
+			fileName = keyVaultObject.ObjectAlias
+		} else {
+			fileName = keyVaultObject.ObjectName
 		}
-		log.Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)
+		if err := ioutil.WriteFile(path.Join(targetPath, fileName), objectContent, permission); err != nil {
+			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", fileName, targetPath)
+		}
+		log.Infof("secrets store csi driver mounted %s", fileName)
 		log.Infof("Mount point: %s", targetPath)
 	}
 
