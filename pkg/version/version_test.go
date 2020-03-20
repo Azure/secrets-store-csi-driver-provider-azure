@@ -1,4 +1,4 @@
-package main
+package version
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ func TestPrintVersion(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	err := printVersion()
+	err := PrintVersion()
 
 	outC := make(chan string)
 	// copy the output in a separate goroutine so printing can't block indefinitely

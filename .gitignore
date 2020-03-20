@@ -329,3 +329,8 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# This is where the result of the go build goes
+/output*/
+/_output*/
+/_output
