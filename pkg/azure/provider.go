@@ -188,23 +188,6 @@ func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL 
 	return &vaultUri, nil
 }
 
-// GetManagementToken retrieves a new service principal token
-func (p *Provider) GetManagementToken(grantType OAuthGrantType, cloudName string) (authorizer autorest.Authorizer, err error) {
-
-	env, err := ParseAzureEnvironment(cloudName)
-	if err != nil {
-		return nil, err
-	}
-
-	rmEndPoint := env.ResourceManagerEndpoint
-	servicePrincipalToken, err := p.GetServicePrincipalToken(env, rmEndPoint)
-	if err != nil {
-		return nil, err
-	}
-	authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
-	return authorizer, nil
-}
-
 // GetServicePrincipalToken creates a new service principal token based on the configuration
 func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource string) (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, p.TenantID)
