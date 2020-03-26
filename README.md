@@ -268,14 +268,11 @@ Here are the steps that you can follow to test the Azure Key Vault Azure Provide
     KEYVAULT_OBJECT_ALIAS3=<YOUR_KEY_VAULT_SECRET_ALIAS>
     KEYVAULT_OBJECT_VERSION3=""
 
-    KEYVAULT_RESOURCE_GROUP=<yourAzureResourceGroupName>
     KEYVAULT_NAME=<yourAzureKeyVaultName>
-    KEYVAULT_RESOURCE_ID=/subscriptions/<yourAzureSubscriptionId>/resourceGroups/<yourAzureResourceGroupName>/providers/Microsoft.KeyVault/vaults/<yourAzureKeyVaultName>
 
     AZURE_CLIENT_ID=<yourAzureServicePrincipalId>
     AZURE_CLIENT_SECRET=<yourAzureServicePrincipalSecret>
-    AZURE_SUBSCRIPTION_ID=<yourAzureSubscriptionId>
-    AZURE_TENANT_ID=<yourAzureTenantId>
+    TENANT_ID=<yourAzureTenantId>
     ```
 
 2. Now, you will create a `kind cluster` and kubernetes namespace locally.
