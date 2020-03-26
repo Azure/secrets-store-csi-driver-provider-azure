@@ -51,6 +51,13 @@ setup() {
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
+@test "CSI inline volume test - read azure kv object #3 if alias present from pod" {
+  KEY_VAULT_CONTAINS=$KEYVAULT_OBJECT_VALUE3
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_ALIAS3)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+}
+
+
 @test "secretproviderclasses crd is established" {
   cmd="kubectl wait --for condition=established --timeout=60s crd/secretproviderclasses.secrets-store.csi.x-k8s.io"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
@@ -91,7 +98,8 @@ setup() {
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv object #3  if alias present from pod" {
+@test "CSI inline volume test with pod portability - read azure kv object #3 if alias present from pod" {
   KEY_VAULT_CONTAINS=$KEYVAULT_OBJECT_VALUE3
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_ALIAS3)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }

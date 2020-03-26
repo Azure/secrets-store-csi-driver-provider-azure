@@ -242,7 +242,7 @@ This section will show you how to locally test the Azure Key Vault Provider end-
 
 Here are the steps that you can follow to test the Azure Key Vault Azure Provider.
 
-1. add your secrets to a `secrets.env` file at the application `root` directory.
+1. Add your secrets to a `secrets.env` file at the application `root` directory.
 
     💡 The third Key Vault object information is the same as the first  object. Only, the 3rd object will also include an `objectAlias`.
     ```bash
