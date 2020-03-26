@@ -16,8 +16,8 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
 
 
-The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
-1. Service Principal 
+The Azure Key Vault Provider offers two modes for accessing a Key Vault instance:
+1. Service Principal
 1. Pod Identity
 
 ## OPTION 1 - Service Principal
@@ -207,7 +207,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```yaml
     usepodidentity: "true"
     ```
-    
+
 1. Update [this sample deployment](examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 1. Deploy your app
@@ -224,3 +224,75 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
+
+
+## Local End-To-End Testing for the Key Vault Azure Provider
+
+This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the `test/bats/tests/local` folder to see the tests and the deployments needed for creating the e2e tests.
+
+### Prerequisites
+- [ Helm >= 3](https://helm.sh/)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [Azure Service Principal](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest)
+- [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2)
+- [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
+- [Docker](https://docs.docker.com/get-started/)
+- [Bats](https://github.com/bats-core/bats-core)
+
+
+Here are the steps that you can follow to test the Azure Key Vault Azure Provider.
+
+1. add your secrets to a `secrets.env` file at the application `root` directory.
+
+    💡 The third Key Vault object information is the same as the first  object. Only, the 3rd object will also include an `objectAlias`.
+    ```bash
+    # secrets.env
+    PROVIDER_TEST_IMAGE=<your_docker_username>/secrets-store-csi-driver-provider-azure
+
+    KEYVAULT_OBJECT_NAME1=<yourKeyVaultSecretName>
+    KEYVAULT_OBJECT_VALUE1=<yourKeyVaultSecretValue>
+    KEYVAULT_OBJECT_TYPE1=secret
+    KEYVAULT_OBJECT_ALIAS1=""
+    KEYVAULT_OBJECT_VERSION1=""
+
+    KEYVAULT_OBJECT_NAME2=<yourKeyVaultKeyName>
+    KEYVAULT_OBJECT_VALUE2=<yourKeyVaultKeyValue>
+    KEYVAULT_OBJECT_TYPE2=key
+    KEYVAULT_OBJECT_ALIAS2=""
+    KEYVAULT_OBJECT_VERSION2=""
+
+    # same information as 1st Key Vault Object. Just add objectAlias
+    KEYVAULT_OBJECT_NAME3=<yourKeyVaultSecretName>
+    KEYVAULT_OBJECT_VALUE3=<yourKeyVaultSecretValue>
+    KEYVAULT_OBJECT_TYPE3=secret
+    KEYVAULT_OBJECT_ALIAS3=<YOUR_KEY_VAULT_SECRET_ALIAS>
+    KEYVAULT_OBJECT_VERSION3=""
+
+    KEYVAULT_RESOURCE_GROUP=<yourAzureResourceGroupName>
+    KEYVAULT_NAME=<yourAzureKeyVaultName>
+    KEYVAULT_RESOURCE_ID=/subscriptions/<yourAzureSubscriptionId>/resourceGroups/<yourAzureResourceGroupName>/providers/Microsoft.KeyVault/vaults/<yourAzureKeyVaultName>
+
+    AZURE_CLIENT_ID=<yourAzureServicePrincipalId>
+    AZURE_CLIENT_SECRET=<yourAzureServicePrincipalSecret>
+    AZURE_SUBSCRIPTION_ID=<yourAzureSubscriptionId>
+    AZURE_TENANT_ID=<yourAzureTenantId>
+    ```
+
+2. Now, you will create a `kind cluster` and kubernetes namespace locally.
+
+    ```bash
+      # bootstrap the kind cluster
+      make local-e2e-bootstrap
+
+      # set your kubernetes context to be the kind cluster
+      export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
+
+      # creat the `dev` namespace
+      kubectl create ns dev
+    ```
+
+3. Run the local tests
+
+    ```bash
+      make local-e2e-test
+    ```
