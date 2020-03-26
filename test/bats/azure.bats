@@ -9,7 +9,9 @@ IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
 PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
 
 export SECRET_NAME=secret1
+export SECRET_ALIAS=SECRET_1
 export KEY_NAME=key1
+export KEY_ALIAS=KEY_1
 export SECRET_NAME=secret1
 export SECRET_VERSION=""
 
@@ -93,5 +95,12 @@ setup() {
 @test "CSI inline volume test with pod portability - read azure kv key from pod" {
   KEY_VALUE_CONTAINS=uiPCav0xdIq
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/key1)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+}
+
+
+@test "CSI inline volume test with pod portability - read azure kv key if alias exists from pod" {
+  KEY_VALUE_CONTAINS=uiPCav0xdIq
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/KEY_1)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
