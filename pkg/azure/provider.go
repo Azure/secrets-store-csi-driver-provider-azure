@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -352,7 +352,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			return err
 		}
 		objectContent := []byte(content)
-		if err := ioutil.WriteFile(path.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
 			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
 		}
 		log.Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)

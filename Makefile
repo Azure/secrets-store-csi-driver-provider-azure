@@ -69,3 +69,11 @@ e2e-bootstrap:
 .PHONY: e2e-azure
 e2e-azure:
 	bats -t test/bats/azure.bats
+
+.PHONY: build-windows
+build-windows:
+	CGO_ENABLED=0 GOOS=windows go build -a -ldflags "-X main.BuildDate=$(BUILD_DATE) -X main.BuildVersion=$(IMAGE_VERSION)" -o _output/secrets-store-csi-driver-provider-azure.exe .
+
+.PHONY: build-container-windows
+build-container-windows: build-windows
+	docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg IMAGE_VERSION="$(IMAGE_VERSION)" -f windows.Dockerfile .
