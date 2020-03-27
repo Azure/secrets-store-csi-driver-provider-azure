@@ -1,8 +1,10 @@
+include secrets.env
+export $(shell sed 's/=.*//' secrets.env)
+
 IMAGE_NAME=secrets-store-csi-driver-provider-azure
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-LOCAL_DOCKER_IMAGE ?= $(IMAGE_NAME)
 IMAGE_VERSION ?= 0.0.3
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
@@ -72,12 +74,14 @@ e2e-azure:
 	bats -t test/bats/azure.bats
 
 local-e2e-bootstrap:
-# TODO RUN LOCAL E2E
+	# create kind cluster
 	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
 	# Build image
-	DOCKER_IMAGE=$(LOCAL_DOCKER_IMAGE) IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
+	DOCKER_IMAGE=$(IMAGE_NAME) IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
 	# Load image into kind cluster
-	kind load docker-image --name kind $(LOCAL_DOCKER_IMAGE):e2e-$$(git rev-parse --short HEAD)
+	kind load docker-image --name kind $(IMAGE_NAME):e2e-$$(git rev-parse --short HEAD)
+	# set kube context to be kind cluster
+	KUBECONFIG=$(shell kind get kubeconfig-path --name="kind") && kubectl create ns dev
 
 local-e2e-test:
-	bash -c "set -a && source ./secrets.env && bats -t test/bats/tests/local/local_azure.bats"
+	bats -t test/bats/tests/local/local_azure.bats

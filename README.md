@@ -56,7 +56,7 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
           array:
             - |
               objectName: secret1
-              objectAlias: SECRET_1     # [OPTIONAL] KeyVault object alias.
+              objectAlias: SECRET_1     # [OPTIONAL] object alias.
               objectType: secret        # object types: secret, key or cert
               objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
             - |
@@ -77,7 +77,7 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
-    | objectAlias    | no       | the filename of the object when written to disk                 | ""            |
+    | objectAlias    | no       | the filename of the object when written to disk - defaults to objectName if not provided             | ""            |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
     | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
     | resourceGroup  | yes      | name of resource group containing key vault instance            | ""            |
@@ -234,7 +234,7 @@ This section will show you how to locally test the Azure Key Vault Provider end-
 - [ Helm >= 3](https://helm.sh/)
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [Azure Service Principal](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest)
-- [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2)
+- [Create an Azure Key Vault and Set Secrets](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2)
 - [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
 - [Docker](https://docs.docker.com/get-started/)
 - [Bats](https://github.com/bats-core/bats-core)
@@ -275,17 +275,10 @@ Here are the steps that you can follow to test the Azure Key Vault Azure Provide
     TENANT_ID=<yourAzureTenantId>
     ```
 
-2. Now, you will create a `kind cluster` and kubernetes namespace locally.
+2. Now, you will create a `kind cluster` and kubernetes namespace `dev` locally.
 
     ```bash
-      # bootstrap the kind cluster
       make local-e2e-bootstrap
-
-      # set your kubernetes context to be the kind cluster
-      export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
-
-      # creat the `dev` namespace
-      kubectl create ns dev
     ```
 
 3. Run the local tests
