@@ -50,14 +50,16 @@ unit-test:
 KIND_VERSION ?= 0.5.1
 KUBERNETES_VERSION ?= 1.15.3
 
-.PHONY: e2e-bootstrap
-e2e-bootstrap:
+install-tools:
 	# Download and install kubectl
 	curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 	# Download and install kind
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
 	# Download and install Helm
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
+
+.PHONY: e2e-bootstrap
+e2e-bootstrap:
 	# Create kind cluster
 	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
 	# Build image
@@ -72,16 +74,6 @@ e2e-bootstrap:
 .PHONY: e2e-azure
 e2e-azure:
 	bats -t test/bats/azure.bats
-
-local-e2e-bootstrap:
-	# create kind cluster
-	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
-	# Build image
-	DOCKER_IMAGE=$(IMAGE_NAME) IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
-	# Load image into kind cluster
-	kind load docker-image --name kind $(IMAGE_NAME):e2e-$$(git rev-parse --short HEAD)
-	# set kube context to be kind cluster
-	KUBECONFIG=$(shell kind get kubeconfig-path --name="kind") && kubectl create ns dev
 
 local-e2e-test:
 	bats -t test/bats/tests/local/local_azure.bats

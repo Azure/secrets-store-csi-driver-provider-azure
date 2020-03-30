@@ -15,7 +15,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ../secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
+  run helm install ../secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
   assert_success
 }
 
