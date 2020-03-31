@@ -6,15 +6,16 @@ BATS_TESTS_DIR=test/bats/tests
 WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
-PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"e2e/secrets-store-csi-driver-provider-azure"}
 
-export SECRET_NAME=secret1
-export SECRET_ALIAS=SECRET_1
-export KEY_NAME=key1
-export KEY_ALIAS=KEY_1
-export SECRET_NAME=secret1
+export SECRET_NAME=${KEYVAULT_SECRET_NAME:-secret1}
+export SECRET_ALIAS=${KEYVAULT_SECRET_ALIAS:-SECRET_1}
+export SECRET_TYPE=${KEYVAULT_SECRET_TYPE:-secret}
+export KEY_NAME=${KEYVAULT_KEY_NAME:-key1}
+export KEY_ALIAS=${KEYVAULT_KEY_ALIAS:-KEY_1}
+export KEY_TYPE=${KEYVAULT_KEY_TYPE:-key}
 export SECRET_VERSION=""
-
+export KEY_VALUE=${KEYVAULT_KEY_VALUE:-uiPCav0xdIq}
 setup() {
   if [[ -z "${AZURE_CLIENT_ID}" ]] || [[ -z "${AZURE_CLIENT_SECRET}" ]]; then
     echo "Error: Azure service principal is not provided" >&2
@@ -48,14 +49,23 @@ setup() {
 }
 
 @test "CSI inline volume test - read azure kv secret from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1)
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test - read azure kv key from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/key1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEY_NAME)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
+}
+
+@test "CSI inline volume test - read azure kv secret, if alias exists, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$SECRET_ALIAS)
+  [[ "$result" -eq "test" ]]
+}
+
+@test "CSI inline volume test - read azure kv key, if alias exists, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEY_ALIAS)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 @test "secretproviderclasses crd is established" {
@@ -88,19 +98,22 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv secret from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/secret1)
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv key from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/key1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEY_NAME)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 
+@test "CSI inline volume test with pod portability - read azure kv secret if alias exists from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$SECRET_ALIAS)
+  [[ "$result" -eq "test" ]]
+}
+
 @test "CSI inline volume test with pod portability - read azure kv key if alias exists from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/KEY_1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEY_ALIAS)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }

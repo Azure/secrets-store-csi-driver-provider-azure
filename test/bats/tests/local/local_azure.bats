@@ -5,7 +5,7 @@ BATS_LOCAL_TESTS_DIR=test/bats/tests/local
 WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
-
+KEY_VALUE_CONTAINS=${KEYVAULT_KEY_VALUE:-uiPCav0xdIq}
 setup() {
   if [[ -z "${AZURE_CLIENT_ID}" ]] || [[ -z "${AZURE_CLIENT_SECRET}" ]]; then
     echo "Error: Azure service principal is not provided" >&2
@@ -15,7 +15,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install ../secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
+  run helm install $PATH_TO_SECRETS_STORE_CSI_DRIVER/secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
   assert_success
 }
 
@@ -39,21 +39,23 @@ setup() {
   assert_success
 }
 
-@test "CSI inline volume test - read azure kv object #1 from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEYVAULT_OBJECT_NAME1)
+@test "CSI inline volume test - read azure kv secret from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEYVAULT_SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
-@test "CSI inline volume test - read azure kv object #2 from pod" {
-  KEY_VALUE_CONTAINS=$KEYVAULT_OBJECT_VALUE2
-
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEYVAULT_OBJECT_NAME2)
+@test "CSI inline volume test - read azure kv key from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEYVAULT_KEY_NAME)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
-@test "CSI inline volume test - read azure kv object #3 if alias present from pod" {
-  KEY_VAULT_CONTAINS=$KEYVAULT_OBJECT_VALUE3
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_ALIAS3)
+@test "CSI inline volume test - read azure kv secret, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_SECRET_ALIAS)
+  [[ "$result" -eq "test" ]]
+}
+
+@test "CSI inline volume test - read azure kv key, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_KEY_ALIAS)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
@@ -87,19 +89,22 @@ setup() {
   assert_success
 }
 
-@test "CSI inline volume test with pod portability - read azure kv object #1 from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_NAME1)
+@test "CSI inline volume test with pod portability - read azure kv secret from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv object #2 from pod" {
-  KEY_VALUE_CONTAINS=$KEYVAULT_OBJECT_VALUE2
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_NAME2)
+@test "CSI inline volume test with pod portability - read azure kv key from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_KEY_NAME)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv object #3 if alias present from pod" {
-  KEY_VAULT_CONTAINS=$KEYVAULT_OBJECT_VALUE3
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_OBJECT_ALIAS3)
+@test "CSI inline volume test with pod portability - read azure kv secret, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_SECRET_ALIAS)
+  [[ "$result" -eq "test" ]]
+}
+
+@test "CSI inline volume test with pod portability - read azure kv key, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEYVAULT_KEY_ALIAS)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }

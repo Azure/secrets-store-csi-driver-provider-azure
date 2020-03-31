@@ -1,16 +1,16 @@
 include secrets.env
 export $(shell sed 's/=.*//' secrets.env)
 
-IMAGE_NAME=secrets-store-csi-driver-provider-azure
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.3
+PROJECT_NAME ?= secrets-store-csi-driver-provider-azure
+
+ORG_PATH=github.com/Azure
+REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
-ORG_PATH=github.com/Azure
-PROJECT_NAME := secrets-store-csi-driver-provider-azure
-REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
@@ -63,9 +63,9 @@ e2e-bootstrap:
 	# Create kind cluster
 	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
 	# Build image
-	DOCKER_IMAGE="e2e/secrets-store-csi-driver-provider-azure" IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
+	IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
 	# Load image into kind cluster
-	kind load docker-image --name kind e2e/secrets-store-csi-driver-provider-azure:e2e-$$(git rev-parse --short HEAD)
+	kind load docker-image --name kind $(DOCKER_IMAGE):e2e-$$(git rev-parse --short HEAD)
 	# Set up tiller
 	kubectl --namespace kube-system --output yaml create serviceaccount tiller --dry-run | kubectl --kubeconfig $$(kind get kubeconfig-path)  apply -f -
 	kubectl create --output yaml clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller --dry-run | kubectl --kubeconfig $$(kind get kubeconfig-path) apply -f -
