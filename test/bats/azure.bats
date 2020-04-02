@@ -10,6 +10,8 @@ PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
 
 export SECRET_NAME=secret1
 export KEY_NAME=key1
+export SECRET_ALIAS=SECRET_1
+export KEY_ALIAS=KEY_1
 export SECRET_NAME=secret1
 export SECRET_VERSION=""
 
@@ -56,6 +58,17 @@ setup() {
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
 
+@test "CSI inline volume test - read azure kv secret, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/SECRET_1)
+  [[ "$result" -eq "test" ]]
+}
+
+@test "CSI inline volume test - read azure kv key, if alias present, from pod" {
+  KEY_VALUE_CONTAINS=uiPCav0xdIq
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/KEY_1)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+}
+
 @test "secretproviderclasses crd is established" {
   cmd="kubectl wait --for condition=established --timeout=60s crd/secretproviderclasses.secrets-store.csi.x-k8s.io"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
@@ -93,5 +106,16 @@ setup() {
 @test "CSI inline volume test with pod portability - read azure kv key from pod" {
   KEY_VALUE_CONTAINS=uiPCav0xdIq
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/key1)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+}
+
+@test "CSI inline volume test with pod portability - read azure kv secret, if alias present, from pod" {
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/SECRET_1)
+  [[ "$result" -eq "test" ]]
+}
+
+@test "CSI inline volume test with pod portability - read azure kv key, if alias present, from pod" {
+  KEY_VALUE_CONTAINS=uiPCav0xdIq
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/KEY_1)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
