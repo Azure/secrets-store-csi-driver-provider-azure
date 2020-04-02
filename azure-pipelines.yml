@@ -41,6 +41,7 @@ steps:
 - script: |
     make e2e-bootstrap
     export KUBECONFIG=$(kind get kubeconfig-path)
+    kubectl create ns dev
     make e2e-azure
   workingDirectory: '$(modulePath)'
   displayName: "e2e-azure"
