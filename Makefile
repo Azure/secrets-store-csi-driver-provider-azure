@@ -54,18 +54,13 @@ e2e-bootstrap:
 	# Download and install kind
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
 	# Download and install Helm
-	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
+	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 	# Create kind cluster
 	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
 	# Build image
 	DOCKER_IMAGE="e2e/secrets-store-csi-driver-provider-azure" IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
 	# Load image into kind cluster
 	kind load docker-image --name kind e2e/secrets-store-csi-driver-provider-azure:e2e-$$(git rev-parse --short HEAD)
-	# Set up tiller
-	kubectl --namespace kube-system --output yaml create serviceaccount tiller --dry-run | kubectl --kubeconfig $$(kind get kubeconfig-path)  apply -f -
-	kubectl create --output yaml clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller --dry-run | kubectl --kubeconfig $$(kind get kubeconfig-path) apply -f -
-	helm init --service-account tiller --upgrade --wait --kubeconfig $$(kind get kubeconfig-path)
-
 .PHONY: e2e-azure
 e2e-azure:
 	bats -t test/bats/azure.bats
