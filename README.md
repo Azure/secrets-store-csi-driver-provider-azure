@@ -56,10 +56,12 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
           array:
             - |
               objectName: secret1
+              objectAlias: SECRET_1     # [OPTIONAL] object alias
               objectType: secret        # object types: secret, key or cert
               objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
             - |
               objectName: key1
+              objectAlias: ""
               objectType: key
               objectVersion: ""
         resourceGroup: "rg1"            # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
@@ -75,6 +77,7 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
+    | objectAlias    | no       | the filename of the object when written to disk - defaults to objectName if not provided | "" |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
     | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
     | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
