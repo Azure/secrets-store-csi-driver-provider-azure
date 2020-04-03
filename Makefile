@@ -1,16 +1,21 @@
-IMAGE_NAME=secrets-store-csi-driver-provider-azure
+include secrets.env
+export $(shell sed 's/=.*//' secrets.env)
+
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.5
+PROJECT_NAME ?= secrets-store-csi-driver-provider-azure
+
 # Use a custom version for E2E tests if we are testing in CI
 ifdef CI
 override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
 endif
+
+
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
-PROJECT_NAME := secrets-store-csi-driver-provider-azure
 REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
@@ -65,7 +70,6 @@ KIND_K8S_VERSION ?= 1.16.3
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
 ifdef CI_KIND_CLUSTER
-		curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 		make setup-kind
 endif
 	docker pull $(IMAGE_TAG) || make e2e-container
@@ -94,12 +98,13 @@ ifndef CI_KIND_CLUSTER
 	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION) -y
 endif
 
-.PHONY: e2e-azure
-e2e-azure:
+.PHONY: e2e-test
+e2e-test:
 	bats -t test/bats/azure.bats
 
 .PHONY: setup-kind
 setup-kind:
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
 	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
 
