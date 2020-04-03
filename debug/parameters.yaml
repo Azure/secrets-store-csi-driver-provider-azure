@@ -8,4 +8,4 @@ objects:  |
     - |
       objectName: storageToken
       objectType: secret
-tenantId: "{{AZURE_TENANT_ID}}"
+tenantId: "{{TENANT_ID}}"

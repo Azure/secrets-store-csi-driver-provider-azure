@@ -3,11 +3,11 @@
 LAUNCHPATH=/go/src/secrets-store-csi-driver-provider-azure/
 export $(cat $LAUNCHPATH/debug/secrets.env | xargs)
 
-SECRETS="{\"clientId\": \"$KEYVAULT_CLIENT_ID\",\"clientSecret\": \"$KEYVAULT_CLIENT_SECRET\"}"
+SECRETS="{\"clientId\": \"$AZURE_CLIENT_ID\",\"clientSecret\": \"$AZURE_CLIENT_SECRET\"}"
 
 ATTRIBUTES=$(cat $LAUNCHPATH/debug/parameters.yaml \
   | sed -e "s/{{KEYVAULT_NAME}}/$KEYVAULT_NAME/" \
-  | sed -e "s/{{AZURE_TENANT_ID}}/$AZURE_TENANT_ID/" \
+  | sed -e "s/{{TENANT_ID}}/$TENANT_ID/" \
   | yq r - -j \
 )
 
@@ -23,7 +23,7 @@ jq -n '{
       "type": "go",
       "request": "launch",
       "mode": "exec",
-      "program": "${workspaceFolder}/secrets-store-csi-driver-provider-azure",
+      "program": "${workspaceFolder}/_output/secrets-store-csi-driver-provider-azure",
       "env":{},
       "args": [
        env.SECRETS,
