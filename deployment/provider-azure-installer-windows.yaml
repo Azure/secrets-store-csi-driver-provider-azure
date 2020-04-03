@@ -19,7 +19,7 @@ spec:
         beta.kubernetes.io/os: windows
       containers:
         - name: provider-azure-installer
-          image: aramase/secrets-store-csi-driver-provider-azure:win00
+          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4
           imagePullPolicy: Always
           resources:
             requests:
