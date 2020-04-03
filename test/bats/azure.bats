@@ -7,13 +7,17 @@ WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
+SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/k8s.io"}
 
-export SECRET_NAME=secret1
-export KEY_NAME=key1
-export SECRET_ALIAS=SECRET_1
-export KEY_ALIAS=KEY_1
-export SECRET_NAME=secret1
+export SECRET_NAME=${KEYVAULT_SECRET_NAME:-secret1}
+export SECRET_ALIAS=${KEYVAULT_SECRET_ALIAS:-SECRET_1}
+export SECRET_TYPE=${KEYVAULT_SECRET_TYPE:-secret}
+export KEY_NAME=${KEYVAULT_KEY_NAME:-key1}
+export KEY_ALIAS=${KEYVAULT_KEY_ALIAS:-KEY_1}
+export KEY_TYPE=${KEYVAULT_KEY_TYPE:-key}
 export SECRET_VERSION=""
+export KEY_VALUE=${KEYVAULT_KEY_VALUE:-uiPCav0xdIq}
+
 
 export CERT1_NAME=${CERT1_NAME:-pemcert1}
 export CERT2_NAME=${CERT2_NAME:-pkcs12cert1}
@@ -30,7 +34,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ${GOPATH}/src/sigs.k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
+  run helm install ${SECRETS_STORE_CSI_DRIVER_PATH}/secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
   assert_success
 }
 
@@ -55,14 +59,13 @@ setup() {
 }
 
 @test "CSI inline volume test - read azure kv secret from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1)
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test - read azure kv key from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/key1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEY_NAME)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 @test "CSI inline volume test - read azure pem cert from pod" {
@@ -116,14 +119,14 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv secret from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/secret1)
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$SECRET_NAME)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv key from pod" {
   KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/key1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEY_NAME)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure pem cert from pod" {
