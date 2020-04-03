@@ -35,6 +35,10 @@ steps:
   workingDirectory: '$(modulePath)'
   displayName: 'Set up workspace and install dependencies'
 - script: |
+    make build build-windows
+  workingDirectory: '$(modulePath)'
+  displayName: 'build linux and windows binaries'
+- script: |
     make unit-test
   workingDirectory: '$(modulePath)'
   displayName: 'Run unit tests'
