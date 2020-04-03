@@ -8,6 +8,4 @@ objects:  |
     - |
       objectName: storageToken
       objectType: secret
-resourceGroup: "{{KEYVAULT_RESOURCE_GROUP}}"
-subscriptionId: "{{AZURE_SUBSCRIPTION_ID}}"
 tenantId: "{{AZURE_TENANT_ID}}"

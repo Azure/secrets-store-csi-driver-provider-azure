@@ -7,8 +7,6 @@ SECRETS="{\"clientId\": \"$KEYVAULT_CLIENT_ID\",\"clientSecret\": \"$KEYVAULT_CL
 
 ATTRIBUTES=$(cat $LAUNCHPATH/debug/parameters.yaml \
   | sed -e "s/{{KEYVAULT_NAME}}/$KEYVAULT_NAME/" \
-  | sed -e "s/{{KEYVAULT_RESOURCE_GROUP}}/$KEYVAULT_RESOURCE_GROUP/" \
-  | sed -e "s/{{AZURE_SUBSCRIPTION_ID}}/$AZURE_SUBSCRIPTION_ID/" \
   | sed -e "s/{{AZURE_TENANT_ID}}/$AZURE_TENANT_ID/" \
   | yq r - -j \
 )
