@@ -4,7 +4,7 @@ ENV PATH /go/bin:/usr/local/go/bin:$PATH
 ENV GOPATH /go
 COPY . /go/src/github.com/Azure/secrets-store-csi-driver-provider-azure
 WORKDIR /go/src/github.com/Azure/secrets-store-csi-driver-provider-azure
-ARG IMAGE_VERSION=0.0.3
+ARG IMAGE_VERSION=0.0.4
 RUN make build
 
 FROM alpine:3.10.3
