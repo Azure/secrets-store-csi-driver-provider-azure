@@ -242,4 +242,5 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 
- For steps on how to contribute, please read the [Contribution Documentation](/docs/contributing.md).
+### Utilizing the [VS Code Remote Container Extension](https://code.visualstudio.com/docs/remote/containers) for Contribution
+ For steps on how to contribute using the VS Code Remote Container, please read the [VS Code Remote Container Extension Contribution Documentation](/docs/REMOTE_CONTAINER.md).

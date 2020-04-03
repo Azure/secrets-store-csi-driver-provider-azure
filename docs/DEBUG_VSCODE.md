@@ -29,6 +29,8 @@ The [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) will be used 
 
 Let's add some example secrets to our Key Vault:
 
+> We will use `databasePassword` and `storageToken` as arbitray secret objects inside the Azure Key Vault.
+
 ```bash
 az keyvault secret set --vault-name $KEYVAULT_NAME --name "databasePassword" --value $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 40 | head -n 1)
   az keyvault secret set --vault-name $KEYVAULT_NAME --name "storageToken" --value $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 40 | head -n 1)
