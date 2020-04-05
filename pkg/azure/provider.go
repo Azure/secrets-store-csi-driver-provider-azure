@@ -66,6 +66,8 @@ type Provider struct {
 	TenantID string
 	// POD AAD Identity flag
 	UsePodIdentity bool
+	// User Assign Identity
+	UserAssignedIdentityID string
 	// AAD app client secret (if not using POD AAD Identity)
 	AADClientSecret string
 	// AAD app client secret id (if not using POD AAD Identity)
@@ -121,6 +123,17 @@ func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType, cloudName string) 
 	if '/' == kvEndPoint[len(kvEndPoint)-1] {
 		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
 	}
+
+	if p.UsePodIdentity {
+		log.Infof("azure: using pod identity to retrieve token")
+		msiToken, err := p.GetMSIToken(kvEndPoint)
+		if err != nil {
+			return nil, err
+		}
+		authorizer = autorest.NewBearerAuthorizer(msiToken)
+		return authorizer, nil
+	}
+
 	servicePrincipalToken, err := p.GetServicePrincipalToken(env, kvEndPoint)
 	if err != nil {
 		return nil, err
@@ -203,6 +216,36 @@ func (p *Provider) GetManagementToken(grantType OAuthGrantType, cloudName string
 	}
 	authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
 	return authorizer, nil
+}
+
+// GetMSIToken creates a new MSI token
+func (p *Provider) GetMSIToken(resource string) (*adal.ServicePrincipalToken, error) {
+
+	log.Infof("azure: using pod identity to retrieve token")
+
+	// Retrive token with MSI.
+	msiEndpoint, err := adal.GetMSIVMEndpoint()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get the Managed Service Identity endpoint: %v", err)
+	}
+
+	// User assigned
+	if p.UserAssignedIdentityID != "" {
+		log.Infof("Fetching token for resource using User Assigned MSI")
+		token, err := adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(msiEndpoint, resource, p.UserAssignedIdentityID)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create the Managed Service Identity token: %v", err)
+		}
+		return token, nil
+	}
+
+	// System assigned
+	log.Infof("Fetching token for resource using System Assigned MSI")
+	token, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, resource)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create the Managed Service Identity token: %v", err)
+	}
+	return token, nil
 }
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
