@@ -56,6 +56,8 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
       provider: azure                   # accepted provider options: azure or vault
       parameters:
         usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
+        useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+        userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
         keyvaultName: "kvname"          # the name of the KeyVault
         cloudName: "cloudname"          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublic Cloud
         objects:  |
@@ -76,20 +78,22 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
 
     ```
 
-    | Name           | Required | Description                                                     | Default Value |
-    | -------------- | -------- | --------------------------------------------------------------- | ------------- |
-    | provider       | yes      | specify name of the provider                                    | ""            |
-    | usePodIdentity | no       | specify access mode: service principal or pod identity          | "false"       |
+    | Name                   | Required | Description                                                     | Default Value |
+    | --------------         | -------- | --------------------------------------------------------------- | ------------- |
+    | provider               | yes      | specify name of the provider                                    | ""            |
+    | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
+    | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
+    | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
-    | cloudName      | OPTIONAL available for version > 0.0.4       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    | cloudName      | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
     |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
-    | objectAlias    | OPTIONAL available for version > 0.0.4       | the filename of the object when written to disk - defaults to objectName if not provided | "" |
+    | objectAlias    | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
     | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-    | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
-    | subscriptionId | REQUIRED for version < 0.0.4      | subscription ID containing key vault instance                   | ""            |
+    | resourceGroup  | yes      | [__*available for version > 0.0.4*__] name of resource group containing key vault instance            | ""            |
+    | subscriptionId | yes      | [__*available for version > 0.0.4*__] subscription ID containing key vault instance                   | ""            |
     | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
 
 1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
@@ -105,9 +109,11 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     ```
 
 #### Provide Identity to Access Key Vault
-The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
+The Azure Key Vault Provider offers four modes for accessing a Key Vault instance: 
 1. Service Principal 
 1. Pod Identity
+1. VMSS User Assigned Managed Identity
+1. VMSS System Assigned Managed Identity
 
 **OPTION 1 - Service Principal**
 
@@ -253,5 +259,78 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl exec -it nginx-secrets-store-inline-podid ls /mnt/secrets-store/
     secret1
     ```
+
+**OPTION 3 - VMSS User Assigned Managed Identity**
+
+This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
+
+> You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
+>
+>```bash
+>az aks show -g <resource group> -n <aks cluster name> --query identityProfile.kubeletidentity.clientId -o tsv
+>```
+
+1. Create Azure Managed Identity
+
+```bash
+az identity create -g <RESOURCE GROUP> -n <IDENTITY NAME>
+```
+
+2. Assign Azure Managed Identity to VMSS
+
+```bash
+az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
+```
+
+3. Grant Azure Managed Identity KeyVault permissions
+
+   Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
+
+   ```bash
+   # set policy to access keys in your Key Vault
+   az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access secrets in your Key Vault
+   az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access certs in your Key Vault
+   az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   ```
+
+4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.
+
+```yaml
+useVMManagedIdentity: "true"               # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
+```
+
+**OPTION 4 - VMSS System Assigned Managed Identity**
+
+This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
+
+1. Verify that the nodes have its own system assigned managed identity
+
+```bash
+az vmss identity show -g <resource group>  -n <vmss scalset name> -o yaml
+```
+
+The output should contain `type: SystemAssigned`.  
+
+2. Grant Azure Managed Identity KeyVault permissions
+
+   Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
+
+   ```bash
+   # set policy to access keys in your Key Vault
+   az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access secrets in your Key Vault
+   az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access certs in your Key Vault
+   az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   ```
+
+3. Deploy your application. Specify `useVMManagedIdentity` to `true`.
+
+```yaml
+useVMManagedIdentity: "true"            # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
