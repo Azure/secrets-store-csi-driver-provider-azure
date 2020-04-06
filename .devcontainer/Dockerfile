@@ -30,26 +30,26 @@ RUN apt-get update \
   && cd /tmp/gotools \
   && GO111MODULE=on go get -v golang.org/x/tools/gopls@latest 2>&1 \
   && GO111MODULE=on go get -v \
-      honnef.co/go/tools/...@latest \
-      golang.org/x/tools/cmd/gorename@latest \
-      golang.org/x/tools/cmd/goimports@latest \
-      golang.org/x/tools/cmd/guru@latest \
-      golang.org/x/lint/golint@latest \
-      github.com/mdempsky/gocode@latest \
-      github.com/cweill/gotests/...@latest \
-      github.com/haya14busa/goplay/cmd/goplay@latest \
-      github.com/sqs/goreturns@latest \
-      github.com/josharian/impl@latest \
-      github.com/davidrjenni/reftools/cmd/fillstruct@latest \
-      github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest  \
-      github.com/ramya-rao-a/go-outline@latest  \
-      github.com/acroca/go-symbols@latest  \
-      github.com/godoctor/godoctor@latest  \
-      github.com/rogpeppe/godef@latest  \
-      github.com/zmb3/gogetdoc@latest \
-      github.com/fatih/gomodifytags@latest  \
-      github.com/mgechev/revive@latest  \
-      github.com/go-delve/delve/cmd/dlv@latest 2>&1 \
+  honnef.co/go/tools/...@latest \
+  golang.org/x/tools/cmd/gorename@latest \
+  golang.org/x/tools/cmd/goimports@latest \
+  golang.org/x/tools/cmd/guru@latest \
+  golang.org/x/lint/golint@latest \
+  github.com/mdempsky/gocode@latest \
+  github.com/cweill/gotests/...@latest \
+  github.com/haya14busa/goplay/cmd/goplay@latest \
+  github.com/sqs/goreturns@latest \
+  github.com/josharian/impl@latest \
+  github.com/davidrjenni/reftools/cmd/fillstruct@latest \
+  github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest  \
+  github.com/ramya-rao-a/go-outline@latest  \
+  github.com/acroca/go-symbols@latest  \
+  github.com/godoctor/godoctor@latest  \
+  github.com/rogpeppe/godef@latest  \
+  github.com/zmb3/gogetdoc@latest \
+  github.com/fatih/gomodifytags@latest  \
+  github.com/mgechev/revive@latest  \
+  github.com/go-delve/delve/cmd/dlv@latest 2>&1 \
   #
   # Install Go tools w/o module support
   && go get -v github.com/alecthomas/gometalinter 2>&1 \
@@ -75,15 +75,15 @@ RUN apt-get update \
 
 # Install jq utility
 RUN wget --no-check-certificate https://raw.githubusercontent.com/stedolan/jq/master/sig/jq-release.key -O /tmp/jq-release.key && \
-    wget --no-check-certificate https://raw.githubusercontent.com/stedolan/jq/master/sig/v${JQ_VERSION}/jq-linux64.asc -O /tmp/jq-linux64.asc && \
-    wget --no-check-certificate https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 -O /tmp/jq-linux64 && \
-    gpg --import /tmp/jq-release.key && \
-    gpg --verify /tmp/jq-linux64.asc /tmp/jq-linux64 && \
-    cp /tmp/jq-linux64 /usr/bin/jq && \
-    chmod +x /usr/bin/jq && \
-    rm -f /tmp/jq-release.key && \
-    rm -f /tmp/jq-linux64.asc && \
-    rm -f /tmp/jq-linux64
+  wget --no-check-certificate https://raw.githubusercontent.com/stedolan/jq/master/sig/v${JQ_VERSION}/jq-linux64.asc -O /tmp/jq-linux64.asc && \
+  wget --no-check-certificate https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 -O /tmp/jq-linux64 && \
+  gpg --import /tmp/jq-release.key && \
+  gpg --verify /tmp/jq-linux64.asc /tmp/jq-linux64 && \
+  cp /tmp/jq-linux64 /usr/bin/jq && \
+  chmod +x /usr/bin/jq && \
+  rm -f /tmp/jq-release.key && \
+  rm -f /tmp/jq-linux64.asc && \
+  rm -f /tmp/jq-linux64
 
 # Install yq utility
 RUN apt-key adv --no-tty --keyserver keyserver.ubuntu.com --recv-keys CC86BB64 \
@@ -101,15 +101,15 @@ RUN apt-get install -y apt-transport-https ca-certificates curl gnupg-agent soft
 
 # Install Azure CLI
 RUN apt-get install -y apt-transport-https curl gnupg2 lsb-release \
-    && echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list \
-    && curl -sL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - 2>/dev/null \
-    && apt-get update \
-    && apt-get install -y azure-cli
+  && echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list \
+  && curl -sL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - 2>/dev/null \
+  && apt-get update \
+  && apt-get install -y azure-cli
 # clean up
 RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* /go/src /tmp/gotools\
-    && rm -rf /tmp/downloads
+  && apt-get clean -y \
+  && rm -rf /var/lib/apt/lists/* /go/src /tmp/gotools\
+  && rm -rf /tmp/downloads
 
 # Update this to "on" or "off" as appropriate
 ENV GO111MODULE=on
