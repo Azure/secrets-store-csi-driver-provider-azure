@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 LAUNCHPATH=/go/src/secrets-store-csi-driver-provider-azure/
-export $(cat $LAUNCHPATH/debug/secrets.env | xargs)
+export $(cat $LAUNCHPATH/secrets.env | xargs)
 
 SECRETS="{\"clientId\": \"$AZURE_CLIENT_ID\",\"clientSecret\": \"$AZURE_CLIENT_SECRET\"}"
 
