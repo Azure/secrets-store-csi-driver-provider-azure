@@ -21,7 +21,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install ${GOPATH}/src/k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver -n csi-secrets-store --namespace dev
+  run helm install csi-secrets-store ${GOPATH}/src/k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
   assert_success
 }
 
