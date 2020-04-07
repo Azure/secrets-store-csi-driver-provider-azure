@@ -66,6 +66,8 @@ type Provider struct {
 	TenantID string
 	// POD AAD Identity flag
 	UsePodIdentity bool
+	// VM managed identity flag
+	UseVMManagedIdentity bool
 	// User Assign Identity
 	UserAssignedIdentityID string
 	// AAD app client secret (if not using POD AAD Identity)
@@ -122,16 +124,6 @@ func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType, cloudName string) 
 	kvEndPoint := env.KeyVaultEndpoint
 	if '/' == kvEndPoint[len(kvEndPoint)-1] {
 		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
-	}
-
-	if p.UsePodIdentity {
-		log.Infof("azure: using pod identity to retrieve token")
-		msiToken, err := p.GetMSIToken(kvEndPoint)
-		if err != nil {
-			return nil, err
-		}
-		authorizer = autorest.NewBearerAuthorizer(msiToken)
-		return authorizer, nil
 	}
 
 	servicePrincipalToken, err := p.GetServicePrincipalToken(env, kvEndPoint)
@@ -218,36 +210,6 @@ func (p *Provider) GetManagementToken(grantType OAuthGrantType, cloudName string
 	return authorizer, nil
 }
 
-// GetMSIToken creates a new MSI token
-func (p *Provider) GetMSIToken(resource string) (*adal.ServicePrincipalToken, error) {
-
-	log.Infof("azure: using pod identity to retrieve token")
-
-	// Retrive token with MSI.
-	msiEndpoint, err := adal.GetMSIVMEndpoint()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get the Managed Service Identity endpoint: %v", err)
-	}
-
-	// User assigned
-	if p.UserAssignedIdentityID != "" {
-		log.Infof("Fetching token for resource using User Assigned MSI")
-		token, err := adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(msiEndpoint, resource, p.UserAssignedIdentityID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to create the Managed Service Identity token: %v", err)
-		}
-		return token, nil
-	}
-
-	// System assigned
-	log.Infof("Fetching token for resource using System Assigned MSI")
-	token, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, resource)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create the Managed Service Identity token: %v", err)
-	}
-	return token, nil
-}
-
 // GetServicePrincipalToken creates a new service principal token based on the configuration
 func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource string) (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, p.TenantID)
@@ -309,6 +271,27 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 		err = fmt.Errorf("nmi response failed with status code: %d", resp.StatusCode)
 		return nil, err
 	}
+
+	if p.UseVMManagedIdentity {
+		msiEndpoint, err := adal.GetMSIVMEndpoint()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get managed identity (MSI) endpoint")
+		}
+
+		if p.UserAssignedIdentityID != "" {
+			log.Infof("azure: using user assigned managed identity %s to retrieve access token", p.UserAssignedIdentityID)
+			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
+				msiEndpoint,
+				resource,
+				p.UserAssignedIdentityID)
+		}
+
+		log.Infof("azure: using system assigned managed identity to retrieve access token")
+		return adal.NewServicePrincipalTokenFromMSI(
+			msiEndpoint,
+			resource)
+	}
+
 	// When CSI driver is using a Service Principal clientid + client secret to retrieve token for resource
 	if len(p.AADClientSecret) > 0 {
 		log.Infof("azure: using client_id+client_secret to retrieve access token")
@@ -325,6 +308,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (err error) {
 	keyvaultName := attrib["keyvaultName"]
 	usePodIdentityStr := attrib["usePodIdentity"]
+	useVMManagedIdentityStr := attrib["useVmManagedIdentity"]
+	userAssignedIdentityIDStr := attrib["userAssignedIdentityID"]
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
 	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
@@ -341,20 +326,33 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		usePodIdentity = true
 	}
 
+	useVMManagedIdentity := false
+	if useVMManagedIdentityStr == "true" {
+		useVMManagedIdentity = true
+	}
+
 	log.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
-	if !usePodIdentity {
+	if !usePodIdentity && !useVMManagedIdentity {
 		log.Infof("not using pod identity to access keyvault")
 		p.AADClientID, p.AADClientSecret, err = GetCredential(secrets)
 		if err != nil {
 			log.Infof("missing client credential to access keyvault")
 			return err
 		}
-	} else {
+	}
+	if usePodIdentity {
 		log.Infof("using pod identity to access keyvault")
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
 	}
+	if useVMManagedIdentity {
+		log.Infof("using vmss user identity to access keyvault")
+		if p.PodName == "" || p.PodNamespace == "" {
+			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
+		}
+	}
+
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
 		return fmt.Errorf("objects is not set")
@@ -387,6 +385,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 	p.KeyvaultName = keyvaultName
 	p.UsePodIdentity = usePodIdentity
+	p.UseVMManagedIdentity = useVMManagedIdentity
+	p.UserAssignedIdentityID = userAssignedIdentityIDStr
 	p.TenantID = tenantID
 
 	for _, keyVaultObject := range keyVaultObjects {
