@@ -331,9 +331,13 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		useVMManagedIdentity = true
 	}
 
+	if usePodIdentity && useVMManagedIdentity {
+		return fmt.Errorf("cannot enable both pod identity and assigned user identity")
+	}
+
 	log.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
 	if !usePodIdentity && !useVMManagedIdentity {
-		log.Infof("not using pod identity to access keyvault")
+		log.Infof("not using pod identity or vm assigned user identity to access keyvault")
 		p.AADClientID, p.AADClientSecret, err = GetCredential(secrets)
 		if err != nil {
 			log.Infof("missing client credential to access keyvault")
@@ -345,9 +349,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
-	}
-	if useVMManagedIdentity {
-		log.Infof("using vmss user identity to access keyvault")
+	} else if useVMManagedIdentity {
+		log.Infof("using vm assigned user identity to access keyvault")
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
