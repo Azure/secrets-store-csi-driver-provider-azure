@@ -7,7 +7,7 @@ spec:
   parameters:
     usePodIdentity: "false"         # [OPTIONAL] if not provided, will default to "false"
     useVMManagedIdentity: "true"   # specify access mode: use a service principal or pod identity or vm managed identity
-    userAssignedIdentityClientID: "$USER_ASSIGN_IDENTITY_ID"     # User identity ID
+    userAssignedIdentityID: "$USER_ASSIGN_IDENTITY_ID"     # User identity ID
     keyvaultName: "$KEYVAULT_NAME" # the name of the KeyVault
     objects: |
       array:
