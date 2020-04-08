@@ -35,12 +35,17 @@ steps:
   workingDirectory: '$(modulePath)'
   displayName: 'Set up workspace and install dependencies'
 - script: |
+    make build build-windows
+  workingDirectory: '$(modulePath)'
+  displayName: 'build linux and windows binaries'
+- script: |
     make unit-test
   workingDirectory: '$(modulePath)'
   displayName: 'Run unit tests'
 - script: |
     make e2e-bootstrap
     export KUBECONFIG=$(kind get kubeconfig-path)
+    kubectl create ns dev
     make e2e-azure
   workingDirectory: '$(modulePath)'
   displayName: "e2e-azure"

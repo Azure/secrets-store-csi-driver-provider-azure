@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -191,23 +191,6 @@ func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL 
 	vaultDnsSuffixValue := *vaultDnsSuffix
 	vaultUri := "https://" + p.KeyvaultName + "." + vaultDnsSuffixValue + "/"
 	return &vaultUri, nil
-}
-
-// GetManagementToken retrieves a new service principal token
-func (p *Provider) GetManagementToken(grantType OAuthGrantType, cloudName string) (authorizer autorest.Authorizer, err error) {
-
-	env, err := ParseAzureEnvironment(cloudName)
-	if err != nil {
-		return nil, err
-	}
-
-	rmEndPoint := env.ResourceManagerEndpoint
-	servicePrincipalToken, err := p.GetServicePrincipalToken(env, rmEndPoint)
-	if err != nil {
-		return nil, err
-	}
-	authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
-	return authorizer, nil
 }
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
@@ -398,7 +381,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			return err
 		}
 		objectContent := []byte(content)
-		if err := ioutil.WriteFile(path.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(targetPath, keyVaultObject.ObjectName), objectContent, permission); err != nil {
 			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", keyVaultObject.ObjectName, targetPath)
 		}
 		log.Infof("secrets store csi driver mounted %s", keyVaultObject.ObjectName)

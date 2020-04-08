@@ -15,26 +15,27 @@ spec:
       labels:
         app: csi-secrets-store-provider-azure
     spec:
+      nodeSelector:
+        beta.kubernetes.io/os: windows
       containers:
         - name: provider-azure-installer
           image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4
           imagePullPolicy: Always
           resources:
             requests:
-              cpu: 50m
-              memory: 100Mi
+              cpu: 100m
+              memory: 200Mi
             limits:
-              cpu: 50m
-              memory: 100Mi
+              cpu: 100m
+              memory: 200Mi
           env:
             - name: TARGET_DIR
-              value: "/etc/kubernetes/secrets-store-csi-providers"
+              value: "C:\\k\\secrets-store-csi-providers"
           volumeMounts:
-            - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
+            - mountPath: "C:\\k\\secrets-store-csi-providers"
               name: providervol
       volumes:
         - name: providervol
           hostPath:
-            path: "/etc/kubernetes/secrets-store-csi-providers"
-      nodeSelector:
-        beta.kubernetes.io/os: linux
+            path: "C:\\k\\secrets-store-csi-providers"
+            type: DirectoryOrCreate
