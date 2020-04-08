@@ -80,7 +80,7 @@ type Provider struct {
 type KeyVaultObject struct {
 	// the name of the Azure Key Vault objects
 	ObjectName string `json:"objectName" yaml:"objectName"`
-	// the alias of the Azure Key Vault objects
+	// the filename the object will be written to
 	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
 	// the version of the Azure Key Vault objects
 	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
