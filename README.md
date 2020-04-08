@@ -66,8 +66,8 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
               objectName: key1
               objectType: key
               objectVersion: ""
-        resourceGroup: "rg1"            # the resource group of the KeyVault
-        subscriptionId: "subid"         # the subscription ID of the KeyVault
+        resourceGroup: "rg1"            # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
+        subscriptionId: "subid"         # [REQUIRED for version < 0.0.4] the subscription ID of the KeyVault
         tenantId: "tid"                 # the tenant ID of the KeyVault
 
     ```
@@ -78,14 +78,14 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
     | userAssignedIdentityID | no       | specify the user assigned identity ID in case 'usePodIdentity'  | "false"       |
     | useVMManagedIdentity   | no       | If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM                   |  ""             |
-    | keyvaultName           | yes      | name of a Key Vault instance                                    | ""            |
-    | objects                | yes      | a string of arrays of strings                                   | ""            |
-    | objectName             | yes      | name of a Key Vault object                                      | ""            |
-    | objectType             | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
-    | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-    | resourceGroup          | yes      | name of resource group containing key vault instance            | ""            |
-    | subscriptionId         | yes      | subscription ID containing key vault instance                   | ""            |
-    | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
+    | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
+    | objects        | yes      | a string of arrays of strings                                   | ""            |
+    | objectName     | yes      | name of a Key Vault object                                      | ""            |
+    | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
+    | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
+    | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
+    | subscriptionId | REQUIRED for version < 0.0.4      | subscription ID containing key vault instance                   | ""            |
+    | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
 
 1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
 
