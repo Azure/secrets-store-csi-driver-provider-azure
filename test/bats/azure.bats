@@ -79,14 +79,13 @@ setup() {
 }
 
 @test "CSI inline volume test - read azure kv secret, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/SECRET_1)
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$SECRET_ALIAS)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test - read azure kv key, if alias present, from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/KEY_1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$KEY_ALIAS)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 @test "secretproviderclasses crd is established" {
@@ -124,7 +123,6 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv key from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEY_NAME)
   [[ "$result" == *"${KEY_VALUE}"* ]]
 }
@@ -140,14 +138,13 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv secret, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/SECRET_1)
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$SECRET_ALIAS)
   [[ "$result" -eq "test" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv key, if alias present, from pod" {
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/KEY_1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$KEY_ALIAS)
+  [[ "$result" == *"${KEY_VALUE}"* ]]
 }
 
 @test "CSI inline volume test with user assigned identity" {
