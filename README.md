@@ -15,12 +15,12 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 ## Install the Secrets Store CSI Driver (Kubernetes Version 1.15.x+)
 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
 
-
-The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
+The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 
 1. Service Principal
 1. Pod Identity
 1. VMSS User Assigned Managed Identity
+1. VMSS System Assigned Managed Identity
 
 ## OPTION 1 - Service Principal
 
@@ -76,8 +76,8 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     | --------------         | -------- | --------------------------------------------------------------- | ------------- |
     | provider               | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
-    | userAssignedIdentityID | no       | specify the user assigned identity ID in case 'usePodIdentity'  | "false"       |
     | useVMManagedIdentity   | no       | If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM                   |  ""             |
+    | userAssignedIdentityID | no       | specify the user assigned identity ID in case 'usePodIdentity'  | "false"       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
@@ -228,19 +228,27 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 #### OPTION 3: VMSS User Assigned Managed Identity
 
-This option allows flexvol to use the user assigned managed identity on the k8s cluster VMSS directly.
+This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
-### Prerequisites:
+> You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
+>
+>```bash
+>az aks show -g <resource group> -n <aks cluster name> --query identityProfile.kubeletidentity.clientId -o tsv
+>```
 
-Make sure you have AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) 
-
-1. Get the user identity that created automaticaly by AKS
+1. Create Azure Managed Identity
 
 ```bash
-az aks show -g <resource-group> -n <aks_cluster_name> -o json --query "identityProfile"
+az identity create -g <RESOURCE GROUP> -n <IDENTITY NAME>
 ```
 
-1. Grant Azure Managed Identity KeyVault permissions
+2. Assign Azure Managed Identity to VMSS
+
+```bash
+az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
+```
+
+3. Grant Azure Managed Identity KeyVault permissions
 
    Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
 
@@ -253,11 +261,42 @@ az aks show -g <resource-group> -n <aks_cluster_name> -o json --query "identityP
    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
    ```
 
-2. Deploy your application. Specify `usevmmanagedidentity` to `true`.
+4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.
 
 ```yaml
-usevmmanagedidentity: "true"            # [OPTIONAL] if not provided, will default to "false"
+useVMManagedIdentity: "true"               # [OPTIONAL] if not provided, will default to "false"
 userAssignedIdentityID: "clientid"      # [OPTIONAL] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
+```
+
+#### OPTION 4: VMSS System Assigned Managed Identity
+
+This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
+
+1. Verify that the nodes have its own system assigned managed identity
+
+```bash
+az vmss identity show -g <resource group>  -n <vmss scalset name> -o yaml
+```
+
+The output should contain `type: SystemAssigned`.  
+
+2. Grant Azure Managed Identity KeyVault permissions
+
+   Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
+
+   ```bash
+   # set policy to access keys in your Key Vault
+   az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access secrets in your Key Vault
+   az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access certs in your Key Vault
+   az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   ```
+
+3. Deploy your application. Specify `useVMManagedIdentity` to `true`.
+
+```yaml
+useVMManagedIdentity: "true"            # [OPTIONAL] if not provided, will default to "false"
 ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.

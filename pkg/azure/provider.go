@@ -262,7 +262,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 		}
 
 		if p.UserAssignedIdentityID != "" {
-			log.Infof("azure: using user assigned managed identity %s to retrieve access token", p.UserAssignedIdentityID)
+			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
+			log.Infof("azure: using user assigned managed identity %s to retrieve access token", r.ReplaceAllString(p.UserAssignedIdentityID, "$1##### REDACTED #####$3"))
 			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
 				msiEndpoint,
 				resource,
@@ -291,8 +292,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (err error) {
 	keyvaultName := attrib["keyvaultName"]
 	usePodIdentityStr := attrib["usePodIdentity"]
-	useVMManagedIdentityStr := attrib["useVmManagedIdentity"]
-	userAssignedIdentityIDStr := attrib["userAssignedIdentityID"]
+	useVMManagedIdentityStr := attrib["useVMManagedIdentity"]
+	userAssignedIdentityID := attrib["userAssignedIdentityID"]
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
 	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
@@ -333,10 +334,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
 	} else if useVMManagedIdentity {
-		log.Infof("using vm assigned user identity to access keyvault")
-		if p.PodName == "" || p.PodNamespace == "" {
-			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
-		}
+		log.Infof("using vm managed identity to access keyvault")
 	}
 
 	objectsStrings := attrib["objects"]
@@ -372,7 +370,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.KeyvaultName = keyvaultName
 	p.UsePodIdentity = usePodIdentity
 	p.UseVMManagedIdentity = useVMManagedIdentity
-	p.UserAssignedIdentityID = userAssignedIdentityIDStr
+	p.UserAssignedIdentityID = userAssignedIdentityID
 	p.TenantID = tenantID
 
 	for _, keyVaultObject := range keyVaultObjects {
