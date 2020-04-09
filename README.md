@@ -76,7 +76,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
     | --------------         | -------- | --------------------------------------------------------------- | ------------- |
     | provider               | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
-    | useVMManagedIdentity   | no       | If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM                   |  ""             |
+    | useVMManagedIdentity   | no       | If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM                                                                    |  ""           |
     | userAssignedIdentityID | no       | specify the user assigned identity ID in case 'usePodIdentity'  | "false"       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
