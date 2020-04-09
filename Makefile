@@ -1,5 +1,5 @@
-include secrets.env
-export $(shell sed 's/=.*//' secrets.env)
+-include secrets.env
+export $(shell test -f secrets.env && sed 's/=.*//' secrets.env)
 
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
