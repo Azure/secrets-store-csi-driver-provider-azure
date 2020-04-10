@@ -425,8 +425,6 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
 
 1. Add all secrets related to the Azure Key Vault, Service Principal, and your Azure Subscription
 
-    💡 The third Key Vault object information is the same as the first  object. Only, the 3rd object will also include an `objectAlias`.
-
     ```bash
     # secrets.env
 
