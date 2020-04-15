@@ -15,14 +15,21 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 ### Install the Secrets Store CSI Driver 
 **Prerequisites**
 
-Recommended Kubernetes version: v1.16.0+
+Recommended Kubernetes version: 
+- For linux - v1.16.0+
+- For windows - v1.18.0+
 
-💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
+💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage) to install the driver.
 
 ### Install the Azure Key Vault Provider
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
+```
+
+For windows nodes
+```bash
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
 ```
 
 To validate the provider's installer is running as expected, run the following commands:	
@@ -79,24 +86,23 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     ```
 
     | Name                   | Required | Description                                                     | Default Value |
-    | --------------         | -------- | --------------------------------------------------------------- | ------------- |
+    | -----------------------| -------- | --------------------------------------------------------------- | ------------- |
     | provider               | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
     | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
     | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
-    | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
-    | cloudName      | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
-    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
-    | objects        | yes      | a string of arrays of strings                                   | ""            |
-    | objectName     | yes      | name of a Key Vault object                                      | ""            |
-    | objectAlias    | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
-    | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
-    | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-    | resourceGroup  | yes      | [__*available for version > 0.0.4*__] name of resource group containing key vault instance            | ""            |
-    | subscriptionId | yes      | [__*available for version > 0.0.4*__] subscription ID containing key vault instance                   | ""            |
-    | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
+    | keyvaultName           | yes      | name of a Key Vault instance                                    | ""            |
+    | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)| "" |
+    | objects                | yes      | a string of arrays of strings                                   | ""            |
+    | objectName             | yes      | name of a Key Vault object                                      | ""            |
+    | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
+    | objectType             | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
+    | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest | ""            |
+    | resourceGroup          | no      | [__*required for version < 0.0.4*__] name of resource group containing key vault instance            | ""            |
+    | subscriptionId         | no      | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                   | ""            |
+    | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
 
-1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
+1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
 
     ```yaml
     volumes:
@@ -117,6 +123,8 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 **OPTION 1 - Service Principal**
 
+> Supported with linux and windows
+
 1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
 
     ```bash
@@ -135,7 +143,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
     az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR SPN CLIENT ID>
     ```
 
-1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
+1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
 
     ```yaml
     nodePublishSecretRef:
@@ -143,6 +151,8 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
     ```
 
 **OPTION 2 - Pod Identity**
+
+> Supported only on linux
 
 **Prerequisites**
 
@@ -262,6 +272,8 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 **OPTION 3 - VMSS User Assigned Managed Identity**
 
+> Supported with linux and windows
+
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
 > You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
@@ -303,6 +315,8 @@ userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.
 ```
 
 **OPTION 4 - VMSS System Assigned Managed Identity**
+
+> Supported with linux and windows
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
 
