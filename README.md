@@ -12,8 +12,8 @@ _WIP_
 
 This guide will walk you through the steps to configure and run the Azure Key Vault provider for Secret Store CSI driver on Kubernetes.
 
-## Install the Secrets Store CSI Driver (Kubernetes Version 1.15.x+)
-Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
+### Install the Secrets Store CSI Driver 
+**Prerequisites**
 
 The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 
@@ -22,25 +22,36 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 1. VMSS User Assigned Managed Identity
 1. VMSS System Assigned Managed Identity
 
-## OPTION 1 - Service Principal
+Recommended Kubernetes version: v1.16.0+
 
-1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
+💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
 
-    ```bash
-    kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
-    ```
 
-    Ensure this service principal has all the required permissions to access content in your Azure key vault instance.
-    If not, you can run the following using the Azure cli:
+### Install the Azure Key Vault Provider
 
-    ```bash
-    # Assign Reader Role to the service principal for your keyvault
-    az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
+```bash
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
+```
 
-    az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR SPN CLIENT ID>
-    az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR SPN CLIENT ID>
-    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR SPN CLIENT ID>
-    ```
+To validate the provider's installer is running as expected, run the following commands:	
+
+```bash
+kubectl get pods -l app=csi-secrets-store-provider-azure
+```
+
+You should see the provider pods running on each agent node:
+
+```bash
+NAME                                     READY   STATUS    RESTARTS   AGE
+csi-secrets-store-provider-azure-4ngf4   1/1     Running   0          8s
+csi-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
+```
+
+### Using the Azure Key Vault Provider
+
+#### Create secretproviderclasses
+
+Create a `secretproviderclasses` resource to provide provider-specific parameters for the Secrets Store CSI driver. 
 
 1. Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
@@ -60,10 +71,12 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
           array:
             - |
               objectName: secret1
+              objectAlias: SECRET_1     # [OPTIONAL available for version > 0.0.4] object alias
               objectType: secret        # object types: secret, key or cert
               objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
             - |
               objectName: key1
+              objectAlias: ""
               objectType: key
               objectVersion: ""
         resourceGroup: "rg1"            # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
@@ -81,6 +94,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
+    | objectAlias    | OPTIONAL available for version > 0.0.4       | the filename of the object when written to disk - defaults to objectName if not provided | "" |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
     | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
     | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
@@ -97,20 +111,43 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
           readOnly: true
           volumeAttributes:
             secretProviderClass: "azure-kvname"
-          nodePublishSecretRef:
-            name: secrets-store-creds
     ```
 
-1. Make sure to reference the service principal kubernetes secret created in the previous step
+#### Provide Identity to Access Key Vault
+The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
+1. Service Principal 
+1. Pod Identity
+
+**OPTION 1 - Service Principal**
+
+1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
+
+    ```bash
+    kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
+    ```
+
+    Ensure this service principal has all the required permissions to access content in your Azure key vault instance.
+    If not, you can run the following using the Azure cli:
+
+    ```bash
+    # Assign Reader Role to the service principal for your keyvault
+    az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
+
+    az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR SPN CLIENT ID>
+    az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR SPN CLIENT ID>
+    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR SPN CLIENT ID>
+    ```
+
+1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
 
     ```yaml
     nodePublishSecretRef:
       name: secrets-store-creds
     ```
 
-## OPTION 2 - Pod Identity
+**OPTION 2 - Pod Identity**
 
-### Prerequisites:
+**Prerequisites**
 
 💡 Make sure you have installed pod identity to your Kubernetes cluster
 

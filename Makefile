@@ -44,8 +44,8 @@ unit-test:
 	go test $(GO_FILES) -v
 
 
-KIND_VERSION ?= 0.5.1
-KUBERNETES_VERSION ?= 1.15.3
+KIND_VERSION ?= 0.6.0
+KUBERNETES_VERSION ?= 1.16.3
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap:
