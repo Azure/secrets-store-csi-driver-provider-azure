@@ -233,9 +233,8 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 				return nil, err
 			}
 
-			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
-			log.Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
-			log.Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
+			log.Infof("accesstoken: %s", RedacteString(nmiResp.Token.AccessToken))
+			log.Infof("clientid: %s", RedacteString(nmiResp.ClientID))
 
 			token := nmiResp.Token
 			clientID := nmiResp.ClientID
@@ -262,8 +261,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 		}
 
 		if p.UserAssignedIdentityID != "" {
-			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
-			log.Infof("azure: using user assigned managed identity %s to retrieve access token", r.ReplaceAllString(p.UserAssignedIdentityID, "$1##### REDACTED #####$3"))
+			log.Infof("azure: using user assigned managed identity %s to retrieve access token", RedacteString(p.UserAssignedIdentityID))
 			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
 				msiEndpoint,
 				resource,
@@ -438,4 +436,10 @@ func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
 	}
 
 	return &environment.KeyVaultDNSSuffix, nil
+}
+
+//RedacteString Apply regex to a sensitive string and return the redacted value
+func RedacteString(sensitiveString string) string {
+	r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
+	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
