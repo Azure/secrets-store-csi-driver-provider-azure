@@ -22,7 +22,7 @@ steps:
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(modulePath)'
-    mkdir -p '$(GOPATH)/src/github.com/deislabs/secrets-store-csi-driver'
+    mkdir -p '$(GOPATH)/src/k8s.io/secrets-store-csi-driver'
     shopt -s extglob
     mv !(gopath) '$(modulePath)'
     echo '##vso[task.prependpath]$(GOBIN)'
@@ -30,10 +30,14 @@ steps:
     go version
   displayName: 'Set up the Go workspace'
 - script: |
-    git clone https://github.com/deislabs/secrets-store-csi-driver.git $(GOPATH)/src/github.com/deislabs/secrets-store-csi-driver
-    sudo apt-get update && sudo apt-get install bats
+    git clone https://github.com/kubernetes-sigs/secrets-store-csi-driver.git $(GOPATH)/src/k8s.io/secrets-store-csi-driver
+    sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get update && sudo apt-get install bats && sudo apt-get install yq
   workingDirectory: '$(modulePath)'
   displayName: 'Set up workspace and install dependencies'
+- script: |
+    make build build-windows
+  workingDirectory: '$(modulePath)'
+  displayName: 'build linux and windows binaries'
 - script: |
     make unit-test
   workingDirectory: '$(modulePath)'
@@ -41,6 +45,7 @@ steps:
 - script: |
     make e2e-bootstrap
     export KUBECONFIG=$(kind get kubeconfig-path)
+    kubectl create ns dev
     make e2e-azure
   workingDirectory: '$(modulePath)'
   displayName: "e2e-azure"

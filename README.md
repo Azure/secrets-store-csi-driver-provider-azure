@@ -12,15 +12,104 @@ _WIP_
 
 This guide will walk you through the steps to configure and run the Azure Key Vault provider for Secret Store CSI driver on Kubernetes.
 
-## Install the Secrets Store CSI Driver (Kubernetes Version 1.15.x+)
-Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/deislabs/secrets-store-csi-driver#usage).
+### Install the Secrets Store CSI Driver 
+**Prerequisites**
 
+Recommended Kubernetes version: v1.16.0+
 
+💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
+
+### Install the Azure Key Vault Provider
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
+```
+
+To validate the provider's installer is running as expected, run the following commands:	
+
+```bash
+kubectl get pods -l app=csi-secrets-store-provider-azure
+```
+
+You should see the provider pods running on each agent node:
+
+```bash
+NAME                                     READY   STATUS    RESTARTS   AGE
+csi-secrets-store-provider-azure-4ngf4   1/1     Running   0          8s
+csi-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
+```
+
+### Using the Azure Key Vault Provider
+
+#### Create secretproviderclasses
+
+Create a `secretproviderclasses` resource to provide provider-specific parameters for the Secrets Store CSI driver. 
+
+1. Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
+
+    ```yaml
+    apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+    kind: SecretProviderClass
+    metadata:
+      name: azure-kvname
+    spec:
+      provider: azure                   # accepted provider options: azure or vault
+      parameters:
+        usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
+        keyvaultName: "kvname"          # the name of the KeyVault
+        cloudName: "cloudname"          # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublic Cloud
+        objects:  |
+          array:
+            - |
+              objectName: secret1
+              objectAlias: SECRET_1     # [OPTIONAL available for version > 0.0.4] object alias
+              objectType: secret        # object types: secret, key or cert
+              objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+            - |
+              objectName: key1
+              objectAlias: ""
+              objectType: key
+              objectVersion: ""
+        resourceGroup: "rg1"            # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
+        subscriptionId: "subid"         # [REQUIRED for version < 0.0.4] the subscription ID of the KeyVault
+        tenantId: "tid"                 # the tenant ID of the KeyVault
+
+    ```
+
+    | Name           | Required | Description                                                     | Default Value |
+    | -------------- | -------- | --------------------------------------------------------------- | ------------- |
+    | provider       | yes      | specify name of the provider                                    | ""            |
+    | usePodIdentity | no       | specify access mode: service principal or pod identity          | "false"       |
+    | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
+    | cloudName      | no       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
+    | objects        | yes      | a string of arrays of strings                                   | ""            |
+    | objectName     | yes      | name of a Key Vault object                                      | ""            |
+    | objectAlias    | OPTIONAL available for version > 0.0.4       | the filename of the object when written to disk - defaults to objectName if not provided | "" |
+    | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
+    | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
+    | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
+    | subscriptionId | REQUIRED for version < 0.0.4      | subscription ID containing key vault instance                   | ""            |
+    | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
+
+1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
+
+    ```yaml
+    volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kvname"
+    ```
+
+#### Provide Identity to Access Key Vault
 The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
 1. Service Principal 
 1. Pod Identity
 
-## OPTION 1 - Service Principal
+**OPTION 1 - Service Principal**
 
 1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
 
@@ -40,74 +129,16 @@ The Azure Key Vault Provider offers two modes for accessing a Key Vault instance
     az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR SPN CLIENT ID>
     ```
 
-1. Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
-
-    ```yaml
-    apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
-    kind: SecretProviderClass
-    metadata:
-      name: azure-kvname
-    spec:
-      provider: azure                   # accepted provider options: azure or vault
-      parameters:
-        usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
-        keyvaultName: "kvname"          # the name of the KeyVault
-        cloudName: "cloudname"          # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublic Cloud
-        objects:  |
-          array:
-            - |
-              objectName: secret1
-              objectType: secret        # object types: secret, key or cert
-              objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
-            - |
-              objectName: key1
-              objectType: key
-              objectVersion: ""
-        resourceGroup: "rg1"            # the resource group of the KeyVault
-        subscriptionId: "subid"         # the subscription ID of the KeyVault
-        tenantId: "tid"                 # the tenant ID of the KeyVault
-
-    ```
-
-    | Name           | Required | Description                                                     | Default Value |
-    | -------------- | -------- | --------------------------------------------------------------- | ------------- |
-    | provider       | yes      | specify name of the provider                                    | ""            |
-    | usePodIdentity | no       | specify access mode: service principal or pod identity          | "false"       |
-    | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
-    | cloudName      | no       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
-    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
-    | objects        | yes      | a string of arrays of strings                                   | ""            |
-    | objectName     | yes      | name of a Key Vault object                                      | ""            |
-    | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
-    | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-    | resourceGroup  | yes      | name of resource group containing key vault instance            | ""            |
-    | subscriptionId | yes      | subscription ID containing key vault instance                   | ""            |
-    | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
-
-1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
-
-    ```yaml
-    volumes:
-      - name: secrets-store-inline
-        csi:
-          driver: secrets-store.csi.k8s.com
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "azure-kvname"
-          nodePublishSecretRef:
-            name: secrets-store-creds
-    ```
-
-1. Make sure to reference the service principal kubernetes secret created in the previous step
+1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
 
     ```yaml
     nodePublishSecretRef:
       name: secrets-store-creds
     ```
 
-## OPTION 2 - Pod Identity
+**OPTION 2 - Pod Identity**
 
-### Prerequisites:
+**Prerequisites**
 
 💡 Make sure you have installed pod identity to your Kubernetes cluster
 

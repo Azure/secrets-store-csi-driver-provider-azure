@@ -1,4 +1,4 @@
-package main
+package version
 
 import (
 	"encoding/json"
@@ -10,6 +10,8 @@ var (
 	BuildDate string
 	// BuildVersion is the version of binary
 	BuildVersion string
+
+	minDriverVersion = "v0.0.8"
 )
 
 // providerVersion holds current provider version
@@ -20,7 +22,7 @@ type providerVersion struct {
 	MinDriverVersion string `json:"minDriverVersion"`
 }
 
-func printVersion() (err error) {
+func PrintVersion() (err error) {
 	pv := providerVersion{
 		Version:          BuildVersion,
 		BuildDate:        BuildDate,
