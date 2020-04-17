@@ -64,8 +64,8 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
       provider: azure                   # accepted provider options: azure or vault
       parameters:
         usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
-        useVMManagedIdentity: "false"   # [OPTIONAL] if not provided, will default to "false"
-        userAssignedIdentityID: "client_id"  # [OPTIONAL] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
+        useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+        userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
         keyvaultName: "kvname"          # the name of the KeyVault
         objects:  |
           array:
@@ -89,8 +89,8 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | --------------         | -------- | --------------------------------------------------------------- | ------------- |
     | provider               | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
-    | useVMManagedIdentity   | no       | specify access mode: use a service principal or pod identity or vm managed identity    |  "false"|
-    | userAssignedIdentityID | no       | The user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
+    | useVMManagedIdentity   | OPTIONAL available for version > 0.0.4       | specify access mode: use a service principal or pod identity or vm managed identity    |  "false"|
+    | userAssignedIdentityID | OPTIONAL available for version > 0.0.4       | The user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
@@ -301,8 +301,8 @@ az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identitie
 4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.
 
 ```yaml
-useVMManagedIdentity: "true"               # [OPTIONAL] if not provided, will default to "false"
-userAssignedIdentityID: "clientid"      # [OPTIONAL] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
+useVMManagedIdentity: "true"               # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
 ```
 
 #### OPTION 4: VMSS System Assigned Managed Identity
