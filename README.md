@@ -65,7 +65,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
       parameters:
         usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
         useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
-        userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
+        userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
         keyvaultName: "kvname"          # the name of the KeyVault
         objects:  |
           array:
@@ -89,16 +89,16 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | --------------         | -------- | --------------------------------------------------------------- | ------------- |
     | provider               | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
-    | useVMManagedIdentity   | OPTIONAL available for version > 0.0.4       | specify access mode: use a service principal or pod identity or vm managed identity    |  "false"|
-    | userAssignedIdentityID | OPTIONAL available for version > 0.0.4       | The user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
+    | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
+    | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
-    | objectAlias    | OPTIONAL available for version > 0.0.4       | the filename of the object when written to disk - defaults to objectName if not provided | "" |
+    | objectAlias    | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
     | objectType     | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
     | objectVersion  | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-    | resourceGroup  | REQUIRED for version < 0.0.4      | name of resource group containing key vault instance            | ""            |
-    | subscriptionId | REQUIRED for version < 0.0.4      | subscription ID containing key vault instance                   | ""            |
+    | resourceGroup  | yes      | [__*available for version > 0.0.4*__] name of resource group containing key vault instance            | ""            |
+    | subscriptionId | yes      | [__*available for version > 0.0.4*__] subscription ID containing key vault instance                   | ""            |
     | tenantId       | yes      | tenant ID containing key vault instance                         | ""            |
 
 1. Update your [deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
@@ -263,7 +263,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     secret1
     ```
 
-#### OPTION 3: VMSS User Assigned Managed Identity
+**OPTION 3: VMSS User Assigned Managed Identity**
 
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
@@ -302,10 +302,10 @@ az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identitie
 
 ```yaml
 useVMManagedIdentity: "true"               # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
-userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use, leave empty to use system assigned managed identity
+userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
 ```
 
-#### OPTION 4: VMSS System Assigned Managed Identity
+**OPTION 4: VMSS System Assigned Managed Identity**
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
 
