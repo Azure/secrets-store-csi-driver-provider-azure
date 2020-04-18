@@ -67,6 +67,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
         useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
         userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
         keyvaultName: "kvname"          # the name of the KeyVault
+        cloudName: "cloudname"          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublic Cloud
         objects:  |
           array:
             - |
@@ -92,6 +93,8 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
     | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
+    | cloudName      | OPTIONAL available for version > 0.0.4       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
     | objectAlias    | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
