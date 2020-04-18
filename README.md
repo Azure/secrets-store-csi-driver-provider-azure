@@ -57,6 +57,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
       parameters:
         usePodIdentity: "false"         # [OPTIONAL for Azure] if not provided, will default to "false"
         keyvaultName: "kvname"          # the name of the KeyVault
+        cloudName: "cloudname"          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublic Cloud
         objects:  |
           array:
             - |
@@ -80,6 +81,8 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | provider       | yes      | specify name of the provider                                    | ""            |
     | usePodIdentity | no       | specify access mode: service principal or pod identity          | "false"       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
+    | cloudName      | OPTIONAL available for version > 0.0.4       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
     | objectAlias    | OPTIONAL available for version > 0.0.4       | the filename of the object when written to disk - defaults to objectName if not provided | "" |

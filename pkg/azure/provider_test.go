@@ -83,7 +83,12 @@ func TestGetVaultURL(t *testing.T) {
 		p.KeyvaultName = tc.vaultName
 
 		for idx := range testEnvs {
-			vaultURL, err := p.getVaultURL(context.Background(), testEnvs[idx])
+			azCloudEnv, err := ParseAzureEnvironment(testEnvs[idx])
+			if err != nil {
+				t.Fatalf("Error parsing cloud environment %v", err)
+			}
+			p.AzureCloudEnvironment = azCloudEnv
+			vaultURL, err := p.getVaultURL(context.Background())
 			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
 				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
 			}
@@ -92,5 +97,26 @@ func TestGetVaultURL(t *testing.T) {
 				t.Fatalf("expected vault url: %s, got: %s", expectedURL, *vaultURL)
 			}
 		}
+	}
+}
+
+func TestParseAzureEnvironment(t *testing.T) {
+	envNamesArray := []string{"AZURECHINACLOUD", "AZUREGERMANCLOUD", "AZUREPUBLICCLOUD", "AZUREUSGOVERNMENTCLOUD", ""}
+	for _, envName := range envNamesArray {
+		azureEnv, err := ParseAzureEnvironment(envName)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if strings.EqualFold(envName, "") && !strings.EqualFold(azureEnv.Name, "AZUREPUBLICCLOUD") {
+			t.Fatalf("string doesn't match, expected AZUREPUBLICCLOUD, got %s", azureEnv.Name)
+		} else if !strings.EqualFold(envName, "") && !strings.EqualFold(envName, azureEnv.Name) {
+			t.Fatalf("string doesn't match, expected %s, got %s", envName, azureEnv.Name)
+		}
+	}
+
+	wrongEnvName := "AZUREWRONGCLOUD"
+	_, err := ParseAzureEnvironment(wrongEnvName)
+	if err == nil {
+		t.Fatalf("expected error for wrong azure environment name")
 	}
 }

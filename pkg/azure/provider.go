@@ -60,6 +60,8 @@ func AuthGrantType() OAuthGrantType {
 type Provider struct {
 	// the name of the Azure Key Vault instance
 	KeyvaultName string
+	// the type of azure cloud based on azure go sdk
+	AzureCloudEnvironment *azure.Environment
 	// the name of the Azure Key Vault objects, since attributes can only be strings, this will be mapped to StringArray, which is an array of KeyVaultObject
 	Objects []KeyVaultObject
 	// tenantID in AAD
@@ -113,17 +115,12 @@ func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 }
 
 // GetKeyvaultToken retrieves a new service principal token to access keyvault
-func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType, cloudName string) (authorizer autorest.Authorizer, err error) {
-	env, err := ParseAzureEnvironment(cloudName)
-	if err != nil {
-		return nil, err
-	}
-
-	kvEndPoint := env.KeyVaultEndpoint
+func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType) (authorizer autorest.Authorizer, err error) {
+	kvEndPoint := p.AzureCloudEnvironment.KeyVaultEndpoint
 	if '/' == kvEndPoint[len(kvEndPoint)-1] {
 		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
 	}
-	servicePrincipalToken, err := p.GetServicePrincipalToken(env, kvEndPoint)
+	servicePrincipalToken, err := p.GetServicePrincipalToken(kvEndPoint)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +128,9 @@ func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType, cloudName string) 
 	return authorizer, nil
 }
 
-func (p *Provider) initializeKvClient(cloudName string) (*kv.BaseClient, error) {
+func (p *Provider) initializeKvClient() (*kv.BaseClient, error) {
 	kvClient := kv.New()
-	token, err := p.GetKeyvaultToken(AuthGrantType(), cloudName)
+	token, err := p.GetKeyvaultToken(AuthGrantType())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get key vault token")
 	}
@@ -168,7 +165,7 @@ func GetCredential(secrets map[string]string) (string, string, error) {
 	return clientID, clientSecret, nil
 }
 
-func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL *string, err error) {
+func (p *Provider) getVaultURL(ctx context.Context) (vaultURL *string, err error) {
 	log.Debugf("vaultName: %s", p.KeyvaultName)
 
 	// Key Vault name must be a 3-24 character string
@@ -181,7 +178,7 @@ func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL 
 		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
 	}
 
-	vaultDnsSuffix, err := GetVaultDNSSuffix(cloudName)
+	vaultDnsSuffix, err := GetVaultDNSSuffix(p.AzureCloudEnvironment.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +188,8 @@ func (p *Provider) getVaultURL(ctx context.Context, cloudName string) (vaultURL 
 }
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
-func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource string) (*adal.ServicePrincipalToken, error) {
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, p.TenantID)
+func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrincipalToken, error) {
+	oauthConfig, err := adal.NewOAuthConfig(p.AzureCloudEnvironment.ActiveDirectoryEndpoint, p.TenantID)
 	if err != nil {
 		return nil, fmt.Errorf("creating the OAuth config: %v", err)
 	}
@@ -266,6 +263,7 @@ func (p *Provider) GetServicePrincipalToken(env *azure.Environment, resource str
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (err error) {
 	keyvaultName := attrib["keyvaultName"]
+	cloudName := attrib["cloudName"]
 	usePodIdentityStr := attrib["usePodIdentity"]
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
@@ -277,6 +275,12 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if tenantID == "" {
 		return fmt.Errorf("tenantId is not set")
 	}
+
+	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
+	if err != nil {
+		return fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
+	}
+
 	// defaults
 	usePodIdentity := false
 	if usePodIdentityStr == "true" {
@@ -328,6 +332,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return fmt.Errorf("objects array is empty")
 	}
 	p.KeyvaultName = keyvaultName
+	p.AzureCloudEnvironment = azureCloudEnv
 	p.UsePodIdentity = usePodIdentity
 	p.TenantID = tenantID
 
@@ -353,12 +358,12 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 // GetKeyVaultObjectContent get content of the keyvault object
 func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType string, objectName string, objectVersion string) (content string, err error) {
-	vaultURL, err := p.getVaultURL(ctx, "")
+	vaultURL, err := p.getVaultURL(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get vault")
 	}
 
-	kvClient, err := p.initializeKvClient("")
+	kvClient, err := p.initializeKvClient()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get keyvaultClient")
 	}
