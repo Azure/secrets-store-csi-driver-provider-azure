@@ -45,18 +45,18 @@ unit-test:
 
 
 KIND_VERSION ?= 0.6.0
-KUBERNETES_VERSION ?= 1.16.3
+KIND_K8S_VERSION ?= 1.16.3
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap:
 	# Download and install kubectl
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 	# Download and install kind
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
 	# Download and install Helm
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 	# Create kind cluster
-	kind create cluster --config kind-config.yaml --image kindest/node:v${KUBERNETES_VERSION}
+	kind create cluster --config kind-config.yaml --image kindest/node:v${KIND_K8S_VERSION}
 	# Build image
 	DOCKER_IMAGE="e2e/secrets-store-csi-driver-provider-azure" IMAGE_VERSION=e2e-$$(git rev-parse --short HEAD) make image
 	# Load image into kind cluster
