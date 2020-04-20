@@ -1,61 +1,64 @@
 trigger:
- - master
+  branches:
+    include:
+    - master
 
 pr:
   branches:
     include:
     - master
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+jobs:
+- job: unit_tests
+  timeoutInMinutes: 5
+  cancelTimeoutInMinutes: 5
+  pool:
+    vmImage: 'ubuntu-latest'
 
-variables:
- GOBIN:  '$(GOPATH)/bin' # Go binaries path
- GOROOT: '/usr/local/go1.13' # Go installation path
- GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
- modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
- GO111MODULE: 'on'
- repo.path: $(GOPATH)/src/github.com/Azure/secrets-store-csi-driver-provider-azure
+  steps:
+  - task: GoTool@0
+    inputs:
+      version: '1.14.1'
+  - script: |
+      make build build-windows
+    displayName: 'build linux and windows binaries'
+  - script: |
+      make unit-test
+    displayName: 'Run unit tests'
 
-steps:
-- script: |
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    mkdir -p '$(GOPATH)/src/k8s.io/secrets-store-csi-driver'
-    shopt -s extglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-    go version
-  displayName: 'Set up the Go workspace'
-- script: |
-    git clone https://github.com/kubernetes-sigs/secrets-store-csi-driver.git $(GOPATH)/src/k8s.io/secrets-store-csi-driver
-    sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get update && sudo apt-get install bats && sudo apt-get install yq
-  workingDirectory: '$(modulePath)'
-  displayName: 'Set up workspace and install dependencies'
-- script: |
-    make build build-windows
-  workingDirectory: '$(modulePath)'
-  displayName: 'build linux and windows binaries'
-- script: |
-    make unit-test
-  workingDirectory: '$(modulePath)'
-  displayName: 'Run unit tests'
-- script: |
-    make e2e-bootstrap
-    export KUBECONFIG=$(kind get kubeconfig-path)
-    kubectl create ns dev
-    make e2e-azure
-  workingDirectory: '$(modulePath)'
-  displayName: "e2e-azure"
-  env:
-    AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-    AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-    KEY_NAME: $(KEY_NAME)
-    KEY_VERSION: $(KEY_VERSION)
-    KEYVAULT_NAME: $(KEYVAULT_NAME)
-    RESOURCE_GROUP: $(RESOURCE_GROUP)
-    SECRET_NAME: $(SECRET_NAME)
-    SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
-    TENANT_ID: $(TENANT_ID)
+- job: e2e_test_kind
+  dependsOn: unit_tests
+  pool:
+    vmImage: 'ubuntu-latest'
+  timeoutInMinutes: 10
+  cancelTimeoutInMinutes: 5
+  workspace:
+    clean: all
+
+  variables:
+    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
+
+  steps:
+  - task: GoTool@0
+    inputs:
+      version: '1.14.1'
+  - script: |
+      git clone https://github.com/kubernetes-sigs/secrets-store-csi-driver.git $(GOPATH)/src/k8s.io/secrets-store-csi-driver
+      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get update && sudo apt-get install bats && sudo apt-get install yq
+    displayName: 'Set up workspace and install dependencies'
+  - script: |
+      make e2e-bootstrap
+      export KUBECONFIG=$(kind get kubeconfig-path)
+      kubectl create ns dev
+      make e2e-azure
+    displayName: "Run e2e tests on kind cluster"
+    env:
+      AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      KEY_NAME: $(KEY_NAME)
+      KEY_VERSION: $(KEY_VERSION)
+      KEYVAULT_NAME: $(KEYVAULT_NAME)
+      RESOURCE_GROUP: $(RESOURCE_GROUP)
+      SECRET_NAME: $(SECRET_NAME)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      TENANT_ID: $(TENANT_ID)
