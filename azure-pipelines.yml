@@ -27,7 +27,7 @@ jobs:
     displayName: 'Run unit tests'
 
 - job: e2e_test_kind
-  dependsOn: unit_tests
+  # dependsOn: unit_tests
   pool:
     vmImage: 'ubuntu-latest'
   timeoutInMinutes: 10
