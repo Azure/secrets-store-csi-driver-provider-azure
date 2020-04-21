@@ -330,7 +330,7 @@ The output should contain `type: SystemAssigned`.
 3. Deploy your application. Specify `useVMManagedIdentity` to `true`.
 
 ```yaml
-useVMManagedIdentity: "true"            # [OPTIONAL] if not provided, will default to "false"
+useVMManagedIdentity: "true"            # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
 ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
