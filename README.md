@@ -15,17 +15,9 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 ### Install the Secrets Store CSI Driver 
 **Prerequisites**
 
-The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
-
-1. Service Principal
-1. Pod Identity
-1. VMSS User Assigned Managed Identity
-1. VMSS System Assigned Managed Identity
-
 Recommended Kubernetes version: v1.16.0+
 
 💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage).
-
 
 ### Install the Azure Key Vault Provider
 
@@ -93,7 +85,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
     | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
     | keyvaultName   | yes      | name of a Key Vault instance                                    | ""            |
-    | cloudName      | OPTIONAL available for version > 0.0.4       | Name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
+    | cloudName      | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,| ""            |
     |                |          | AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)      | ""            | 
     | objects        | yes      | a string of arrays of strings                                   | ""            |
     | objectName     | yes      | name of a Key Vault object                                      | ""            |
@@ -117,9 +109,11 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     ```
 
 #### Provide Identity to Access Key Vault
-The Azure Key Vault Provider offers two modes for accessing a Key Vault instance: 
+The Azure Key Vault Provider offers four modes for accessing a Key Vault instance: 
 1. Service Principal 
 1. Pod Identity
+1. VMSS User Assigned Managed Identity
+1. VMSS System Assigned Managed Identity
 
 **OPTION 1 - Service Principal**
 
