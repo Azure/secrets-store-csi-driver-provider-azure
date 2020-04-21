@@ -3,7 +3,7 @@
     "properties": {
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "$KUBERNETES_VERSION",
+            "orchestratorRelease": "$AKSENGINE_K8S_VERSION",
             "kubernetesConfig": {
                 "loadBalancerSku": "Standard",
                 "excludeMasterFromStandardLB": true,
