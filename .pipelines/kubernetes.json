@@ -8,7 +8,7 @@
                 "loadBalancerSku": "Standard",
                 "excludeMasterFromStandardLB": true,
                 "useManagedIdentity": true,
-                "userAssignedID": "$AZURE_CLUSTER_NAME",
+                "userAssignedID": "$AZURE_CLUSTER_MSI_NAME",
                 "addons": [
                     {
                         "name": "csi-secrets-store",
