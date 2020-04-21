@@ -56,6 +56,7 @@ steps:
 
   - script: |
       az login -t microsoft.com --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET}
+      az account set -s ${SUBSCRIPTION_ID}
       VMSS_NAME=$(az vmss list -g ${AZURE_CLUSTER_NAME} --subscription ${SUBSCRIPTION_ID} --query "[].name" -o tsv)
 
       # Assign user assigned identity to the VMSS
