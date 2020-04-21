@@ -6,7 +6,6 @@ jobs:
   # dependsOn: e2e_test_kind
   timeoutInMinutes: 120
   cancelTimeoutInMinutes: 5
-  condition: eq(1,2)
   pool:
     vmImage: ubuntu-latest
   workspace:
@@ -29,7 +28,7 @@ jobs:
       make e2e-bootstrap
       export KUBECONFIG=cluster-kubeconfig.json
       kubectl create ns dev
-      # make e2e-azure
+      make e2e-azure
     displayName: "Run e2e tests on aks-engine cluster"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
@@ -41,4 +40,6 @@ jobs:
       SECRET_NAME: $(SECRET_NAME)
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
+      CI: true
+      PROVIDER_TEST_IMAGE: "k8sprowinternal.azurecr.io/secrets-store-csi-driver-provider-azure"
   - template: templates/teardown.yaml

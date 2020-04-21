@@ -12,7 +12,7 @@ GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
 PROJECT_NAME := secrets-store-csi-driver-provider-azure
 REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
-IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
+E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
@@ -76,11 +76,11 @@ ifdef CI_KIND_CLUSTER
 else
 		az acr login --name $(REGISTRY_NAME)
 		make build build-windows
-		az acr build --registry $(REGISTRY_NAME) -t $(IMAGE_TAG)-linux-amd64 -f Dockerfile --platform linux .
-		az acr build --registry $(REGISTRY_NAME) -t $(IMAGE_TAG)-windows-1809-amd64 -f windows.Dockerfile --platform windows .
-		docker manifest create $(IMAGE_TAG) $(IMAGE_TAG)-linux-amd64 $(IMAGE_TAG)-windows-1809-amd64
-		docker manifest inspect $(IMAGE_TAG)
-		docker manifest push --purge $(IMAGE_TAG)
+		az acr build --registry $(REGISTRY_NAME) -t $(E2E_IMAGE_TAG)-linux-amd64 -f Dockerfile --platform linux .
+		az acr build --registry $(REGISTRY_NAME) -t $(E2E_IMAGE_TAG)-windows-1809-amd64 -f windows.Dockerfile --platform windows .
+		docker manifest create $(E2E_IMAGE_TAG) $(E2E_IMAGE_TAG)-linux-amd64 $(E2E_IMAGE_TAG)-windows-1809-amd64
+		docker manifest inspect $(E2E_IMAGE_TAG)
+		docker manifest push --purge $(E2E_IMAGE_TAG)
 endif
 
 .PHONY: e2e-azure
