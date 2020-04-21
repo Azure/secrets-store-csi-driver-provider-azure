@@ -90,7 +90,7 @@ e2e-azure:
 .PHONY: setup-kind
 setup-kind:
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
-	kind create cluster --config kind-config.yaml --image kindest/node:v${KIND_KUBERNETES_VERSION}
+	kind create cluster --config kind-config.yaml --image kindest/node:v${KIND_K8S_VERSION}
 
 .PHONY: install-helm
 install-helm:
