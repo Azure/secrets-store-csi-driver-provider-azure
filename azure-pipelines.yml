@@ -63,6 +63,8 @@ jobs:
       SECRET_NAME: $(SECRET_NAME)
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
+      PROVIDER_TEST_IMAGE: "e2e/secrets-store-csi-driver-provider-azure"
+      CI_KIND_CLUSTER: true
 
 - template: .pipelines/e2e-job-azure.yaml
   parameters:

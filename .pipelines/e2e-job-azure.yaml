@@ -6,6 +6,7 @@ jobs:
   # dependsOn: e2e_test_kind
   timeoutInMinutes: 120
   cancelTimeoutInMinutes: 5
+  condition: eq(1,2)
   pool:
     vmImage: ubuntu-latest
   workspace:
@@ -25,6 +26,7 @@ jobs:
       sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get update && sudo apt-get install bats && sudo apt-get install yq
     displayName: 'Set up workspace and install dependencies'
   - script: |
+      make e2e-bootstrap
       export KUBECONFIG=cluster-kubeconfig.json
       kubectl create ns dev
       # make e2e-azure
