@@ -260,7 +260,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     secret1
     ```
 
-**OPTION 3: VMSS User Assigned Managed Identity**
+**OPTION 3 - VMSS User Assigned Managed Identity**
 
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
@@ -302,7 +302,7 @@ useVMManagedIdentity: "true"               # [OPTIONAL available for version > 0
 userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
 ```
 
-**OPTION 4: VMSS System Assigned Managed Identity**
+**OPTION 4 - VMSS System Assigned Managed Identity**
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
 
