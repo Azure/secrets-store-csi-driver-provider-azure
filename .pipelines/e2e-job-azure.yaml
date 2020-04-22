@@ -3,7 +3,9 @@ parameters:
 
 jobs:
 - job: ${{ parameters.name }}
-  # dependsOn: e2e_test_kind
+  dependsOn:
+  - unit_tests
+  - e2e_test_kind
   timeoutInMinutes: 120
   cancelTimeoutInMinutes: 5
   pool:
@@ -40,6 +42,4 @@ jobs:
       SECRET_NAME: $(SECRET_NAME)
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
-      CI: true
-      PROVIDER_TEST_IMAGE: "k8sprowinternal.azurecr.io/secrets-store-csi-driver-provider-azure"
   - template: templates/teardown.yaml

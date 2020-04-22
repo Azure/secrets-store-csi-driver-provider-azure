@@ -67,3 +67,4 @@ steps:
       RESOURCE_GROUP: $(RESOURCE_GROUP)
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
     displayName: "[AKS Engine] Assign User MSI to the VMSS"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))

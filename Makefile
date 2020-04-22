@@ -73,8 +73,8 @@ endif
 .PHONY: e2e-container
 e2e-container:
 ifdef CI_KIND_CLUSTER
-		DOCKER_IMAGE="e2e/secrets-store-csi-driver-provider-azure" make image
-		kind load docker-image --name kind e2e/secrets-store-csi-driver-provider-azure:e2e-$$(git rev-parse --short HEAD)
+		DOCKER_IMAGE=$(REGISTRY)/$(IMAGE_NAME) make image
+		kind load docker-image --name kind $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 else
 		az acr login --name $(REGISTRY_NAME)
 		make build build-windows
