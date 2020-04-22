@@ -68,6 +68,10 @@ type Provider struct {
 	TenantID string
 	// POD AAD Identity flag
 	UsePodIdentity bool
+	// VM managed identity flag
+	UseVMManagedIdentity bool
+	// User Assign Identity
+	UserAssignedIdentityID string
 	// AAD app client secret (if not using POD AAD Identity)
 	AADClientSecret string
 	// AAD app client secret id (if not using POD AAD Identity)
@@ -227,9 +231,8 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 				return nil, err
 			}
 
-			r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
-			log.Infof("accesstoken: %s", r.ReplaceAllString(nmiResp.Token.AccessToken, "$1##### REDACTED #####$3"))
-			log.Infof("clientid: %s", r.ReplaceAllString(nmiResp.ClientID, "$1##### REDACTED #####$3"))
+			log.Infof("accesstoken: %s", RedactClientID(nmiResp.Token.AccessToken))
+			log.Infof("clientid: %s", RedactClientID(nmiResp.ClientID))
 
 			token := nmiResp.Token
 			clientID := nmiResp.ClientID
@@ -248,6 +251,27 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 		err = fmt.Errorf("nmi response failed with status code: %d", resp.StatusCode)
 		return nil, err
 	}
+
+	if p.UseVMManagedIdentity {
+		msiEndpoint, err := adal.GetMSIVMEndpoint()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get managed identity (MSI) endpoint")
+		}
+
+		if p.UserAssignedIdentityID != "" {
+			log.Infof("azure: using user assigned managed identity %s to retrieve access token", RedactClientID(p.UserAssignedIdentityID))
+			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
+				msiEndpoint,
+				resource,
+				p.UserAssignedIdentityID)
+		}
+
+		log.Infof("azure: using system assigned managed identity to retrieve access token")
+		return adal.NewServicePrincipalTokenFromMSI(
+			msiEndpoint,
+			resource)
+	}
+
 	// When CSI driver is using a Service Principal clientid + client secret to retrieve token for resource
 	if len(p.AADClientSecret) > 0 {
 		log.Infof("azure: using client_id+client_secret to retrieve access token")
@@ -265,6 +289,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	keyvaultName := attrib["keyvaultName"]
 	cloudName := attrib["cloudName"]
 	usePodIdentityStr := attrib["usePodIdentity"]
+	useVMManagedIdentityStr := attrib["useVMManagedIdentity"]
+	userAssignedIdentityID := attrib["userAssignedIdentityID"]
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
 	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
@@ -287,20 +313,36 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		usePodIdentity = true
 	}
 
-	log.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
-	if !usePodIdentity {
-		log.Infof("not using pod identity to access keyvault")
+	useVMManagedIdentity := false
+	if useVMManagedIdentityStr == "true" {
+		useVMManagedIdentity = true
+	}
+
+	if usePodIdentity && useVMManagedIdentity {
+		return fmt.Errorf("cannot enable both pod identity and assigned user identity")
+	}
+
+	if !usePodIdentity && !useVMManagedIdentity {
+		log.Infof("not using pod identity or vm assigned user identity to access keyvault")
 		p.AADClientID, p.AADClientSecret, err = GetCredential(secrets)
 		if err != nil {
 			log.Infof("missing client credential to access keyvault")
 			return err
 		}
-	} else {
+	}
+	if usePodIdentity {
 		log.Infof("using pod identity to access keyvault")
 		if p.PodName == "" || p.PodNamespace == "" {
 			return fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount")
 		}
+		log.Infof("mounting secrets store object content for %s/%s", p.PodNamespace, p.PodName)
+	} else if useVMManagedIdentity {
+		log.Infof("using vm managed identity to access keyvault")
 	}
+	if useVMManagedIdentity {
+		log.Infof("using vmss user identity to access keyvault")
+	}
+
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
 		return fmt.Errorf("objects is not set")
@@ -334,6 +376,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.KeyvaultName = keyvaultName
 	p.AzureCloudEnvironment = azureCloudEnv
 	p.UsePodIdentity = usePodIdentity
+	p.UseVMManagedIdentity = useVMManagedIdentity
+	p.UserAssignedIdentityID = userAssignedIdentityID
 	p.TenantID = tenantID
 
 	for _, keyVaultObject := range keyVaultObjects {
@@ -405,4 +449,10 @@ func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
 	}
 
 	return &environment.KeyVaultDNSSuffix, nil
+}
+
+//RedactClientID Apply regex to a sensitive string and return the redacted value
+func RedactClientID(sensitiveString string) string {
+	r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
+	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
