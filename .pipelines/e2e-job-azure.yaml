@@ -6,7 +6,7 @@ jobs:
   dependsOn:
   - unit_tests
   - e2e_test_kind
-  timeoutInMinutes: 120
+  timeoutInMinutes: 45
   cancelTimeoutInMinutes: 5
   pool:
     vmImage: ubuntu-latest
@@ -43,3 +43,7 @@ jobs:
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
   - template: templates/teardown.yaml
+  - script:
+      make e2e-container-cleanup
+    displayName: "Delete e2e test images"
+    failOnStderr: false

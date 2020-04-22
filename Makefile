@@ -2,7 +2,7 @@ IMAGE_NAME=secrets-store-csi-driver-provider-azure
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-IMAGE_VERSION ?= 0.0.5
+IMAGE_VERSION ?= 0.0.4
 # Use a custom version for E2E tests if we are testing in CI
 ifdef CI
 override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
@@ -85,6 +85,15 @@ else
 		docker manifest push --purge $(E2E_IMAGE_TAG)
 endif
 
+.PHONY: e2e-container-cleanup
+e2e-container-cleanup:
+ifndef CI_KIND_CLUSTER
+	az acr login --name $(REGISTRY_NAME)
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-linux-amd64 -y
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-windows-1809-amd64 -y
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION) -y
+endif
+
 .PHONY: e2e-azure
 e2e-azure:
 	bats -t test/bats/azure.bats
@@ -92,7 +101,7 @@ e2e-azure:
 .PHONY: setup-kind
 setup-kind:
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
-	kind create cluster --config kind-config.yaml --image kindest/node:v${KIND_K8S_VERSION}
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
 
 .PHONY: install-helm
 install-helm:
