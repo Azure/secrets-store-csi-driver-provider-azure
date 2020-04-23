@@ -3,8 +3,11 @@ trigger:
     include:
     - master
 
-pr: none
-
+pr:
+  branches:
+    include:
+    - master
+    
 jobs:
 - job: k8s_1_18_msi_e2e
   timeoutInMinutes: 45
