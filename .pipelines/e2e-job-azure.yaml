@@ -1,11 +1,12 @@
-parameters:
-  name: ''
+trigger:
+  branches:
+    include:
+    - master
+
+pr: none
 
 jobs:
-- job: ${{ parameters.name }}
-  dependsOn:
-  - unit_tests
-  - e2e_test_kind
+- job: k8s_1_18_msi_e2e
   timeoutInMinutes: 45
   cancelTimeoutInMinutes: 5
   pool:

@@ -63,7 +63,3 @@ jobs:
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
-
-- template: .pipelines/e2e-job-azure.yaml
-  parameters:
-    name: 'k8s_1_18_msi_e2e'
