@@ -6,7 +6,7 @@ BATS_TESTS_DIR=test/bats/tests
 WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=e2e-$(git rev-parse --short HEAD)
-PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
 
 export SECRET_NAME=secret1
 export KEY_NAME=key1

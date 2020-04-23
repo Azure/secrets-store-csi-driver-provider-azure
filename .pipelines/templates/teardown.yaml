@@ -1,0 +1,11 @@
+steps:
+  - script: |
+      rm ${LOCAL_SSH_KEY}*
+      az login -t microsoft.com --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET}
+      az group delete -n ${AZURE_CLUSTER_NAME} --subscription ${SUBSCRIPTION_ID} --yes --no-wait
+    displayName: "Teardown cluster"
+    condition: and(always(), eq(variables['TEARDOWN_CLUSTER'], 'true'))
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)

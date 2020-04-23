@@ -1,0 +1,70 @@
+steps:
+  - script: |
+      curl -LO https://github.com/Azure/aks-engine/releases/download/v${AKS_ENGINE_VERSION}/aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
+      tar -zxvf aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
+      chmod +x aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine
+      sudo mv aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine /usr/local/bin/
+
+      # Download kubectl
+      curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+      chmod +x kubectl
+      sudo mv kubectl /usr/local/bin/
+
+      # Print aks-engine version
+      aks-engine version
+    displayName: "[AKS Engine] Download binaries"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
+
+  - script: |
+      echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]sscd-e2e-$(openssl rand -hex 6)"
+      echo ${AZURE_CLUSTER_NAME}
+    displayName: "[AKS Engine] Set cluster name"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
+
+  - script: |
+      echo "##vso[task.setvariable variable=AZURE_ADMIN_USERNAME]$USER"
+      echo -e 'y\n' | ssh-keygen -f ~/.ssh/$(AZURE_CLUSTER_NAME) -t rsa -N ''
+      echo "##vso[task.setvariable variable=AZURE_SSH_KEY]$(cat ~/.ssh/$(AZURE_CLUSTER_NAME).pub)"
+      echo "##vso[task.setvariable variable=LOCAL_SSH_KEY]$HOME/.ssh/$(AZURE_CLUSTER_NAME)"
+    displayName: "[AKS Engine] Generate SSH key"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
+
+  - script: |
+      envsubst < .pipelines/kubernetes.json > cluster.json
+    displayName: "[AKS Engine] Build AKS-Engine API Model"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+
+  - script: |
+      aks-engine deploy --api-model cluster.json \
+        --location ${AZURE_LOCATION} \
+        --subscription-id ${SUBSCRIPTION_ID} \
+        --force-overwrite \
+        --client-id ${CLIENT_ID} \
+        --client-secret ${CLIENT_SECRET}
+      # wait for nodes
+      sleep 2m
+      cp _output/${AZURE_CLUSTER_NAME}/kubeconfig/kubeconfig.${AZURE_LOCATION}.json cluster-kubeconfig.json
+    displayName: "[AKS Engine] Deploy Azure cluster"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+
+  - script: |
+      az login -t microsoft.com --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET}
+      az account set -s ${SUBSCRIPTION_ID}
+      VMSS_NAME=$(az vmss list -g ${AZURE_CLUSTER_NAME} --subscription ${SUBSCRIPTION_ID} --query "[].name" -o tsv)
+
+      # Assign user assigned identity to the VMSS
+      az vmss identity assign -g ${AZURE_CLUSTER_NAME} -n $VMSS_NAME --subscription ${SUBSCRIPTION_ID} --identities /subscriptions/${SUBSCRIPTION_ID}/resourcegroups/${RESOURCE_GROUP}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${USER_MSI_NAME} >> /dev/null
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+      RESOURCE_GROUP: $(RESOURCE_GROUP)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+    displayName: "[AKS Engine] Assign User MSI to the VMSS"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
