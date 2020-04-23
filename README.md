@@ -174,3 +174,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 1. [Pod Identity](docs/pod-identity-mode.md)
 1. [VMSS User Assigned Managed Identity](docs/user-assigned-msi-mode.md)
 1. [VMSS System Assigned Managed Identity](docs/system-assigned-msi-mode.md)
+
+#### Testing
+
+For documentation on how to locally test the Secrets Store CSI Driver Provider for Azure, please refer to [this guide](/testing.md)
