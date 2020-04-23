@@ -1,11 +1,15 @@
-parameters:
-  name: ''
+trigger:
+  branches:
+    include:
+    - master
+
+pr:
+  branches:
+    include:
+    - master
 
 jobs:
-- job: ${{ parameters.name }}
-  dependsOn:
-  - unit_tests
-  - e2e_test_kind
+- job: k8s_1_18_msi_e2e
   timeoutInMinutes: 45
   cancelTimeoutInMinutes: 5
   pool:
@@ -29,6 +33,7 @@ jobs:
   - script: |
       make e2e-bootstrap
       export KUBECONFIG=cluster-kubeconfig.json
+      kubectl get nodes -o wide
       kubectl create ns dev
       make e2e-azure
     displayName: "Run e2e tests on aks-engine cluster"
