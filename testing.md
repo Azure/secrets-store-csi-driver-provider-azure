@@ -68,16 +68,16 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     ```bash
     # secrets.env
 
-    KEYVAULT_SECRET_NAME=<yourKeyVaultSecretName>
-    KEYVAULT_SECRET_TYPE=secret
-    KEYVAULT_SECRET_ALIAS=""
-    KEYVAULT_SECRET_VERSION=""
+    OBJECT1_NAME=<yourKeyVaultSecretName>
+    OBJECT1_TYPE=secret
+    OBJECT1_ALIAS=""
+    OBJECT1_VERSION=""
 
-    KEYVAULT_KEY_NAME=<yourKeyVaultKeyName>
-    KEYVAULT_KEY_VALUE=<yourKeyVaultKeyValue>
-    KEYVAULT_KEY_TYPE=key
-    KEYVAULT_KEY_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
-    KEYVAULT_KEY_VERSION=""
+    OBJECT2_NAME=<yourKeyVaultKeyName>
+    OBJECT2_VALUE=<yourKeyVaultKeyValue>
+    OBJECT2_TYPE=key
+    OBJECT2_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
+    OBJECT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
 
@@ -95,6 +95,10 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
 
     # the name you want to give for the docker image
     DOCKER_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+    # the tag you'd like to give your docker image
+    IMAGE_TAG=<image_tag>
+    # assign an image version to know which changes you are testing.
+    IMAGE_VERSION=<image_version>
     # name of docker image provided for the azure.bats tests. SHOULD be the same as DOCKER_IMAGE
     PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
     # local path to folder container cloned Secrets Store CSI Driver
@@ -105,16 +109,16 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
   <summary>The finished 'secrets.env' should look like this:</summary>
   <p>
 
-    KEYVAULT_SECRET_NAME=<yourKeyVaultSecretName>
-    KEYVAULT_SECRET_TYPE=secret
-    KEYVAULT_SECRET_ALIAS=""
-    KEYVAULT_SECRET_VERSION=""
+    OBJECT1_NAME=<yourKeyVaultSecretName>
+    OBJECT1_TYPE=secret
+    OBJECT1_ALIAS=""
+    OBJECT1_VERSION=""
 
-    KEYVAULT_KEY_NAME=<yourKeyVaultKeyName>
-    KEYVAULT_KEY_VALUE=<yourKeyVaultKeyValue>
-    KEYVAULT_KEY_TYPE=key
-    KEYVAULT_KEY_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
-    KEYVAULT_KEY_VERSION=""
+    OBJECT2_NAME=<yourKeyVaultKeyName>
+    OBJECT2_VALUE=<yourKeyVaultKeyValue>
+    OBJECT2_TYPE=key
+    OBJECT2_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
+    OBJECT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
 
@@ -123,6 +127,8 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     TENANT_ID=<yourAzureTenantId>
 
     DOCKER_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+    IMAGE_TAG=<image_tag>
+    IMAGE_VERSION=<image_version>
     PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
     SECRETS_STORE_CSI_DRIVER_PATH=<your_local_path_to_the_secrets_store_csi_driver>
 
@@ -137,7 +143,7 @@ Here are the steps that you can follow to test the Azure Key Vault Azure Provide
 2. Now run the following make targets to test the Azure Provider e2e.
     ```bash
       # create and configure kind cluster
-      make e2e-bootstrap
+      make e2e-local-bootstrap
       # run the e2e-tests
       make e2e-test
     ```
