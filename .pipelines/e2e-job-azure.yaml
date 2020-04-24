@@ -47,7 +47,6 @@ jobs:
       SECRET_NAME: $(SECRET_NAME)
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
-      CI_KIND_CLUSTER: true
   - template: templates/teardown.yaml
   - script:
       make e2e-container-cleanup
