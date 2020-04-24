@@ -70,6 +70,7 @@ KIND_K8S_VERSION ?= 1.16.3
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
 ifdef CI_KIND_CLUSTER
+		curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 		make setup-kind
 endif
 	docker pull $(IMAGE_TAG) || make e2e-container
@@ -104,10 +105,15 @@ e2e-test:
 
 .PHONY: setup-kind
 setup-kind:
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
 	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
 
 .PHONY: install-helm
 install-helm:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+.PHONY: e2e-local-bootstrap
+e2e-local-bootstrap:
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
+	make image
+	kind load docker-image --name kind $(DOCKER_IMAGE):$(IMAGE_VERSION)
