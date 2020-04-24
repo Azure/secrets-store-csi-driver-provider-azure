@@ -5,7 +5,7 @@ load helpers
 BATS_TESTS_DIR=test/bats/tests
 WAIT_TIME=60
 SLEEP_TIME=1
-IMAGE_TAG=${IMAGE_TAG:-"e2e-$(git rev-parse --short HEAD)"}
+IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
 SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/k8s.io"}
 
