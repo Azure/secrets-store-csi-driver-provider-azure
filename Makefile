@@ -16,7 +16,7 @@ endif
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
-REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
+REPO_PATH="$(ORG_PATH)/$(IMAGE_NAME)"
 E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
