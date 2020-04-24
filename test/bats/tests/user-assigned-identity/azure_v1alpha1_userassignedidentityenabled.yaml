@@ -12,11 +12,11 @@ spec:
     objects: |
       array:
         - |
-          objectName: $SECRET_NAME
-          objectType: secret        # object types: secret, key or cert
-          objectVersion: $SECRET_VERSION         # [OPTIONAL] object versions, default to latest if empty
+          objectName: $OBJECT1_NAME
+          objectType: $OBJECT1_TYPE       # object types: secret, key or cert
+          objectVersion: $OBJECT1_VERSION         # [OPTIONAL] object versions, default to latest if empty
         - |
-          objectName: $KEY_NAME
-          objectType: key
-          objectVersion: $KEY_VERSION
+          objectName: $OBJECT2_NAME
+          objectType: $OBJECT2_TYPE
+          objectVersion: $OBJECT2_VERSION
     tenantId: "$TENANT_ID" # the tenant ID of the KeyVault
