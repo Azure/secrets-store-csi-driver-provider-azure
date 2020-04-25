@@ -197,7 +197,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     Set `type: 0` for Managed Service Identity; `type: 1` for Service Principal
     In this case, we are using managed service identity, `type: 0`.
     Create a new name for the AzureIdentity.
-    Set `ResourceID` to `id` of the Azure User Identity created from the previous step.
+    Set `resourceID` to `id` of the Azure User Identity created from the previous step.
 
     ```yaml
     apiVersion: "aadpodidentity.k8s.io/v1"
@@ -206,8 +206,8 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       name: <any-name>
     spec:
       type: 0
-      ResourceID: /subscriptions/<subid>/resourcegroups/<resourcegroup>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<idname>
-      ClientID: <clientid>
+      resourceID: /subscriptions/<subid>/resourcegroups/<resourcegroup>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<idname>
+      clientID: <clientid>
     ```
 
     ```bash
@@ -223,8 +223,8 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     metadata:
       name: <any-name>
     spec:
-      AzureIdentity: <name of AzureIdentity created from previous step>
-      Selector: <label value to match in your app>
+      azureIdentity: <name of AzureIdentity created from previous step>
+      selector: <label value to match in your app>
     ```
 
     ```
@@ -233,7 +233,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 1. Add the following to [this](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml) deployment yaml:
 
-    a. Include the `aadpodidbinding` label matching the `Selector` value set in the previous step so that this pod will be assigned an identity
+    a. Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
     metadata:
     labels:
