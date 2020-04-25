@@ -23,7 +23,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ${GOPATH}/src/k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
+  run helm install csi-secrets-store ${GOPATH}/src/sigs.k8s.io/secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
   assert_success
 }
 
@@ -117,5 +117,35 @@ setup() {
 @test "CSI inline volume test with pod portability - read azure kv key, if alias present, from pod" {
   KEY_VALUE_CONTAINS=uiPCav0xdIq
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/KEY_1)
+  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+}
+
+@test "CSI inline volume test with user assigned identity" {
+  if [ ${CI_KIND_CLUSTER} ]; then
+    skip "not running in azure cluster"
+  fi
+
+  envsubst < $BATS_TESTS_DIR/user-assigned-identity/azure_v1alpha1_userassignedidentityenabled.yaml | kubectl apply -f -
+
+  cmd="kubectl wait --for condition=established --timeout=60s crd/secretproviderclasses.secrets-store.csi.x-k8s.io"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  cmd="kubectl get secretproviderclasses.secrets-store.csi.x-k8s.io/azure-msi -o yaml | grep azure"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  run kubectl apply -f $BATS_TESTS_DIR/user-assigned-identity/nginx-pod-user-identity-secrets-store-inline-volume-crd.yaml
+  assert_success
+
+  cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-crd-msi"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  run kubectl get pod/nginx-secrets-store-inline-crd-msi
+  assert_success
+
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/secret1)
+  [[ "$result" -eq "test" ]]
+
+  KEY_VALUE_CONTAINS=uiPCav0xdIq
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/key1)
   [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
 }
