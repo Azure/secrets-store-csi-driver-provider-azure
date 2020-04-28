@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -40,6 +41,8 @@ const (
 	podnameheader = "podname"
 	// Pod Identity podnsheader
 	podnsheader = "podns"
+	certTypePem = "application/x-pem-file"
+	certTypePfx = "application/x-pkcs12"
 )
 
 // NMIResponse is the response received from aad-pod-identity
@@ -431,7 +434,27 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
-		return string(*certbundle.Cer), nil
+		if !*certbundle.Policy.KeyProperties.Exportable {
+			err := errors.Errorf("cert key is not exportable")
+			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+		}
+		secretBundle, err := kvClient.GetSecret(ctx, *vaultURL, objectName, objectVersion)
+		if err != nil {
+			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+		}
+		switch *secretBundle.ContentType {
+		case certTypePem:
+			return *secretBundle.Value, nil
+		case certTypePfx:
+			pfxRaw, err := base64.StdEncoding.DecodeString(*secretBundle.Value)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			return string(pfxRaw), nil
+		default:
+			err := errors.Errorf("failed to get certificate. unknown content type '%s'", *secretBundle.ContentType)
+			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+		}
 	default:
 		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
 		return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
