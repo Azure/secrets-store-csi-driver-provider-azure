@@ -15,19 +15,12 @@ spec:
       labels:
         app: csi-secrets-store-provider-azure
     spec:
-      nodeSelector:
-        beta.kubernetes.io/os: windows
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
-            requests:
-              cpu: 100m
-              memory: 200Mi
-            limits:
-              cpu: 100m
-              memory: 200Mi
+{{ toYaml .Values.windows.resources | indent 12 }}
           env:
             - name: TARGET_DIR
               value: "C:\\k\\secrets-store-csi-providers"
@@ -39,3 +32,5 @@ spec:
           hostPath:
             path: "C:\\k\\secrets-store-csi-providers"
             type: DirectoryOrCreate
+      nodeSelector:
+        beta.kubernetes.io/os: windows

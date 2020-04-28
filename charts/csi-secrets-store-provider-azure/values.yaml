@@ -1,0 +1,27 @@
+image:
+  repository: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure
+  tag: 0.0.4
+  pullPolicy: IfNotPresent
+
+linux:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+
+windows:
+  enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 200Mi
+
+driver:
+  install: true
