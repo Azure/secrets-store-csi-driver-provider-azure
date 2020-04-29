@@ -1,33 +1,26 @@
+{{- if .Values.windows.enabled}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  labels:
-    app: csi-secrets-store-provider-azure
-  name: csi-secrets-store-provider-azure-windows
+  name: {{ template "sscdpa.fullname" . }}-windows
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
 spec:
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: csi-secrets-store-provider-azure
+      app: {{ template "sscdpa.name" . }}
   template:
     metadata:
-      labels:
-        app: csi-secrets-store-provider-azure
+{{ include "sscdpa.labels" . | indent 6 }}
     spec:
-      nodeSelector:
-        beta.kubernetes.io/os: windows
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.5
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
-            requests:
-              cpu: 100m
-              memory: 200Mi
-            limits:
-              cpu: 100m
-              memory: 200Mi
+{{ toYaml .Values.windows.resources | indent 12 }}
           env:
             - name: TARGET_DIR
               value: "C:\\k\\secrets-store-csi-providers"
@@ -39,3 +32,6 @@ spec:
           hostPath:
             path: "C:\\k\\secrets-store-csi-providers"
             type: DirectoryOrCreate
+      nodeSelector:
+        beta.kubernetes.io/os: windows
+{{- end -}}
