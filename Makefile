@@ -2,7 +2,7 @@ IMAGE_NAME=secrets-store-csi-driver-provider-azure
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-IMAGE_VERSION ?= 0.0.4
+IMAGE_VERSION ?= 0.0.5
 # Use a custom version for E2E tests if we are testing in CI
 ifdef CI
 override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
