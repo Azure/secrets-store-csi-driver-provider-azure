@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4
+          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.5
           imagePullPolicy: Always
           resources:
             requests:
