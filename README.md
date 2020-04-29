@@ -12,17 +12,24 @@ _WIP_
 
 This guide will walk you through the steps to configure and run the Azure Key Vault provider for Secret Store CSI driver on Kubernetes.
 
-### Install the Secrets Store CSI Driver 
+### Install the Secrets Store CSI Driver and Azure keyvault provider
 **Prerequisites**
 
 Recommended Kubernetes version: 
 - For linux - v1.16.0+
 - For windows - v1.18.0+
 
+### [Installation using Helm](charts/csi-secrets-store-provider-azure/README.md)
+
+<details>
+<summary><strong>[ALTERNATIVE DEPLOYMENT OPTION] Using Deployment Yamls</strong></summary>
+
 💡 Make sure you have followed the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage) to install the driver.
+
 
 ### Install the Azure Key Vault Provider
 
+For linux nodes
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
 ```
@@ -45,6 +52,7 @@ NAME                                     READY   STATUS    RESTARTS   AGE
 csi-secrets-store-provider-azure-4ngf4   1/1     Running   0          8s
 csi-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
 ```
+</details>
 
 ### Using the Azure Key Vault Provider
 

@@ -23,5 +23,12 @@ windows:
       cpu: 100m
       memory: 200Mi
 
-driver:
+## Configuration values for the secrets-store-csi-driver dependency.
+## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/charts/csi-secrets-store-provider-azure/README.md
+##
+secrets-store-csi-driver:
   install: true
+  linux:
+    enabled: true
+  windows:
+    enabled: false

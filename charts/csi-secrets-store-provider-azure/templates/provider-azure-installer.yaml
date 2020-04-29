@@ -1,19 +1,19 @@
+{{- if .Values.linux.enabled}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  labels:
-    app: csi-secrets-store-provider-azure
-  name: csi-secrets-store-provider-azure
+  name: {{ template "sscdpa.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
 spec:
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: csi-secrets-store-provider-azure
+      app: {{ template "sscdpa.name" . }}
   template:
     metadata:
-      labels:
-        app: csi-secrets-store-provider-azure
+{{ include "sscdpa.labels" . | indent 6 }}
     spec:
       containers:
         - name: provider-azure-installer
@@ -33,3 +33,4 @@ spec:
             path: "/etc/kubernetes/secrets-store-csi-providers"
       nodeSelector:
         beta.kubernetes.io/os: linux
+{{- end -}}
