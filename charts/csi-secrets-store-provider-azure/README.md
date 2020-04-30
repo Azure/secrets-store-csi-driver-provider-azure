@@ -16,7 +16,7 @@ Quick start instructions for the setup and configuration of secrets-store-csi-dr
 
 ```shell
 $ helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
-$ helm install csi-secrets-store-provider-azure/csi-secrets-provider-azure --generate-name
+$ helm install csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --generate-name
 ```
 
 ### Configuration
