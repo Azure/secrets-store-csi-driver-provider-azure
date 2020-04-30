@@ -427,8 +427,14 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
-		// NOTE: we are writing the RSA modulus content of the key
-		return *keybundle.Key.N, nil
+		switch keybundle.Key.Kty {
+		case kv.RSA:
+			// NOTE: we are writing the RSA modulus content of the key
+			return *keybundle.Key.N, nil
+		default:
+			err := errors.Errorf("failed to get key. key type '%s' currently not supported", keybundle.Key.Kty)
+			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+		}
 	case VaultObjectTypeCertificate:
 		certbundle, err := kvClient.GetCertificate(ctx, *vaultURL, objectName, objectVersion)
 		if err != nil {
