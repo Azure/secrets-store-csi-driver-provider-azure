@@ -6,7 +6,9 @@ Azure Key Vault provider for [Secret Store CSI driver](https://github.com/kubern
 
 ## Demo
 
-_WIP_
+This demo created by @Houssem Dellai is using AAD Pod Identity and Secret Store CSI provider for Key Vault to retrieve database login and password from Azure Key Vault.
+
+<a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src=""/></a>
 
 ## Usage
 
