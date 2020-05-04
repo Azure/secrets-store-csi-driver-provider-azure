@@ -1,8 +1,10 @@
 package azure
 
 import (
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
 
@@ -452,11 +455,11 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		case certTypePem:
 			return *secretBundle.Value, nil
 		case certTypePfx:
-			pfxRaw, err := base64.StdEncoding.DecodeString(*secretBundle.Value)
+			content, err := decodePKCS12(*secretBundle.Value)
 			if err != nil {
 				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 			}
-			return string(pfxRaw), nil
+			return content, nil
 		default:
 			err := errors.Errorf("failed to get certificate. unknown content type '%s'", *secretBundle.ContentType)
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
@@ -484,4 +487,33 @@ func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
 func RedactClientID(sensitiveString string) string {
 	r, _ := regexp.Compile(`^(\S{4})(\S|\s)*(\S{4})$`)
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
+}
+
+// decodePkcs12 decodes a PKCS#12 client certificate by extracting the public certificate and
+// the private key
+func decodePKCS12(value string) (content string, err error) {
+	pfxRaw, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return "", err
+	}
+	key, cert, err := pkcs12.Decode(pfxRaw, "")
+	if err != nil {
+		return "", err
+	}
+	keyX509, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return "", err
+	}
+	var pemData []byte
+	keyBlock := &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: keyX509,
+	}
+	certBlock := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+	pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
+	pemData = append(pemData, pem.EncodeToMemory(keyBlock)...)
+	return string(pemData), nil
 }
