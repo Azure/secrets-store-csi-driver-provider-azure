@@ -1,6 +1,6 @@
 # KIND Demo
 
-[kind](https://github.com/kubernetes-sigs/kind)(Kubernetes in Docker) is a tool for running local Kubernetes clusters using Docker container “nodes”. Azure CSI Driver will work in kind using Service Principle.
+[kind](https://github.com/kubernetes-sigs/kind)(Kubernetes in Docker) is a tool for running local Kubernetes clusters using Docker container “nodes”. Azure CSI Driver will work in kind using Service Principal.
 
 ## Prerequisite
 
@@ -10,7 +10,7 @@
 
 ## Setup
 
-- Create a Azure AD App to create Service Principal and give it "GET" permission for secrets in keyvault. Follow the steps in [keyvault docs](https://docs.microsoft.com/en-us/azure/key-vault/general/group-permissions-for-apps#applications)
+- Create a Azure AD App to create Service Principal and give it "GET" permission for secrets in keyvault. Follow the steps in [keyvault docs](https://docs.microsoft.com/en-us/azure/key-vault/general/group-permissions-for-apps#applications). Keep `ClientID` and `ClientSecret` of the AD app handy.
 
 - Update `nginx-pod-secrets-store-inline-volume.yaml` to provide keyvault name and the keyvault resources to fetch.
 
@@ -30,7 +30,7 @@ array:
 
 ## Usage
 
-Run the `kind-demo.sh` from this directory and pass `Client_ID` and `Client_Secret` as argument.
+Run the `kind-demo.sh` from this directory and pass AD App's `Client_ID` and `Client_Secret` as argument.
 
 ```sh
 ./kind-demo.sh <Client_ID> <Client_Secret>
@@ -48,7 +48,7 @@ kind create cluster --name kind-csi-demo
 
 - Install [csi-secrets-store-provider-azure](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md)
 
-- Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
+- Add your AD app credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
 
 ```sh
 kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
