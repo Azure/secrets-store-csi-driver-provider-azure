@@ -6,7 +6,7 @@
 
 - Follow [kind installation instruction](https://github.com/kubernetes-sigs/kind#installation-and-usage) to setup kind in your machine
 
-> Windows 10 users could you WSL 2 to install kind and run this sample. Integrate docker for windows with wsl 2 by following the [instructions](https://docs.docker.com/docker-for-windows/wsl-tech-preview/).
+> Windows 10 users could you wsl 2 to install kind and run this sample. Integrate docker for windows with wsl 2 by following the [instructions](https://docs.docker.com/docker-for-windows/wsl-tech-preview/).
 
 ## Setup
 
@@ -17,15 +17,18 @@
 ```
 keyvaultName: '' # the name of the KeyVault
 objects: |
-array:
-    - |
-    objectName: secret1
-    objectType: secret        # object types: secret, key or cert
-    objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
-    - |
-    objectName: key1
-    objectType: key
-    objectVersion: ""
+    array:
+        - |
+        objectName: secret1
+        objectType: secret        # object types: secret, key or cert
+        objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+        - |
+        objectName: key1
+        objectType: key
+        objectVersion: ""
+resourceGroup: '' # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
+subscriptionId: '' # [REQUIRED for version < 0.0.4] the subscription ID of the KeyVault
+tenantId: '' # the tenant ID of the KeyVault
 ```
 
 ## Usage
