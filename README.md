@@ -43,7 +43,7 @@ For windows nodes
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
 ```
 
-To validate the provider's installer is running as expected, run the following commands:	
+To validate the provider's installer is running as expected, run the following commands:    
 
 ```bash
 kubectl get pods -l app=csi-secrets-store-provider-azure
@@ -60,9 +60,24 @@ csi-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
 
 ### Using the Azure Key Vault Provider
 
+#### Create a new Azure Key Vault resource or use an existing one
+
+In addition to a Kubernetes cluster, you will need an Azure Key Vault resource with secret content to access. Follow [this quickstart tutorial](https://docs.microsoft.com/azure/key-vault/secrets/quick-create-portal) to deploy an Azure Key Vault and add an example secret to it.
+
+Review the settings you desire for your Key Vault, such as what resources (Azure VMs, Azure Resource Manager, etc.) and what kind of network endpoints can access secrets in it.
+
+Take note of the following properties for use in the next section:
+
+1. Name of secret object in Key Vault
+1. Secret content type (secret, key, cert)
+1. Name of Key Vault resource
+1. Resource group the Key Vault resides within
+1. Azure Subscription ID the Key Vault was provisioned with
+1. Azure Tenant ID the Subscription ID belongs to
+
 #### Create secretproviderclasses
 
-Create a `secretproviderclasses` resource to provide provider-specific parameters for the Secrets Store CSI driver. 
+Create a `secretproviderclasses` resource to provide provider-specific parameters for the Secrets Store CSI driver. In this example, use an existing Azure Key Vault or the Azure Key Vault resource created previously.
 
 1. Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
@@ -114,21 +129,35 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | subscriptionId         | no      | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                   | ""            |
     | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
 
-1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step
+1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
 
-    ```yaml
-    volumes:
-      - name: secrets-store-inline
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "azure-kvname"
-    ```
+    If you did not change the name of the secretProviderClass previously, no changes are needed.
+    
+        ```yaml
+        volumes:
+          - name: secrets-store-inline
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "azure-kvname"
+        ```
+
+  1. Select and complete an option from below to enable access to the Key Vault
+
+  1. Deploy the secretProviderClass
+
+     `kubectl apply -f ./examples/v1alpha1_secretproviderclass.yaml`
+
+  1. Deploy the Linux deployment yaml
+
+     `kubectl apply -f ./examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml`
 
 #### Provide Identity to Access Key Vault
-The Azure Key Vault Provider offers four modes for accessing a Key Vault instance: 
-1. Service Principal 
+
+The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
+
+1. Service Principal
 1. Pod Identity
 1. VMSS User Assigned Managed Identity
 1. VMSS System Assigned Managed Identity
@@ -137,25 +166,40 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 > Supported with linux and windows
 
-1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
+1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal)
 
     ```bash
+    # Client ID will be the App ID of your service principal
+    # Client Secret will be the Password of your service principal
+
     kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
     ```
 
     Ensure this service principal has all the required permissions to access content in your Azure key vault instance.
-    If not, you can run the following using the Azure cli:
+    If you do not have a service principal, you can run the following Azure CLI commands to create a new service principal and assign permissions:
 
     ```bash
-    # Assign Reader Role to the service principal for your keyvault
-    az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
+    # Set environment variables
+    SPNAME=<servicePrincipalName>
+    APPID=<service-principal-appId>
+    KV_NAME=<key-vault-name>
+    RG=<resource-group-name-for-KV>
+    SUBID=<subscription-id>
 
-    az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR SPN CLIENT ID>
-    az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR SPN CLIENT ID>
-    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR SPN CLIENT ID>
+    # OPTIONAL: Create a new service principal, be sure to notate the SP secret returned on creation
+    az ad sp create-for-rbac --skip-assignment --name $SPNAME
+
+    # Assign Reader Role to the service principal for your keyvault
+    az role assignment create --role Reader --assignee $APPID --scope /subscriptions/$SUBID/resourcegroups/$RG/providers/Microsoft.KeyVault/vaults/$KV_NAME
+    
+    az keyvault set-policy -n $KV_NAME --key-permissions get --spn $APPID
+    az keyvault set-policy -n $KV_NAME --secret-permissions get --spn $APPID
+    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn $APPID
     ```
 
 1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
+
+If you did not change the name of the secret reference previously, no changes are needed.
 
     ```yaml
     nodePublishSecretRef:
