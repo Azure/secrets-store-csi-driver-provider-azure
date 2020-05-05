@@ -513,7 +513,7 @@ func decodePKCS12(value string) (content string, err error) {
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	}
-	pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	pemData = append(pemData, pem.EncodeToMemory(keyBlock)...)
+	pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	return string(pemData), nil
 }
