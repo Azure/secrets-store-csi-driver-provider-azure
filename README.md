@@ -131,7 +131,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
 
 1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
 
-    If you did not change the name of the secretProviderClass previously, no changes are needed.
+        If you did not change the name of the secretProviderClass previously, no changes are needed.
     
         ```yaml
         volumes:
@@ -166,7 +166,9 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 > Supported with linux and windows
 
-1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal)
+1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal) 
+
+    A properly configured service principal will need to be passed in with the SP's App ID and Password. Ensure this service principal has all the required permissions to access content in your Azure Key Vault instance.
 
     ```bash
     # Client ID will be the App ID of your service principal
@@ -174,20 +176,23 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
     kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
     ```
+    
+    **If you do not have a service principal**, run the following Azure CLI command to create a new service principal.
 
-    Ensure this service principal has all the required permissions to access content in your Azure key vault instance.
-    If you do not have a service principal, you can run the following Azure CLI commands to create a new service principal and assign permissions:
+    ```bash
+    # OPTIONAL: Create a new service principal, be sure to notate the SP secret returned on creation.
+    az ad sp create-for-rbac --skip-assignment --name $SPNAME
+    ```
+
+    With an existing service principal, assign the following permissions.
 
     ```bash
     # Set environment variables
     SPNAME=<servicePrincipalName>
-    APPID=<service-principal-appId>
+    APPID=$(az ad sp show --id http://${SPNAME} --query appId -o tsv)
     KV_NAME=<key-vault-name>
     RG=<resource-group-name-for-KV>
     SUBID=<subscription-id>
-
-    # OPTIONAL: Create a new service principal, be sure to notate the SP secret returned on creation
-    az ad sp create-for-rbac --skip-assignment --name $SPNAME
 
     # Assign Reader Role to the service principal for your keyvault
     az role assignment create --role Reader --assignee $APPID --scope /subscriptions/$SUBID/resourcegroups/$RG/providers/Microsoft.KeyVault/vaults/$KV_NAME
@@ -332,6 +337,8 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
+AKS does not support user assigned managed identities yet, only system assigned managed identities. Until this gap is covered, use a service principal or system assigned identities with AKS.
+
 > You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
 >
 >```bash
@@ -375,6 +382,8 @@ userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.
 > Supported with linux and windows
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
+
+For AKS clusters, system assigned managed identities can be created on your behalf. To learn more [read here about AKS managed identity support](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity).
 
 1. Verify that the nodes have its own system assigned managed identity
 
