@@ -105,7 +105,8 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
     # local path to folder container cloned Secrets Store CSI Driver
     SECRETS_STORE_CSI_DRIVER_PATH=<your_local_path_to_the_secrets_store_csi_driver>
-
+    # will disable tests not related to the Kind Cluster
+    CI_KIND_CLUSTER=true
     ```
 <details>
   <summary>The finished 'secrets.env' should look like this:</summary>
@@ -133,7 +134,7 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     IMAGE_VERSION=<image_version>
     PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
     SECRETS_STORE_CSI_DRIVER_PATH=<your_local_path_to_the_secrets_store_csi_driver>
-
+    CI_KIND_CLUSTER=true
   </p>
 </details>
 
