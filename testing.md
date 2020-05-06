@@ -1,6 +1,6 @@
 # Testing
 
-## Local End-To-End Testing for the Key Vault Azure Provider
+## Local End-To-End Testing for the Azure Key Vault Provider
 
 This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the `test/bats` folder to see the tests and the deployments needed for creating the e2e tests.
 
@@ -56,6 +56,8 @@ AZURE_CLIENT_SECRET=$(az ad sp credential reset --name $AZURE_CLIENT_ID --creden
 
 # Assign Read Only Policy for our Key Vault to the Service Principal
 az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn $KEYVAULT_CLIENT_ID
+az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn $KEYVAULT_CLIENT_ID
+
 ```
 The Service Principal(SP) created during this section uses just **Read Only** permissions. This SP is then applied to the Azure Key Vault since we want to limit the Service Principal's credentials to only allow for reading of the keys. This will prevent the chance of manipulating anything on the Key Vault when using the login of this Service Principal.
 

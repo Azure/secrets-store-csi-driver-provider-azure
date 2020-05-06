@@ -7,11 +7,12 @@ WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
-SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/sigs.k8s.io"}
+SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/sigs.k8s.io/secrets-store-csi-driver"}
 
 export OBJECT1_NAME=${OBJECT1_NAME:-secret1}
 export OBJECT1_ALIAS=${OBJECT1_ALIAS:-SECRET_1}
 export OBJECT1_TYPE=${OBJECT1_TYPE:-secret}
+export OBJECT1_VALUE=${OBJECT1_VALUE:-test}
 
 export OBJECT2_NAME=${OBJECT2_NAME:-key1}
 export OBJECT2_ALIAS=${OBJECT2_ALIAS:-KEY_1}
@@ -33,7 +34,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ${SECRETS_STORE_CSI_DRIVER_PATH}/secrets-store-csi-driver/charts/secrets-store-csi-driver --namespace dev
+  run helm install csi-secrets-store ${SECRETS_STORE_CSI_DRIVER_PATH}/charts/secrets-store-csi-driver --namespace dev
   assert_success
 }
 
@@ -57,12 +58,12 @@ setup() {
   assert_success
 }
 
-@test "CSI inline volume test - read azure kv secret from pod" {
+@test "CSI inline volume test - read azure kv ${OBJECT1_TYPE} from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT1_NAME)
-  [[ "$result" -eq "test" ]]
+  [[ "$result" == *"${OBJECT1_VALUE}" ]]
 }
 
-@test "CSI inline volume test - read azure kv key from pod" {
+@test "CSI inline volume test - read azure kv ${OBJECT2_TYPE} from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT2_NAME)
   [[ "$result" == *"${OBJECT2_VALUE}"* ]]
 }
@@ -77,12 +78,12 @@ setup() {
   [[ `$result` -eq `${CERT2_VALUE}` ]]
 }
 
-@test "CSI inline volume test - read azure kv secret, if alias present, from pod" {
+@test "CSI inline volume test - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT1_ALIAS)
-  [[ "$result" -eq "test" ]]
+  [[ "$result" == *"${OBJECT1_VALUE}" ]]
 }
 
-@test "CSI inline volume test - read azure kv key, if alias present, from pod" {
+@test "CSI inline volume test - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT2_ALIAS)
   [[ "$result" == *"${OBJECT2_VALUE}"* ]]
 }
@@ -116,12 +117,12 @@ setup() {
   assert_success
 }
 
-@test "CSI inline volume test with pod portability - read azure kv secret from pod" {
+@test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE} from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT1_NAME)
-  [[ "$result" -eq "test" ]]
+  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv key from pod" {
+@test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE} from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT2_NAME)
   [[ "$result" == *"${OBJECT2_VALUE}"* ]]
 }
@@ -136,12 +137,12 @@ setup() {
   [[ `$result` -eq `${CERT2_VALUE}` ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv secret, if alias present, from pod" {
+@test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT1_ALIAS)
-  [[ "$result" -eq "test" ]]
+  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
 }
 
-@test "CSI inline volume test with pod portability - read azure kv key, if alias present, from pod" {
+@test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
   result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT2_ALIAS)
   [[ "$result" == *"${OBJECT2_VALUE}"* ]]
 }
@@ -168,10 +169,9 @@ setup() {
   run kubectl get pod/nginx-secrets-store-inline-crd-msi
   assert_success
 
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/secret1)
-  [[ "$result" -eq "test" ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/$OBJECT1_NAME)
+  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
 
-  KEY_VALUE_CONTAINS=uiPCav0xdIq
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/key1)
-  [[ "$result" == *"${KEY_VALUE_CONTAINS}"* ]]
+  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/$OBJECT2_NAME)
+  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
 }

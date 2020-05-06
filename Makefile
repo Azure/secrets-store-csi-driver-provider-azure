@@ -5,19 +5,18 @@ REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.5
-PROJECT_NAME ?= secrets-store-csi-driver-provider-azure
+IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
 
 # Use a custom version for E2E tests if we are testing in CI
 ifdef CI
 override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
 endif
 
-
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
-REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
-E2E_IMAGE_TAG=$(REGISTRY)/$(PROJECT_NAME):$(IMAGE_VERSION)
+REPO_PATH="$(ORG_PATH)/$(IMAGE_NAME)"
+E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
@@ -78,8 +77,8 @@ endif
 .PHONY: e2e-container
 e2e-container:
 ifdef CI_KIND_CLUSTER
-		DOCKER_IMAGE=$(REGISTRY)/$(PROJECT_NAME) make image
-		kind load docker-image --name kind $(REGISTRY)/$(PROJECT_NAME):$(IMAGE_VERSION)
+		DOCKER_IMAGE=$(REGISTRY)/$(IMAGE_NAME) make image
+		kind load docker-image --name kind $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 else
 		az acr login --name $(REGISTRY_NAME)
 		make build build-windows
@@ -94,9 +93,9 @@ endif
 e2e-container-cleanup:
 ifndef CI_KIND_CLUSTER
 	az acr login --name $(REGISTRY_NAME)
-	az acr repository delete --name $(REGISTRY_NAME) --image $(PROJECT_NAME):$(IMAGE_VERSION)-linux-amd64 -y
-	az acr repository delete --name $(REGISTRY_NAME) --image $(PROJECT_NAME):$(IMAGE_VERSION)-windows-1809-amd64 -y
-	az acr repository delete --name $(REGISTRY_NAME) --image $(PROJECT_NAME):$(IMAGE_VERSION) -y
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-linux-amd64 -y
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-windows-1809-amd64 -y
+	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION) -y
 endif
 
 .PHONY: e2e-test
