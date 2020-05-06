@@ -143,7 +143,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
                 secretProviderClass: "azure-kvname"
         ```
 
-  1. Select and complete an option from [below to enable access to the Key Vault](####Provide-Identity-to-Access-Key-Vault)
+  1. Select and complete an option from [below to enable access to the Key Vault](#provide-identity-to-access-key-vault)
 
   1. Deploy the secretProviderClass
 
@@ -155,18 +155,16 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
 
 #### Validate the secret
 
+Read more about [validating secret content from the secrets-store-csi-driver here](https://github.com/kubernetes-sigs/secrets-store-csi-driver#secret-content-is-mounted-on-pod-start).
+
 1. Validate the pod has access to the secret from key vault:
 
     ```bash
+    ## show secrets held in secrets-store
     kubectl exec -it nginx-secrets-store-inline-podid ls /mnt/secrets-store/
-    secret1
-    ```
 
-    You should see an output similar to:
-    ```bash
-    ➜  Desktop kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/secret1
-    + kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/secret1
-    /mnt/secrets-store/secret1
+    ## print a test secret
+    kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1
     ```
 
 #### Provide Identity to Access Key Vault
