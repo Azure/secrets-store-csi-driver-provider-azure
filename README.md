@@ -143,7 +143,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
                 secretProviderClass: "azure-kvname"
         ```
 
-  1. Select and complete an option from below to enable access to the Key Vault
+  1. Select and complete an option from [below to enable access to the Key Vault](####Provide-Identity-to-Access-Key-Vault)
 
   1. Deploy the secretProviderClass
 
@@ -152,6 +152,22 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
   1. Deploy the Linux deployment yaml
 
      `kubectl apply -f ./examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml`
+
+#### Validate the secret
+
+1. Validate the pod has access to the secret from key vault:
+
+    ```bash
+    kubectl exec -it nginx-secrets-store-inline-podid ls /mnt/secrets-store/
+    secret1
+    ```
+
+    You should see an output similar to:
+    ```bash
+    ➜  Desktop kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/secret1
+    + kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/secret1
+    /mnt/secrets-store/secret1
+    ```
 
 #### Provide Identity to Access Key Vault
 
@@ -322,13 +338,6 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
     ```bash
     kubectl apply -f examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
-    ```
-
-1. Validate the pod has access to the secret from key vault:
-
-    ```bash
-    kubectl exec -it nginx-secrets-store-inline-podid ls /mnt/secrets-store/
-    secret1
     ```
 
 **OPTION 3 - VMSS User Assigned Managed Identity**
