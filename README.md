@@ -155,15 +155,13 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
 
 #### Validate the secret
 
-Read more about [validating secret content from the secrets-store-csi-driver here](https://github.com/kubernetes-sigs/secrets-store-csi-driver#secret-content-is-mounted-on-pod-start).
-
-1. Validate the pod has access to the secret from key vault:
+1. To validate, once the pod is started, you should see the new mounted content at the volume path specified in your deployment yaml.
 
     ```bash
     ## show secrets held in secrets-store
-    kubectl exec -it nginx-secrets-store-inline-podid ls /mnt/secrets-store/
+    kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
 
-    ## print a test secret
+    ## print a test secret held in secrets-store
     kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/secret1
     ```
 
