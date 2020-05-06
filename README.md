@@ -15,9 +15,9 @@ This guide will walk you through the steps to configure and run the Azure Key Va
 ### Install the Secrets Store CSI Driver and the Azure Keyvault Provider
 **Prerequisites**
 
-Recommended Kubernetes version: 
-- For linux - v1.16.0+
-- For windows - v1.18.0+
+Recommended Kubernetes version:
+- For Linux - v1.16.0+
+- For Windows - v1.18.0+
 
 **Deployment using Helm**
 
@@ -43,7 +43,7 @@ For windows nodes
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
 ```
 
-To validate the provider's installer is running as expected, run the following commands:    
+To validate the provider's installer is running as expected, run the following commands:
 
 ```bash
 kubectl get pods -l app=csi-secrets-store-provider-azure
@@ -93,7 +93,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
         useVMManagedIdentity: "false"   # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
         userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
         keyvaultName: "kvname"          # the name of the KeyVault
-        cloudName: "cloudname"          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublic Cloud
+        cloudName: ""          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
         objects:  |
           array:
             - |
