@@ -30,11 +30,16 @@ The [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) will be used 
 ```
  If you were to check in your Azure Subscription, you will have a new Resource Group and Key Vault created. You can learn more [here](https://docs.microsoft.com/azure/key-vault/about-keys-secrets-and-certificates#objects-identifiers-and-versioning) about Azure Key Vault naming, objects, types, and versioning.
 
-You can add objects to your Key Vault with the commands below (make sure to add your own object name):
+Below are examples of how to quickly add a few objects to your Key Vault (make sure to add your own object name):
+
+💡 **Please add 2 Objects (Keys and/or Secrets) and 2 Certificates (1 PEM, and 1 PKCS12) to your Key Vault.**
 
 ```bash
 az keyvault secret set --vault-name $KEYVAULT_NAME --name <secretNameHere> --value $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 40 | head -n 1)
+
 az keyvault key create --vault-name $KEYVAULT_NAME --name <keyNameHere>
+
+az keyvault certificate create --vault-name $KEYVAULT_NAME --name <certNameHere> -p "$(az keyvault certificate get-default-policy)"
 ```
 
 You can retrieve the value of a Key Vault secret with the following script:
@@ -42,6 +47,10 @@ You can retrieve the value of a Key Vault secret with the following script:
 ```bash
 # to view a given secret's value
 az keyvault secret show --vault-name $KEYVAULT_NAME --name <secretNameHere> --query value -o tsv
+# to view a given key's value
+az keyvault key show --vault-name $KEYVAULT_NAME --name <yourKeyNameHere> --query "key.n" -o tsv
+# to view a given certificate's value
+az keyvault certificate show --vault-name $KEYVAULT_NAME --name <yourCertificateNameHere> --query cer -o tsv
 ```
 ### Create a Service Principal
 
@@ -55,8 +64,9 @@ AZURE_CLIENT_ID=$(az ad sp create-for-rbac --name $KEYVAULT_NAME --role Reader -
 AZURE_CLIENT_SECRET=$(az ad sp credential reset --name $AZURE_CLIENT_ID --credential-description "APClientSecret" --query password -o tsv)
 
 # Assign Read Only Policy for our Key Vault to the Service Principal
-az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn $KEYVAULT_CLIENT_ID
-az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn $KEYVAULT_CLIENT_ID
+az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn $AZURE_CLIENT_ID
+az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn $AZURE_CLIENT_ID
+az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn $AZURE_CLIENT_ID
 
 ```
 The Service Principal(SP) created during this section uses just **Read Only** permissions. This SP is then applied to the Azure Key Vault since we want to limit the Service Principal's credentials to only allow for reading of the keys. This will prevent the chance of manipulating anything on the Key Vault when using the login of this Service Principal.
@@ -65,7 +75,9 @@ The Service Principal(SP) created during this section uses just **Read Only** pe
 
 Add your secrets to a `secrets.env` file at the application `root` directory.
 
-1. Add all secrets related to the Azure Key Vault, Service Principal, and your Azure Subscription
+1. Add all secrets related to the Azure Key Vault, Service Principal, and your Azure Subscription.
+
+> By this point you should have 4 Objects in your Key Vault. 2 Certs, and 2 Objects(Secrets and/or Keys).
 
     ```bash
     # secrets.env
@@ -80,6 +92,14 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     OBJECT2_TYPE=key
     OBJECT2_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
     OBJECT2_VERSION=""
+
+    CERT1_NAME=<yourKeyVaultCertName>
+    CERT1_VALUE=<yourKeyVaultCertValue>
+    CERT1_VERSION=""
+
+    CERT2_NAME=<yourKeyVaultCertName>
+    CERT2_VALUE=<yourKeyVaultCertValue>
+    CERT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
 
@@ -122,6 +142,14 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     OBJECT2_TYPE=key
     OBJECT2_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
     OBJECT2_VERSION=""
+
+    CERT1_NAME=<yourKeyVaultCertName>
+    CERT1_VALUE=<yourKeyVaultCertValue>
+    CERT1_VERSION=""
+
+    CERT2_NAME=<yourKeyVaultCertName>
+    CERT2_VALUE=<yourKeyVaultCertValue>
+    CERT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
 
