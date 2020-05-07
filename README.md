@@ -131,9 +131,9 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
 
 1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
 
-        If you did not change the name of the secretProviderClass previously, no changes are needed.
+      If you did not change the name of the secretProviderClass previously, no changes are needed.
     
-        ```yaml
+      ```yaml
         volumes:
           - name: secrets-store-inline
             csi:
@@ -141,7 +141,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
               readOnly: true
               volumeAttributes:
                 secretProviderClass: "azure-kvname"
-        ```
+      ```
 
   1. Select and complete an option from [below to enable access to the Key Vault](#provide-identity-to-access-key-vault)
 
@@ -176,7 +176,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 **OPTION 1 - Service Principal**
 
-> Supported with linux and windows
+> Supported with Linux and Windows
 
 1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal) 
 
@@ -216,7 +216,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to reference the service principal kubernetes secret created in the previous step
 
-If you did not change the name of the secret reference previously, no changes are needed.
+    If you did not change the name of the secret reference previously, no changes are needed.
 
     ```yaml
     nodePublishSecretRef:
@@ -225,7 +225,7 @@ If you did not change the name of the secret reference previously, no changes ar
 
 **OPTION 2 - Pod Identity**
 
-> Supported only on linux
+> Supported only on Linux
 
 **Prerequisites**
 
@@ -242,12 +242,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
       ```
 
-   - (Optional) Providing required permissions for MIC
-
-     - If the SPN you are using for the AKS cluster was created separately (before the cluster creation - i.e. not part of the MC_ resource group) you will need to assign it the "Managed Identity Operator" role.
-       ```
-       az role assignment create --role "Managed Identity Operator" --assignee <sp id> --scope <full id of the managed identity>
-       ```
+   - 💡 Follow the [Role assignment](https://github.com/Azure/aad-pod-identity/blob/master/docs/readmes/README.role-assignment.md) documentation to setup all the required roles for aad-pod-identity components.
 
 1. Create an Azure User Identity
 
@@ -338,7 +333,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 **OPTION 3 - VMSS User Assigned Managed Identity**
 
-> Supported with linux and windows
+> Supported with Linux and Windows
 
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
@@ -384,7 +379,7 @@ userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.
 
 **OPTION 4 - VMSS System Assigned Managed Identity**
 
-> Supported with linux and windows
+> Supported with Linux and Windows
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
 
