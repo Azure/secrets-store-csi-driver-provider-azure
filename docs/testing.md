@@ -18,11 +18,11 @@ As as prerequisite, you will need to have an [Azure Key Vault](https://docs.micr
 
 ### Set up an Azure Key Vault
 
-For assistance on setting up an Azure Key Vault specific to testing this project, please refer to [this guide](docs/setup-keyvault.md)
+For assistance on setting up an Azure Key Vault specific to testing this project, please refer to [this guide](/docs/setup-keyvault.md)
 
 ### Assign a Service Principal to Your Azure Key Vault
 
-For assistance on assigning an existing or new Service Principal to your Key Vault, please follow [this guide](docs/service-principal-mode.md).
+For assistance on assigning an existing or new Service Principal to your Key Vault, please follow [this guide](/docs/service-principal-mode.md).
 
 ### Preparing your secrets
 

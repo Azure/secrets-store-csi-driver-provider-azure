@@ -177,4 +177,4 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 #### Testing
 
-For documentation on how to locally test the Secrets Store CSI Driver Provider for Azure, please refer to [this guide](/testing.md)
+For documentation on how to locally test the Secrets Store CSI Driver Provider for Azure, please refer to [this guide](/docs/testing.md)
