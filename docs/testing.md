@@ -129,6 +129,10 @@ Here are the steps that you can follow to test the Azure Key Vault Azure Provide
 ```bash
   # create and configure kind cluster
   make e2e-local-bootstrap
+  # set your cluster context to the kind cluster
+  export KUBECONFIG=$(kind get kubeconfig-path)
+  # add the dev namespace where the Secrets Store CSI Driver and the Azure Provider will be deployed
+  kubectl create namespace dev
   # run the e2e-tests
   make e2e-test
 ```
