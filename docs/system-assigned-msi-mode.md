@@ -12,7 +12,7 @@ For AKS clusters, system assigned managed identities can be created on your beha
 az vmss identity show -g <resource group>  -n <vmss scalset name> -o yaml
 ```
 
-The output should contain `type: SystemAssigned`.  
+The output should contain `type: SystemAssigned`.
 
 2. Grant Azure Managed Identity KeyVault permissions
 
@@ -20,11 +20,11 @@ The output should contain `type: SystemAssigned`.
 
    ```bash
    # set policy to access keys in your Key Vault
-   az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
    # set policy to access secrets in your Key Vault
-   az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
    # set policy to access certs in your Key Vault
-   az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
    ```
 
 3. Deploy your application. Specify `useVMManagedIdentity` to `true`.
