@@ -77,7 +77,7 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
 
 1. Add all secrets related to the Azure Key Vault, Service Principal, and your Azure Subscription.
 
-> By this point you should have 4 Objects in your Key Vault. 2 Certs, and 2 Objects(Secrets and/or Keys).
+> By this point you should have 4 Objects in your Key Vault. 2 Certs (Base64 Encoded), and 2 Objects (Secrets and/or Keys).
 
     ```bash
     # secrets.env
@@ -92,13 +92,14 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     OBJECT2_TYPE=key
     OBJECT2_ALIAS=<YOUR_KEY_VAULT_KEY_ALIAS>
     OBJECT2_VERSION=""
-
+     
+    # The Certs are Base64 Encoded.
     CERT1_NAME=<yourKeyVaultCertName>
-    CERT1_VALUE=<yourKeyVaultCertValue>
+    CERT1_VALUE=<yourKeyVaultCertBase64EncodedValue>
     CERT1_VERSION=""
 
     CERT2_NAME=<yourKeyVaultCertName>
-    CERT2_VALUE=<yourKeyVaultCertValue>
+    CERT2_VALUE=<yourKeyVaultCertBase64EncodedValue>
     CERT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
@@ -144,11 +145,11 @@ Add your secrets to a `secrets.env` file at the application `root` directory.
     OBJECT2_VERSION=""
 
     CERT1_NAME=<yourKeyVaultCertName>
-    CERT1_VALUE=<yourKeyVaultCertValue>
+    CERT1_VALUE=<yourKeyVaultCertBase64EncodedValue>
     CERT1_VERSION=""
 
     CERT2_NAME=<yourKeyVaultCertName>
-    CERT2_VALUE=<yourKeyVaultCertValue>
+    CERT2_VALUE=<yourKeyVaultCertBase64EncodedValue>
     CERT2_VERSION=""
 
     KEYVAULT_NAME=<yourAzureKeyVaultName>
