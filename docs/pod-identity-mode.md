@@ -86,19 +86,19 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
 
 1. Add the following to [this](../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml) deployment yaml:
 
-    a. Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
+    Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
     metadata:
     labels:
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
+    
+1. Update [this sample deployment](../examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
-    b. make sure to update `usepodidentity` to `true`
+    Make sure to update `usepodidentity` to `true`
     ```yaml
     usepodidentity: "true"
     ```
-    
-1. Update [this sample deployment](../examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 1. Deploy your app
 
