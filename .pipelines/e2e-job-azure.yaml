@@ -35,7 +35,7 @@ jobs:
       export KUBECONFIG=cluster-kubeconfig.json
       kubectl get nodes -o wide
       kubectl create ns dev
-      make e2e-azure
+      make e2e-test
     displayName: "Run e2e tests on aks-engine cluster"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)

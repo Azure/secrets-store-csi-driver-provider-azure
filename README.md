@@ -32,7 +32,6 @@ Follow [this guide to install using Helm](charts/csi-secrets-store-provider-azur
 
 💡 Follow the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage) to install the driver.
 
-
 ### Install the Azure Key Vault Provider
 
 For linux nodes
@@ -131,10 +130,10 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | subscriptionId         | no      | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                   | ""            |
     | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
 
-1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
+1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step.
 
       If you did not change the name of the secretProviderClass previously, no changes are needed.
-    
+
       ```yaml
         volumes:
           - name: secrets-store-inline
@@ -175,3 +174,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 1. [Pod Identity](docs/pod-identity-mode.md)
 1. [VMSS User Assigned Managed Identity](docs/user-assigned-msi-mode.md)
 1. [VMSS System Assigned Managed Identity](docs/system-assigned-msi-mode.md)
+
+#### Testing
+
+For documentation on how to locally test the Secrets Store CSI Driver Provider for Azure, please refer to [this guide](/docs/testing.md)

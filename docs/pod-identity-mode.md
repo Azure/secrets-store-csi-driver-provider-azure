@@ -36,11 +36,11 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
 
     # set policy to access keys in your keyvault
-    az keyvault set-policy -n $KV_NAME --key-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
+    az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     # set policy to access secrets in your keyvault
-    az keyvault set-policy -n $KV_NAME --secret-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
+    az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     # set policy to access certs in your keyvault
-    az keyvault set-policy -n $KV_NAME --certificate-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
+    az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     ```
 
 1. Add a new `AzureIdentity` for the new identity to your cluster
@@ -99,7 +99,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```yaml
     usepodidentity: "true"
     ```
-
+    
 1. Deploy your app
 
     ```bash
