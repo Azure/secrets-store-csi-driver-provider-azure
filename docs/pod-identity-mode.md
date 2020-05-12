@@ -6,7 +6,7 @@
 
 💡 Make sure you have installed pod identity to your Kubernetes cluster
 
-   __This project makes use of the aad-pod-identity project located  [here](https://github.com/Azure/aad-pod-identity#deploy-the-azure-aad-identity-infra) to handle the identity management of the pods. Reference the aad-pod-identity README if you need further instructions on any of these steps.__
+   __This project makes use of the aad-pod-identity project located  [here](https://github.com/Azure/aad-pod-identity#getting-started) to handle the identity management of the pods. Reference the aad-pod-identity README if you need further instructions on any of these steps.__
 
 Not all steps need to be followed on the instructions for the aad-pod-identity project as we will also complete some of the steps on our installation here.
 
@@ -84,7 +84,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl create -f aadpodidentitybinding.yaml
     ```
 
-1. Add the following to [this](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml) deployment yaml:
+1. Add the following to [this](../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml) deployment yaml:
 
     a. Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
@@ -98,12 +98,12 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     usepodidentity: "true"
     ```
     
-1. Update [this sample deployment](examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
+1. Update [this sample deployment](../examples/v1alpha1_secretproviderclass_podid.yaml) to create a `secretproviderclasses` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 1. Deploy your app
 
     ```bash
-    kubectl apply -f examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
+    kubectl apply -f ../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
     ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.

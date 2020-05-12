@@ -19,7 +19,7 @@ Recommended Kubernetes version:
 - For Linux - v1.16.0+
 - For Windows - v1.18.0+
 
-> For Kubernetes version 1.15, please use [Azure Keyvault Flexvolume](https://github.com/Azure/kubernetes-keyvault-flexvol)
+> For Kubernetes version 1.15 and below, please use [Azure Keyvault Flexvolume](https://github.com/Azure/kubernetes-keyvault-flexvol)
 
 **Deployment using Helm**
 
@@ -131,7 +131,7 @@ Create a `secretproviderclasses` resource to provide provider-specific parameter
     | subscriptionId         | no      | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                   | ""            |
     | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
 
-1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secretproviderclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
+1. Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
 
       If you did not change the name of the secretProviderClass previously, no changes are needed.
     
