@@ -19,6 +19,8 @@ Recommended Kubernetes version:
 - For Linux - v1.16.0+
 - For Windows - v1.18.0+
 
+> For Kubernetes version 1.15, please use [Azure Keyvault Flexvolume](https://github.com/Azure/kubernetes-keyvault-flexvol)
+
 **Deployment using Helm**
 
 Follow [this guide to install using Helm](charts/csi-secrets-store-provider-azure/README.md)
