@@ -28,7 +28,7 @@
     ```bash
     # Set environment variables
     SPNAME=<servicePrincipalName>
-    AZURE_CLIENT_ID=$(az ad sp show --id http://${SPNAME} --query AZURE_CLIENT_ID -o tsv)
+    AZURE_CLIENT_ID=$(az ad sp show --id http://${SPNAME} --query appId -o tsv)
     KEYVAULT_NAME=<key-vault-name>
     KEYVAULT_RESOURCE_GROUP=<resource-group-name-for-KV>
     SUBID=<subscription-id>
