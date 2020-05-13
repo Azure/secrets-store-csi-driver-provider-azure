@@ -424,7 +424,24 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
-		return *secret.Value, nil
+		content := *secret.Value
+		// if the secret is part of a certificate, then we need to convert the key to PEM format
+		if secret.Kid != nil && len(*secret.Kid) > 0 {
+			switch *secret.ContentType {
+			case certTypePem:
+				return *secret.Value, nil
+			case certTypePfx:
+				content, err := getCertAndPrivKeyInPEMFormat(*secret.Value)
+				if err != nil {
+					return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+				}
+				return content, nil
+			default:
+				err := errors.Errorf("failed to get certificate. unknown content type '%s'", *secret.ContentType)
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+		}
+		return content, nil
 	case VaultObjectTypeKey:
 		keybundle, err := kvClient.GetKey(ctx, *vaultURL, objectName, objectVersion)
 		if err != nil {
@@ -443,27 +460,13 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
-		if !*certbundle.Policy.KeyProperties.Exportable {
-			err := errors.Errorf("cert key is not exportable")
-			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+		certBlock := &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: *certbundle.Cer,
 		}
-		secretBundle, err := kvClient.GetSecret(ctx, *vaultURL, objectName, objectVersion)
-		if err != nil {
-			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
-		}
-		switch *secretBundle.ContentType {
-		case certTypePem:
-			return *secretBundle.Value, nil
-		case certTypePfx:
-			content, err := decodePKCS12(*secretBundle.Value)
-			if err != nil {
-				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
-			}
-			return content, nil
-		default:
-			err := errors.Errorf("failed to get certificate. unknown content type '%s'", *secretBundle.ContentType)
-			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
-		}
+		var pemData []byte
+		pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
+		return string(pemData), nil
 	default:
 		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
 		return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
@@ -489,9 +492,21 @@ func RedactClientID(sensitiveString string) string {
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
 
+func getPrivateKeyInPEMFormat(value string) (string, error) {
+	return decodePKCS12(value, true, false)
+}
+
+func getCertInPEMFormat(value string) (string, error) {
+	return decodePKCS12(value, false, true)
+}
+
+func getCertAndPrivKeyInPEMFormat(value string) (string, error) {
+	return decodePKCS12(value, true, true)
+}
+
 // decodePkcs12 decodes a PKCS#12 client certificate by extracting the public certificate and
 // the private key
-func decodePKCS12(value string) (content string, err error) {
+func decodePKCS12(value string, getKey, getCert bool) (content string, err error) {
 	pfxRaw, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
 		return "", err
@@ -505,15 +520,20 @@ func decodePKCS12(value string) (content string, err error) {
 		return "", err
 	}
 	var pemData []byte
-	keyBlock := &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: keyX509,
+	if getKey {
+		keyBlock := &pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: keyX509,
+		}
+		pemData = append(pemData, pem.EncodeToMemory(keyBlock)...)
 	}
-	certBlock := &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
+
+	if getCert {
+		certBlock := &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: cert.Raw,
+		}
+		pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	}
-	pemData = append(pemData, pem.EncodeToMemory(keyBlock)...)
-	pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	return string(pemData), nil
 }
