@@ -12,7 +12,8 @@ helm install csi-secrets-store-provider-azure/csi-secrets-store-provider-azure -
 kubectl create secret generic secrets-store-creds --from-literal clientid=$CLIENT_ID --from-literal clientsecret=$CLIENT_SECRET
 
 # Deploy app
-kubectl apply -f nginx-pod-secrets-store-inline-volume.yaml
+kubectl apply -f v1alpha1_secretproviderclass.yaml
+kubectl apply -f nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml
 
 # wait for deployment
 kubectl wait --for=condition=ready pods/nginx-secrets-store-inline --timeout=300s

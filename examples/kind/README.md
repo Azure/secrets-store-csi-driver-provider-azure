@@ -1,6 +1,6 @@
 # KIND Demo
 
-[kind](https://github.com/kubernetes-sigs/kind)(Kubernetes in Docker) is a tool for running local Kubernetes clusters using Docker container “nodes”. Azure CSI Driver will work in kind using Service Principal.
+[kind](https://github.com/kubernetes-sigs/kind)(Kubernetes in Docker) is a tool for running local Kubernetes clusters using Docker container “nodes”. Azure Key Vault Provider for Secrets Store CSI Driver will work in kind using Service Principal.
 
 ## Prerequisite
 
@@ -10,22 +10,25 @@
 
 ## Setup
 
-- Create a Azure AD App to create Service Principal and give it "GET" permission for secrets in keyvault. Follow the steps in [keyvault docs](https://docs.microsoft.com/en-us/azure/key-vault/general/group-permissions-for-apps#applications). Keep `ClientID` and `ClientSecret` of the AD app handy.
+- We will use Azure Key Vault provider for Secrets Store CSI driver in [Service Principle Mode](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/service-principal-mode.md) Create a Azure AD App to create Service Principal and give it "GET" permission for secrets in keyvault. Follow the steps in [keyvault docs](https://docs.microsoft.com/en-us/azure/key-vault/general/group-permissions-for-apps#applications). Keep `ClientID` and `ClientSecret` of the AD app handy.
 
-- Update `nginx-pod-secrets-store-inline-volume.yaml` to provide keyvault name and the keyvault resources to fetch.
+- Copy [v1alpha1_secretproviderclass.yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/v1alpha1_secretproviderclass.yaml) and [nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to this directory.
 
-```
+- Update `v1alpha1_secretproviderclass.yaml` to provide keyvault name and the keyvault resources to fetch.
+
+```yaml
+cloudName: 'AzurePublicCloud' # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
 keyvaultName: '' # the name of the KeyVault
 objects: |
-    array:
-        - |
-        objectName: secret1
-        objectType: secret        # object types: secret, key or cert
-        objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
-        - |
-        objectName: key1
-        objectType: key
-        objectVersion: ""
+  array:
+    - |
+    objectName: secret1
+    objectType: secret        # object types: secret, key or cert
+    objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+    - |
+    objectName: key1
+    objectType: key
+    objectVersion: ""
 resourceGroup: '' # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
 subscriptionId: '' # [REQUIRED for version < 0.0.4] the subscription ID of the KeyVault
 tenantId: '' # the tenant ID of the KeyVault
