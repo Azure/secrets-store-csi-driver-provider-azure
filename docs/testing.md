@@ -2,7 +2,7 @@
 
 ## Local End-To-End Testing for the Azure Key Vault Provider
 
-This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the `../test/bats` folder to see the tests and the deployments needed for creating the e2e tests.
+This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the [test/bats](/test/bats) folder to see the tests and the deployments needed for creating the e2e tests.
 
 ### E2E Prerequisites
 
