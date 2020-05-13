@@ -458,9 +458,15 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 			if err != nil {
 				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 			}
+			// decode the base64 bytes for e
+			eb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.E)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			e := new(big.Int).SetBytes(eb).Int64()
 			pKey := &rsa.PublicKey{
 				N: new(big.Int).SetBytes(nb),
-				E: 65537,
+				E: int(e),
 			}
 			derBytes, err := x509.MarshalPKIXPublicKey(pKey)
 			if err != nil {
