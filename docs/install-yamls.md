@@ -11,6 +11,20 @@ Quick start instructions for the setup and configuration of secrets-store-csi-dr
 
 💡 Follow the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage) to install the driver.
 
+To validate the driver is running as expected, run the following commands:
+
+```bash
+kubectl get pods -l app=csi-secrets-store
+```
+
+You should see the driver pods running on each agent node:
+
+```bash
+NAME                                     READY   STATUS    RESTARTS   AGE
+csi-secrets-store-jlls6                  1/1     Running   0          10s
+csi-secrets-store-qt2l7                  1/1     Running   0          10s
+```
+
 ### Install the Azure Key Vault Provider
 
 For linux nodes

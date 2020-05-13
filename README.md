@@ -19,10 +19,12 @@ Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kuber
 - [Demo](#demo)
 - [Usage](#usage)
   - [Install with Helm](#install-the-secrets-store-csi-driver-and-the-azure-keyvault-provider)
-  - [Using the Azure Key Vault Provider](##using-the-azure-key-vault-provider)
+  - [Using the Azure Key Vault Provider](#using-the-azure-key-vault-provider)
 - [Azure Key Vault Provider Features](#azure-key-vault-provider-features)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Testing](#testing)
+- [Support](#support)
 
 ## Demo
 
@@ -66,9 +68,9 @@ Take note of the following properties for use in the next section:
 
 #### Create your own SecretProviderClass Object
 
-Create a `secretproviderclasses` custom resource to provide provider-specific parameters for the Secrets Store CSI driver. In this example, use an existing Azure Key Vault or the Azure Key Vault resource created previously.
+Create a `SecretProviderClass` custom resource to provide provider-specific parameters for the Secrets Store CSI driver. In this example, use an existing Azure Key Vault or the Azure Key Vault resource created previously.
 
-Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `secretproviderclasses` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
+Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
 
@@ -133,7 +135,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 To ensure your application is using the Secrets Store CSI driver, update your deployment yaml to use the `secrets-store.csi.k8s.io` driver and reference the `SecretProviderClass` resource created in the previous step.
 
-Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `secretProviderClass` resource created in the previous step. 
+Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
     
   ```yaml
     volumes:
@@ -147,7 +149,7 @@ Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volu
 
 #### Deploy your Kubernetes Resources
 
-  1. Deploy the secretProviderClass yaml created previously. For example:
+  1. Deploy the SecretProviderClass yaml created previously. For example:
 
      `kubectl apply -f ./examples/v1alpha1_secretproviderclass.yaml`
 
