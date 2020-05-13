@@ -6,7 +6,7 @@ trigger:
 pr:
   branches:
     include:
-    - master
+      - master
 
 jobs:
 - job: unit_tests
@@ -50,7 +50,7 @@ jobs:
       make e2e-bootstrap
       export KUBECONFIG=$(kind get kubeconfig-path)
       kubectl create ns dev
-      make e2e-azure
+      make e2e-test
     displayName: "Run e2e tests on kind cluster"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)

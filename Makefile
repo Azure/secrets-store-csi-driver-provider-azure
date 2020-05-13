@@ -1,17 +1,21 @@
-IMAGE_NAME=secrets-store-csi-driver-provider-azure
+-include secrets.env
+export $(shell test -f secrets.env && sed 's/=.*//' secrets.env)
+
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.5
+IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
+
 # Use a custom version for E2E tests if we are testing in CI
 ifdef CI
 override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
 endif
+
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
-PROJECT_NAME := secrets-store-csi-driver-provider-azure
-REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
+REPO_PATH="$(ORG_PATH)/$(IMAGE_NAME)"
 E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
@@ -94,8 +98,8 @@ ifndef CI_KIND_CLUSTER
 	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION) -y
 endif
 
-.PHONY: e2e-azure
-e2e-azure:
+.PHONY: e2e-test
+e2e-test:
 	bats -t test/bats/azure.bats
 
 .PHONY: setup-kind
@@ -106,3 +110,9 @@ setup-kind:
 .PHONY: install-helm
 install-helm:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+.PHONY: e2e-local-bootstrap
+e2e-local-bootstrap:
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
+	make image
+	kind load docker-image --name kind $(DOCKER_IMAGE):$(IMAGE_VERSION)
