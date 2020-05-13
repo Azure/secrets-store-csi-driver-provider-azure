@@ -1,12 +1,16 @@
 package azure
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -449,8 +453,57 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		}
 		switch keybundle.Key.Kty {
 		case kv.RSA:
-			// NOTE: we are writing the RSA modulus content of the key
-			return *keybundle.Key.N, nil
+			// decode the base64 bytes for n
+			nb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.N)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			pKey := &rsa.PublicKey{
+				N: new(big.Int).SetBytes(nb),
+				E: 65537,
+			}
+			derBytes, err := x509.MarshalPKIXPublicKey(pKey)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			pubKeyBlock := &pem.Block{
+				Type:  "PUBLIC KEY",
+				Bytes: derBytes,
+			}
+			var pemData []byte
+			pemData = append(pemData, pem.EncodeToMemory(pubKeyBlock)...)
+			return string(pemData), nil
+		case kv.EC:
+			// decode the base64 bytes for x
+			xb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.X)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			// decode the base64 bytes for y
+			yb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.Y)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			crv, err := getCurve(keybundle.Key.Crv)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			pKey := &ecdsa.PublicKey{
+				X:     new(big.Int).SetBytes(xb),
+				Y:     new(big.Int).SetBytes(yb),
+				Curve: crv,
+			}
+			derBytes, err := x509.MarshalPKIXPublicKey(pKey)
+			if err != nil {
+				return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
+			}
+			pubKeyBlock := &pem.Block{
+				Type:  "PUBLIC KEY",
+				Bytes: derBytes,
+			}
+			var pemData []byte
+			pemData = append(pemData, pem.EncodeToMemory(pubKeyBlock)...)
+			return string(pemData), nil
 		default:
 			err := errors.Errorf("failed to get key. key type '%s' currently not supported", keybundle.Key.Kty)
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
@@ -536,4 +589,17 @@ func decodePKCS12(value string, getKey, getCert bool) (content string, err error
 		pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	}
 	return string(pemData), nil
+}
+
+func getCurve(crv kv.JSONWebKeyCurveName) (elliptic.Curve, error) {
+	switch crv {
+	case kv.P256:
+		return elliptic.P256(), nil
+	case kv.P384:
+		return elliptic.P384(), nil
+	case kv.P521:
+		return elliptic.P521(), nil
+	default:
+		return nil, fmt.Errorf("curve %s is not suppported", crv)
+	}
 }
