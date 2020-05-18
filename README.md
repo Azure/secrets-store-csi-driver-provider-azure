@@ -253,4 +253,4 @@ Azure Key Vault Provider for Secrets Store CSI Driver is an open source project 
 
 This demo created by <a href="https://twitter.com/HoussemDellai">Houssem Dellai</a> is using AAD Pod Identity and Secret Store CSI provider for Key Vault to retrieve database login and password from Azure Key Vault. <a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24">Watch it here.</a>
 
-<a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src="images/demo-video-thumb.png" width="60%"/></a>
+<a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src="https://github.com/HoussemDellai/secrets-store-csi-driver-provider-azure/blob/added-demo/images/demo-video-thumb.png?raw=true" width="60%"/></a>
