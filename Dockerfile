@@ -8,9 +8,9 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags "${LDFL
 
 FROM us.gcr.io/k8s-artifacts-prod/build-image/debian-base-amd64:v2.1.0
 COPY --from=builder /go/src/github.com/Azure/secrets-store-csi-driver-provider-azure/_output/secrets-store-csi-driver-provider-azure /bin/
-COPY --from=builder /go/src/github.com/Azure/secrets-store-csi-driver-provider-azure/install.sh /bin/install_azure_provider.sh
-RUN clean-install bash
 RUN chmod a+x /bin/secrets-store-csi-driver-provider-azure
-RUN chmod +x /bin/install_azure_provider.sh
 
-ENTRYPOINT ["/bin/install_azure_provider.sh"]
+CMD ["sh","-c", "if [ -z \"${TARGET_DIR}\" ]; then echo 'target dir is not set. please set TARGET_DIR env var'; exit 1; fi; \
+    mkdir -p ${TARGET_DIR}/azure || exit 1; \
+    cp /bin/secrets-store-csi-driver-provider-azure ${TARGET_DIR}/azure/provider-azure || exit 1; \
+    while true; do echo \"install done at ${TARGET_DIR}/azure, daemonset sleeping\" && sleep 60; done"]
