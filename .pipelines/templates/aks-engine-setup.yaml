@@ -30,7 +30,7 @@ steps:
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
 
   - script: |
-      envsubst < .pipelines/kubernetes.json > cluster.json
+      envsubst < test/e2e/cluster_configs/$(CLUSTER_CONFIG).json > cluster.json
     displayName: "[AKS Engine] Build AKS-Engine API Model"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
     env:

@@ -13,6 +13,16 @@ if [[ "$OSTYPE" == *"darwin"* ]]; then
   BASE64_FLAGS="-b 0"
 fi
 
+PROVIDER_YAML=deployment/provider-azure-installer.yaml
+CONTAINER_IMAGE=nginx
+EXEC_COMMAND="cat /mnt/secrets-store"
+
+if [ $TEST_WINDOWS ]; then
+  PROVIDER_YAML=deployment/provider-azure-installer-windows.yaml
+  CONTAINER_IMAGE=mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+  EXEC_COMMAND="powershell.exe cat /mnt/secrets-store"
+fi
+
 export OBJECT1_NAME=${OBJECT1_NAME:-secret1}
 export OBJECT1_ALIAS=${OBJECT1_ALIAS:-SECRET_1}
 export OBJECT1_TYPE=${OBJECT1_TYPE:-secret}
@@ -41,6 +51,8 @@ export CERT1_KEY_VALUE=${CERT1_KEY_VALUE:-"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KT
 export CERT2_KEY_VALUE=${CERT2_KEY_VALUE:-"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF6b2VUeWdyMkpHTEZBTzlBZVJYaAo0MXFYYlFXUnNtL1BGeTY5WWZjUHlNc3RRWXZOQWlWamNBZWIwbWRLTnF2V290aXc1QXlEbWxaUGo3WlRxVEF3CjNpZE9ncGdOaDNGTjN0YXFIbDZBa1ZwRlh4YVE0bEl0enBDMXJOMHVEamZUYzNoUmJwdFdJN3MrQ3NxaWdIa1gKMTNGd1NpWCtzQktRbEt6eG9DRk1HN3NUcFB2S1dEd1Q2Mi8rMXptYWFWQzI0Z2ZRY3RsczM2QmJvQ2QwcFZhdQp2dUE3ZGE2VWRNMlhnRkNadjhIdEhvNEtkYVBaWDhaOVJRV1p3dWpoTXE3TzNSeHE5YTZQMUZVbElWY2k0OE1KClRXRFpobjI2VHNDdmdldzgzWi9TRHV5Vmh1N3JjMWVQUE93STVoaGU3ZXpGQTVQbEZkM1ZPT1U2RS9PN2pWcU4KTHdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="}
 export CERT3_KEY_VALUE=${CERT3_KEY_VALUE:-"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFVUFtYVRFQTV4U3l3MEd1NkRYbUticVo5LzJHMwovV2ZybzdPK3N6Ulpkd2xiQ0NYck9HcW1uS2tOb2dFU2E1cU5GSUdZSzdiUTF0ZDl0TFdSK2U3T1R3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="}
 
+export CONTAINER_IMAGE=$CONTAINER_IMAGE
+
 setup() {
   if [[ -z "${AZURE_CLIENT_ID}" ]] || [[ -z "${AZURE_CLIENT_SECRET}" ]]; then
     echo "Error: Azure service principal is not provided" >&2
@@ -49,12 +61,12 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ${SECRETS_STORE_CSI_DRIVER_PATH}/charts/secrets-store-csi-driver --namespace dev
+  run helm install csi-secrets-store ${SECRETS_STORE_CSI_DRIVER_PATH}/charts/secrets-store-csi-driver --namespace dev --set windows.enabled=true
   assert_success
 }
 
 @test "install azure provider with e2e image" {
-  yq w deployment/provider-azure-installer.yaml "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
+  yq w ${PROVIDER_YAML} "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
     | yq w - spec.template.spec.containers[0].imagePullPolicy "IfNotPresent" | kubectl apply -n dev -f -
 }
 
@@ -74,23 +86,23 @@ setup() {
 }
 
 @test "CSI inline volume test - read azure kv ${OBJECT1_TYPE} from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT1_NAME)
-  [[ "$result" == *"${OBJECT1_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test - read azure kv ${OBJECT2_TYPE} from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT2_NAME)
-  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "CSI inline volume test - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT1_ALIAS)
-  [[ "$result" == *"${OBJECT1_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_ALIAS)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline cat /mnt/secrets-store/$OBJECT2_ALIAS)
-  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_ALIAS)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "secretproviderclasses crd is established" {
@@ -112,8 +124,7 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability" {
-  run kubectl apply -f $BATS_TESTS_DIR/nginx-pod-secrets-store-inline-volume-crd.yaml
-  assert_success
+  envsubst < $BATS_TESTS_DIR/nginx-pod-secrets-store-inline-volume-crd.yaml | kubectl apply -f -
 
   cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-crd"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
@@ -123,23 +134,23 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE} from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT1_NAME)
-  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE} from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT2_NAME)
-  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT1_ALIAS)
-  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_ALIAS)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd cat /mnt/secrets-store/$OBJECT2_ALIAS)
-  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_ALIAS)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "CSI inline volume test with certificates" {
@@ -151,8 +162,7 @@ setup() {
   cmd="kubectl get secretproviderclasses.secrets-store.csi.x-k8s.io/azure-certs -o yaml | grep azure"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
 
-  run kubectl apply -f $BATS_TESTS_DIR/certificates/nginx-pod-secrets-store-inline-volume-crd.yaml
-  assert_success
+  envsubst < $BATS_TESTS_DIR/certificates/nginx-pod-secrets-store-inline-volume-crd.yaml | kubectl apply -f -
 
   cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-crd-certs"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
@@ -164,35 +174,35 @@ setup() {
 @test "CSI inline volume test with pod portability - read azure pem cert, priv and pub key from pod" {
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME | base64 ${BASE64_FLAGS})
   diff  <(echo "$result" ) <(echo "${CERT1_VALUE}")
-  [[ "$result" == "${CERT1_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT1_VALUE}" ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "$result" == "${CERT1_KEY_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT1_KEY_VALUE}" ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "$result" == "${CERT1_SECRET_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT1_SECRET_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure pkcs12 cert, priv and pub key from pod" {
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME | base64 ${BASE64_FLAGS})
-  [[ "$result" == "${CERT2_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT2_VALUE}" ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "$result" == "${CERT2_KEY_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT2_KEY_VALUE}" ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "$result" == "${CERT2_SECRET_VALUE}" ]]
+  [[ "${result//$'\r'}" == "${CERT2_SECRET_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure ecc cert, priv and pub key from pod" {
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME | base64 ${BASE64_FLAGS})
-  [[ "$result" == ${CERT3_VALUE} ]]
+  [[ "${result//$'\r'}" == ${CERT3_VALUE} ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "$result" == ${CERT3_KEY_VALUE} ]]
+  [[ "${result//$'\r'}" == ${CERT3_KEY_VALUE} ]]
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "$result" == ${CERT3_SECRET_VALUE} ]]
+  [[ "${result//$'\r'}" == ${CERT3_SECRET_VALUE} ]]
 }
 
 @test "CSI inline volume test with user assigned identity" {
@@ -208,18 +218,21 @@ setup() {
   cmd="kubectl get secretproviderclasses.secrets-store.csi.x-k8s.io/azure-msi -o yaml | grep azure"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
 
-  run kubectl apply -f $BATS_TESTS_DIR/user-assigned-identity/nginx-pod-user-identity-secrets-store-inline-volume-crd.yaml
-  assert_success
+  envsubst < $BATS_TESTS_DIR/user-assigned-identity/nginx-pod-user-identity-secrets-store-inline-volume-crd.yaml | kubectl apply -f -
 
   cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-crd-msi"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+}
 
-  run kubectl get pod/nginx-secrets-store-inline-crd-msi
-  assert_success
 
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/$OBJECT1_NAME)
-  [[ "$result" == *"${OBJECT1_VALUE}"* ]]
+@test "CSI inline volume test with user assigned identity - read ${OBJECT1_TYPE}, ${OBJECT2_TYPE} from pod" {
+  if [ ${CI_KIND_CLUSTER} ]; then
+    skip "not running in azure cluster"
+  fi
 
-  result=$(kubectl exec -it nginx-secrets-store-inline-crd-msi cat /mnt/secrets-store/$OBJECT2_NAME)
-  [[ "$result" == *"${OBJECT2_VALUE}"* ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-msi -- $EXEC_COMMAND/$OBJECT1_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
+
+  result=$(kubectl exec nginx-secrets-store-inline-crd-msi -- $EXEC_COMMAND/$OBJECT2_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }

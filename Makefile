@@ -7,11 +7,6 @@ DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
 IMAGE_VERSION ?= 0.0.5
 IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
 
-# Use a custom version for E2E tests if we are testing in CI
-ifdef CI
-override IMAGE_VERSION := e2e-$$(git rev-parse --short HEAD)
-endif
-
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
