@@ -429,11 +429,11 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
 		content := *secret.Value
-		// if the secret is part of a certificate, then we need to convert the key to PEM format
+		// if the secret is part of a certificate, then we need to convert the certificate and key to PEM format
 		if secret.Kid != nil && len(*secret.Kid) > 0 {
 			switch *secret.ContentType {
 			case certTypePem:
-				return *secret.Value, nil
+				return content, nil
 			case certTypePfx:
 				content, err := getCertAndPrivKeyInPEMFormat(*secret.Value)
 				if err != nil {
@@ -451,6 +451,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
+		// for object type "key" the public key is written to the file in PEM format
 		switch keybundle.Key.Kty {
 		case kv.RSA:
 			// decode the base64 bytes for n
@@ -515,6 +516,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 		}
 	case VaultObjectTypeCertificate:
+		// for object type "cert" the certificate is written to the file in PEM format
 		certbundle, err := kvClient.GetCertificate(ctx, *vaultURL, objectName, objectVersion)
 		if err != nil {
 			return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
@@ -551,14 +553,9 @@ func RedactClientID(sensitiveString string) string {
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
 
-func getPrivateKeyInPEMFormat(value string) (string, error) {
-	return decodePKCS12(value, true, false)
-}
-
-func getCertInPEMFormat(value string) (string, error) {
-	return decodePKCS12(value, false, true)
-}
-
+// getCertAndPrivKeyInPEMFormat returns the certificate and private key to be
+// written to file
+// cert and private key are returned when object type is "secret"
 func getCertAndPrivKeyInPEMFormat(value string) (string, error) {
 	return decodePKCS12(value, true, true)
 }
