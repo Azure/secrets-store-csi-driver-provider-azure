@@ -172,37 +172,45 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure pem cert, priv and pub key from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME | base64 ${BASE64_FLAGS})
-  diff  <(echo "$result" ) <(echo "${CERT1_VALUE}")
-  [[ "${result//$'\r'}" == "${CERT1_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT1_NAME)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT1_VALUE}" ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == "${CERT1_KEY_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT1_NAME-pub-key)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT1_KEY_VALUE}" ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT1_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == "${CERT1_SECRET_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT1_NAME-secret)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT1_SECRET_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure pkcs12 cert, priv and pub key from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == "${CERT2_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT2_NAME)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT2_VALUE}" ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == "${CERT2_KEY_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT2_NAME-pub-key)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT2_KEY_VALUE}" ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT2_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == "${CERT2_SECRET_VALUE}" ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT2_NAME-secret)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == "${CERT2_SECRET_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure ecc cert, priv and pub key from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == ${CERT3_VALUE} ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT3_NAME)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == ${CERT3_VALUE} ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME-pub-key | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == ${CERT3_KEY_VALUE} ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT3_NAME-pub-key)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == ${CERT3_KEY_VALUE} ]]
 
-  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- cat /mnt/secrets-store/$CERT3_NAME-secret | base64 ${BASE64_FLAGS})
-  [[ "${result//$'\r'}" == ${CERT3_SECRET_VALUE} ]]
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT3_NAME-secret)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == ${CERT3_SECRET_VALUE} ]]
 }
 
 @test "CSI inline volume test with user assigned identity" {
