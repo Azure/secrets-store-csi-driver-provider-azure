@@ -9,7 +9,7 @@ pr:
     - master
 
 jobs:
-- job: k8s_1_18_msi_e2e
+- job: k8s_1_18_msi_e2e_linux
   timeoutInMinutes: 45
   cancelTimeoutInMinutes: 5
   pool:
@@ -20,6 +20,7 @@ jobs:
   variables:
     GOPATH: '$(system.defaultWorkingDirectory)/gopath'
     modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
+    CLUSTER_CONFIG: linux
 
   steps:
   - task: GoTool@0
@@ -28,9 +29,20 @@ jobs:
   - template: templates/aks-engine-setup.yaml
   - script: |
       git clone https://github.com/kubernetes-sigs/secrets-store-csi-driver.git $(GOPATH)/src/sigs.k8s.io/secrets-store-csi-driver
-      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get update && sudo apt-get install bats && sudo apt-get install yq
+      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
+      sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
+      bats --version
     displayName: 'Set up workspace and install dependencies'
   - script: |
+      # Generate image version
+      IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
+      echo "Image version: ${IMAGE_VERSION}"
+
+      export IMAGE_VERSION="${IMAGE_VERSION}"
+      export IMAGE_TAG="${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_TAG]${IMAGE_VERSION}"
+
       make e2e-bootstrap
       export KUBECONFIG=cluster-kubeconfig.json
       kubectl get nodes -o wide
@@ -49,6 +61,63 @@ jobs:
       TENANT_ID: $(TENANT_ID)
   - template: templates/teardown.yaml
   - script:
-      make e2e-container-cleanup
+       IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD) make e2e-container-cleanup
+    displayName: "Delete e2e test images"
+    failOnStderr: false
+
+- job: k8s_1_18_msi_e2e_windows
+  timeoutInMinutes: 45
+  cancelTimeoutInMinutes: 5
+  pool:
+    vmImage: ubuntu-latest
+  workspace:
+    clean: all
+
+  variables:
+    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
+    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
+    CLUSTER_CONFIG: windows
+
+  steps:
+  - task: GoTool@0
+    inputs:
+      version: '1.14.1'
+  - template: templates/aks-engine-setup.yaml
+  - script: |
+      git clone https://github.com/kubernetes-sigs/secrets-store-csi-driver.git $(GOPATH)/src/sigs.k8s.io/secrets-store-csi-driver
+      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
+      sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
+      bats --version
+    displayName: 'Set up workspace and install dependencies'
+  - script: |
+      # Generate image version
+      IMAGE_VERSION=windows-e2e-$(git rev-parse --short HEAD)
+      echo "Image version: ${IMAGE_VERSION}"
+
+      export IMAGE_VERSION="${IMAGE_VERSION}"
+      export IMAGE_TAG="${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_TAG]${IMAGE_VERSION}"
+
+      make e2e-bootstrap
+      export KUBECONFIG=cluster-kubeconfig.json
+      kubectl get nodes -o wide
+      kubectl create ns dev
+      make e2e-test
+    displayName: "Run e2e tests on aks-engine cluster"
+    env:
+      AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      KEY_NAME: $(KEY_NAME)
+      KEY_VERSION: $(KEY_VERSION)
+      KEYVAULT_NAME: $(KEYVAULT_NAME)
+      RESOURCE_GROUP: $(RESOURCE_GROUP)
+      SECRET_NAME: $(SECRET_NAME)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      TENANT_ID: $(TENANT_ID)
+      TEST_WINDOWS: true
+  - template: templates/teardown.yaml
+  - script:
+      IMAGE_VERSION=windows-e2e-$(git rev-parse --short HEAD) make e2e-container-cleanup
     displayName: "Delete e2e test images"
     failOnStderr: false
