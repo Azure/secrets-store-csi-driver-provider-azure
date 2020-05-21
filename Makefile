@@ -16,6 +16,8 @@ E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
 
+LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION)"
+
 GO111MODULE ?= on
 export GO111MODULE
 DOCKER_CLI_EXPERIMENTAL = enabled
@@ -24,20 +26,19 @@ export GOPATH GOBIN GO111MODULE DOCKER_CLI_EXPERIMENTAL
 .PHONY: build
 build: setup
 	@echo "Building..."
-	$Q GOOS=linux CGO_ENABLED=0 go build -ldflags "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION)" -o _output/secrets-store-csi-driver-provider-azure ./cmd/
+	$Q GOOS=linux CGO_ENABLED=0 go build -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure ./cmd/
 
 .PHONY: build-windows
 build-windows:
-	CGO_ENABLED=0 GOOS=windows go build -a -ldflags "-X main.BuildDate=$(BUILD_DATE) -X main.BuildVersion=$(IMAGE_VERSION)" -o _output/secrets-store-csi-driver-provider-azure.exe ./cmd/
+	CGO_ENABLED=0 GOOS=windows go build -a -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure.exe ./cmd/
 
 image:
-# build inside docker container
 	@echo "Building docker image..."
-	$Q docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg IMAGE_VERSION="$(IMAGE_VERSION)" .
+	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg LDFLAGS=${LDFLAGS} -f Dockerfile --platform="linux/amd64" --output "type=docker,push=false" .
 
 .PHONY: build-container-windows
-build-container-windows: build-windows
-	docker build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg IMAGE_VERSION="$(IMAGE_VERSION)" -f windows.Dockerfile .
+build-container-windows:
+	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg LDFLAGS=${LDFLAGS} -f windows.Dockerfile --platform="windows/amd64" --output "type=docker,push=false" .
 
 push: image
 	docker push $(DOCKER_IMAGE):$(IMAGE_VERSION)
@@ -71,14 +72,15 @@ endif
 
 .PHONY: e2e-container
 e2e-container:
+	docker buildx rm container-builder || true
+	docker buildx create --use --name=container-builder
 ifdef CI_KIND_CLUSTER
 		DOCKER_IMAGE=$(REGISTRY)/$(IMAGE_NAME) make image
 		kind load docker-image --name kind $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 else
 		az acr login --name $(REGISTRY_NAME)
-		make build build-windows
-		az acr build --registry $(REGISTRY_NAME) -t $(E2E_IMAGE_TAG)-linux-amd64 -f Dockerfile --platform linux .
-		az acr build --registry $(REGISTRY_NAME) -t $(E2E_IMAGE_TAG)-windows-1809-amd64 -f windows.Dockerfile --platform windows .
+		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-linux-amd64 --build-arg LDFLAGS=${LDFLAGS} -f Dockerfile --platform="linux/amd64" --push .
+		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-windows-1809-amd64 --build-arg LDFLAGS=${LDFLAGS} -f windows.Dockerfile --platform="windows/amd64" --push .
 		docker manifest create $(E2E_IMAGE_TAG) $(E2E_IMAGE_TAG)-linux-amd64 $(E2E_IMAGE_TAG)-windows-1809-amd64
 		docker manifest inspect $(E2E_IMAGE_TAG)
 		docker manifest push --purge $(E2E_IMAGE_TAG)
