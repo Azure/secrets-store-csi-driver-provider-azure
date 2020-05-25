@@ -4,6 +4,8 @@ image:
   pullPolicy: IfNotPresent
 
 linux:
+  nodeSelector:
+    beta.kubernetes.io/os: linux
   enabled: true
   resources:
     requests:
@@ -14,6 +16,8 @@ linux:
       memory: 100Mi
 
 windows:
+  nodeSelector:
+    beta.kubernetes.io/os: windows
   enabled: false
   resources:
     requests:
