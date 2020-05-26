@@ -2,7 +2,7 @@
 
 > Note: This behavior was introduced in 0.0.6 release of Azure Key Vault Provider for Secrets Store CSI Driver. This is backward incompatible with the prior releases. 
 
-The Azure Key Vault Provider for Secrets Store CSI Driverr has been designed to closely align with the current behavior of  `az keyvault certificate/secret/key download`.
+The Azure Key Vault Provider for Secrets Store CSI Driver has been designed to closely align with the current behavior of  [az keyvault certificate/secret/key download](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest).
 
 [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) design makes sharp distinctions between Keys, Secrets and Certificates. The KeyVault service's Certificates features were designed making use of it's Keys and Secrets capabilities.
 
@@ -17,7 +17,7 @@ Knowing that the certificate is stored in a Key Vault certificate, we can retrie
 ```yaml
         array:
           - |
-            objectName: cert1
+            objectName: certName
             objectType: cert
             objectVersion: ""
 ```
@@ -31,7 +31,7 @@ Knowing that the public key is stored in a Key Vault key, we can retrieve it by 
 ```yaml
         array:
           - |
-            objectName: cert1
+            objectName: certName
             objectType: key
             objectVersion: ""
 ```
@@ -45,7 +45,7 @@ Knowing that the private key is stored in a Key Vault secret with the public cer
 ```yaml
         array:
           - |
-            objectName: cert1
+            objectName: certName
             objectType: secret
             objectVersion: ""
 ```
