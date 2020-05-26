@@ -1,6 +1,6 @@
 image:
   repository: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure
-  tag: 0.0.5
+  tag: 0.0.6
   pullPolicy: IfNotPresent
 
 linux:
@@ -34,5 +34,7 @@ secrets-store-csi-driver:
   install: true
   linux:
     enabled: true
+    kubeletRootDir: /var/lib/kubelet
   windows:
     enabled: false
+    kubeletRootDir: C:\var\lib\kubelet
