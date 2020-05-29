@@ -46,7 +46,7 @@ metadata:
   name: azure-tls
 spec:
   provider: azure
-  secretObjects:
+  secretObjects:                                # secretObjects defines the desired state of synced K8s secret objects
   - secretName: ingress-tls-csi
     type: kubernetes.io/tls
     data: 
@@ -82,7 +82,7 @@ EOF
               name: secrets-store-creds
 ```
 
-If not using [service principal mode](../../examples/service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](deployment-app-one.yaml) and [deployment-app-two.yaml](deployment-app-two.yaml)
+If not using [service principal mode](../../docs/service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](deployment-app-one.yaml) and [deployment-app-two.yaml](deployment-app-two.yaml)
 
 ```yaml
             nodePublishSecretRef:
