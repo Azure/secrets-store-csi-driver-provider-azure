@@ -38,7 +38,7 @@ Knowing that the public key is stored in a Key Vault key, we can retrieve it by 
 
 The contents of the file will be the public key in PEM format.
 
-## How to obtain the private key
+## How to obtain the private key and certificate
 
 Knowing that the private key is stored in a Key Vault secret with the public certificate included, we can retrieve it by using object type `secret`
 

@@ -37,6 +37,7 @@ helm install stable/nginx-ingress --generate-name \
 
 - To provide identity to access key vault, refer to the following [section](https://github.com/Azure/secrets-store-csi-driver-provider-azure#provide-identity-to-access-key-vault).
 - Set the `tenantId` and `keyvaultName`
+- Use `objectType: secret` for `ingresscert` as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/getting-certs-and-keys.md#getting-certificates-and-keys-using-azure-key-vault-provider)
 
 ```bash
 $ cat <<EOF | kubectl apply -f -
