@@ -31,10 +31,10 @@ The following table lists the configurable parameters of the csi-secrets-store-p
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `image.tag` | Azure Keyvault Provider image | `0.0.6` |
 | `linux.enabled` | Install azure keyvault provider on linux nodes | true |
-| `linux.nodeSelector` | Node Selector for the daemonset on linux nodes | `beta.kubernetes.io/os: linux` |
+| `linux.nodeSelector` | Node Selector for the daemonset on linux nodes | `kubernetes.io/os: linux` |
 | `linux.resources` | Resource limit for provider pods on linux nodes | `requests.cpu: 50m`<br>`requests.memory: 100Mi`<br>`limits.cpu: 50m`<br>`limits.memory: 100Mi` |
 | `windows.enabled` | Install azure keyvault provider on windows nodes | false |
-| `windows.nodeSelector` | Node Selector for the daemonset on windows nodes | `beta.kubernetes.io/os: windows` |
+| `windows.nodeSelector` | Node Selector for the daemonset on windows nodes | `kubernetes.io/os: windows` |
 | `windows.resources` | Resource limit for provider pods on windows nodes | `requests.cpu: 100m`<br>`requests.memory: 200Mi`<br>`limits.cpu: 100m`<br>`limits.memory: 200Mi` |
 | `secrets-store-csi-driver.install` | Install secrets-store-csi-driver with this chart | true |
 | `secrets-store-csi-driver.linux.enabled` | Install secrets-store-csi-driver on linux nodes | true |

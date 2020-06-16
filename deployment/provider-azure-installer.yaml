@@ -37,4 +37,4 @@ spec:
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

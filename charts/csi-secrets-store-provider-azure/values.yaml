@@ -5,7 +5,7 @@ image:
 
 linux:
   nodeSelector:
-    beta.kubernetes.io/os: linux
+    kubernetes.io/os: linux
   enabled: true
   resources:
     requests:
@@ -17,7 +17,7 @@ linux:
 
 windows:
   nodeSelector:
-    beta.kubernetes.io/os: windows
+    kubernetes.io/os: windows
   enabled: false
   resources:
     requests:
