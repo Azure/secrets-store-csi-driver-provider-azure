@@ -26,6 +26,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	"github.com/pkg/errors"
 )
@@ -130,6 +131,10 @@ func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 
 // GetKeyvaultToken retrieves a new service principal token to access keyvault
 func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType) (authorizer autorest.Authorizer, err error) {
+	err = adal.AddToUserAgent(version.GetUserAgent())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to add user agent to adal")
+	}
 	kvEndPoint := p.AzureCloudEnvironment.KeyVaultEndpoint
 	if '/' == kvEndPoint[len(kvEndPoint)-1] {
 		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
@@ -144,6 +149,10 @@ func (p *Provider) GetKeyvaultToken(grantType OAuthGrantType) (authorizer autore
 
 func (p *Provider) initializeKvClient() (*kv.BaseClient, error) {
 	kvClient := kv.New()
+	err := kvClient.AddToUserAgent(version.GetUserAgent())
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to add user agent to keyvault client")
+	}
 	token, err := p.GetKeyvaultToken(AuthGrantType())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get key vault token")
