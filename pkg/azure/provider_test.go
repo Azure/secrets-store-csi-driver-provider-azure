@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -272,22 +271,7 @@ Uz7sJMWoq7mOrINHQ0ZmaiE=
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			content, err := decodePKCS12(tc.value, false, true)
-			if err != nil {
-				t.Fatalf("expected nil err, got: %v", err)
-			}
-			if content != tc.expectedCert {
-				t.Fatalf("certificate mismatch")
-			}
-			content, err = decodePKCS12(tc.value, true, false)
-			if err != nil {
-				t.Fatalf("expected nil err, got: %v", err)
-			}
-			fmt.Println(content)
-			if content != tc.expectedKey {
-				t.Fatalf("key mismatch")
-			}
-			content, err = decodePKCS12(tc.value, true, true)
+			content, err := decodePKCS12(tc.value)
 			if err != nil {
 				t.Fatalf("expected nil err, got: %v", err)
 			}

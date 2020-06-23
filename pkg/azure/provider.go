@@ -437,7 +437,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 			case certTypePem:
 				return content, nil
 			case certTypePfx:
-				content, err := getCertAndPrivKeyInPEMFormat(*secret.Value)
+				content, err := decodePKCS12(*secret.Value)
 				if err != nil {
 					return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 				}
@@ -555,15 +555,9 @@ func RedactClientID(sensitiveString string) string {
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
 
-// getCertAndPrivKeyInPEMFormat returns the certificate and private key to be  written to file
-// cert and private key are returned when object type is "secret"
-func getCertAndPrivKeyInPEMFormat(value string) (string, error) {
-	return decodePKCS12(value, true, true)
-}
-
 // decodePkcs12 decodes a PKCS#12 client certificate by extracting the public certificate and
 // the private key
-func decodePKCS12(value string, getKey, getCert bool) (content string, err error) {
+func decodePKCS12(value string) (content string, err error) {
 	pfxRaw, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
 		return "", err
@@ -598,12 +592,8 @@ func decodePKCS12(value string, getKey, getCert bool) (content string, err error
 			pemKeyData = append(pemKeyData, pem.EncodeToMemory(block)...)
 		}
 	}
-	if getKey {
-		pemData = append(pemData, pemKeyData...)
-	}
-	if getCert {
-		pemData = append(pemData, pemCertData...)
-	}
+	pemData = append(pemData, pemKeyData...)
+	pemData = append(pemData, pemCertData...)
 	return string(pemData), nil
 }
 
