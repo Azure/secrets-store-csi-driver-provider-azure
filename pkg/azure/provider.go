@@ -555,8 +555,8 @@ func RedactClientID(sensitiveString string) string {
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
 
-// decodePkcs12 decodes a PKCS#12 client certificate by extracting the public certificate and
-// the private key
+// decodePkcs12 decodes PKCS#12 client certificates by extracting the public certificates and
+// the private keys
 func decodePKCS12(value string) (content string, err error) {
 	pfxRaw, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
@@ -584,7 +584,11 @@ func decodePKCS12(value string) (content string, err error) {
 			if err != nil {
 				return "", err
 			}
-			// converting to pkcs8 private key as ToPEM uses pkcs1
+			// pkcs1 RSA private key PEM file is specific for RSA keys. RSA is not used exclusively inside X509
+			// and SSL/TLS, a more generic key format is available in the form of PKCS#8 that identifies the type
+			// of private key and contains the relevant data.
+			// Converting to pkcs8 private key as ToPEM uses pkcs1
+			// The driver determines the key type from the pkcs8 form of the key and marshals appropriately
 			block.Bytes, err = x509.MarshalPKCS8PrivateKey(key)
 			if err != nil {
 				return "", err
