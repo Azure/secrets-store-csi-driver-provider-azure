@@ -17,8 +17,9 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pkcs12"
+
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
 
@@ -48,9 +49,10 @@ const (
 	// Pod Identity podnameheader
 	podnameheader = "podname"
 	// Pod Identity podnsheader
-	podnsheader = "podns"
-	certTypePem = "application/x-pem-file"
-	certTypePfx = "application/x-pkcs12"
+	podnsheader     = "podns"
+	certTypePem     = "application/x-pem-file"
+	certTypePfx     = "application/x-pkcs12"
+	certificateType = "CERTIFICATE"
 )
 
 // NMIResponse is the response received from aad-pod-identity
@@ -444,7 +446,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, objectType stri
 			case certTypePem:
 				return content, nil
 			case certTypePfx:
-				content, err := getCertAndPrivKeyInPEMFormat(*secret.Value)
+				content, err := decodePKCS12(*secret.Value)
 				if err != nil {
 					return "", wrapObjectTypeError(err, objectType, objectName, objectVersion)
 				}
@@ -562,44 +564,49 @@ func RedactClientID(sensitiveString string) string {
 	return r.ReplaceAllString(sensitiveString, "$1##### REDACTED #####$3")
 }
 
-// getCertAndPrivKeyInPEMFormat returns the certificate and private key to be
-// written to file
-// cert and private key are returned when object type is "secret"
-func getCertAndPrivKeyInPEMFormat(value string) (string, error) {
-	return decodePKCS12(value, true, true)
-}
-
-// decodePkcs12 decodes a PKCS#12 client certificate by extracting the public certificate and
-// the private key
-func decodePKCS12(value string, getKey, getCert bool) (content string, err error) {
+// decodePkcs12 decodes PKCS#12 client certificates by extracting the public certificates and
+// the private keys
+func decodePKCS12(value string) (content string, err error) {
 	pfxRaw, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
 		return "", err
 	}
-	key, cert, err := pkcs12.Decode(pfxRaw, "")
+	// using ToPEM to extract more than one certificate and key in pfxData
+	pemBlock, err := pkcs12.ToPEM(pfxRaw, "")
 	if err != nil {
 		return "", err
-	}
-	keyX509, err := x509.MarshalPKCS8PrivateKey(key)
-	if err != nil {
-		return "", err
-	}
-	var pemData []byte
-	if getKey {
-		keyBlock := &pem.Block{
-			Type:  "PRIVATE KEY",
-			Bytes: keyX509,
-		}
-		pemData = append(pemData, pem.EncodeToMemory(keyBlock)...)
 	}
 
-	if getCert {
-		certBlock := &pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: cert.Raw,
+	var pemKeyData, pemCertData, pemData []byte
+	for _, block := range pemBlock {
+		// PEM block encoded form contains the headers
+		//    -----BEGIN Type-----
+		//    Headers
+		//    base64-encoded Bytes
+		//    -----END Type-----
+		// Setting headers to nil to ensure no headers included in the encoded block
+		block.Headers = make(map[string]string)
+		if block.Type == certificateType {
+			pemCertData = append(pemCertData, pem.EncodeToMemory(block)...)
+		} else {
+			key, err := parsePrivateKey(block.Bytes)
+			if err != nil {
+				return "", err
+			}
+			// pkcs1 RSA private key PEM file is specific for RSA keys. RSA is not used exclusively inside X509
+			// and SSL/TLS, a more generic key format is available in the form of PKCS#8 that identifies the type
+			// of private key and contains the relevant data.
+			// Converting to pkcs8 private key as ToPEM uses pkcs1
+			// The driver determines the key type from the pkcs8 form of the key and marshals appropriately
+			block.Bytes, err = x509.MarshalPKCS8PrivateKey(key)
+			if err != nil {
+				return "", err
+			}
+			pemKeyData = append(pemKeyData, pem.EncodeToMemory(block)...)
 		}
-		pemData = append(pemData, pem.EncodeToMemory(certBlock)...)
 	}
+	pemData = append(pemData, pemKeyData...)
+	pemData = append(pemData, pemCertData...)
 	return string(pemData), nil
 }
 
@@ -614,4 +621,17 @@ func getCurve(crv kv.JSONWebKeyCurveName) (elliptic.Curve, error) {
 	default:
 		return nil, fmt.Errorf("curve %s is not suppported", crv)
 	}
+}
+
+func parsePrivateKey(block []byte) (interface{}, error) {
+	if key, err := x509.ParsePKCS1PrivateKey(block); err == nil {
+		return key, nil
+	}
+	if key, err := x509.ParsePKCS8PrivateKey(block); err == nil {
+		return key, nil
+	}
+	if key, err := x509.ParseECPrivateKey(block); err == nil {
+		return key, nil
+	}
+	return nil, fmt.Errorf("failed to parse key for type pkcs1, pkcs8 or ec")
 }
