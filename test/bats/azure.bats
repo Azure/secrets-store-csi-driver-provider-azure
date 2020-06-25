@@ -244,3 +244,42 @@ setup() {
   result=$(kubectl exec nginx-secrets-store-inline-crd-msi -- $EXEC_COMMAND/$OBJECT2_NAME)
   [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
+
+@test "CSI inline volume test with pod-identity" {
+  if [ ${CI_KIND_CLUSTER} ] || [ ${TEST_WINDOWS} ]; then
+    skip "not running in azure cluster or running on windows cluster"
+  fi
+
+  run kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+  assert_success
+
+  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l component=mic"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l component=nmi"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  envsubst < $BATS_TESTS_DIR/pod-identity/pi_azure_identity_binding.yaml | kubectl apply -f -
+  envsubst < $BATS_TESTS_DIR/pod-identity/azure_v1alpha1_podidentity.yaml | kubectl apply -f -
+
+  cmd="kubectl get secretproviderclasses.secrets-store.csi.x-k8s.io/azure-pod-identity -o yaml | grep azure"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  envsubst < $BATS_TESTS_DIR/pod-identity/nginx-pod-pi-secrets-store-inline-volume-crd.yaml | kubectl apply -f -
+
+  cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-crd-pi"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+}
+
+
+@test "CSI inline volume test with pod-identity - read ${OBJECT1_TYPE}, ${OBJECT2_TYPE} from pod" {
+  if [ ${CI_KIND_CLUSTER} ] || [ ${TEST_WINDOWS} ]; then
+    skip "not running in azure cluster or running on windows cluster"
+  fi
+
+  result=$(kubectl exec nginx-secrets-store-inline-crd-pi -- $EXEC_COMMAND/$OBJECT1_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
+
+  result=$(kubectl exec nginx-secrets-store-inline-crd-pi -- $EXEC_COMMAND/$OBJECT2_NAME)
+  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
+}
