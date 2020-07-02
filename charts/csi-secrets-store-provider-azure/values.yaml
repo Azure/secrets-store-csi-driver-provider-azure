@@ -1,6 +1,6 @@
 image:
   repository: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure
-  tag: 0.0.6
+  tag: 0.0.7
   pullPolicy: IfNotPresent
 
 linux:
