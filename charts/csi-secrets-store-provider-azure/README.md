@@ -29,7 +29,7 @@ The following table lists the configurable parameters of the csi-secrets-store-p
 | `fullnameOverride` | String to fully override csi-secrets-store-provider-azure.fullname template with a string | `""` |
 | `image.repository` | Image repository | `mcr.microsoft.com/k8s/csi/secrets-store/provider-azure` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `image.tag` | Azure Keyvault Provider image | `0.0.6` |
+| `image.tag` | Azure Keyvault Provider image | `0.0.7` |
 | `linux.enabled` | Install azure keyvault provider on linux nodes | true |
 | `linux.nodeSelector` | Node Selector for the daemonset on linux nodes | `{}` |
 | `linux.resources` | Resource limit for provider pods on linux nodes | `requests.cpu: 50m`<br>`requests.memory: 100Mi`<br>`limits.cpu: 50m`<br>`limits.memory: 100Mi` |

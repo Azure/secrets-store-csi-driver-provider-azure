@@ -19,7 +19,7 @@ spec:
         kubernetes.io/os: windows
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.6
+          image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.7
           imagePullPolicy: Always
           resources:
             requests:

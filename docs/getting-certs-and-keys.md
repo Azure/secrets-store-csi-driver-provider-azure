@@ -12,7 +12,9 @@ The KeyVault service stores both the public and the private parts of your certif
 
 ## How to obtain the certificate
 
-Knowing that the certificate is stored in a Key Vault certificate, we can retrieve it by using object type `cert`
+Knowing that the certificate is stored in a Key Vault certificate, we can retrieve it by using object type `cert`.
+
+> Note: For chain of certificates, using object type `cert` only returns the Server certificate and not the entire chain.
 
 ```yaml
         array:
@@ -51,3 +53,5 @@ Knowing that the private key is stored in a Key Vault secret with the public cer
 ```
 
 The contents of the file will be the private key and certificate in PEM format.
+
+> Note: For chain of certificates, using object type `secret` returns entire certificate chain along with the private key.
