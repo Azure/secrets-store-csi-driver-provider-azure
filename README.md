@@ -87,6 +87,7 @@ To provide identity to access key vault, refer to the following [section](#provi
       userAssignedIdentityID: "client_id"  # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
       keyvaultName: "kvname"          # the name of the KeyVault
       cloudName: ""          # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
+      cloudEnvFileName: ""   # [OPTIONAL available for version > 0.0.7] use to define path to file for populating azure environment
       objects:  |
         array:
           - |
@@ -113,6 +114,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
   | keyvaultName           | yes      | name of a Key Vault instance                                    | ""            |
   | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)| "" |
+  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment | "" |
   | objects                | yes      | a string of arrays of strings                                   | ""            |
   | objectName             | yes      | name of a Key Vault object                                      | ""            |
   | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |

@@ -2,6 +2,9 @@ package azure
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -279,5 +282,32 @@ Uz7sJMWoq7mOrINHQ0ZmaiE=
 				t.Fatalf("certificate and key mismatch")
 			}
 		})
+	}
+}
+
+func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
+	azureStackCloudEnvName := "AZURESTACKCLOUD"
+	file, err := ioutil.TempFile("", "ut")
+	defer os.Remove(file.Name())
+	if err != nil {
+		t.Fatalf("expected error to be nil, got: %+v", err)
+	}
+	_, err = io.WriteString(file, `{}`)
+	if err != nil {
+		t.Fatalf("expected error to be nil, got: %+v", err)
+	}
+	_, err = ParseAzureEnvironment(azureStackCloudEnvName)
+	if err == nil {
+		t.Fatalf("expected error to be not nil as AZURE_ENVIRONMENT_FILEPATH is not set")
+	}
+
+	err = setAzureEnvironmentFilePath(file.Name())
+	defer os.Unsetenv(azure.EnvironmentFilepathName)
+	if err != nil {
+		t.Fatalf("expected error to be nil, got: %+v", err)
+	}
+	_, err = ParseAzureEnvironment(azureStackCloudEnvName)
+	if err != nil {
+		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
 }
