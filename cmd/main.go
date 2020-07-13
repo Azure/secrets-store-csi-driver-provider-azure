@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/azure"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
@@ -63,7 +64,13 @@ func main() {
 		log.Fatalf("[error] : %v", err)
 	}
 
-	ctx := context.Background()
+	// kubelet default timeout for volumes is 2m3s - https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/volumemanager/volume_manager.go#L80
+	// setting the context to 1m50s will ensure request is terminated if taking longer/unable to establish connection due to underlying network error and
+	// the correct error is returned back to the driver
+	// Value is set to 1m50s to provide enough time for driver to complete outstanding operations
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute+50*time.Second)
+	defer cancel()
+
 	err = provider.MountSecretsStoreObjectContent(ctx, attrib, secret, *targetPath, filePermission)
 	if err != nil {
 		log.Fatalf("[error] : %v", err)

@@ -402,6 +402,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.TenantID = tenantID
 
 	for _, keyVaultObject := range keyVaultObjects {
+		log.Infof("fetching object: %s, type: %s from key vault", keyVaultObject.ObjectName, keyVaultObject.ObjectType)
 		content, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		if err != nil {
 			return err
@@ -412,10 +413,9 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			fileName = keyVaultObject.ObjectAlias
 		}
 		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
-			return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", fileName, targetPath)
+			return errors.Wrapf(err, "failed to mount %s at %s", fileName, targetPath)
 		}
-		log.Infof("secrets store csi driver mounted %s", fileName)
-		log.Infof("Mount point: %s", targetPath)
+		log.Infof("successfully mounted %s", fileName)
 	}
 
 	return nil
