@@ -4,7 +4,7 @@
 
 This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
 
-AKS does not support user assigned managed identities yet, only system assigned managed identities. Until this gap is covered, use a service principal or system assigned identities with AKS.
+AKS does not support BYO managed identities yet. Until this gap is covered, use a service principal or the auto generated Kubelet MI with AKS.
 
 > You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
 >
