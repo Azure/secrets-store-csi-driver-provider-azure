@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	attributes  = pflag.String("attributes", "", "volume attributes")
-	secrets     = pflag.String("secrets", "", "node publish ref secret")
-	targetPath  = pflag.String("targetPath", "", "Target path to write data.")
-	permission  = pflag.String("permission", "", "File permission")
-	debug       = pflag.Bool("debug", false, "sets log to debug level")
-	versionInfo = pflag.Bool("version", false, "prints the version information")
+	attributes     = pflag.String("attributes", "", "volume attributes")
+	secrets        = pflag.String("secrets", "", "node publish ref secret")
+	targetPath     = pflag.String("targetPath", "", "Target path to write data.")
+	permission     = pflag.String("permission", "", "File permission")
+	debug          = pflag.Bool("debug", false, "sets log to debug level")
+	versionInfo    = pflag.Bool("version", false, "prints the version information")
+	contextTimeout = pflag.Int("context-timeout", 110, "context timeout in seconds for provider calls")
 )
 
 // LogHook is used to setup custom hooks
@@ -68,7 +69,7 @@ func main() {
 	// setting the context to 1m50s will ensure request is terminated if taking longer/unable to establish connection due to underlying network error and
 	// the correct error is returned back to the driver
 	// Value is set to 1m50s to provide enough time for driver to complete outstanding operations
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute+50*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*contextTimeout))
 	defer cancel()
 
 	err = provider.MountSecretsStoreObjectContent(ctx, attrib, secret, *targetPath, filePermission)
