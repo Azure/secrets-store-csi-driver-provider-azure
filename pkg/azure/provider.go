@@ -93,6 +93,9 @@ type Provider struct {
 	PodName string
 	// the namespace of the pod (if using POD AAD Identity)
 	PodNamespace string
+	// EnvironmentFilepathName captures the name of the environment variable containing the path to the file
+	// to be used while populating the Azure Environment.
+	EnvironmentFilepathName string
 }
 
 // KeyVaultObject holds keyvault object related config
@@ -315,6 +318,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	tenantID := attrib["tenantId"]
 	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
 	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
+	cloudEnvFileName := attrib["cloudEnvFileName"]
 
 	if keyvaultName == "" {
 		return fmt.Errorf("keyvaultName is not set")
@@ -327,8 +331,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if err != nil {
 		return fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
 	}
+	err = setAzureEnvironmentFilePath(cloudEnvFileName)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
+	}
 
-	// defaults
 	usePodIdentity := false
 	if usePodIdentityStr == "true" {
 		usePodIdentity = true
@@ -634,4 +641,14 @@ func parsePrivateKey(block []byte) (interface{}, error) {
 		return key, nil
 	}
 	return nil, fmt.Errorf("failed to parse key for type pkcs1, pkcs8 or ec")
+}
+
+// setAzureEnvironmentFilePath sets the AZURE_ENVIRONMENT_FILEPATH env var which is used by
+// go-autorest for AZURESTACKCLOUD
+func setAzureEnvironmentFilePath(envFileName string) error {
+	if envFileName == "" {
+		return nil
+	}
+	log.Infof("setting AZURE_ENVIRONMENT_FILEPATH to %s for custom cloud", envFileName)
+	return os.Setenv(azure.EnvironmentFilepathName, envFileName)
 }
