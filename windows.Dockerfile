@@ -18,4 +18,4 @@ CMD ["\"C:\\Program Files\\PowerShell\\pwsh.exe\"","-Command", "$global:TargetDi
     if (!(Test-Path $azureProviderDir)) { New-Item -path $azureProviderDir -type Directory }; \
     write-host \"Copying file to $azureProviderDir\\provider-azure.exe\"; \
     Copy-Item C:\\secrets-store-csi-driver-provider-azure.exe -Destination $azureProviderDir/provider-azure.exe; \
-    while ($true) { write-host 'install done, daemonset sleeping'; Start-Sleep -Seconds 60 }"]
+    while ($true) { Start-Sleep -Seconds 60 }"]
