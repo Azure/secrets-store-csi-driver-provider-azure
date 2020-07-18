@@ -66,43 +66,13 @@ setup() {
 }
 
 @test "install azure provider with e2e image" {
-  yq w ${PROVIDER_YAML} "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
-    | yq w - spec.template.spec.containers[0].imagePullPolicy "IfNotPresent" | kubectl apply -n dev -f -
+  yq w -d 1 ${PROVIDER_YAML} "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
+    | yq w -d 1 - spec.template.spec.containers[0].imagePullPolicy "IfNotPresent" | kubectl apply -n dev -f -
 }
 
 @test "create azure k8s secret" {
   run kubectl create secret generic secrets-store-creds --from-literal clientid=${AZURE_CLIENT_ID} --from-literal clientsecret=${AZURE_CLIENT_SECRET}
   assert_success
-}
-
-@test "CSI inline volume test" {
-  envsubst < $BATS_TESTS_DIR/nginx-pod-secrets-store-inline-volume.yaml | kubectl apply -f -
-
-  cmd="kubectl wait --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline"
-  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
-
-  run kubectl get pod/nginx-secrets-store-inline
-  assert_success
-}
-
-@test "CSI inline volume test - read azure kv ${OBJECT1_TYPE} from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_NAME)
-  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
-}
-
-@test "CSI inline volume test - read azure kv ${OBJECT2_TYPE} from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_NAME)
-  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
-}
-
-@test "CSI inline volume test - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_ALIAS)
-  [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
-}
-
-@test "CSI inline volume test - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_ALIAS)
-  [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "secretproviderclasses crd is established" {
@@ -134,22 +104,22 @@ setup() {
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE} from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_NAME)
+  result=$(kubectl exec nginx-secrets-store-inline-crd -- $EXEC_COMMAND/$OBJECT1_NAME)
   [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE} from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_NAME)
+  result=$(kubectl exec nginx-secrets-store-inline-crd -- $EXEC_COMMAND/$OBJECT2_NAME)
   [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT1_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT1_ALIAS)
+  result=$(kubectl exec nginx-secrets-store-inline-crd -- $EXEC_COMMAND/$OBJECT1_ALIAS)
   [[ "${result//$'\r'}" == *"${OBJECT1_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure kv ${OBJECT2_TYPE}, if alias present, from pod" {
-  result=$(kubectl exec nginx-secrets-store-inline -- $EXEC_COMMAND/$OBJECT2_ALIAS)
+  result=$(kubectl exec nginx-secrets-store-inline-crd -- $EXEC_COMMAND/$OBJECT2_ALIAS)
   [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
 }
 
@@ -250,13 +220,16 @@ setup() {
     skip "not running in azure cluster or running on windows cluster"
   fi
 
-  run kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+  run helm repo add aad-pod-identity https://raw.githubusercontent.com/Azure/aad-pod-identity/master/charts
+  assert_success
+ 
+  run helm install pi aad-pod-identity/aad-pod-identity --set nmi.probePort=8081
   assert_success
 
-  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l component=mic"
+  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l app.kubernetes.io/component=mic"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
 
-  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l component=nmi"
+  cmd="kubectl wait pod --for=condition=Ready --timeout=60s -l app.kubernetes.io/component=nmi"
   wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
 
   envsubst < $BATS_TESTS_DIR/pod-identity/pi_azure_identity_binding.yaml | kubectl apply -f -
