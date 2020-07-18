@@ -38,3 +38,7 @@ secrets-store-csi-driver:
     kubeletRootDir: C:\var\lib\kubelet
   logLevel:
     debug: true
+
+## Install default service account
+rbac:
+  install: true

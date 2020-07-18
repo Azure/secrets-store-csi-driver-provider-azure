@@ -15,6 +15,7 @@ spec:
     metadata:
 {{ include "sscdpa.labels" . | indent 6 }}
     spec:
+      serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
