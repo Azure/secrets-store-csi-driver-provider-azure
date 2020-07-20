@@ -4,7 +4,7 @@
 
 This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
 
-For AKS clusters, system assigned managed identities can be created on your behalf. To learn more [read here about AKS managed identity support](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity).
+AKS uses system-assigned managed identity as [cluster managed identity](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity). This managed identity shouldn't be used to authenticate with KeyVault. You should consider using a [user-assigned managed identity](user-assigned-msi-mode.md) instead.
 
 1. Verify that the nodes have its own system assigned managed identity
 
