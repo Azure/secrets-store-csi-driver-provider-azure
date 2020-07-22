@@ -39,7 +39,9 @@ The following table lists the configurable parameters of the csi-secrets-store-p
 | `secrets-store-csi-driver.install` | Install secrets-store-csi-driver with this chart | true |
 | `secrets-store-csi-driver.linux.enabled` | Install secrets-store-csi-driver on linux nodes | true |
 | `secrets-store-csi-driver.linux.kubeletRootDir` | Configure the kubelet root dir | `/var/lib/kubelet` |
+| `secrets-store-csi-driver.linux.metricsAddr` | The address the metric endpoint binds to | `:8080` |
 | `secrets-store-csi-driver.windows.enabled` | Install secrets-store-csi-driver on windows nodes | false |
 | `secrets-store-csi-driver.windows.kubeletRootDir` | Configure the kubelet root dir | `C:\var\lib\kubelet` |
+| `secrets-store-csi-driver.windows.metricsAddr` | The address the metric endpoint binds to | `:8080` |
 | `secrets-store-csi-driver.logLevel.debug` | Enable debug logging | `true` |
 | `rbac.install` | Install default service account | true |

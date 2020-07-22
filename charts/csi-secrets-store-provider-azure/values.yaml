@@ -33,9 +33,11 @@ secrets-store-csi-driver:
   linux:
     enabled: true
     kubeletRootDir: /var/lib/kubelet
+    metricsAddr: ":8080"
   windows:
     enabled: false
     kubeletRootDir: C:\var\lib\kubelet
+    metricsAddr: ":8080"
   logLevel:
     debug: true
 
