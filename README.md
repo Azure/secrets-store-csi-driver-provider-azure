@@ -106,23 +106,23 @@ To provide identity to access key vault, refer to the following [section](#provi
 
   ```
 
-  | Name                   | Required | Description                                                     | Default Value |
-  | -----------------------| -------- | --------------------------------------------------------------- | ------------- |
-  | provider               | yes      | specify name of the provider                                    | ""            |
-  | usePodIdentity         | no       | specify access mode: service principal or pod identity          | "false"       |
-  | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity    |  "false"|
-  | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode  | ""       |
-  | keyvaultName           | yes      | name of a Key Vault instance                                    | ""            |
-  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)| "" |
-  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment | "" |
-  | objects                | yes      | a string of arrays of strings                                   | ""            |
-  | objectName             | yes      | name of a Key Vault object                                      | ""            |
-  | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided | "" |
-  | objectType             | yes      | type of a Key Vault object: secret, key or cert                 | ""            |
-  | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest | ""            |
-  | resourceGroup          | no      | [__*required for version < 0.0.4*__] name of resource group containing key vault instance            | ""            |
-  | subscriptionId         | no      | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                   | ""            |
-  | tenantId               | yes      | tenant ID containing key vault instance                         | ""            |
+  | Name                   | Required | Description                                                                                                                                                      | Default Value |
+  | ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+  | provider               | yes      | specify name of the provider                                                                                                                                     | ""            |
+  | usePodIdentity         | no       | specify access mode: service principal or pod identity                                                                                                           | "false"       |
+  | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity                                                                 | "false"       |
+  | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode                                     | ""            |
+  | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                     | ""            |
+  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud) | ""            |
+  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment                                                         | ""            |
+  | objects                | yes      | a string of arrays of strings                                                                                                                                    | ""            |
+  | objectName             | yes      | name of a Key Vault object                                                                                                                                       | ""            |
+  | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                           | ""            |
+  | objectType             | yes      | type of a Key Vault object: secret, key or cert                                                                                                                  | ""            |
+  | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                  | ""            |
+  | resourceGroup          | no       | [__*required for version < 0.0.4*__] name of resource group containing key vault instance                                                                        | ""            |
+  | subscriptionId         | no       | [__*required for version < 0.0.4*__] subscription ID containing key vault instance                                                                               | ""            |
+  | tenantId               | yes      | tenant ID containing key vault instance                                                                                                                          | ""            |
 
 #### Provide Identity to Access Key Vault
 
@@ -256,4 +256,4 @@ Azure Key Vault Provider for Secrets Store CSI Driver is an open source project 
 
 This demo created by <a href="https://twitter.com/HoussemDellai">Houssem Dellai</a> is using AAD Pod Identity and Secret Store CSI provider for Key Vault to retrieve database login and password from Azure Key Vault. <a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24">Watch it here.</a>
 
-<a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src="https://github.com/HoussemDellai/secrets-store-csi-driver-provider-azure/blob/added-demo/images/demo-video-thumb.png?raw=true" width="60%"/></a>
+<a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/images/demo-video-thumb.png?raw=true" width="60%"/></a>
