@@ -2,6 +2,16 @@
 
 Azure Key Vault provider for Secrets Store CSI driver allows you to get secret contents stored in Azure Key Vault instance and use the Secrets Store CSI driver interface to mount them into Kubernetes pods.
 
+## Helm chart, Secrets Store CSI Driver and Key Vault Provider versions
+
+| Helm Chart Version | Secrets Store CSI Driver Version | Azure Key Vault Provider Version |
+|--------------------|----------------------------------|----------------------------------|
+| `0.0.5` | `0.0.9` | `0.0.5` |
+| `0.0.6` | `0.0.10` | `0.0.5` |
+| `0.0.7` | `0.0.11` | `0.0.6` |
+| `0.0.8` | `0.0.11` | `0.0.7` |
+| `0.0.9` | `0.0.12` | `0.0.7` |
+
 ## Installation
 
 Quick start instructions for the setup and configuration of secrets-store-csi-driver and azure keyvault provider using Helm.
