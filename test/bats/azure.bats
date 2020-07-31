@@ -167,6 +167,11 @@ setup() {
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT2_NAME-secret)
   result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
   [[ "${result_base64_encoded}" == "${CERT2_SECRET_VALUE}" ]]
+
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT2_NAME-secret-pfx)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 -d | openssl pkcs12 -nodes -passin pass:"" | sed -ne '/-BEGIN PRIVATE KEY-/,/-END PRIVATE KEY-/p; /-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | base64 ${BASE64_FLAGS})
+  diff  <(echo "${result_base64_encoded}" ) <(echo "${CERT2_SECRET_VALUE}")
+  [[ "${result_base64_encoded}" == "${CERT2_SECRET_VALUE}" ]]
 }
 
 @test "CSI inline volume test with pod portability - read azure ecc cert, priv and pub key from pod" {
@@ -180,6 +185,10 @@ setup() {
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT3_NAME-secret)
   result_base64_encoded=$(echo "${result//$'\r'}" | base64 ${BASE64_FLAGS})
+  [[ "${result_base64_encoded}" == ${CERT3_SECRET_VALUE} ]]
+
+  result=$(kubectl exec nginx-secrets-store-inline-crd-certs -- $EXEC_COMMAND/$CERT3_NAME-secret-pfx)
+  result_base64_encoded=$(echo "${result//$'\r'}" | base64 -d | openssl pkcs12 -nodes -passin pass:"" | sed -ne '/-BEGIN PRIVATE KEY-/,/-END PRIVATE KEY-/p; /-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | base64 ${BASE64_FLAGS})
   [[ "${result_base64_encoded}" == ${CERT3_SECRET_VALUE} ]]
 }
 

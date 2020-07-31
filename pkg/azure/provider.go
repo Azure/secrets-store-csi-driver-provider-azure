@@ -415,8 +415,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	for _, keyVaultObject := range keyVaultObjects {
 		log.Infof("fetching object: %s, type: %s from key vault", keyVaultObject.ObjectName, keyVaultObject.ObjectType)
-		if len(keyVaultObject.ObjectFormat) > 0 && keyVaultObject.ObjectFormat != objectFormatPEM && keyVaultObject.ObjectFormat != objectFormatPFX {
-			return fmt.Errorf("Invalid objectFormat: %v for objectName: %s, should be PEM or PFX", keyVaultObject.ObjectFormat, keyVaultObject.ObjectName)
+		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
+			return wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		content, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
@@ -481,10 +481,6 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		keybundle, err := kvClient.GetKey(ctx, *vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 		if err != nil {
 			return "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
-		}
-		// object format requested is pfx, then return the content as is
-		if strings.EqualFold(kvObject.ObjectFormat, objectFormatPFX) {
-			return content, err
 		}
 		// for object type "key" the public key is written to the file in PEM format
 		switch keybundle.Key.Kty {
@@ -555,10 +551,6 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		certbundle, err := kvClient.GetCertificate(ctx, *vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 		if err != nil {
 			return "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
-		}
-		// object format requested is pfx, then return the content as is
-		if strings.EqualFold(kvObject.ObjectFormat, objectFormatPFX) {
-			return content, err
 		}
 		certBlock := &pem.Block{
 			Type:  "CERTIFICATE",
@@ -672,4 +664,21 @@ func setAzureEnvironmentFilePath(envFileName string) error {
 	}
 	log.Infof("setting AZURE_ENVIRONMENT_FILEPATH to %s for custom cloud", envFileName)
 	return os.Setenv(azure.EnvironmentFilepathName, envFileName)
+}
+
+// validateObjectFormat checks if the object format is valid and is supported
+// for the given object type
+func validateObjectFormat(objectFormat, objectType string) error {
+	if len(objectFormat) == 0 {
+		return nil
+	}
+	if !strings.EqualFold(objectFormat, objectFormatPEM) && !strings.EqualFold(objectFormat, objectFormatPFX) {
+		return fmt.Errorf("Invalid objectFormat: %v, should be PEM or PFX", objectFormat)
+	}
+	// Azure Key Vault returns the base64 encoded binary content only for type secret
+	// for types cert/key, the content is always in pem format
+	if objectFormat == objectFormatPFX && objectType != VaultObjectTypeSecret {
+		return fmt.Errorf("PFX format only supported for objectType: secret")
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -309,5 +310,54 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	_, err = ParseAzureEnvironment(azureStackCloudEnvName)
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
+	}
+}
+
+func TestValidateObjectFormat(t *testing.T) {
+	cases := []struct {
+		desc         string
+		objectFormat string
+		objectType   string
+		expectedErr  error
+	}{
+		{
+			desc:         "no object format specified",
+			objectFormat: "",
+			objectType:   "cert",
+			expectedErr:  nil,
+		},
+		{
+			desc:         "object format not valid",
+			objectFormat: "pkcs",
+			objectType:   "secret",
+			expectedErr:  fmt.Errorf("Invalid objectFormat: pkcs, should be PEM or PFX"),
+		},
+		{
+			desc:         "object format PFX, but object type not secret",
+			objectFormat: "pfx",
+			objectType:   "cert",
+			expectedErr:  fmt.Errorf("PFX format only supported for objectType: secret"),
+		},
+		{
+			desc:         "object format PFX case insensitive check",
+			objectFormat: "PFX",
+			objectType:   "secret",
+			expectedErr:  nil,
+		},
+		{
+			desc:         "valid object format and type",
+			objectFormat: "pfx",
+			objectType:   "secret",
+			expectedErr:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validateObjectFormat(tc.objectFormat, tc.objectType)
+			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
+				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
 	}
 }
