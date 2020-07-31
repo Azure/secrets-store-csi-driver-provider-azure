@@ -8,6 +8,7 @@ SLEEP_TIME=1
 IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
 SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/sigs.k8s.io/secrets-store-csi-driver"}
+NODE_SELECTOR_OS=linux
 BASE64_FLAGS="-w 0"
 if [[ "$OSTYPE" == *"darwin"* ]]; then
   BASE64_FLAGS="-b 0"
@@ -21,6 +22,7 @@ if [ $TEST_WINDOWS ]; then
   PROVIDER_YAML=deployment/provider-azure-installer-windows.yaml
   CONTAINER_IMAGE=mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
   EXEC_COMMAND="powershell.exe cat /mnt/secrets-store"
+  NODE_SELECTOR_OS=windows
 fi
 
 export OBJECT1_NAME=${OBJECT1_NAME:-secret1}
@@ -52,6 +54,7 @@ export CERT2_KEY_VALUE=${CERT2_KEY_VALUE:-"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KT
 export CERT3_KEY_VALUE=${CERT3_KEY_VALUE:-"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFVUFtYVRFQTV4U3l3MEd1NkRYbUticVo5LzJHMwovV2ZybzdPK3N6Ulpkd2xiQ0NYck9HcW1uS2tOb2dFU2E1cU5GSUdZSzdiUTF0ZDl0TFdSK2U3T1R3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="}
 
 export CONTAINER_IMAGE=$CONTAINER_IMAGE
+export NODE_SELECTOR_OS=$NODE_SELECTOR_OS
 
 setup() {
   if [[ -z "${AZURE_CLIENT_ID}" ]] || [[ -z "${AZURE_CLIENT_SECRET}" ]]; then
@@ -184,7 +187,7 @@ setup() {
 }
 
 @test "CSI inline volume test with user assigned identity" {
-  if [ ${CI_KIND_CLUSTER} ]; then
+  if [[ "$CI_KIND_CLUSTER" = true ]]; then
     skip "not running in azure cluster"
   fi
 
@@ -204,7 +207,7 @@ setup() {
 
 
 @test "CSI inline volume test with user assigned identity - read ${OBJECT1_TYPE}, ${OBJECT2_TYPE} from pod" {
-  if [ ${CI_KIND_CLUSTER} ]; then
+  if [[ "$CI_KIND_CLUSTER" = true ]]; then
     skip "not running in azure cluster"
   fi
 
@@ -216,7 +219,7 @@ setup() {
 }
 
 @test "CSI inline volume test with pod-identity" {
-  if [ ${CI_KIND_CLUSTER} ] || [ ${TEST_WINDOWS} ]; then
+  if [[ "$CI_KIND_CLUSTER" = true ]] || [[ "$TEST_WINDOWS" = true ]]; then
     skip "not running in azure cluster or running on windows cluster"
   fi
 
@@ -246,7 +249,7 @@ setup() {
 
 
 @test "CSI inline volume test with pod-identity - read ${OBJECT1_TYPE}, ${OBJECT2_TYPE} from pod" {
-  if [ ${CI_KIND_CLUSTER} ] || [ ${TEST_WINDOWS} ]; then
+  if [[ "$CI_KIND_CLUSTER" = true ]] || [[ "$TEST_WINDOWS" = true ]]; then
     skip "not running in azure cluster or running on windows cluster"
   fi
 

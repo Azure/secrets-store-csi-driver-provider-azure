@@ -1,0 +1,64 @@
+steps:
+  - script: |
+      echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]sscd-e2e-$(openssl rand -hex 6)"
+      echo ${AZURE_CLUSTER_NAME}
+    displayName: "[AKS] Set cluster name"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+
+  - script: |
+      az group create -n ${AZURE_CLUSTER_NAME} -l ${AZURE_LOCATION}
+
+      az aks create \
+        -g ${AZURE_CLUSTER_NAME} \
+        -n ${AZURE_CLUSTER_NAME} \
+        --subscription ${SUBSCRIPTION_ID} \
+        --node-count ${AGENT_COUNT} \
+        --kubernetes-version ${AKS_KUBERNETES_VERSION} \
+        --node-vm-size Standard_D2_v3 \
+        --location ${AZURE_LOCATION} \
+        --service-principal ${CLIENT_ID} \
+        --client-secret ${CLIENT_SECRET} \
+        --windows-admin-username azureuser \
+        --windows-admin-password ${WINDOWS_ADMIN_PASSWORD} \
+        --network-plugin azure \
+        --no-ssh-key
+
+      if [[ $CLUSTER_CONFIG == "windows" ]]; then
+        az aks nodepool add \
+            -g ${AZURE_CLUSTER_NAME} \
+            --cluster-name ${AZURE_CLUSTER_NAME} \
+            --os-type Windows \
+            --name win \
+            --node-count 1
+      fi
+
+      az aks get-credentials -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME}
+
+      # Sleep for 120 seconds to wait for nodes and pods to become ready
+      sleep 2m
+      kubectl wait --for=condition=ready node --all
+      kubectl wait pod -n kube-system --for=condition=Ready --all
+      kubectl get nodes -owide
+      kubectl cluster-info
+    displayName: "[AKS] Deploy Azure cluster"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      WINDOWS_ADMIN_PASSWORD: $(WINDOWS_ADMIN_PASSWORD)
+
+  - script: |
+      az login -t microsoft.com --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET}
+      az account set -s ${SUBSCRIPTION_ID}
+      VMSS_NAMES=$(az vmss list -g MC_${AZURE_CLUSTER_NAME}_${AZURE_CLUSTER_NAME}_${AZURE_LOCATION} --subscription ${SUBSCRIPTION_ID} --query "[].name" -o tsv)
+
+      # Assign user assigned identity to the VMSS
+      echo "$VMSS_NAMES" | while IFS= read -r VMSS_NAME; do az vmss identity assign -g MC_${AZURE_CLUSTER_NAME}_${AZURE_CLUSTER_NAME}_${AZURE_LOCATION} -n $VMSS_NAME --subscription ${SUBSCRIPTION_ID} --identities /subscriptions/${SUBSCRIPTION_ID}/resourcegroups/${RESOURCE_GROUP}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${USER_MSI_NAME} >> /dev/null; done
+    env:
+      CLIENT_ID: $(AAD_CLIENT_ID)
+      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
+      RESOURCE_GROUP: $(RESOURCE_GROUP)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+    displayName: "[AKS] Assign User MSI to the VMSS"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))

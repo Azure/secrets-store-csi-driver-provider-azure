@@ -1,6 +1,8 @@
 steps:
   - script: |
-      rm ${LOCAL_SSH_KEY}*
+      if [[ $CLUSTER_TYPE == "aks-engine" ]]; then
+        rm ${LOCAL_SSH_KEY}*
+      fi
       az login -t microsoft.com --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET}
       az group delete -n ${AZURE_CLUSTER_NAME} --subscription ${SUBSCRIPTION_ID} --yes --no-wait
     displayName: "Teardown cluster"

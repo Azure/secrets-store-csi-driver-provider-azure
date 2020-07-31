@@ -1,21 +1,5 @@
 steps:
   - script: |
-      curl -LO https://github.com/Azure/aks-engine/releases/download/v${AKS_ENGINE_VERSION}/aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
-      tar -zxvf aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
-      chmod +x aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine
-      sudo mv aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine /usr/local/bin/
-
-      # Download kubectl
-      curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-      chmod +x kubectl
-      sudo mv kubectl /usr/local/bin/
-
-      # Print aks-engine version
-      aks-engine version
-    displayName: "[AKS Engine] Download binaries"
-    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
-
-  - script: |
       echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]sscd-e2e-$(openssl rand -hex 6)"
       echo ${AZURE_CLUSTER_NAME}
     displayName: "[AKS Engine] Set cluster name"
@@ -44,9 +28,16 @@ steps:
         --force-overwrite \
         --client-id ${CLIENT_ID} \
         --client-secret ${CLIENT_SECRET}
-      # wait for nodes
+
+      export KUBECONFIG="$(pwd)/_output/${AZURE_CLUSTER_NAME}/kubeconfig/kubeconfig.${AZURE_LOCATION}.json"
+      echo "##vso[task.setvariable variable=KUBECONFIG]${KUBECONFIG}"
+
+      # Sleep for 120 seconds to wait for nodes and pods to become ready
       sleep 2m
-      cp _output/${AZURE_CLUSTER_NAME}/kubeconfig/kubeconfig.${AZURE_LOCATION}.json cluster-kubeconfig.json
+      kubectl wait --for=condition=ready node --all
+      kubectl wait pod -n kube-system --for=condition=Ready --all
+      kubectl get nodes -owide
+      kubectl cluster-info
     displayName: "[AKS Engine] Deploy Azure cluster"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
     env:
