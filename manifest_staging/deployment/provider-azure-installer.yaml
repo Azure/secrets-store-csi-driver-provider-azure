@@ -21,10 +21,18 @@ spec:
         app: csi-secrets-store-provider-azure
     spec:
       serviceAccountName: csi-secrets-store-provider-azure
+      hostNetwork: true
       containers:
         - name: provider-azure-installer
           image: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.8
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          args:
+            - --endpoint=unix:///provider/azure.sock
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "rm /provider/azure.sock"
           resources:
             requests:
               cpu: 50m
@@ -32,15 +40,20 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
-          env:
-            - name: TARGET_DIR
-              value: "/etc/kubernetes/secrets-store-csi-providers"
           volumeMounts:
-            - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
+            - mountPath: "/provider"
               name: providervol
+            - name: mountpoint-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+          securityContext:
+            privileged: true
       volumes:
         - name: providervol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
+        - name: mountpoint-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
       nodeSelector:
         kubernetes.io/os: linux

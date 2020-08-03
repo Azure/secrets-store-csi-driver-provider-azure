@@ -13,7 +13,6 @@ steps:
         -n ${AZURE_CLUSTER_NAME} \
         --subscription ${SUBSCRIPTION_ID} \
         --node-count ${AGENT_COUNT} \
-        --kubernetes-version ${AKS_KUBERNETES_VERSION} \
         --node-vm-size Standard_D2_v3 \
         --location ${AZURE_LOCATION} \
         --service-principal ${CLIENT_ID} \

@@ -1,128 +1,42 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"io"
-	"io/ioutil"
 	"os"
-	"time"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/azure"
+	"k8s.io/klog"
+
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
 
 var (
-	attributes     = pflag.String("attributes", "", "volume attributes")
-	secrets        = pflag.String("secrets", "", "node publish ref secret")
-	targetPath     = pflag.String("targetPath", "", "Target path to write data.")
-	permission     = pflag.String("permission", "", "File permission")
-	debug          = pflag.Bool("debug", false, "sets log to debug level")
-	versionInfo    = pflag.Bool("version", false, "prints the version information")
-	contextTimeout = pflag.Int("context-timeout", 110, "context timeout in seconds for provider calls")
+	versionInfo = pflag.Bool("version", false, "prints the version information")
+	endpoint    = pflag.String("endpoint", "unix://tmp/azure.sock", "CSI gRPC endpoint")
 )
 
-// LogHook is used to setup custom hooks
-type LogHook struct {
-	Writer    io.Writer
-	Loglevels []log.Level
-}
-
 func main() {
+	klog.InitFlags(nil)
 	pflag.Parse()
 
-	var attrib, secret map[string]string
-	var filePermission os.FileMode
-	var err error
-
-	setupLogger()
-
 	if *versionInfo {
-		if err = version.PrintVersion(); err != nil {
-			log.Fatalf("failed to print version, err: %+v", err)
+		if err := version.PrintVersion(); err != nil {
+			klog.Fatalf("failed to print version, err: %+v", err)
 		}
 		os.Exit(0)
 	}
-
-	err = json.Unmarshal([]byte(*attributes), &attrib)
+	// Add csi-secrets-store user agent to adal requests
+	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
+		klog.Fatalf("failed to add user agent to adal: %+v", err)
+	}
+	// Initialize and run the GRPC server
+	server, err := provider.New(*endpoint)
 	if err != nil {
-		log.Fatalf("failed to unmarshal attributes, err: %v", err)
-	}
-	err = json.Unmarshal([]byte(*secrets), &secret)
-	if err != nil {
-		log.Fatalf("failed to unmarshal secrets, err: %v", err)
-	}
-	err = json.Unmarshal([]byte(*permission), &filePermission)
-	if err != nil {
-		log.Fatalf("failed to unmarshal file permission, err: %v", err)
+		klog.Fatalf("failed to create new server, err: %+v", err)
 	}
 
-	provider, err := azure.NewProvider()
-	if err != nil {
-		log.Fatalf("[error] : %v", err)
-	}
-
-	// kubelet default timeout for volumes is 2m3s - https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/volumemanager/volume_manager.go#L80
-	// setting the context to 1m50s will ensure request is terminated if taking longer/unable to establish connection due to underlying network error and
-	// the correct error is returned back to the driver
-	// Value is set to 1m50s to provide enough time for driver to complete outstanding operations
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*contextTimeout))
-	defer cancel()
-
-	err = provider.MountSecretsStoreObjectContent(ctx, attrib, secret, *targetPath, filePermission)
-	if err != nil {
-		log.Fatalf("[error] : %v", err)
-	}
-
-	os.Exit(0)
-}
-
-// setupLogger sets up hooks to redirect stdout and stderr
-func setupLogger() {
-	log.SetOutput(ioutil.Discard)
-
-	// set log level
-	log.SetLevel(log.InfoLevel)
-	if *debug {
-		log.SetLevel(log.DebugLevel)
-	}
-
-	// add hook to send info, debug, warn level logs to stdout
-	log.AddHook(&LogHook{
-		Writer: os.Stdout,
-		Loglevels: []log.Level{
-			log.InfoLevel,
-			log.DebugLevel,
-			log.WarnLevel,
-		},
-	})
-
-	// add hook to send panic, fatal, error logs to stderr
-	log.AddHook(&LogHook{
-		Writer: os.Stderr,
-		Loglevels: []log.Level{
-			log.PanicLevel,
-			log.FatalLevel,
-			log.ErrorLevel,
-		},
-	})
-}
-
-// Fire is called when logging function with current hook is called
-// write to appropriate writer based on log level
-func (hook *LogHook) Fire(entry *log.Entry) error {
-	line, err := entry.String()
-	if err != nil {
-		return err
-	}
-	_, err = hook.Writer.Write([]byte(line))
-	return err
-}
-
-// Levels defines log levels at which hook is triggered
-func (hook *LogHook) Levels() []log.Level {
-	return hook.Loglevels
+	server.Run()
 }
