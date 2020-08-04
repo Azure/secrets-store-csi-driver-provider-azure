@@ -49,6 +49,12 @@ Follow [this guide](charts/csi-secrets-store-provider-azure/README.md) to instal
 
 Alternatively, follow [this guide](docs/install-yamls.md) to install using deployment yamls.
 
+**In addition, if you are using Secrets Store CSI Driver and the Azure Keyvault Provider in a cluster with [pod security policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/) enabled**, review and create the following policy that enables the spec required for Secrets Store CSI Driver and the Azure Keyvault Provider to work:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/pod-security-policy.yaml
+```
+
 ### Using the Azure Key Vault Provider
 
 #### Create a new Azure Key Vault resource or use an existing one
