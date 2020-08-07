@@ -98,7 +98,7 @@ To provide identity to access key vault, refer to the following [section](#provi
         array:
           - |
             objectName: secret1
-            objectAlias: SECRET_1     # [OPTIONAL available for version > 0.0.4] object alias
+            objectAlias: SECRET_1     # [OPTIONAL available for version > 0.0.5] object alias
             objectType: secret        # object types: secret, key or cert
             objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
           - |
