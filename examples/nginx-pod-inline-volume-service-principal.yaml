@@ -1,3 +1,4 @@
+# This is a sample pod definition for using SecretProviderClass and service-principal for authentication with Key Vault
 kind: Pod
 apiVersion: v1
 metadata:
@@ -17,5 +18,5 @@ spec:
         readOnly: true
         volumeAttributes:
           secretProviderClass: "azure-kvname"
-        nodePublishSecretRef:
-          name: secrets-store-creds
+        nodePublishSecretRef:                       # Only required when using service principal mode
+          name: secrets-store-creds                 # Only required when using service principal mode

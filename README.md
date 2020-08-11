@@ -1,6 +1,9 @@
 # Azure Key Vault Provider for Secrets Store CSI Driver
 
 [![Build Status](https://dev.azure.com/azure/secrets-store-csi-driver-provider-azure/_apis/build/status/secrets-store-csi-driver-provider-azure-ci?branchName=master)](https://dev.azure.com/azure/secrets-store-csi-driver-provider-azure/_build/latest?definitionId=67&branchName=master)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Azure/secrets-store-csi-driver-provider-azure)
+[![Go Report Card](https://goreportcard.com/badge/Azure/secrets-store-csi-driver-provider-azure)](https://goreportcard.com/report/Azure/secrets-store-csi-driver-provider-azure)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Azure/secrets-store-csi-driver-provider-azure)
 
 Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) allows you to get secret contents stored in an [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) instance and use the Secrets Store CSI driver interface to mount them into Kubernetes pods.
 
@@ -99,7 +102,7 @@ To provide identity to access key vault, refer to the following [section](#provi
           - |
             objectName: secret1
             objectAlias: SECRET_1     # [OPTIONAL available for version > 0.0.4] object alias
-            objectType: secret        # object types: secret, key or cert
+            objectType: secret        # object types: secret, key or cert. For Key Vault certificates, refer to https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/getting-certs-and-keys.md for the object type to use
             objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
           - |
             objectName: key1
@@ -124,7 +127,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   | objects                | yes      | a string of arrays of strings                                                                                                                                                                                   | ""            |
   | objectName             | yes      | name of a Key Vault object                                                                                                                                                                                      | ""            |
   | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                          | ""            |
-  | objectType             | yes      | type of a Key Vault object: secret, key or cert                                                                                                                                                                 | ""            |
+  | objectType             | yes      | type of a Key Vault object: secret, key or cert.<br>For Key Vault certificates, refer to [doc](docs/getting-certs-and-keys.md) for the object type to use.</br>                                                 | ""            |
   | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                                                                 | ""            |
   | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates | "pem"         |
   | resourceGroup          | no       | [__*required for version < 0.0.4*__] name of resource group containing key vault instance                                                                                                                       | ""            |
@@ -144,7 +147,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 To ensure your application is using the Secrets Store CSI driver, update your deployment yaml to use the `secrets-store.csi.k8s.io` driver and reference the `SecretProviderClass` resource created in the previous step.
 
-Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
+Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
     
   ```yaml
     volumes:
@@ -164,7 +167,7 @@ Update your [linux deployment yaml](examples/nginx-pod-secrets-store-inline-volu
 
   1. Deploy the application yaml created previously. For example:
 
-     `kubectl apply -f ./examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml`
+     `kubectl apply -f ./examples/nginx-pod-inline-volume-service-principal.yaml`
 
 #### Validate the secret
 
