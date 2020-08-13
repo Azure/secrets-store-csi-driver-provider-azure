@@ -211,11 +211,7 @@ func (p *Provider) getVaultURL(ctx context.Context) (vaultURL *string, err error
 		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
 	}
 
-	vaultDnsSuffix, err := GetVaultDNSSuffix(p.AzureCloudEnvironment.Name)
-	if err != nil {
-		return nil, err
-	}
-	vaultDnsSuffixValue := *vaultDnsSuffix
+	vaultDnsSuffixValue := p.AzureCloudEnvironment.KeyVaultDNSSuffix
 	vaultUri := "https://" + p.KeyvaultName + "." + vaultDnsSuffixValue + "/"
 	return &vaultUri, nil
 }
@@ -567,15 +563,6 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 
 func wrapObjectTypeError(err error, objectType, objectName, objectVersion string) error {
 	return errors.Wrapf(err, "failed to get objectType:%s, objectName:%s, objectVersion:%s", objectType, objectName, objectVersion)
-}
-
-func GetVaultDNSSuffix(cloudName string) (vaultTld *string, err error) {
-	environment, err := ParseAzureEnvironment(cloudName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &environment.KeyVaultDNSSuffix, nil
 }
 
 //RedactClientID Apply regex to a sensitive string and return the redacted value
