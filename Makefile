@@ -4,7 +4,7 @@ export $(shell test -f secrets.env && sed 's/=.*//' secrets.env)
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-IMAGE_VERSION ?= 0.0.7
+IMAGE_VERSION ?= 0.0.8
 IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
 
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
@@ -30,15 +30,17 @@ build: setup
 
 .PHONY: build-windows
 build-windows:
+	@echo "Building windows binary..."
 	CGO_ENABLED=0 GOOS=windows go build -a -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure.exe ./cmd/
 
 image:
 	@echo "Building docker image..."
-	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg LDFLAGS=${LDFLAGS} -f Dockerfile --platform="linux/amd64" --output "type=docker,push=false" .
+	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) -f Dockerfile --platform="linux/amd64" --output "type=docker,push=false" .
 
 .PHONY: build-container-windows
 build-container-windows:
-	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) --build-arg LDFLAGS=${LDFLAGS} -f windows.Dockerfile --platform="windows/amd64" --output "type=docker,push=false" .
+	@echo "Building windows docker image..."
+	docker buildx build --no-cache -t $(DOCKER_IMAGE):$(IMAGE_VERSION) -f windows.Dockerfile --platform="windows/amd64" --output "type=docker,push=false" .
 
 push: image
 	docker push $(DOCKER_IMAGE):$(IMAGE_VERSION)
@@ -71,7 +73,7 @@ endif
 	docker pull $(IMAGE_TAG) || make e2e-container
 
 .PHONY: e2e-container
-e2e-container:
+e2e-container: build build-windows
 	docker buildx rm container-builder || true
 	docker buildx create --use --name=container-builder
 ifdef CI_KIND_CLUSTER
@@ -79,8 +81,8 @@ ifdef CI_KIND_CLUSTER
 		kind load docker-image --name kind $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 else
 		az acr login --name $(REGISTRY_NAME)
-		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-linux-amd64 --build-arg LDFLAGS=${LDFLAGS} -f Dockerfile --platform="linux/amd64" --push .
-		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-windows-1809-amd64 --build-arg LDFLAGS=${LDFLAGS} -f windows.Dockerfile --platform="windows/amd64" --push .
+		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-linux-amd64 -f Dockerfile --platform="linux/amd64" --push .
+		docker buildx build --no-cache -t $(E2E_IMAGE_TAG)-windows-1809-amd64 -f windows.Dockerfile --platform="windows/amd64" --push .
 		docker manifest create $(E2E_IMAGE_TAG) $(E2E_IMAGE_TAG)-linux-amd64 $(E2E_IMAGE_TAG)-windows-1809-amd64
 		docker manifest inspect $(E2E_IMAGE_TAG)
 		docker manifest push --purge $(E2E_IMAGE_TAG)
