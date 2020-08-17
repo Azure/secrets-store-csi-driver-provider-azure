@@ -5,6 +5,8 @@ image:
 
 linux:
   nodeSelector: {}
+  tolerations: []
+  env: []
   enabled: true
   resources:
     requests:
@@ -16,6 +18,7 @@ linux:
 
 windows:
   nodeSelector: {}
+  tolerations: []
   enabled: false
   resources:
     requests:

@@ -23,8 +23,8 @@ spec:
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           env:
-            - name: TARGET_DIR
-              value: "/etc/kubernetes/secrets-store-csi-providers"
+          - name: TARGET_DIR
+            value: "/etc/kubernetes/secrets-store-csi-providers"
           volumeMounts:
             - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
               name: providervol
@@ -36,5 +36,9 @@ spec:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
 {{- toYaml .Values.linux.nodeSelector | nindent 8 }}
+{{- end }}
+{{- with .Values.linux.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
 {{- end }}
 {{- end -}}
