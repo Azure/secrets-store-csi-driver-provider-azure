@@ -25,10 +25,10 @@ Standard labels for helm resources
 */}}
 {{- define "sscdpa.labels" -}}
 labels:
-  heritage: "{{ .Release.Service }}"
-  release: "{{ .Release.Name }}"
-  revision: "{{ .Release.Revision }}"
-  chart: "{{ .Chart.Name }}"
-  chartVersion: "{{ .Chart.Version }}"
+  app.kubernetes.io/instance: "{{ .Release.Name }}"
+  app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+  app.kubernetes.io/name: "{{ template "sscdpa.name" . }}"
+  app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
   app: {{ template "sscdpa.name" . }}
+  helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 {{- end -}}
