@@ -7,19 +7,16 @@ WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
-SECRETS_STORE_CSI_DRIVER_PATH=${SECRETS_STORE_CSI_DRIVER_PATH:-"$GOPATH/src/sigs.k8s.io/secrets-store-csi-driver"}
 NODE_SELECTOR_OS=linux
 BASE64_FLAGS="-w 0"
 if [[ "$OSTYPE" == *"darwin"* ]]; then
   BASE64_FLAGS="-b 0"
 fi
 
-PROVIDER_YAML=deployment/provider-azure-installer.yaml
 CONTAINER_IMAGE=nginx
 EXEC_COMMAND="cat /mnt/secrets-store"
 
 if [ $TEST_WINDOWS ]; then
-  PROVIDER_YAML=deployment/provider-azure-installer-windows.yaml
   CONTAINER_IMAGE=mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
   EXEC_COMMAND="powershell.exe cat /mnt/secrets-store"
   NODE_SELECTOR_OS=windows
@@ -64,13 +61,14 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi-secrets-store ${SECRETS_STORE_CSI_DRIVER_PATH}/charts/secrets-store-csi-driver --namespace dev --set windows.enabled=true
-  assert_success
-}
+  run helm install csi charts/csi-secrets-store-provider-azure --namespace dev --set windows.enabled=true \
+      --set secrets-store-csi-driver.windows.enabled=true \
+      --set image.repository=${PROVIDER_TEST_IMAGE} \
+      --set image.tag=${IMAGE_TAG} \
+      --set image.pullPolicy="IfNotPresent" \
+      --dependency-update
 
-@test "install azure provider with e2e image" {
-  yq w -d 1 ${PROVIDER_YAML} "spec.template.spec.containers[0].image" "${PROVIDER_TEST_IMAGE}:${IMAGE_TAG}" \
-    | yq w -d 1 - spec.template.spec.containers[0].imagePullPolicy "IfNotPresent" | kubectl apply -n dev -f -
+  assert_success
 }
 
 @test "create azure k8s secret" {
