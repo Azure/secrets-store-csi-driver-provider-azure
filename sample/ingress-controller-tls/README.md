@@ -41,7 +41,7 @@ helm install stable/nginx-ingress --generate-name \
 - Set secret type to `kubernetes.io/tls`
 
 ```bash
-$ cat <<EOF | kubectl apply -f -
+$ cat <<EOF | kubectl apply -n ingress-test -f -
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
 metadata:

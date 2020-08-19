@@ -2,8 +2,30 @@ apiVersion: v1
 entries:
   csi-secrets-store-provider-azure:
   - apiVersion: v1
+    appVersion: 0.0.8
+    created: "2020-08-18T18:28:20.445103-07:00"
+    dependencies:
+    - condition: secrets-store-csi-driver.install
+      name: secrets-store-csi-driver
+      repository: https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
+      version: 0.0.13
+    description: A Helm chart to install the Secrets Store CSI Driver and the Azure
+      Keyvault Provider inside a Kubernetes cluster.
+    digest: 62389072bbc0a17a9cca9a243b0d19e273bb1ff3ea637e7274aadba56b384421
+    home: https://github.com/Azure/secrets-store-csi-driver-provider-azure
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - email: anish.ramasekar@gmail.com
+      name: Anish Ramasekar
+    name: csi-secrets-store-provider-azure
+    sources:
+    - https://github.com/Azure/secrets-store-csi-driver-provider-azure
+    urls:
+    - https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.10.tgz
+    version: 0.0.10
+  - apiVersion: v1
     appVersion: 0.0.7
-    created: "2020-07-22T16:31:19.361455-07:00"
+    created: "2020-08-18T18:28:20.453336-07:00"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -25,7 +47,7 @@ entries:
     version: 0.0.9
   - apiVersion: v1
     appVersion: 0.0.7
-    created: "2020-07-22T16:31:19.360428-07:00"
+    created: "2020-08-18T18:28:20.451505-07:00"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -47,7 +69,7 @@ entries:
     version: 0.0.8
   - apiVersion: v1
     appVersion: 0.0.6
-    created: "2020-07-22T16:31:19.359216-07:00"
+    created: "2020-08-18T18:28:20.450191-07:00"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -69,7 +91,7 @@ entries:
     version: 0.0.7
   - apiVersion: v1
     appVersion: 0.0.5
-    created: "2020-07-22T16:31:19.358042-07:00"
+    created: "2020-08-18T18:28:20.448896-07:00"
     dependencies:
     - condition: driver.install
       name: secrets-store-csi-driver
@@ -91,7 +113,7 @@ entries:
     version: 0.0.6
   - apiVersion: v1
     appVersion: 0.0.5
-    created: "2020-07-22T16:31:19.356837-07:00"
+    created: "2020-08-18T18:28:20.447555-07:00"
     dependencies:
     - condition: driver.install
       name: secrets-store-csi-driver
@@ -111,4 +133,4 @@ entries:
     urls:
     - https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.5.tgz
     version: 0.0.5
-generated: "2020-07-22T16:31:19.352738-07:00"
+generated: "2020-08-18T18:28:20.44344-07:00"

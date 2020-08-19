@@ -79,6 +79,8 @@ Take note of the following properties for use in the next section:
 
 Create a `SecretProviderClass` custom resource to provide provider-specific parameters for the Secrets Store CSI driver. In this example, use an existing Azure Key Vault or the Azure Key Vault resource created previously.
 
+> NOTE: The `SecretProviderClass` has to be in the same namespace as the pod referencing it.
+
 Update [this sample deployment](examples/v1alpha1_secretproviderclass.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
