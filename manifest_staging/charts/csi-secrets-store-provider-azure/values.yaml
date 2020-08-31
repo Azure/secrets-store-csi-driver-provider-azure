@@ -1,0 +1,74 @@
+image:
+  repository: mcr.microsoft.com/k8s/csi/secrets-store/provider-azure
+  tag: 0.0.8
+  pullPolicy: IfNotPresent
+
+linux:
+  nodeSelector: {}
+  tolerations: []
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+
+windows:
+  nodeSelector: {}
+  tolerations: []
+  enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 200Mi
+
+## Configuration values for the secrets-store-csi-driver dependency.
+## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
+##
+secrets-store-csi-driver:
+  install: true
+  linux:
+    enabled: true
+    kubeletRootDir: /var/lib/kubelet
+    metricsAddr: ":8080"
+    image:
+      repository: mcr.microsoft.com/k8s/csi/secrets-store/driver
+      tag: v0.0.13
+      pullPolicy: IfNotPresent
+    registrarImage:
+      repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
+      tag: v1.2.0
+      pullPolicy: IfNotPresent
+    livenessProbeImage:
+      repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
+      tag: v2.0.0
+      pullPolicy: IfNotPresent
+
+  windows:
+    enabled: false
+    kubeletRootDir: C:\var\lib\kubelet
+    metricsAddr: ":8080"
+    image:
+      repository: mcr.microsoft.com/k8s/csi/secrets-store/driver
+      tag: v0.0.13
+      pullPolicy: IfNotPresent
+    registrarImage:
+      repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
+      tag: v1.2.1-alpha.1-windows-1809-amd64
+      pullPolicy: IfNotPresent
+    livenessProbeImage:
+      repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
+      tag: v2.0.1-alpha.1-windows-1809-amd64
+      pullPolicy: IfNotPresent
+
+  logLevel:
+    debug: true
+
+## Install default service account
+rbac:
+  install: true

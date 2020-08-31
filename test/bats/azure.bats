@@ -61,7 +61,7 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi charts/csi-secrets-store-provider-azure --namespace dev --set windows.enabled=true \
+  run helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace dev --set windows.enabled=true \
       --set secrets-store-csi-driver.windows.enabled=true \
       --set image.repository=${PROVIDER_TEST_IMAGE} \
       --set image.tag=${IMAGE_TAG} \
