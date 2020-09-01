@@ -1,0 +1,15 @@
+trigger: none
+
+schedules:
+  - cron: "0 0 * * *"
+    always: true
+    displayName: "Nightly Build & Test"
+    branches:
+      include:
+        - master
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+  - template: load-tests-template.yaml

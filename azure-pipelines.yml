@@ -10,21 +10,20 @@ pr:
 
 jobs:
 - job: unit_tests
-  timeoutInMinutes: 5
+  timeoutInMinutes: 10
   cancelTimeoutInMinutes: 5
-  pool:
-    vmImage: 'ubuntu-latest'
-
+  workspace:
+    clean: all
   steps:
-  - task: GoTool@0
-    inputs:
-      version: '1.14.1'
-  - script: |
-      make build build-windows
-    displayName: 'build linux and windows binaries'
-  - script: |
-      make unit-test
-    displayName: 'Run unit tests'
+    - task: GoTool@0
+      inputs:
+        version: 1.14.1
+    - script: make build build-windows
+      displayName: Build
+    - script: make unit-test
+      displayName: Run unit tests
+    - script: make helm-lint
+      displayName: Run helm lint
 
 - job: e2e_test_kind
   pool:
@@ -51,7 +50,6 @@ jobs:
       # Generate image version
       IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
       echo "Image version: ${IMAGE_VERSION}"
-
       export IMAGE_VERSION="${IMAGE_VERSION}"
       export IMAGE_TAG="${IMAGE_VERSION}"
       echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
@@ -102,7 +100,6 @@ jobs:
       # Generate image version
       IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
       echo "Image version: ${IMAGE_VERSION}"
-
       export IMAGE_VERSION="${IMAGE_VERSION}"
       export IMAGE_TAG="${IMAGE_VERSION}"
       echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"

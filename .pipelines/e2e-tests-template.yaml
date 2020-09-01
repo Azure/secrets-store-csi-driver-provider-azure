@@ -23,6 +23,7 @@ jobs:
             value: ${{ format('{0}', osType) }}
           - name: CLUSTER_TYPE
             value: ${{ format('{0}', clusterType) }}
+          - group: csi-secrets-store-e2e
 
         steps:
         - task: GoTool@0
@@ -35,9 +36,9 @@ jobs:
             bats --version
 
             curl -LO https://github.com/Azure/aks-engine/releases/download/v${AKS_ENGINE_VERSION}/aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
-            tar -zxvf aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
-            chmod +x aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine
-            sudo mv aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64/aks-engine /usr/local/bin/
+            tar -zxvf aks-engine-v$(AKS_ENGINE_VERSION)-linux-amd64.tar.gz
+            chmod +x aks-engine-v$(AKS_ENGINE_VERSION)-linux-amd64/aks-engine
+            sudo mv aks-engine-v$(AKS_ENGINE_VERSION)-linux-amd64/aks-engine /usr/local/bin/
 
             # Download kubectl
             curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
@@ -47,9 +48,19 @@ jobs:
             # Print aks-engine version
             aks-engine version
           displayName: 'Set up workspace and install dependencies'
+          
         - template: templates/build-images.yaml
         - template: templates/aks-engine-setup.yaml
         - template: templates/aks-setup.yaml
+
+        - script: |
+            VMSS_NAMES=$(az vmss list -g ${CLUSTER_RESOURCE_GROUP} --query "[].name" -o tsv)
+
+            echo "Assigning /subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) to ${VMSS_NAMES}"
+            # Assign user assigned identity to the VMSS
+            echo "$VMSS_NAMES" | while IFS= read -r VMSS_NAME; do az vmss identity assign -g ${CLUSTER_RESOURCE_GROUP} -n $VMSS_NAME --identities /subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) >> /dev/null; done
+          displayName: "Assign User MSI to the VMSS"
+
         - script: |
             kubectl create ns dev            
             make e2e-test
@@ -66,8 +77,7 @@ jobs:
             TENANT_ID: $(TENANT_ID)
             ${{ if eq(osType, 'windows') }}:
               TEST_WINDOWS: true
+
         - template: templates/teardown.yaml
-        - script:
-            make e2e-container-cleanup
-          displayName: "Delete e2e test images"
-          failOnStderr: false
+
+        - template: templates/cleanup-images.yaml

@@ -1,0 +1,19 @@
+steps:
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    inputs:
+      testResultsFormat: "JUnit"
+      testResultsFiles: $(perf-tests.repo.path)/_artifacts/junit.xml
+    condition: succeededOrFailed()
+
+  - script: |
+      # rename : to -
+      for f in *:*; do mv -v "$f" $(echo "$f" | tr ':' '-'); done
+      mkdir -p $(Build.ArtifactStagingDirectory)/results
+      cp * $(Build.ArtifactStagingDirectory)/results
+    workingDirectory: "$(perf-tests.repo.path)/_artifacts"
+    displayName: Copy artifacts
+    condition: succeededOrFailed()
+  - task: PublishBuildArtifacts@1
+    displayName: Save artifacts
+    condition: succeededOrFailed()
