@@ -1,12 +1,14 @@
-# Secure AKS Secrets with Key Vault
+# Secure Secrets in AKS with Key Vault
 
 ## Introduction
 
-A Secret in Kubernetes is meant to save sensitive and secure data like passwords, certificates, and keys. These Secret objects aren't secret or secure! They're encoded using Base64 and saved into *etcd*. Also, by default, any pod can access to them. As a solution, we can encrypt data at rest as explained in [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data). In this case, it's recommended to use a Key Management System (KMS) to securely save the encryption keys.
+A Secret in Kubernetes is meant to save sensitive and secure data like passwords, certificates, and keys. These Secret objects aren't secret or secure! They're encoded using Base64 and saved into *etcd*. Also, by default, any pod have access to them. 
 
-KMS systems themselves have the feature to save the sensitive data like keys, secrets, files, and certificates. So, why not simply using it instead! Even more than just encryption, they offer powerful features like key rotation and expiration date.
+To secure these secrets, one solution could be to encrypt data at rest in Kubernetes as explained in [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data). But this feature (KMS) is not yet supported in AKS. However some work is in progress. Check the [AKS Roadmap](https://github.com/Azure/AKS/projects/1#card-36434441) and the [KMS Plugin for Key Vault](https://github.com/Azure/kubernetes-kms).
 
-Now, to access KMS, a password is needed and should be saved in a Secret object in *etcd*! We returned back to the same problem. Fortunately, cloud providers have a solution. Instead of using a password to access KMS, the managed Kubernetes cluster will be granted access to KMS. In Azure, for example, AKS can connect to Key Vault or SQL Database… using an Identity. This connection could be done using the open-source [project Pod Identity](https://github.com/Azure/aad-pod-identity). It uses Azure AD to create an Identity and assign the roles and resources.
+Another solution would be using Azure Key Vault. It can securely encrypt sensitive data like keys, secrets, files, and certificates. Even more than just encryption, they offer powerful features like key rotation, expiration date and access policies.
+
+Now, to access Key Vault, a password is needed. Thus it will be non-securely saved in a Secret object in *etcd*! We returned back to the first problem. Fortunately in Azure, AKS can connect to Key Vault or SQL Database… using an Identity. This connection could be done using the open-source [project Pod Identity](https://github.com/Azure/aad-pod-identity). It uses Azure AD to create an Identity and assign the roles and resources.
 
 Now that we have access to Key Vault, we can use its SDK or REST API in the application to retrieve the secrets. The SDK has support for .NET, Java, Python, JS, Ruby, PHP, etc. Or we can retrieve the secrets from a mounted volume. Historically, in Azure, this solution was implemented through [Kubernetes Key Vault Flex Volume](https://github.com/Azure/kubernetes-keyvault-flexvol). Now it's being deprecated. The new solution is [Azure Key Vault provider for Secret Store CSI driver](https://github.com/Azure/secrets-store-csi-driver-provider-azure). Which is the Azure implementation of [Secrets Store CSI driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver).
 
@@ -27,7 +29,7 @@ $tenantId = (az account show | ConvertFrom-Json).tenantId
 $location = "westeurope"
 $resourceGroupName = "rg-" + $suffix
 $aksName = "aks-" + $suffix
-$aksVersion = "1.16.9"
+$aksVersion = "1.16.13"
 $keyVaultName = "keyvaultaks" + $suffix
 $secret1Name = "DatabaseLogin"
 $secret2Name = "DatabasePassword"
@@ -55,7 +57,7 @@ $aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aks
 }
 # retrieve the existing or created AKS
 $aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
-# echo "Connecting/athenticating to AKS..."
+# echo "Connecting/authenticating to AKS..."
 az aks get-credentials -n $aksName -g $resourceGroupName
 echo "Creating Key Vault..."
 $keyVault = az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json
