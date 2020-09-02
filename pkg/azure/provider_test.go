@@ -258,7 +258,7 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	_, err = io.WriteString(file, `{}`)
+	_, err = io.WriteString(file, fmt.Sprintf(`{"name": "%s"}`, azureStackCloudEnvName))
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
@@ -272,9 +272,12 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	_, err = ParseAzureEnvironment(azureStackCloudEnvName)
+	env, err := ParseAzureEnvironment(azureStackCloudEnvName)
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
+	}
+	if env.Name != azureStackCloudEnvName {
+		t.Fatalf("expected environment name to be '%s', got: '%s'", azureStackCloudEnvName, env.Name)
 	}
 }
 

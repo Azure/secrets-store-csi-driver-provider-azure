@@ -1,0 +1,6 @@
+{
+    "name": "AzureStackCloud",
+    "activeDirectoryEndpoint": "https://login.microsoftonline.com/",
+    "keyVaultEndpoint": "https://vault.azure.net/",
+    "keyVaultDNSSuffix": "vault.azure.net"
+}

@@ -27,6 +27,7 @@ Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kuber
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [Testing](#testing)
+- [Other Azure Clouds](#other-azure-clouds)
 - [Support](#support)
 
 ## Demo
@@ -124,8 +125,8 @@ To provide identity to access key vault, refer to the following [section](#provi
   | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of VM's managed identity                                                                                                                | "false"       |
   | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for VMSS User Assigned Managed Identity mode                                                                                    | ""            |
   | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                    | ""            |
-  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud,AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud)                                                | ""            |
-  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment                                                                                                        | ""            |
+  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                              | ""            |
+  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](#other-azure-clouds).               | ""            |
   | objects                | yes      | a string of arrays of strings                                                                                                                                                                                   | ""            |
   | objectName             | yes      | name of a Key Vault object                                                                                                                                                                                      | ""            |
   | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                          | ""            |
@@ -259,6 +260,11 @@ Please refer to [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
 ## Testing
 
 For documentation on how to locally test the Secrets Store CSI Driver Provider for Azure, please refer to [this guide](docs/testing.md)
+
+## Other Azure Clouds
+
+For documentation on how to pull secret content from air-gapped and/or on-prem clouds (such as Azure Stack Hub),
+please refer to [this guide](docs/custom-environments.md).
 
 ## Support
 

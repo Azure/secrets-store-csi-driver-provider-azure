@@ -328,13 +328,13 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return fmt.Errorf("tenantId is not set")
 	}
 
-	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
-	if err != nil {
-		return fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
-	}
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
 		return fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
+	}
+	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
+	if err != nil {
+		return fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
 	}
 
 	usePodIdentity := false

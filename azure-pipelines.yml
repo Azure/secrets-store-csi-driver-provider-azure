@@ -73,3 +73,59 @@ jobs:
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
+  - script: |
+      make e2e-kind-cleanup
+    displayName: 'Delete kind cluster'
+
+- job: custom_cloud_e2e_test_kind
+  pool:
+    vmImage: 'ubuntu-latest'
+  timeoutInMinutes: 10
+  cancelTimeoutInMinutes: 5
+  workspace:
+    clean: all
+
+  variables:
+    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
+    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
+
+  steps:
+  - task: GoTool@0
+    inputs:
+      version: '1.14.1'
+  - script: |
+      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
+      sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
+      bats --version
+    displayName: 'Set up workspace and install dependencies'
+  - script: |
+      # Generate image version
+      IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
+      echo "Image version: ${IMAGE_VERSION}"
+
+      export IMAGE_VERSION="${IMAGE_VERSION}"
+      export IMAGE_TAG="${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=IMAGE_TAG]${IMAGE_VERSION}"
+      
+      make e2e-bootstrap
+      export KUBECONFIG=$(kind get kubeconfig-path)
+      kubectl create ns dev
+      make e2e-test
+    displayName: "Run custom cloud e2e tests on kind cluster"
+    env:
+      AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      KEY_NAME: $(KEY_NAME)
+      KEY_VERSION: $(KEY_VERSION)
+      KEYVAULT_NAME: $(KEYVAULT_NAME)
+      RESOURCE_GROUP: $(RESOURCE_GROUP)
+      SECRET_NAME: $(SECRET_NAME)
+      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      TENANT_ID: $(TENANT_ID)
+      CI_KIND_CLUSTER: true
+      AZURE_ENVIRONMENT: AzureStackCloud
+      AZURE_ENVIRONMENT_FILEPATH: /etc/kubernetes/secrets-store-csi-providers/custom_environment.json
+  - script: |
+      make e2e-kind-cleanup
+    displayName: 'Delete kind cluster'
