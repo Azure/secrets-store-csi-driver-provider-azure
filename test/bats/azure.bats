@@ -7,6 +7,8 @@ WAIT_TIME=60
 SLEEP_TIME=1
 IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
 PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
+AZURE_ENVIRONMENT=${AZURE_ENVIRONMENT:-"AzurePublicCloud"}
+AZURE_ENVIRONMENT_FILEPATH=${AZURE_ENVIRONMENT_FILEPATH:-""}
 NODE_SELECTOR_OS=linux
 BASE64_FLAGS="-w 0"
 if [[ "$OSTYPE" == *"darwin"* ]]; then

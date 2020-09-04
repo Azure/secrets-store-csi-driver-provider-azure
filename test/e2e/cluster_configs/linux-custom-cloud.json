@@ -1,0 +1,82 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorRelease": "$AKSENGINE_K8S_VERSION",
+            "kubernetesConfig": {
+                "loadBalancerSku": "Standard",
+                "excludeMasterFromStandardLB": true,
+                "addons": [
+                    {
+                        "name": "csi-secrets-store",
+                        "enabled": false
+                    }
+                ]
+            }
+        },
+        "customCloudProfile": {
+            "portalURL": "https://portal.$AZURE_LOCATION.azure.com/",
+            "identitySystem": "azure_ad",
+            "environment": {
+                "name": "AzureStackCloud",
+                "managementPortalURL": "https://manage.windowsazure.com/",
+                "publishSettingsURL": "https://manage.windowsazure.com/publishsettings/index",
+                "serviceManagementEndpoint": "https://management.core.windows.net/",
+                "resourceManagerEndpoint": "https://management.azure.com/",
+                "activeDirectoryEndpoint": "https://login.microsoftonline.com/",
+                "galleryEndpoint": "https://gallery.azure.com/",
+                "keyVaultEndpoint": "https://vault.azure.net/",
+                "graphEndpoint": "https://graph.windows.net/",
+                "serviceBusEndpoint": "https://servicebus.windows.net/",
+                "batchManagementEndpoint": "https://batch.core.windows.net/",
+                "storageEndpointSuffix": "core.windows.net",
+                "sqlDatabaseDNSSuffix": "database.windows.net",
+                "trafficManagerDNSSuffix": "trafficmanager.net",
+                "keyVaultDNSSuffix": "vault.azure.net",
+                "serviceBusEndpointSuffix": "servicebus.windows.net",
+                "serviceManagementVMDNSSuffix": "cloudapp.net",
+                "resourceManagerVMDNSSuffix": "cloudapp.azure.com",
+                "containerRegistryDNSSuffix": "azurecr.io",
+                "cosmosDBDNSSuffix": "documents.azure.com",
+                "tokenAudience": "https://management.azure.com/",
+                "resourceIdentifiers": {
+                    "graph": "https://graph.windows.net/",
+                    "keyVault": "https://vault.azure.net",
+                    "datalake": "https://datalake.azure.net/",
+                    "batch": "https://batch.core.windows.net/",
+                    "operationalInsights": "https://api.loganalytics.io",
+                    "storage": "https://storage.azure.com/"
+                }
+            }
+        },
+        "masterProfile": {
+            "count": $MASTER_COUNT,
+            "dnsPrefix": "$AZURE_CLUSTER_NAME",
+            "vmSize": "Standard_D2_v3"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "agentpool1",
+                "count": $AGENT_COUNT,
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "VirtualMachineScaleSets"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "$AZURE_ADMIN_USERNAME",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "$AZURE_SSH_KEY"
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "$CLIENT_ID",
+            "secret": "$CLIENT_SECRET"
+        }
+    }
+}
+
