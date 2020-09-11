@@ -1,0 +1,45 @@
+{{- if .Values.windows.enabled}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "sscdpa.fullname" . }}-windows
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ template "sscdpa.name" . }}
+  template:
+    metadata:
+{{ include "sscdpa.labels" . | indent 6 }}
+    spec:
+      serviceAccountName: csi-secrets-store-provider-azure
+      containers:
+        - name: provider-azure-installer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.windows.resources | indent 12 }}
+          env:
+          - name: TARGET_DIR
+            value: "C:\\k\\secrets-store-csi-providers"
+          volumeMounts:
+            - mountPath: "C:\\k\\secrets-store-csi-providers"
+              name: providervol
+      volumes:
+        - name: providervol
+          hostPath:
+            path: "C:\\k\\secrets-store-csi-providers"
+            type: DirectoryOrCreate
+      nodeSelector:
+        kubernetes.io/os: windows
+{{- if .Values.windows.nodeSelector }}
+{{- toYaml .Values.windows.nodeSelector | nindent 8 }}
+{{- end }}
+{{- with .Values.windows.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end -}}
