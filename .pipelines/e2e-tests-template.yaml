@@ -73,9 +73,5 @@ jobs:
             ${{ if eq(osType, 'windows') }}:
               TEST_WINDOWS: true
 
-        - template: templates/get-logs.yaml
-          parameters:
-            logUID: $(CLUSTER_TYPE)-$(CLUSTER_CONFIG)
-
         - template: templates/teardown.yaml
         - template: templates/cleanup-images.yaml
