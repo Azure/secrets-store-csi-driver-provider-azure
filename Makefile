@@ -63,6 +63,7 @@ unit-test:
 
 KIND_VERSION ?= 0.6.0
 KIND_K8S_VERSION ?= 1.18.2
+KIND_K8S_SHA=@sha256:7b27a6d0f2517ff88ba444025beae41491b016bc6af573ba467b70c5e8e0d85f
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
@@ -112,16 +113,11 @@ install-helm:
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap:
-	kind create cluster --image kindest/node:v1.18.2@sha256:7b27a6d0f2517ff88ba444025beae41491b016bc6af573ba467b70c5e8e0d85f
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}${KIND_K8S_SHA}
 	make image
 	kind load --name kind docker-image $(DOCKER_IMAGE):$(IMAGE_VERSION)
 	# Create Dev namespace for local e2e-testing
 	kubectl create ns dev
-ifdef DEVCONTAINER
-	# Helm add csi driver
-	helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts 
-	helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
-endif
 setup-debug-launchjson:
 	chmod +x debug/build-args.sh && ./debug/build-args.sh
 setup-keyvault:
