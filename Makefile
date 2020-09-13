@@ -118,10 +118,15 @@ e2e-local-bootstrap:
 	kind load --name kind docker-image $(DOCKER_IMAGE):$(IMAGE_VERSION)
 	# Create Dev namespace for local e2e-testing
 	kubectl create ns dev
-setup-debug-launchjson:
-	chmod +x debug/build-args.sh && ./debug/build-args.sh
-setup-keyvault:
-	chmod +x debug/set_up_keyvault.sh  && ./debug/set_up_keyvault.sh $(rg_name) $(azure_location) $(docker_user)
+
 .PHONY: e2e-kind-cleanup
 e2e-kind-cleanup:
 	kind delete cluster --name kind
+
+.PHONY: setup-debug-launchjson
+setup-debug-launchjson:
+	chmod +x debug/build-args.sh && ./debug/build-args.sh
+
+.PHONY: setup-keyvault
+setup-keyvault:
+	chmod +x debug/set_up_keyvault.sh  && ./debug/set_up_keyvault.sh $(rg_name) $(azure_location) $(docker_user)
