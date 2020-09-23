@@ -1,13 +1,14 @@
-package provider
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 
+	provider2 "github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+
 	"k8s.io/klog"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -18,19 +19,6 @@ import (
 // CSIDriverProviderServer providers a Secrets Store CSI Driver provider implementation
 type CSIDriverProviderServer struct {
 	*grpc.Server
-	pathToUnixFileSocket string
-}
-
-// Run starts the GRPC server
-func (s *CSIDriverProviderServer) Run() {
-	server := utils.NewNonBlockingGRPCServer()
-	server.Start(s.pathToUnixFileSocket, &CSIDriverProviderServer{})
-	server.Wait()
-}
-
-// New returns an instance of CSIDriverProviderServer with the unix socket path
-func New(pathToUnixFileSocket string) (*CSIDriverProviderServer, error) {
-	return &CSIDriverProviderServer{pathToUnixFileSocket: pathToUnixFileSocket}, nil
 }
 
 // Mount executes the mount operation in the provider. The provider fetches the objects from Key Vault
@@ -55,7 +43,7 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 		klog.Errorf("failed to unmarshal file permission, error: %+v", err)
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %v", err)
 	}
-	provider, err := NewProvider()
+	provider, err := provider2.NewProvider()
 	if err != nil {
 		klog.Errorf("failed to initialize new provider, error: %v", err)
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to initialize new provider, error: %v", err)

@@ -248,7 +248,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
-		klog.Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
+		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
@@ -270,7 +270,6 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
-		objectVersionMap[keyVaultObject.ObjectName] = newObjectVersion
 		klog.Infof("successfully wrote file %s", fileName)
 	}
 
