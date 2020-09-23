@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -325,6 +326,137 @@ func TestValidateObjectFormat(t *testing.T) {
 			err := validateObjectFormat(tc.objectFormat, tc.objectType)
 			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
 				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestValidateObjectEncoding(t *testing.T) {
+	cases := []struct {
+		desc           string
+		objectEncoding string
+		objectType     string
+		expectedErr    error
+	}{
+		{
+			desc:          "No encoding specified",
+			objectEncoding: "",
+			objectType:    "cert",
+			expectedErr:   nil,
+		},
+		{
+			desc:           "Invalid encoding specified",
+			objectEncoding: "utf-16",
+			objectType:     "secret",
+			expectedErr:    fmt.Errorf("invalid objectEncoding: utf-16, should be hex, base64 or utf-8"),
+		},
+		{
+			desc:           "Object Encoding Base64, but objectType is not secret",
+			objectEncoding: "base64",
+			objectType:     "cert",
+			expectedErr:    fmt.Errorf("objectEncoding only supported for objectType: secret"),
+		},
+		{
+			desc:           "Object Encoding case-insensitive check",
+			objectEncoding: "BasE64",
+			objectType:     "secret",
+			expectedErr:    nil,
+		},
+		{
+			desc:           "Valid ObjectEncoding and Type",
+			objectEncoding: "base64",
+			objectType:     "secret",
+			expectedErr:     nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validateObjectEncoding(tc.objectEncoding, tc.objectType)
+			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
+				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestGetContentBytes(t *testing.T) {
+	cases := []struct {
+		desc           string
+		objectContent  string
+		objectEncoding string
+		objectType     string
+		expectedErr    error
+		expectedValue  []byte
+	}{
+		{
+			desc:          "No encoding specified for a secret",
+			objectContent: "abcdefg",
+			objectEncoding: "",
+			objectType:    "secret",
+			expectedErr:   nil,
+			expectedValue: []byte{97, 98, 99, 100, 101, 102, 103},
+		},
+		{
+			desc:          "Certificate object type",
+			objectContent: "foobar123",
+			objectEncoding: "",
+			objectType:    "cert",
+			expectedErr:   nil,
+			expectedValue: []byte{102, 111, 111, 98, 97, 114, 49, 50, 51},
+		},
+		{
+			desc:          "Key object type",
+			objectContent: "keyobjecttype",
+			objectEncoding: "",
+			objectType:    "key",
+			expectedErr:   nil,
+			expectedValue: []byte{107, 101, 121, 111, 98, 106, 101, 99, 116, 116, 121, 112, 101},
+		},
+		{
+			desc:          "UTF-8 encoding",
+			objectContent: "TestSecret1",
+			objectEncoding: "utf-8",
+			objectType:    "secret",
+			expectedErr:   nil,
+			expectedValue: []byte{84, 101, 115, 116, 83, 101, 99, 114, 101, 116, 49},
+		},
+		{
+			desc:          "Base64 encoding",
+			objectContent: "QmFzZTY0RW5jb2RlZFN0cmluZw==",
+			objectEncoding: "base64",
+			objectType:    "secret",
+			expectedErr:   nil,
+			expectedValue: []byte{ 66,97,115,101,54,52,69,110,99,111,100,101,100,83,116,114,105,110,103},
+		},
+		{
+			desc:          "Hex encoding",
+			objectContent: "486578456E636F646564537472696E67",
+			objectEncoding: "hex",
+			objectType:    "secret",
+			expectedErr:   nil,
+			expectedValue: []byte{72,101,120,69,110,99,111,100,101,100,83,116,114,105,110,103},
+		},
+		{
+			desc:          "Invalid encoding",
+			objectContent: "TestSecret1",
+			objectEncoding: "NotAnEncoding",
+			objectType:    "secret",
+			expectedErr:   fmt.Errorf("invalid objectEncoding. Should be utf-8, base64, or hex"),
+			expectedValue: []byte{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			actualValue, err := getContentBytes(tc.objectContent, tc.objectType, tc.objectEncoding)
+			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
+				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+			if len(tc.expectedValue) > 0 {
+				if !bytes.Equal(tc.expectedValue, actualValue) {
+					t.Fatalf("Expected and actual byte values do not match.  Expected: %v  Actual: %v", string(tc.expectedValue), string(actualValue))
+				}
 			}
 		})
 	}
