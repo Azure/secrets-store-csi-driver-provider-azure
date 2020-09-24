@@ -3,6 +3,10 @@ image:
   tag: 0.0.8
   pullPolicy: IfNotPresent
 
+# One or more secrets to be used when pulling images
+imagePullSecrets: []
+# - registrySecretName
+
 linux:
   nodeSelector: {}
   tolerations: []
