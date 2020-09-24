@@ -182,31 +182,25 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if len(usePodIdentityStr) == 0 {
 		usePodIdentityStr = "false"
 	}
+	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
+	}
 	if len(useVMManagedIdentityStr) == 0 {
 		useVMManagedIdentityStr = "false"
 	}
+	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
+	}
 
-	err := setAzureEnvironmentFilePath(cloudEnvFileName)
+	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
 	}
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
 		return nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
-	}
-
-	usePodIdentity, useVMManagedIdentity := false, false
-	if usePodIdentityStr != "" {
-		usePodIdentity, err = strconv.ParseBool(usePodIdentityStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
-		}
-	}
-	if useVMManagedIdentityStr != "" {
-		useVMManagedIdentity, err = strconv.ParseBool(useVMManagedIdentityStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
-		}
 	}
 
 	p.AuthConfig, err = auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
