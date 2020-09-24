@@ -1,4 +1,4 @@
-package azure
+package provider
 
 import (
 	"context"
@@ -298,7 +298,7 @@ func TestValidateObjectFormat(t *testing.T) {
 			desc:         "object format not valid",
 			objectFormat: "pkcs",
 			objectType:   "secret",
-			expectedErr:  fmt.Errorf("Invalid objectFormat: pkcs, should be PEM or PFX"),
+			expectedErr:  fmt.Errorf("invalid objectFormat: pkcs, should be PEM or PFX"),
 		},
 		{
 			desc:         "object format PFX, but object type not secret",

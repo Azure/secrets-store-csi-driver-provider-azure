@@ -20,19 +20,35 @@ spec:
         - name: provider-azure-installer
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --endpoint=unix://C:\\provider\\azure.sock
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  [
+                      "cmd",
+                      "/c",
+                      "del /f C:\\provider\\azure.sock",
+                  ]
           resources:
 {{ toYaml .Values.windows.resources | indent 12 }}
-          env:
-          - name: TARGET_DIR
-            value: "C:\\k\\secrets-store-csi-providers"
           volumeMounts:
-            - mountPath: "C:\\k\\secrets-store-csi-providers"
-              name: providervol
+            - name: provider-vol
+              mountPath: "C:\\provider"
+            - name: mountpoint-dir
+              mountPath: "C:\\var\\lib\\kubelet\\pods"
+              mountPropagation: Bidirectional
+          securityContext:
+            privileged: true
       volumes:
-        - name: providervol
+        - name: provider-vol
           hostPath:
-            path: "C:\\k\\secrets-store-csi-providers"
+            path: C:\k\secrets-store-csi-providers
             type: DirectoryOrCreate
+        - name: mountpoint-dir
+          hostPath:
+            path: C:\var\lib\kubelet\pods\
       nodeSelector:
         kubernetes.io/os: windows
 {{- if .Values.windows.nodeSelector }}

@@ -125,7 +125,7 @@ jobs:
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
       AZURE_ENVIRONMENT: AzureStackCloud
-      AZURE_ENVIRONMENT_FILEPATH: /etc/kubernetes/secrets-store-csi-providers/custom_environment.json
+      AZURE_ENVIRONMENT_FILEPATH: /provider/custom_environment.json
   - script: |
       make e2e-kind-cleanup
     displayName: 'Delete kind cluster'
