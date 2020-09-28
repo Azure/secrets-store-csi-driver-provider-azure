@@ -5,7 +5,7 @@ image:
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
-# - registrySecretName
+# - name: myRegistryKeySecretName
 
 linux:
   nodeSelector: {}

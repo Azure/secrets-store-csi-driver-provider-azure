@@ -17,9 +17,7 @@ spec:
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      {{- range .Values.imagePullSecrets }}
-        - name: {{ . }}
-      {{- end }}
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
       {{- end }}
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
