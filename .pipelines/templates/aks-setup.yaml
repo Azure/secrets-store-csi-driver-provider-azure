@@ -46,8 +46,8 @@ steps:
       export CLUSTER_RESOURCE_GROUP="MC_${AZURE_CLUSTER_NAME}_${AZURE_CLUSTER_NAME}_$(AZURE_LOCATION)"
       echo "##vso[task.setvariable variable=CLUSTER_RESOURCE_GROUP]${CLUSTER_RESOURCE_GROUP}"
 
-      # Sleep for 120 seconds to wait for nodes and pods to become ready
-      sleep 2m
+      # Sleep for 300 seconds to wait for nodes and pods to become ready
+      sleep 5m
       kubectl wait --for=condition=ready node --all
       kubectl wait pod -n kube-system --for=condition=Ready --all
       kubectl get nodes -owide
