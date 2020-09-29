@@ -19,6 +19,7 @@ jobs:
           version: '1.14.1'
 
       - bash: |
+          # we are not pinning this since there are no tags for perf-tests
           git clone -b $(checkout.branch) $(checkout.repo) $(perf-tests.repo.path)
         displayName: Checkout $(checkout.repo) @ $(checkout.branch)
 
@@ -30,14 +31,9 @@ jobs:
 
       - template: templates/aks-setup.yaml
 
-      - script: |
-          VMSS_NAMES=$(az vmss list -g ${CLUSTER_RESOURCE_GROUP} --query "[].name" -o tsv)
-
-          echo "Assigning /subscriptions/$(LOAD_TEST_SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) to ${VMSS_NAMES}"
-          # Assign user assigned identity to the VMSS
-          echo "$VMSS_NAMES" | while IFS= read -r VMSS_NAME; do az vmss identity assign -g ${CLUSTER_RESOURCE_GROUP} -n $VMSS_NAME --identities /subscriptions/$(LOAD_TEST_SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) >> /dev/null; done
-        displayName: "[AKS] Assign User MSI to the VMSS"
-        condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+      - template: templates/assign-user-identity.yaml
+        parameters:
+          identitySubscriptionID: $(LOAD_TEST_SUBSCRIPTION_ID)
 
       - script: |
           echo "Installing helm..."
