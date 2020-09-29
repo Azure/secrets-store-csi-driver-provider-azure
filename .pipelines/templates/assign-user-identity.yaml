@@ -1,0 +1,13 @@
+parameters:
+- name: identitySubscriptionID
+  displayName: 'user assigned identity subscription id'
+  type: string
+
+steps:
+  - script: |
+      VMSS_NAMES=$(az vmss list -g ${CLUSTER_RESOURCE_GROUP} --query "[].name" -o tsv)
+  
+      echo "Assigning /subscriptions/${{ parameters.identitySubscriptionID }}/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) to ${VMSS_NAMES}"
+      # Assign user assigned identity to the VMSS
+      echo "$VMSS_NAMES" | while IFS= read -r VMSS_NAME; do az vmss identity assign -g ${CLUSTER_RESOURCE_GROUP} -n $VMSS_NAME --identities /subscriptions/${{ parameters.identitySubscriptionID }}/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(USER_MSI_NAME) >> /dev/null; done
+    displayName: "Assign User MSI to the VMSS"

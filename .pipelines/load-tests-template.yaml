@@ -1,0 +1,121 @@
+jobs:
+  - job:
+    displayName: aks-load-test
+    timeoutInMinutes: 360
+    cancelTimeoutInMinutes: 30
+    workspace:
+      clean: all
+    variables:
+    - name: HOME
+      value: $(System.DefaultWorkingDirectory)
+    - name: GOPATH
+      value: $(HOME)/go
+    - name: perf-tests.repo.path
+      value: $(GOPATH)/src/k8s.io/perf-tests
+    - group: csi-secrets-store-load
+    steps:
+      - task: GoTool@0
+        inputs:
+          version: '1.14.1'
+
+      - bash: |
+          # we are not pinning this since there are no tags for perf-tests
+          git clone -b $(checkout.branch) $(checkout.repo) $(perf-tests.repo.path)
+        displayName: Checkout $(checkout.repo) @ $(checkout.branch)
+
+      - template: templates/build-images.yaml
+
+      - script: |
+          az account set -s=$(LOAD_TEST_SUBSCRIPTION_ID)
+        displayName: "Set subscription for load tests"
+
+      - template: templates/aks-setup.yaml
+
+      - template: templates/assign-user-identity.yaml
+        parameters:
+          identitySubscriptionID: $(LOAD_TEST_SUBSCRIPTION_ID)
+
+      - script: |
+          echo "Installing helm..."
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+        displayName: "Install helm"
+
+      - script: |
+          kubectl wait --for=condition=ready node --all
+          kubectl wait pod -n kube-system --for=condition=Ready --all
+          kubectl get nodes -owide
+          kubectl cluster-info
+        displayName: "Check cluster's health"
+
+      - script: |
+          export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/secrets-store-csi-driver-provider-azure}"
+
+          helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace $NAMESPACE --wait --timeout=10m -v=5 --debug \
+            --set image.repository=${REGISTRY} \
+            --set image.tag=${IMAGE_VERSION} \
+            --dependency-update
+
+          envsubst < test/load/config-deployment-template.yaml > test/load/config.yaml
+          envsubst < test/load/deployment-template.yaml > test/load/deployment.yaml
+          envsubst < test/load/secret-provider-class-template.yaml > test/load/secret-provider-class.yaml
+        displayName: "Deploy secrets-store-csi-driver and azure keyvault provider"
+        workingDirectory: "$(system.defaultWorkingDirectory)"
+        env:
+          NAMESPACE: "kube-system"
+          SUBSCRIPTION_ID: $(LOAD_TEST_SUBSCRIPTION_ID)
+          USER_ASSIGNED_IDENTITY_CLIENT_ID: $(USER_ASSIGNED_IDENTITY_CLIENT_ID)
+
+      - script: |
+          echo "--- CONFIG ---"
+          cat test/load/config.yaml
+          echo "--- DEPLOYMENT ---"
+          cat test/load/deployment.yaml
+          echo "--- SECRET PROVIDER CLASS ---"
+          cat test/load/secret-provider-class.yaml
+        workingDirectory: "$(system.defaultWorkingDirectory)"
+        displayName: "Get yaml"
+
+      - script: |
+          let NODE_COUNT=${AGENT_COUNT}*${NODE_POOL_COUNT}
+          ./run-e2e.sh cluster-loader2 \
+            --nodes=${NODE_COUNT} \
+            --provider=local \
+            --report-dir="$(perf-tests.repo.path)/_artifacts" \
+            --masterip=${MASTERIP} \
+            --master-internal-ip=${MASTERINTERNALIP} \
+            --testconfig="$(system.defaultWorkingDirectory)/test/load/config.yaml"
+        workingDirectory: "$(perf-tests.repo.path)"
+        displayName: "Run clusterloader2 test"
+
+      - script: |
+          echo "--- GET NODES ---"
+          kubectl get nodes
+          echo "--- GET NS ---"
+          kubectl get ns
+          echo "--- GET PODS ---"
+          kubectl get pods --all-namespaces
+          echo "--- TOP PODS ---"
+          kubectl top pods -n kube-system
+        workingDirectory: "$(perf-tests.repo.path)"
+        condition: succeededOrFailed()
+        displayName: "Get stats"
+
+      - script: |
+          mkdir -p $(Build.ArtifactStagingDirectory)/logs
+          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c secrets-store --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/secrets-store-csi-driver.json
+          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c node-driver-registrar --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/node-driver-registrar.json
+          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c liveness-probe --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/liveness-probe.json
+          kubectl logs -n kube-system -l app.kubernetes.io/name=csi-secrets-store-provider-azure --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/csi-secrets-store-provider-azure.json
+        workingDirectory: "$(perf-tests.repo.path)"
+        condition: succeededOrFailed()
+        displayName: "Get logs"
+
+      - template: templates/publish-load-test-result.yaml
+
+      - script: |
+          az aks delete -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} --yes --no-wait
+          az group delete -g ${AZURE_CLUSTER_NAME} --yes --no-wait
+        displayName: "Delete resource group"
+        condition: always()
+
+      - template: templates/cleanup-images.yaml

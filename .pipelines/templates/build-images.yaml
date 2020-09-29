@@ -2,20 +2,19 @@ steps:
   - script: |
       az login \
         --service-principal \
-        -u=${CLIENT_ID} \
-        -p=${CLIENT_SECRET} \
-        -t=${AZURE_TENANT_ID} > /dev/null
+        -u=$(AAD_CLIENT_ID) \
+        -p=$(AAD_CLIENT_SECRET) \
+        -t=$(TENANT_ID) > /dev/null
       az account set -s=$(SUBSCRIPTION_ID)
     displayName: "az login"
-    env:
-      CLIENT_ID: $(AAD_CLIENT_ID)
-      CLIENT_SECRET: $(AAD_CLIENT_SECRET)
-      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
-      AZURE_TENANT_ID: $(TENANT_ID)
 
   - script: |
       # Generate image version
-      IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-$(CLUSTER_CONFIG)"
+      if [[ -n "${CLUSTER_CONFIG:-}" ]]; then
+        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-$(CLUSTER_CONFIG)"
+      else
+        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-load"
+      fi
       echo "Image version: ${IMAGE_VERSION}"
 
       export IMAGE_VERSION="${IMAGE_VERSION}"

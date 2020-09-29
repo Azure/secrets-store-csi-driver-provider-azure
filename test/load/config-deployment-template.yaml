@@ -1,0 +1,74 @@
+name: csi-secrets-store-load
+automanagedNamespaces: 100
+tuningSets:
+  - name: Uniform500qps
+    qpsLoad:
+      qps: 500
+steps:
+  - name: Starting measurements
+    measurements:
+      - Identifier: ResourceUsageSummary
+        Method: ResourceUsageSummary
+        Params:
+          action: start
+      - Identifier: PodStartupLatency
+        Method: PodStartupLatency
+        Params:
+          action: start
+          labelSelector: group = deployment
+          threshold: 15m
+  - measurements:
+      - Identifier: WaitForRunningDeployment
+        Method: WaitForControlledPodsRunning
+        Params:
+          action: start
+          apiVersion: apps/v1
+          kind: Deployment
+          labelSelector: group = deployment
+          operationTimeout: 15m
+  - name: Creating objects
+    phases:
+      - namespaceRange:
+          min: 1
+          max: 100
+        replicasPerNamespace: 1
+        tuningSet: Uniform500qps
+        objectBundle:
+          - basename: deployment
+            objectTemplatePath: secret-provider-class.yaml
+          - basename: deployment
+            objectTemplatePath: deployment.yaml
+            templateFillMap:
+              Replicas: $POD_COUNT_PER_DEPLOYMENT
+              Group: deployment
+  - name: Waiting for pods to be running
+    measurements:
+      - Identifier: WaitForRunningDeployment
+        Method: WaitForControlledPodsRunning
+        Params:
+          action: gather
+  - name: Deleting objects
+    phases:
+      - namespaceRange:
+          min: 1
+          max: 1
+        replicasPerNamespace: 0
+        tuningSet: Uniform500qps
+        objectBundle:
+          - basename: deployment
+            objectTemplatePath: deployment.yaml
+  - measurements:
+      - Identifier: WaitForRunningDeployment
+        Method: WaitForControlledPodsRunning
+        Params:
+          action: gather
+  - measurements:
+      - Identifier: ResourceUsageSummary
+        Method: ResourceUsageSummary
+        Params:
+          action: gather
+  - measurements:
+      - Identifier: PodStartupLatency
+        Method: PodStartupLatency
+        Params:
+          action: gather

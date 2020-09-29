@@ -60,7 +60,6 @@ mod:
 unit-test:
 	go test $(GO_FILES) -v
 
-
 KIND_VERSION ?= 0.6.0
 KIND_K8S_VERSION ?= 1.16.3
 
@@ -70,7 +69,7 @@ ifdef CI_KIND_CLUSTER
 		curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 		make setup-kind
 endif
-	docker pull $(IMAGE_TAG) || make e2e-container
+	docker pull $(E2E_IMAGE_TAG) || make e2e-container
 
 .PHONY: e2e-container
 e2e-container: build build-windows
@@ -86,15 +85,6 @@ else
 		docker manifest create $(E2E_IMAGE_TAG) $(E2E_IMAGE_TAG)-linux-amd64 $(E2E_IMAGE_TAG)-windows-1809-amd64
 		docker manifest inspect $(E2E_IMAGE_TAG)
 		docker manifest push --purge $(E2E_IMAGE_TAG)
-endif
-
-.PHONY: e2e-container-cleanup
-e2e-container-cleanup:
-ifndef CI_KIND_CLUSTER
-	az acr login --name $(REGISTRY_NAME)
-	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-linux-amd64 -y
-	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION)-windows-1809-amd64 -y
-	az acr repository delete --name $(REGISTRY_NAME) --image $(IMAGE_NAME):$(IMAGE_VERSION) -y
 endif
 
 .PHONY: e2e-test
@@ -119,3 +109,10 @@ e2e-local-bootstrap:
 .PHONY: e2e-kind-cleanup
 e2e-kind-cleanup:
 	kind delete cluster --name kind
+
+.PHONY: helm-lint
+helm-lint:
+	# Download and install Helm
+	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+	# run lint on helm charts
+	helm lint --strict charts/csi-secrets-store-provider-azure
