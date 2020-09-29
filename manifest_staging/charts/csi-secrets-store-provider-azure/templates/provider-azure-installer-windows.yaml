@@ -15,6 +15,10 @@ spec:
     metadata:
 {{ include "sscdpa.labels" . | indent 6 }}
     spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+      {{- end }}
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
