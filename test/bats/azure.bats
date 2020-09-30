@@ -175,6 +175,12 @@ setup() {
   result_base64_encoded=$(echo "${result//$'\r'}" | base64 -d | openssl pkcs12 -nodes -passin pass:"" | sed -ne '/-BEGIN PRIVATE KEY-/,/-END PRIVATE KEY-/p; /-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | base64 ${BASE64_FLAGS})
   diff  <(echo "${result_base64_encoded}" ) <(echo "${CERT2_SECRET_VALUE}")
   [[ "${result_base64_encoded}" == "${CERT2_SECRET_VALUE}" ]]
+
+  kubectl cp nginx-secrets-store-inline-crd-certs:/mnt/secrets-store/$CERT2_NAME-secret-pfx-binary $BATS_TMPDIR/$CERT2_NAME-secret-pfx-binary-e2e
+  result_base64_encoded=$(openssl pkcs12 -nodes -in $BATS_TMPDIR/$CERT2_NAME-secret-pfx-binary-e2e -passin pass:"" | sed -ne '/-BEGIN PRIVATE KEY-/,/-END PRIVATE KEY-/p; /-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | base64 ${BASE64_FLAGS})
+  diff  <(echo "${result_base64_encoded}" ) <(echo "${CERT2_SECRET_VALUE}")
+  [[ "${result_base64_encoded}" == "${CERT2_SECRET_VALUE}" ]]
+  rm $BATS_TMPDIR/$CERT2_NAME-secret-pfx-binary-e2e
 }
 
 @test "CSI inline volume test with pod portability - read azure ecc cert, priv and pub key from pod" {

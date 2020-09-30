@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -47,6 +48,9 @@ const (
 	certificateType                   = "CERTIFICATE"
 	objectFormatPEM                   = "pem"
 	objectFormatPFX                   = "pfx"
+	objectEncodingHex                 = "hex"
+	objectEncodingBase64              = "base64"
+	objectEncodingUtf8                = "utf-8"
 )
 
 // Provider implements the secrets-store-csi-driver provider interface
@@ -84,6 +88,9 @@ type KeyVaultObject struct {
 	// the format of the Azure Key Vault objects
 	// supported formats are PEM, PFX
 	ObjectFormat string `json:"objectFormat" yaml:"objectFormat"`
+	// The encoding of the object in KeyVault
+	// Supported encodings are Base64, Hex, Utf-8
+	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
 }
 
 // StringArray ...
@@ -246,6 +253,9 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
+		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
 			return nil, err
@@ -256,7 +266,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
 		objectVersionMap[objectUID] = newObjectVersion
 
-		objectContent := []byte(content)
+		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		if err != nil {
+			return nil, err
+		}
+		
 		fileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
 			fileName = keyVaultObject.ObjectAlias
@@ -519,4 +533,41 @@ func getObjectVersion(id string) string {
 // <object type>/<object name>
 func getObjectUID(objectName, objectType string) string {
 	return fmt.Sprintf("%s/%s", objectType, objectName)
+}
+
+// validateObjectEncoding checks if the object encoding is valid and is supported
+// for the given object type
+func validateObjectEncoding(objectEncoding, objectType string) error {
+	if len(objectEncoding) == 0 {
+		return nil
+	}
+
+	// ObjectEncoding is supported only for secret types
+	if objectType != VaultObjectTypeSecret {
+		return fmt.Errorf("objectEncoding only supported for objectType: secret")
+	}
+
+	if !strings.EqualFold(objectEncoding, objectEncodingHex) && !strings.EqualFold(objectEncoding, objectEncodingBase64) && !strings.EqualFold(objectEncoding, objectEncodingUtf8) {
+		return fmt.Errorf("invalid objectEncoding: %v, should be hex, base64 or utf-8", objectEncoding)
+	}
+
+	return nil
+}
+
+// getContentBytes takes the given content string and returns the bytes to write to disk
+// If an encoding is specified it will decode the string first
+func getContentBytes(content, objectType, objectEncoding string) ([]byte, error) {
+	if !strings.EqualFold(objectType, VaultObjectTypeSecret) || len(objectEncoding) == 0 || strings.EqualFold(objectEncoding, objectEncodingUtf8) {
+		return []byte(content), nil
+	}
+
+	if strings.EqualFold(objectEncoding, objectEncodingBase64) {
+		return base64.StdEncoding.DecodeString(content)
+	}
+
+	if strings.EqualFold(objectEncoding, objectEncodingHex) {
+		return hex.DecodeString(content)
+	}
+
+	return make([]byte, 0), fmt.Errorf("invalid objectEncoding. Should be utf-8, base64, or hex")
 }
