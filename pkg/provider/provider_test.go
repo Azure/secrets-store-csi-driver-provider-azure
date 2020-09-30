@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -339,10 +340,10 @@ func TestValidateObjectEncoding(t *testing.T) {
 		expectedErr    error
 	}{
 		{
-			desc:          "No encoding specified",
+			desc:           "No encoding specified",
 			objectEncoding: "",
-			objectType:    "cert",
-			expectedErr:   nil,
+			objectType:     "cert",
+			expectedErr:    nil,
 		},
 		{
 			desc:           "Invalid encoding specified",
@@ -366,7 +367,7 @@ func TestValidateObjectEncoding(t *testing.T) {
 			desc:           "Valid ObjectEncoding and Type",
 			objectEncoding: "base64",
 			objectType:     "secret",
-			expectedErr:     nil,
+			expectedErr:    nil,
 		},
 	}
 
@@ -390,60 +391,60 @@ func TestGetContentBytes(t *testing.T) {
 		expectedValue  []byte
 	}{
 		{
-			desc:          "No encoding specified for a secret",
-			objectContent: "abcdefg",
+			desc:           "No encoding specified for a secret",
+			objectContent:  "abcdefg",
 			objectEncoding: "",
-			objectType:    "secret",
-			expectedErr:   nil,
-			expectedValue: []byte{97, 98, 99, 100, 101, 102, 103},
+			objectType:     "secret",
+			expectedErr:    nil,
+			expectedValue:  []byte{97, 98, 99, 100, 101, 102, 103},
 		},
 		{
-			desc:          "Certificate object type",
-			objectContent: "foobar123",
+			desc:           "Certificate object type",
+			objectContent:  "foobar123",
 			objectEncoding: "",
-			objectType:    "cert",
-			expectedErr:   nil,
-			expectedValue: []byte{102, 111, 111, 98, 97, 114, 49, 50, 51},
+			objectType:     "cert",
+			expectedErr:    nil,
+			expectedValue:  []byte{102, 111, 111, 98, 97, 114, 49, 50, 51},
 		},
 		{
-			desc:          "Key object type",
-			objectContent: "keyobjecttype",
+			desc:           "Key object type",
+			objectContent:  "keyobjecttype",
 			objectEncoding: "",
-			objectType:    "key",
-			expectedErr:   nil,
-			expectedValue: []byte{107, 101, 121, 111, 98, 106, 101, 99, 116, 116, 121, 112, 101},
+			objectType:     "key",
+			expectedErr:    nil,
+			expectedValue:  []byte{107, 101, 121, 111, 98, 106, 101, 99, 116, 116, 121, 112, 101},
 		},
 		{
-			desc:          "UTF-8 encoding",
-			objectContent: "TestSecret1",
+			desc:           "UTF-8 encoding",
+			objectContent:  "TestSecret1",
 			objectEncoding: "utf-8",
-			objectType:    "secret",
-			expectedErr:   nil,
-			expectedValue: []byte{84, 101, 115, 116, 83, 101, 99, 114, 101, 116, 49},
+			objectType:     "secret",
+			expectedErr:    nil,
+			expectedValue:  []byte{84, 101, 115, 116, 83, 101, 99, 114, 101, 116, 49},
 		},
 		{
-			desc:          "Base64 encoding",
-			objectContent: "QmFzZTY0RW5jb2RlZFN0cmluZw==",
+			desc:           "Base64 encoding",
+			objectContent:  "QmFzZTY0RW5jb2RlZFN0cmluZw==",
 			objectEncoding: "base64",
-			objectType:    "secret",
-			expectedErr:   nil,
-			expectedValue: []byte{ 66,97,115,101,54,52,69,110,99,111,100,101,100,83,116,114,105,110,103},
+			objectType:     "secret",
+			expectedErr:    nil,
+			expectedValue:  []byte{66, 97, 115, 101, 54, 52, 69, 110, 99, 111, 100, 101, 100, 83, 116, 114, 105, 110, 103},
 		},
 		{
-			desc:          "Hex encoding",
-			objectContent: "486578456E636F646564537472696E67",
+			desc:           "Hex encoding",
+			objectContent:  "486578456E636F646564537472696E67",
 			objectEncoding: "hex",
-			objectType:    "secret",
-			expectedErr:   nil,
-			expectedValue: []byte{72,101,120,69,110,99,111,100,101,100,83,116,114,105,110,103},
+			objectType:     "secret",
+			expectedErr:    nil,
+			expectedValue:  []byte{72, 101, 120, 69, 110, 99, 111, 100, 101, 100, 83, 116, 114, 105, 110, 103},
 		},
 		{
-			desc:          "Invalid encoding",
-			objectContent: "TestSecret1",
+			desc:           "Invalid encoding",
+			objectContent:  "TestSecret1",
 			objectEncoding: "NotAnEncoding",
-			objectType:    "secret",
-			expectedErr:   fmt.Errorf("invalid objectEncoding. Should be utf-8, base64, or hex"),
-			expectedValue: []byte{},
+			objectType:     "secret",
+			expectedErr:    fmt.Errorf("invalid objectEncoding. Should be utf-8, base64, or hex"),
+			expectedValue:  []byte{},
 		},
 	}
 
@@ -457,6 +458,58 @@ func TestGetContentBytes(t *testing.T) {
 				if !bytes.Equal(tc.expectedValue, actualValue) {
 					t.Fatalf("Expected and actual byte values do not match.  Expected: %v  Actual: %v", string(tc.expectedValue), string(actualValue))
 				}
+			}
+		})
+	}
+}
+
+func TestFormatKeyVaultObject(t *testing.T) {
+	cases := []struct {
+		desc                   string
+		keyVaultObject         KeyVaultObject
+		expectedKeyVaultObject KeyVaultObject
+	}{
+		{
+			desc: "leading and trailing whitespace trimmed from all fields",
+			keyVaultObject: KeyVaultObject{
+				ObjectName:     "secret1     ",
+				ObjectVersion:  "",
+				ObjectEncoding: "base64   ",
+				ObjectType:     "  secret",
+				ObjectAlias:    "",
+			},
+			expectedKeyVaultObject: KeyVaultObject{
+				ObjectName:     "secret1",
+				ObjectVersion:  "",
+				ObjectEncoding: "base64",
+				ObjectType:     "secret",
+				ObjectAlias:    "",
+			},
+		},
+		{
+			desc: "no data loss for already sanitized object",
+			keyVaultObject: KeyVaultObject{
+				ObjectName:     "secret1",
+				ObjectVersion:  "version1",
+				ObjectEncoding: "base64",
+				ObjectType:     "secret",
+				ObjectAlias:    "alias",
+			},
+			expectedKeyVaultObject: KeyVaultObject{
+				ObjectName:     "secret1",
+				ObjectVersion:  "version1",
+				ObjectEncoding: "base64",
+				ObjectType:     "secret",
+				ObjectAlias:    "alias",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			formatKeyVaultObject(&tc.keyVaultObject)
+			if !reflect.DeepEqual(tc.keyVaultObject, tc.expectedKeyVaultObject) {
+				t.Fatalf("expected: %+v, but got: %+v", tc.expectedKeyVaultObject, tc.keyVaultObject)
 			}
 		})
 	}

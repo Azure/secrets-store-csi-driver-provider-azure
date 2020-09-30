@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -170,15 +171,15 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string]string, error) {
-	keyvaultName := attrib["keyvaultName"]
-	cloudName := attrib["cloudName"]
-	usePodIdentityStr := attrib["usePodIdentity"]
-	useVMManagedIdentityStr := attrib["useVMManagedIdentity"]
-	userAssignedIdentityID := attrib["userAssignedIdentityID"]
-	tenantID := attrib["tenantId"]
-	cloudEnvFileName := attrib["cloudEnvFileName"]
-	p.PodName = attrib["csi.storage.k8s.io/pod.name"]
-	p.PodNamespace = attrib["csi.storage.k8s.io/pod.namespace"]
+	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
+	cloudName := strings.TrimSpace(attrib["cloudName"])
+	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
+	useVMManagedIdentityStr := strings.TrimSpace(attrib["useVMManagedIdentity"])
+	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
+	tenantID := strings.TrimSpace(attrib["tenantId"])
+	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
+	p.PodName = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
+	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
 
 	if keyvaultName == "" {
 		return nil, fmt.Errorf("keyvaultName is not set")
@@ -234,6 +235,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d", i)
 		}
+		// remove whitespace from all fields in keyVaultObject
+		formatKeyVaultObject(&keyVaultObject)
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
@@ -270,7 +273,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err != nil {
 			return nil, err
 		}
-		
+
 		fileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
 			fileName = keyVaultObject.ObjectAlias
@@ -570,4 +573,23 @@ func getContentBytes(content, objectType, objectEncoding string) ([]byte, error)
 	}
 
 	return make([]byte, 0), fmt.Errorf("invalid objectEncoding. Should be utf-8, base64, or hex")
+}
+
+// formatKeyVaultObject formats the fields in KeyVaultObject
+func formatKeyVaultObject(object *KeyVaultObject) {
+	if object == nil {
+		return
+	}
+	objectPtr := reflect.ValueOf(object)
+	objectValue := objectPtr.Elem()
+
+	for i := 0; i < objectValue.NumField(); i++ {
+		field := objectValue.Field(i)
+		if field.Type() != reflect.TypeOf("") {
+			continue
+		}
+		str := field.Interface().(string)
+		str = strings.TrimSpace(str)
+		field.SetString(str)
+	}
 }
