@@ -15,23 +15,40 @@ spec:
     metadata:
 {{ include "sscdpa.labels" . | indent 6 }}
     spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+      {{- end }}
       serviceAccountName: csi-secrets-store-provider-azure
+      hostNetwork: true
       containers:
         - name: provider-azure-installer
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --endpoint=unix:///provider/azure.sock
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "rm /provider/azure.sock"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
-          env:
-          - name: TARGET_DIR
-            value: "/etc/kubernetes/secrets-store-csi-providers"
           volumeMounts:
-            - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
-              name: providervol
+            - name: provider-vol
+              mountPath: /provider
+            - name: mountpoint-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+          securityContext:
+            privileged: true
       volumes:
-        - name: providervol
+        - name: provider-vol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
+        - name: mountpoint-dir
+          hostPath:
+            path: "/var/lib/kubelet/pods"
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
