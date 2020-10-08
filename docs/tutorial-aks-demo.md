@@ -23,48 +23,61 @@ To complete this workshop, we need az, kubectl and helm CLI. Also, we need to cr
 We provision these resources from the Azure Portal or using the following Powershell script:
 
 ```azurepowershell-interactive
-$suffix = "demo01"
-$subscriptionId = (az account show | ConvertFrom-Json).id
-$tenantId = (az account show | ConvertFrom-Json).tenantId
-$location = "westeurope"
-$resourceGroupName = "rg-" + $suffix
-$aksName = "aks-" + $suffix
-$aksVersion = "1.16.13"
-$keyVaultName = "keyvaultaks" + $suffix
-$secret1Name = "DatabaseLogin"
-$secret2Name = "DatabasePassword"
-$secret1Alias = "DATABASE_LOGIN"
-$secret2Alias = "DATABASE_PASSWORD" 
-$identityName = "identity-aks-kv"
-$identitySelector = "azure-kv"
-$secretProviderClassName = "secret-provider-kv"
-$acrName = "acrforaks" + $suffix
-$isAKSWithManagedIdentity = "true"
+suffix="demo024"
+subscriptionId=$(az account show --query id -o tsv)
+tenantId=$(az account show --query tenantId)
+location="westeurope" # "uksouth" # 
+resourceGroupName=rg$suffix
+aksName=aks$suffix
+aksVersion="1.18.6"
+keyVaultName=keyvaultaks$suffix
+secret1Name="DatabaseLogin"
+secret2Name="DatabasePassword"
+secret1Alias="DATABASE_LOGIN"
+secret2Alias="DATABASE_PASSWORD" 
+identityName="identity-aks-kv"
+identitySelector="azure-kv"
+secretProviderClassName="secret-provider-kv"
+acrName=acrforaks$suffix
+isAKSWithManagedIdentity="true"
 
-# echo "Creating Resource Group..."
-$resourceGroup = az group create -n $resourceGroupName -l $location | ConvertFrom-Json
+echo "Creating Resource Group..."
+az group create -n $resourceGroupName -l $location
 
-# echo "Creating ACR..."
-$acr = az acr create --resource-group $resourceGroupName --name $acrName --sku Basic | ConvertFrom-Json
-az acr login -n $acrName --expose-token
+echo "Creating AKS..."
+if [ $isAKSWithManagedIdentity = "true" ]
+then
+  echo "Creating AKS cluster with Managed Identity..."
+  aks=$(az aks create -n $aksName \
+               -g $resourceGroupName \
+               --kubernetes-version $aksVersion \
+               --node-count 1 \
+               --enable-managed-identity)
+else
+  echo "Creating AKS cluster with Service Principal..."
+  aks=$(az aks create -n $aksName \
+               -g $resourceGroupName \
+               --kubernetes-version $aksVersion \
+               --node-count 1)
+fi
 
-If ($isAKSWithManagedIdentity -eq "true") {
-echo "Creating AKS cluster with Managed Identity..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName  --enable-managed-identity | ConvertFrom-Json
-} Else {
-echo "Creating AKS cluster with Service Principal..."
-$aks = az aks create -n $aksName -g $resourceGroupName --kubernetes-version $aksVersion --node-count 1 --attach-acr $acrName | ConvertFrom-Json
-}
-# retrieve the existing or created AKS
-$aks = (az aks show -n $aksName -g $resourceGroupName | ConvertFrom-Json)
-# echo "Connecting/authenticating to AKS..."
-az aks get-credentials -n $aksName -g $resourceGroupName
+echo "Connecting/authenticating to AKS..."
+az aks get-credentials -n $aksName -g $resourceGroupName --overwrite-existing
+
 echo "Creating Key Vault..."
-$keyVault = az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json
-# $keyVault = az keyvault show -n $keyVaultName | ConvertFrom-Json # retrieve existing KV
+keyVault=$(az keyvault create -n $keyVaultName \
+                       -g $resourceGroupName \
+                       -l $location \
+                       --enable-soft-delete true \
+                       --retention-days 7)
+
 echo "Creating Secrets in Key Vault..."
-az keyvault secret set --name $secret1Name --value "DbUserName" --vault-name $keyVaultName
-az keyvault secret set --name $secret2Name --value "P@ssword123456" --vault-name $keyVaultName
+az keyvault secret set --name $secret1Name \
+                       --value "Houssem" \
+                       --vault-name $keyVaultName
+az keyvault secret set --name $secret2Name \
+                       --value "P@ssword123456" \
+                       --vault-name $keyVaultName
 ```
 
 > [!IMPORTANT]
@@ -92,7 +105,7 @@ TEST SUITE: None
 Let's check the new created pods:
 
 ```azurecli-interactive
-kubectl get pods --namespace=csi-driver
+kubectl get pods --namespace csi-driver
 NAME                                               READY   STATUS              RESTARTS   AGE
 csi-azure-csi-secrets-store-provider-azure-9mf84   0/1     ContainerCreating   0          3s
 csi-azure-secrets-store-csi-driver-rpn7f           0/3     ContainerCreating   0          3s
@@ -103,11 +116,11 @@ csi-azure-secrets-store-csi-driver-rpn7f           0/3     ContainerCreating   0
 Now the driver is installed. Let's use the SecretProviderClass to configure the Key Vault instance to connect to the specific keys, secrets, or certificates to retrieve. Note how we are providing the Key Vault name, resource group, subscription Id, tenant Id, and then the name of the secrets.
 
 ```azurecli-interactive
-$secretProviderKV = @"
+cat > SecretProviderClass.yaml <<EOF
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
 metadata:
-  name: $($secretProviderClassName)
+  name: $secretProviderClassName
 spec:
   provider: azure
   parameters:
@@ -128,11 +141,11 @@ spec:
           objectAlias: $secret2Alias
           objectType: secret
           objectVersion: ""
-    resourceGroup: $resourceGroupName
-    subscriptionId: $subscriptionId
+    # resourceGroup: $resourceGroupName
+    # subscriptionId: $subscriptionId
     tenantId: $tenantId
-"@
-$secretProviderKV | kubectl create -f -
+EOF
+kubectl apply -f SecretProviderClass.yaml
 secretproviderclass.secrets-store.csi.x-k8s.io/secret-provider-kv created
 ```
 
@@ -145,12 +158,20 @@ If we are using AKS with Managed Identity, then we should create the following t
 
 ```azurepowershell-interactive
 # Run the following 2 commands only if using AKS with Managed Identity
-If ($isAKSWithManagedIdentity -eq "true") {
-az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
-az role assignment create --role "Virtual Machine Contributor" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$($aks.nodeResourceGroup)
-# If user-assigned identities that are not within the cluster resource group
-# az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$resourceGroupName
-}
+if [ $isAKSWithManagedIdentity = "true" ]
+then
+  clientId=$(az aks show -n $aksName -g $resourceGroupName --query identityProfile.kubeletidentity.clientId -o tsv)
+  nodeResourceGroup=$(az aks show -n $aksName -g $resourceGroupName --query nodeResourceGroup -o tsv)
+
+  az role assignment create --role "Managed Identity Operator" \
+          --assignee $clientId \
+          --scope /subscriptions/$subscriptionId/resourcegroups/$nodeResourceGroup
+  az role assignment create --role "Virtual Machine Contributor" \
+          --assignee $clientId \
+          --scope /subscriptions/$subscriptionId/resourcegroups/$nodeResourceGroup
+  # If user-assigned identities that are not within the cluster resource group
+  # az role assignment create --role "Managed Identity Operator" --assignee $aks.identityProfile.kubeletidentity.clientId --scope /subscriptions/$subscriptionId/resourcegroups/$resourceGroupName
+fi
 ```
 
 ## Installing Pod Identity and providing access to Key Vault
@@ -179,17 +200,19 @@ If we are using an AKS cluster with Managed Identity, then Azure has already cre
 
 ```azurepowershell-interactive
 # If using AKS with Managed Identity, retrieve the existing Identity
-If ($isAKSWithManagedIdentity -eq "true") {
-echo "Retrieving the existing Azure Identity..."
-$existingIdentity = az resource list -g $aks.nodeResourceGroup --query "[?contains(type, 'Microsoft.ManagedIdentity/userAssignedIdentities')]"  | ConvertFrom-Json
-$identity = az identity show -n $existingIdentity.name -g $existingIdentity.resourceGroup | ConvertFrom-Json
-} Else {
-# If using AKS with Service Principal, create new Identity
-echo "Creating an Azure Identity..."
-$identity = az identity create -g $resourceGroupName -n $identityName | ConvertFrom-Json
-}
+if [ $isAKSWithManagedIdentity = "true" ]
+then
+  echo "Retrieving the existing Azure Identity..."
+  sleep 300
+  existingIdentityName=$(az resource list -g $nodeResourceGroup --query "[?contains(type, 'Microsoft.ManagedIdentity/userAssignedIdentities')].[name]" -o tsv)
+  identity=$(az identity show -n $existingIdentityName -g $nodeResourceGroup)
+ else
+  # If using AKS with Service Principal, create new Identity
+  echo "Creating an Azure Identity..."
+  identity=$(az identity create -g $resourceGroupName -n $identityName)
+fi
  
-$identity
+echo $identity
 {
   "clientId": "a0c038fd-3df3-4eaf-bb34-abdd4f78a0db",
   "clientSecretUrl": "https://control-westeurope.identity.azure.net/subscriptions/<AZURE_SUBSCRIPTION_ID>/resourcegroups/rg-demo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-aks-kv/crede
@@ -211,7 +234,11 @@ Identity/userAssignedIdentities/identity-aks-kv",
 The Identity we created earlier will be used by AKS Pods to read secrets from Key Vault. Thus, it should have permissions to do so. We will assign it the Reader role to the KV scope.
 
 ```azurecli-interactive
-az role assignment create --role "Reader" --assignee $identity.principalId --scope $keyVault.id
+identityPrincipalId=$(az identity show -n $existingIdentityName -g $nodeResourceGroup --query principalId -o tsv)
+identityClientId=$(az identity show -n $existingIdentityName -g $nodeResourceGroup --query clientId -o tsv)
+keyVaultId=$(az keyvault show -n $keyVaultName -g $resourceGroupName --query id -o tsv)
+identityId=$(az identity show -n $existingIdentityName -g $nodeResourceGroup --query id -o tsv)
+az role assignment create --role "Reader" --assignee $identityPrincipalId --scope $keyVaultId
 
 {
   "canDelegate": null,
@@ -237,10 +264,14 @@ In case you chose AKS with Service Principal, you need also to grant permissions
  
 ```azurecli-interactive
 # Run the following command only if using AKS with Service Principal
-If ($isAKSWithManagedIdentity -eq "false") {
-echo "Providing required permissions for MIC..."
-az role assignment create --role "Managed Identity Operator" --assignee $aks.servicePrincipalProfile.clientId --scope $identity.id
-}
+if [ $isAKSWithManagedIdentity = "false" ]
+then
+  echo "Providing required permissions for MIC..."
+  servicePrincipalProfileClientId=$(az aks show -n $aksName -g $resourceGroupName --query servicePrincipalProfile.clientId -o tsv)
+  az role assignment create --role "Managed Identity Operator" 
+          --assignee $servicePrincipalProfileClientId 
+          --scope $identityId
+fi
 
 {
   "canDelegate": null,
@@ -266,8 +297,9 @@ ty/userAssignedIdentities/identity-aks-kv",
 We should tell Key Vault to allow the Identity to do only specific actions on the secrets like get, list, delete, update. In our case, we need only permissions for GET. This permission is granted by using a Policy.
 
 ```azurecli-interactive
-az keyvault set-policy -n $keyVaultName --secret-permissions get --spn $identity.clientId
-
+az keyvault set-policy -n $keyVaultName 
+            --secret-permissions get 
+            --spn $identityClientId
 {
   "id": "/subscriptions/<AZURE_SUBSCRIPTION_ID>/resourceGroups/demo-rg/providers/Microsoft.KeyVault/vaults/kv-aks-demo",
   "location": "westeurope",
@@ -300,26 +332,25 @@ az keyvault set-policy -n $keyVaultName --secret-permissions get --spn $identity
 The Pod needs to use the Identity to access to Key Vault. We’ll point to that Identity in AKS using AzureIdentity object and then we’ll assign it to the Pod through AzureIdentityBinding.
 
 ```azurecli-interactive
-$aadPodIdentityAndBinding = @"
+cat > AzureIdentity.yaml <<EOF
 apiVersion: aadpodidentity.k8s.io/v1
 kind: AzureIdentity
 metadata:
-  name: $($identityName)
+  name: $identityName
 spec:
   type: 0
-  resourceID: $($identity.id)
-  clientID: $($identity.clientId)
+  resourceID: $identityId
+  clientID: $identityClientId
 ---
 apiVersion: aadpodidentity.k8s.io/v1
 kind: AzureIdentityBinding
 metadata:
-  name: $($identityName)-binding
+  name: $identityName-binding
 spec:
-  azureIdentity: $($identityName)
-  selector: $($identitySelector)
-"@
-
-$aadPodIdentityAndBinding | kubectl apply -f -
+  azureIdentity: $identityName
+  selector: $identitySelector
+EOF
+kubectl apply -f AzureIdentity.yaml
 
 azureidentity.aadpodidentity.k8s.io/identity-aks-kv created
 azureidentitybinding.aadpodidentity.k8s.io/identity-aks-kv-binding created
@@ -337,13 +368,13 @@ azureidentitybinding.aadpodidentity.k8s.io/identity-aks-kv-binding created
 At this stage, we can create a Pod and mount CSI driver on which we’ll find the login and password retrieved from Key Vault. Let's deploying a Nginx Pod for testing
 
 ```azurecli-interactive
-$nginxPod = @"
+cat > NginxPod.yaml <<EOF
 kind: Pod
 apiVersion: v1
 metadata:
   name: nginx-secrets-store
   labels:
-    aadpodidbinding: $($identitySelector)
+    aadpodidbinding: $identitySelector
 spec:
   containers:
     - name: nginx
@@ -358,10 +389,10 @@ spec:
         driver: secrets-store.csi.k8s.io
         readOnly: true
         volumeAttributes:
-          secretProviderClass: $($secretProviderClassName)
-"@
+          secretProviderClass: $secretProviderClassName
+EOF
+kubectl apply -f NginxPod.yaml
 
-$nginxPod | kubectl apply -f -
 pod/nginx-secrets-store created
 ```
 
@@ -384,5 +415,5 @@ To clean up the resources, you will purge Key Vault and delete the created resou
 ```azurecli-interactive
 az keyvault purge -n $keyVaultName
 az group delete --no-wait --yes -n $resourceGroupName
-az group delete --no-wait --yes -n $aks.nodeResourceGroup
+az group delete --no-wait --yes -n $nodeResourceGroup
 ```
