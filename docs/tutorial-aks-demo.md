@@ -22,7 +22,7 @@ To complete this workshop, we need az, kubectl and helm CLI. Also, we need to cr
 •	Container Registry (ACR).
 We provision these resources from the Azure Portal or using the following Powershell script:
 
-```azurepowershell-interactive
+```azurecli-interactive
 suffix="demo024"
 subscriptionId=$(az account show --query id -o tsv)
 tenantId=$(az account show --query tenantId)
@@ -156,7 +156,7 @@ secretproviderclass.secrets-store.csi.x-k8s.io/secret-provider-kv created
 
 If we are using AKS with Managed Identity, then we should create the following two role assignments:
 
-```azurepowershell-interactive
+```azurecli-interactive
 # Run the following 2 commands only if using AKS with Managed Identity
 if [ $isAKSWithManagedIdentity = "true" ]
 then
@@ -198,7 +198,7 @@ aad-pod-identity-nmi-t62zh             1/1     Running             0          29
 
 If we are using an AKS cluster with Managed Identity, then Azure has already created the Identity resource with AKS. So, we’ll go to retrieve it. But if we created an AKS cluster with Service Principal, then we need to create a new Identity. 
 
-```azurepowershell-interactive
+```azurecli-interactive
 # If using AKS with Managed Identity, retrieve the existing Identity
 if [ $isAKSWithManagedIdentity = "true" ]
 then
