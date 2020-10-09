@@ -242,6 +242,11 @@ spec:
 ```
 Here is a sample [deployment yaml](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/azure/nginx-deployment-synck8s-azure.yaml) that creates an ENV VAR from the synced Kubernetes secret.
 
+### [OPTIONAL] Enable Auto Rotation of Secrets
+
+You can setup the Secrets Store CSI Driver to periodically update the pod mount and Kubernetes Secret with the latest content from external secrets-store. Refer to [doc]([docs/README.rotation.md](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/docs/README.rotation.md)) for steps on enabling auto rotation.
+
+**NOTE** The CSI driver **does not restart** the application pods. It only handles updating the pod mount and Kubernetes secret similar to how Kubernetes handles updates to Kubernetes secret mounted as volumes.
 
 ## Troubleshooting
 
