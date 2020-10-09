@@ -18,6 +18,7 @@ linux:
     limits:
       cpu: 50m
       memory: 100Mi
+  priorityClassName: ""
 
 windows:
   nodeSelector: {}
@@ -30,6 +31,7 @@ windows:
     limits:
       cpu: 100m
       memory: 200Mi
+  priorityClassName: ""
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
