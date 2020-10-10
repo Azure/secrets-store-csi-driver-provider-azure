@@ -74,10 +74,6 @@ setup() {
       --set image.pullPolicy="IfNotPresent" \
       --set secrets-store-csi-driver.enableSecretRotation=true \
       --set secrets-store-csi-driver.rotationPollInterval=30s \
-      --set secrets-store-csi-driver.linux.image.repository=aramase/secrets-store-csi \
-      --set secrets-store-csi-driver.linux.image.tag=v0.0.16 \
-      --set secrets-store-csi-driver.windows.image.repository=aramase/secrets-store-csi \
-      --set secrets-store-csi-driver.windows.image.tag=v0.0.16 \
       --dependency-update
 
   assert_success
