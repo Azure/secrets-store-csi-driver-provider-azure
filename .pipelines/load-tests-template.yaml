@@ -53,6 +53,7 @@ jobs:
           helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace $NAMESPACE --wait --timeout=10m -v=5 --debug \
             --set image.repository=${REGISTRY} \
             --set image.tag=${IMAGE_VERSION} \
+            --set secrets-store-csi-driver.enableSecretRotation=true \
             --dependency-update
 
           envsubst < test/load/config-deployment-template.yaml > test/load/config.yaml

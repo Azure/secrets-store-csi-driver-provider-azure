@@ -15,6 +15,10 @@ if [[ "$OSTYPE" == *"darwin"* ]]; then
   BASE64_FLAGS="-b 0"
 fi
 
+if [ -z "$AUTO_ROTATE_SECRET_NAME" ]; then
+    export AUTO_ROTATE_SECRET_NAME=secret-$(openssl rand -hex 6)
+fi
+
 CONTAINER_IMAGE=nginx
 EXEC_COMMAND="cat /mnt/secrets-store"
 
@@ -68,6 +72,8 @@ setup() {
       --set image.repository=${PROVIDER_TEST_IMAGE} \
       --set image.tag=${IMAGE_TAG} \
       --set image.pullPolicy="IfNotPresent" \
+      --set secrets-store-csi-driver.enableSecretRotation=true \
+      --set secrets-store-csi-driver.rotationPollInterval=30s \
       --dependency-update
 
   assert_success
@@ -273,4 +279,182 @@ setup() {
 
   result=$(kubectl exec nginx-secrets-store-inline-crd-pi -- $EXEC_COMMAND/$OBJECT2_NAME)
   [[ "${result//$'\r'}" == *"${OBJECT2_VALUE}"* ]]
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Service Principal - Create deployment" {
+  if [[ "$CI_KIND_CLUSTER" = true ]]; then
+    skip "not running in azure cluster"
+  fi
+
+  run kubectl create ns rotation-sp
+  assert_success
+
+  run kubectl create secret generic secrets-store-creds --from-literal clientid=${AZURE_CLIENT_ID} --from-literal clientsecret=${AZURE_CLIENT_SECRET} -n rotation-sp
+  assert_success
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-sp --value secret
+  assert_success
+
+  envsubst < $BATS_TESTS_DIR/rotation/azure_synck8s_v1alpha1_secretproviderclass.yaml | kubectl apply -n rotation-sp -f -
+  envsubst < $BATS_TESTS_DIR/rotation/nginx-pod-synck8s-azure-sp.yaml | kubectl apply -n rotation-sp -f -
+
+  cmd="kubectl wait -n rotation-sp --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-rotation"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  run kubectl get pod/nginx-secrets-store-inline-rotation -n rotation-sp
+  assert_success
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Service Principal" {
+  if [[ "$CI_KIND_CLUSTER" = true ]]; then
+    skip "not running in azure cluster"
+  fi
+
+  run kubectl cp -n rotation-sp nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/before_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/before_rotation)
+  [[ "${result//$'\r'}" == "secret" ]]
+  rm $BATS_TMPDIR/before_rotation
+
+  result=$(kubectl get secret -n rotation-sp rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "secret" ]]
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-sp --value rotated
+  assert_success
+
+  sleep 60
+
+  run kubectl cp -n rotation-sp nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/after_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/after_rotation)
+  [[ "${result//$'\r'}" == "rotated" ]]
+  rm $BATS_TMPDIR/after_rotation
+
+  result=$(kubectl get secret -n rotation-sp rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "rotated" ]]
+
+  run az keyvault secret delete --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-sp
+  assert_success
+
+  run kubectl delete ns rotation-sp
+  assert_success
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Managed Identity - Create deployment" {
+    if [[ "$CI_KIND_CLUSTER" = true ]]; then
+    skip "not running in azure cluster"
+  fi
+
+  run kubectl create ns rotation-msi
+  assert_success
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-msi --value secret
+  assert_success
+
+  envsubst < $BATS_TESTS_DIR/rotation/azure_synck8s_v1alpha1_secretproviderclass_identity.yaml | kubectl apply -n rotation-msi -f -
+  envsubst < $BATS_TESTS_DIR/rotation/nginx-pod-synck8s-azure.yaml | kubectl apply -n rotation-msi -f -
+
+  cmd="kubectl wait -n rotation-msi --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-rotation"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  run kubectl get pod/nginx-secrets-store-inline-rotation -n rotation-msi
+  assert_success
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Managed Identity" {
+  if [[ "$CI_KIND_CLUSTER" = true ]]; then
+    skip "not running in azure cluster"
+  fi
+
+  run kubectl cp -n rotation-msi nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/before_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/before_rotation)
+  [[ "${result//$'\r'}" == "secret" ]]
+  rm $BATS_TMPDIR/before_rotation
+
+  result=$(kubectl get secret -n rotation-msi rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "secret" ]]
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-msi --value rotated
+  assert_success
+
+  sleep 60
+
+  run kubectl cp -n rotation-msi nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/after_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/after_rotation)
+  [[ "${result//$'\r'}" == "rotated" ]]
+  rm $BATS_TMPDIR/after_rotation
+
+  result=$(kubectl get secret -n rotation-msi rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "rotated" ]]
+
+  run az keyvault secret delete --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-msi
+  assert_success
+
+  run kubectl delete ns rotation-msi
+  assert_success
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Pod Identity - Create deployment" {
+  if [[ "$CI_KIND_CLUSTER" = true ]] || [[ "$TEST_WINDOWS" = true ]]; then
+    skip "not running in azure cluster or running on windows cluster"
+  fi
+
+  run kubectl create ns rotation-pi
+  assert_success
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-pi --value secret
+  assert_success
+
+  envsubst < $BATS_TESTS_DIR/pod-identity/pi_azure_identity_binding.yaml | kubectl apply -n rotation-pi -f -
+  envsubst < $BATS_TESTS_DIR/rotation/azure_v1alpha1_podidentity.yaml | kubectl apply -n rotation-pi -f -
+  envsubst < $BATS_TESTS_DIR/rotation/nginx-pod-synck8s-azure-pi.yaml | kubectl apply -n rotation-pi -f -
+
+  cmd="kubectl wait -n rotation-pi --for=condition=Ready --timeout=60s pod/nginx-secrets-store-inline-rotation"
+  wait_for_process $WAIT_TIME $SLEEP_TIME "$cmd"
+
+  run kubectl get pod/nginx-secrets-store-inline-rotation -n rotation-pi
+  assert_success
+}
+
+@test "Test auto rotation of mount contents and K8s secrets with Pod Identity" {
+  if [[ "$CI_KIND_CLUSTER" = true ]] || [[ "$TEST_WINDOWS" = true ]]; then
+    skip "not running in azure cluster or running on windows cluster"
+  fi
+
+  run kubectl cp -n rotation-pi nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/before_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/before_rotation)
+  [[ "${result//$'\r'}" == "secret" ]]
+  rm $BATS_TMPDIR/before_rotation
+
+  result=$(kubectl get secret -n rotation-pi rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "secret" ]]
+
+  run az keyvault secret set --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-pi --value rotated
+  assert_success
+
+  sleep 60
+
+  run kubectl cp -n rotation-pi nginx-secrets-store-inline-rotation:/mnt/secrets-store/secretalias $BATS_TMPDIR/after_rotation
+  assert_success
+
+  result=$(cat $BATS_TMPDIR/after_rotation)
+  [[ "${result//$'\r'}" == "rotated" ]]
+  rm $BATS_TMPDIR/after_rotation
+
+  result=$(kubectl get secret -n rotation-pi rotationsecret -o jsonpath="{.data.username}" | base64 -d)
+  [[ "${result//$'\r'}" == "rotated" ]]
+
+  run az keyvault secret delete --vault-name ${KEYVAULT_NAME} --name ${AUTO_ROTATE_SECRET_NAME}-pi
+  assert_success
+
+  run kubectl delete ns rotation-pi
+  assert_success
 }

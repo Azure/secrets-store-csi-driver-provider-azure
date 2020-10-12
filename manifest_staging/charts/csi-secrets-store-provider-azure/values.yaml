@@ -41,8 +41,8 @@ secrets-store-csi-driver:
     kubeletRootDir: /var/lib/kubelet
     metricsAddr: ":8080"
     image:
-      repository: mcr.microsoft.com/k8s/csi/secrets-store/driver
-      tag: v0.0.14
+      repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
+      tag: v0.0.16
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -58,8 +58,8 @@ secrets-store-csi-driver:
     kubeletRootDir: C:\var\lib\kubelet
     metricsAddr: ":8080"
     image:
-      repository: mcr.microsoft.com/k8s/csi/secrets-store/driver
-      tag: v0.0.14
+      repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
+      tag: v0.0.16
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -73,6 +73,8 @@ secrets-store-csi-driver:
   logLevel:
     debug: true
   grpcSupportedProviders: azure
+  enableSecretRotation: false
+  rotationPollInterval: 2m
 
 ## Install default service account
 rbac:
