@@ -294,3 +294,7 @@ Azure Key Vault Provider for Secrets Store CSI Driver is an open source project 
 This demo created by <a href="https://twitter.com/HoussemDellai">Houssem Dellai</a> is using AAD Pod Identity and Secret Store CSI provider for Key Vault to retrieve database login and password from Azure Key Vault. <a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24">Watch it here.</a>
 
 <a href="https://www.youtube.com/watch?v=dAFWrbeA6vQ&list=PLpbcUe4chE79sB7Jg7B4z3HytqUUEwcNE&index=24"><img src="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/images/demo-video-thumb.png?raw=true" width="60%"/></a>
+
+This demo created by <a href="https://twitter.com/NileshGule">Nilesh Gule</a> is using VMSS Managed Identity and Secret Store CSI provider for Key Vault to retrieve RabbitMQ related secret from Azure Key Vault. These secrets are synced with Kubernetes Secret object and then injected into deployment as ENV variables. <a href="https://youtu.be/MHm4IVGVO1w">Integrate Azure Key Vault (AKV) with Azure Kubernetes Service (AKS) in 5 easy steps</a>
+
+<a href="https://youtu.be/MHm4IVGVO1w"><img src="/images/demo-akv-aks-integration.PNG" width="60%"/></a>
