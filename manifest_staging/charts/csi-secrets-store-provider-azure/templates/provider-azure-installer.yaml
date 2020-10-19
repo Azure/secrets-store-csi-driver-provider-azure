@@ -39,9 +39,7 @@ spec:
               mountPath: /provider
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-          securityContext:
-            privileged: true
+              mountPropagation: HostToContainer
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}

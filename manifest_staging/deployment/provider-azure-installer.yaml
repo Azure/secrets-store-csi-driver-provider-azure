@@ -45,9 +45,7 @@ spec:
               name: providervol
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-          securityContext:
-            privileged: true
+              mountPropagation: HostToContainer
       volumes:
         - name: providervol
           hostPath:
