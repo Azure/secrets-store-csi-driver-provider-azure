@@ -1,0 +1,20 @@
+run:
+  timeout: 5m
+  skip-dirs:
+  skip-files:
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - gofmt
+    - goimports
+    - gosimple
+    - golint
+    - govet
+    - gosec
+    - ineffassign
+    - misspell
+    - unused
+    - structcheck
+    - varcheck

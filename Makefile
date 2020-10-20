@@ -16,12 +16,29 @@ E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
 
+ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
+TOOLS_MOD_DIR := ./tools
+TOOLS_DIR := $(abspath ./.tools)
+
 LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION)"
 
 GO111MODULE ?= on
 export GO111MODULE
 DOCKER_CLI_EXPERIMENTAL = enabled
 export GOPATH GOBIN GO111MODULE DOCKER_CLI_EXPERIMENTAL
+
+$(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
+	cd $(TOOLS_MOD_DIR) && \
+	go build -o $(TOOLS_DIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(TOOLS_DIR)/misspell: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
+	cd $(TOOLS_MOD_DIR) && \
+	go build -o $(TOOLS_DIR)/misspell github.com/client9/misspell/cmd/misspell
+
+.PHONY: lint
+lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
+	$(TOOLS_DIR)/golangci-lint run --timeout=5m -v
+	$(TOOLS_DIR)/misspell $(ALL_DOCS)
 
 .PHONY: build
 build: setup
