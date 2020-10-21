@@ -109,7 +109,7 @@ To provide identity to access key vault, refer to the following [section](#provi
             objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
           - |
             objectName: key1
-            objectAlias: ""
+            objectAlias: ""           # If provided then it has to be referenced in [secretObjects].[objectName] to sync with Kubernetes secrets 
             objectType: key
             objectVersion: ""
       resourceGroup: "rg1"            # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
