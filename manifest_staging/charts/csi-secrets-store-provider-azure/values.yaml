@@ -19,6 +19,10 @@ linux:
       cpu: 50m
       memory: 100Mi
   priorityClassName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
 
 windows:
   nodeSelector: {}
@@ -32,6 +36,10 @@ windows:
       cpu: 100m
       memory: 200Mi
   priorityClassName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
