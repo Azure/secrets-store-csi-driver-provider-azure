@@ -336,3 +336,7 @@ ASALocalRun/
 /_output*/
 /_output
 .DS_Store
+
+# helm chart dependencies
+charts/csi-secrets-store-provider-azure/charts/
+manifest_staging/charts/csi-secrets-store-provider-azure/charts/ 
