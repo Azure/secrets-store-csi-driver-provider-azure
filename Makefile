@@ -114,5 +114,9 @@ e2e-kind-cleanup:
 helm-lint:
 	# Download and install Helm
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+	# install driver dep as helm 3.4.0 requires dependencies for helm lint
+	helm dep update charts/csi-secrets-store-provider-azure
+	helm dep update manifest_staging/charts/csi-secrets-store-provider-azure
 	# run lint on helm charts
 	helm lint --strict charts/csi-secrets-store-provider-azure
+	helm lint --strict manifest_staging/charts/csi-secrets-store-provider-azure
