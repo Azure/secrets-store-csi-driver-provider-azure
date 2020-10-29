@@ -25,12 +25,13 @@ import (
 	"golang.org/x/crypto/pkcs12"
 
 	"golang.org/x/net/context"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	"github.com/pkg/errors"
@@ -159,9 +160,9 @@ func (p *Provider) getVaultURL(ctx context.Context) (vaultURL *string, err error
 		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
 	}
 
-	vaultDnsSuffixValue := p.AzureCloudEnvironment.KeyVaultDNSSuffix
-	vaultUri := "https://" + p.KeyvaultName + "." + vaultDnsSuffixValue + "/"
-	return &vaultUri, nil
+	vaultDNSSuffixValue := p.AzureCloudEnvironment.KeyVaultDNSSuffix
+	vaultURI := "https://" + p.KeyvaultName + "." + vaultDNSSuffixValue + "/"
+	return &vaultURI, nil
 }
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
@@ -233,7 +234,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d", i)
+			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
