@@ -32,7 +32,7 @@ Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kuber
 
 ## Demo
 
-_WIP_
+![Azure Key Vault Provider for Secrets Store CSI Driver Demo](images/demo.gif "Secrets Store CSI Driver Azure Key Vault Provider Demo")
 
 ## Usage
 
