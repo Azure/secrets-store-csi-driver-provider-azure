@@ -339,4 +339,7 @@ ASALocalRun/
 
 # helm chart dependencies
 charts/csi-secrets-store-provider-azure/charts/
-manifest_staging/charts/csi-secrets-store-provider-azure/charts/ 
+manifest_staging/charts/csi-secrets-store-provider-azure/charts/
+
+# Go tools
+.tools/

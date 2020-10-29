@@ -14,10 +14,13 @@ jobs:
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
+
   steps:
     - task: GoTool@0
       inputs:
         version: 1.14.1
+    - script: make lint
+      displayName: Run lint
     - script: make build build-windows
       displayName: Build
     - script: make unit-test
@@ -36,6 +39,7 @@ jobs:
   variables:
     GOPATH: '$(system.defaultWorkingDirectory)/gopath'
     modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
+    GOBIN:  '$(GOPATH)/bin' # Go binaries path
 
   steps:
   - task: GoTool@0
