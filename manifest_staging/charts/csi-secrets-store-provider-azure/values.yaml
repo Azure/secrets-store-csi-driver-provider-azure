@@ -56,11 +56,11 @@ secrets-store-csi-driver:
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v1.2.0
+      tag: v2.0.1
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.0.0
+      tag: v2.1.0
       pullPolicy: IfNotPresent
 
   windows:
@@ -73,11 +73,11 @@ secrets-store-csi-driver:
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v1.2.1-alpha.1-windows-1809-amd64
+      tag: v2.0.1
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.0.1-alpha.1-windows-1809-amd64
+      tag: v2.1.0
       pullPolicy: IfNotPresent
 
   logLevel:
