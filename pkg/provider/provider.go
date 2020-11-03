@@ -18,23 +18,18 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/klog"
-
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
-
-	"golang.org/x/crypto/pkcs12"
-
-	"golang.org/x/net/context"
-	"gopkg.in/yaml.v2"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
-
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
-
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/pkcs12"
+	"golang.org/x/net/context"
+	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 )
 
 // Type of Azure Key Vault objects
@@ -221,14 +216,14 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if objectsStrings == "" {
 		return nil, fmt.Errorf("objects is not set")
 	}
-	klog.V(2).Infof("objects: %s", objectsStrings)
+	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
 		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
 	}
-	klog.V(2).Infof("objects array: %v", objects.Array)
+	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	var keyVaultObjects []KeyVaultObject
 	for i, object := range objects.Array {
 		var keyVaultObject KeyVaultObject
@@ -241,8 +236,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
-	klog.Infof("unmarshaled keyVaultObjects: %v", keyVaultObjects)
-	klog.Infof("keyVaultObjects len: %d", len(keyVaultObjects))
+	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	if len(keyVaultObjects) == 0 {
 		return nil, fmt.Errorf("objects array is empty")
@@ -253,8 +247,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
-		// validation on the provided object
-		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
+		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
@@ -287,7 +280,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
-		klog.Infof("successfully wrote file %s", fileName)
+		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	}
 
 	return objectVersionMap, nil

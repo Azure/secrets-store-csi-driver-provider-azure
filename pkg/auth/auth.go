@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	"k8s.io/klog"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 
 	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -76,7 +76,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 	// The NMI server identifies the pod based on the `podns` and `podname` in the request header and then queries k8s (through MIC) for a matching azure identity.
 	// Then nmi makes an adal request to get a token for the resource in the request, returns the `token` and the `clientid` as a response to the CSI request.
 	if c.UsePodIdentity {
-		klog.Infof("azure: using pod identity to retrieve token")
+		klog.InfoS("using pod identity to retrieve token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		// pod name and namespace are required for the Key Vault provider to request a token
 		// on behalf of the application pod
 		if len(podName) == 0 || len(podNamespace) == 0 {
@@ -98,7 +98,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("nmi response failed with status code: %d", resp.StatusCode)
+			return nil, fmt.Errorf("nmi response failed with status code: %d, err: %+v", resp.StatusCode, err)
 		}
 
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -110,12 +110,9 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 		if err != nil {
 			return nil, err
 		}
+		klog.InfoS("successfully acquired access token", "accessToken", utils.RedactClientID(nmiResp.Token.AccessToken), "clientID", utils.RedactClientID(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
-		klog.Infof("access token: %s, clientID: %s", utils.RedactClientID(nmiResp.Token.AccessToken), utils.RedactClientID(nmiResp.ClientID))
-
-		token := nmiResp.Token
-		clientID := nmiResp.ClientID
-
+		token, clientID := nmiResp.Token, nmiResp.ClientID
 		if token.AccessToken == "" || clientID == "" {
 			return nil, fmt.Errorf("nmi did not return expected values in response: token and clientid")
 		}
@@ -133,14 +130,14 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 			return nil, errors.Wrap(err, "failed to get managed identity (MSI) endpoint")
 		}
 		if c.UserAssignedIdentityID != "" {
-			klog.Infof("azure: using user-assigned managed identity %s to retrieve access token", utils.RedactClientID(c.UserAssignedIdentityID))
+			klog.InfoS("using user-assigned managed identity to retrieve access token", "clientID", utils.RedactClientID(c.UserAssignedIdentityID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
 				msiEndpoint,
 				resource,
 				c.UserAssignedIdentityID)
 		}
 
-		klog.Infof("azure: using system-assigned managed identity to retrieve access token")
+		klog.InfoS("using system-assigned managed identity to retrieve access token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		return adal.NewServicePrincipalTokenFromMSI(
 			msiEndpoint,
 			resource)
@@ -148,14 +145,14 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 
 	// for Service Principal access mode, clientID + client secret are used to retrieve token for resource
 	if len(c.AADClientSecret) > 0 {
-		klog.Infof("azure: using client_id: %s, client_secret: %s to retrieve access token", utils.RedactClientID(c.AADClientID), utils.RedactClientID(c.AADClientSecret))
+		klog.InfoS("using service principal to retrieve access token", "clientID", utils.RedactClientID(c.AADClientID), "secret", utils.RedactClientID(c.AADClientSecret), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		return adal.NewServicePrincipalToken(
 			*oauthConfig,
 			c.AADClientID,
 			c.AADClientSecret,
 			resource)
 	}
-	return nil, fmt.Errorf("no valid credentials")
+	return nil, fmt.Errorf("no valid credentials provided")
 }
 
 // getCredential gets clientid and clientsecret from the secrets

@@ -26,6 +26,12 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
+            {{- if .Values.logFormatJSON }}
+            - --log-format-json={{ .Values.logFormatJSON }}
+            {{- end }}
+            {{- if .Values.logVerbosity }}
+            - -v={{ .Values.logVerbosity }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:

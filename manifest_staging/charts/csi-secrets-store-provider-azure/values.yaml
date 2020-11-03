@@ -7,6 +7,13 @@ image:
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
 
+# logging format json
+# Default is text.
+logFormatJSON: false
+
+# log level. Uses V logs (klog)
+logVerbosity: 0
+
 linux:
   nodeSelector: {}
   tolerations: []
