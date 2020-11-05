@@ -253,6 +253,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
+		// validation on the provided object
 		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
@@ -260,6 +261,15 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
+		fileName := keyVaultObject.ObjectName
+		if keyVaultObject.ObjectAlias != "" {
+			fileName = keyVaultObject.ObjectAlias
+		}
+		if err := validateFileName(fileName); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+
+		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
 			return nil, err
@@ -273,11 +283,6 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
 		if err != nil {
 			return nil, err
-		}
-
-		fileName := keyVaultObject.ObjectName
-		if keyVaultObject.ObjectAlias != "" {
-			fileName = keyVaultObject.ObjectAlias
 		}
 		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
@@ -593,4 +598,33 @@ func formatKeyVaultObject(object *KeyVaultObject) {
 		str = strings.TrimSpace(str)
 		field.SetString(str)
 	}
+}
+
+// This validate will make sure fileName:
+// 1. is not abs path
+// 2. does not contain any '..' elements
+// 3. does not start with '..'
+// These checks have been implemented based on -
+// [validateLocalDescendingPath] https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/validation/validation.go#L1158-L1170
+// [validatePathNoBacksteps] https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/validation/validation.go#L1172-L1186
+func validateFileName(fileName string) error {
+	if len(fileName) == 0 {
+		return fmt.Errorf("file name must not be empty")
+	}
+	// is not abs path
+	if filepath.IsAbs(fileName) {
+		return fmt.Errorf("file name must be a relative path")
+	}
+	// does not have any element which is ".."
+	parts := strings.Split(filepath.ToSlash(fileName), "/")
+	for _, item := range parts {
+		if item == ".." {
+			return fmt.Errorf("file name must not contain '..'")
+		}
+	}
+	// fallback logic if .. is missed in the previous check
+	if strings.Contains(fileName, "..") {
+		return fmt.Errorf("file name must not contain '..'")
+	}
+	return nil
 }
