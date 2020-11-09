@@ -16,6 +16,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       ```
       kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
       ```
+      
    - 💡 Follow the [Role assignment](https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment/) documentation to setup all the required roles for aad-pod-identity components.
 
 1. Create an Azure User Identity
