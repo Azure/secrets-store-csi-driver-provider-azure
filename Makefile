@@ -4,7 +4,7 @@ export $(shell test -f secrets.env && sed 's/=.*//' secrets.env)
 REGISTRY_NAME ?= upstreamk8sci
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io
 DOCKER_IMAGE ?= $(REGISTRY)/public/k8s/csi/secrets-store/provider-azure
-IMAGE_VERSION ?= 0.0.9
+IMAGE_VERSION ?= 0.0.10
 IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
 
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
