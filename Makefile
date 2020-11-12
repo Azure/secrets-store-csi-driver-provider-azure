@@ -119,7 +119,7 @@ install-helm:
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
-	kind create cluster --image kindest/node:v${KIND_K8S_VERSION}
+	kind create cluster --image kindest/node:v${KIND_K8S_VERSION} --config test/kind-config.yaml
 	make image
 	kind load --name kind docker-image $(DOCKER_IMAGE):$(IMAGE_VERSION)
 	# Create Dev namespace for local e2e-testing
