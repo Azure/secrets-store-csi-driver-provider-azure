@@ -1,11 +1,18 @@
 image:
   repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-  tag: 0.0.9
+  tag: 0.0.10
   pullPolicy: IfNotPresent
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
+
+# logging format json
+# Default is text.
+logFormatJSON: false
+
+# log level. Uses V logs (klog)
+logVerbosity: 0
 
 linux:
   nodeSelector: {}
@@ -52,7 +59,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.16
+      tag: v0.0.17
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -69,7 +76,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.16
+      tag: v0.0.17
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -80,8 +87,6 @@ secrets-store-csi-driver:
       tag: v2.1.0
       pullPolicy: IfNotPresent
 
-  logLevel:
-    debug: true
   grpcSupportedProviders: azure
   enableSecretRotation: false
   rotationPollInterval: 2m

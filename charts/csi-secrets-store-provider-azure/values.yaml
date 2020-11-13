@@ -1,11 +1,18 @@
 image:
   repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-  tag: 0.0.9
+  tag: 0.0.10
   pullPolicy: IfNotPresent
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
+
+# logging format json
+# Default is text.
+logFormatJSON: false
+
+# log level. Uses V logs (klog)
+logVerbosity: 0
 
 linux:
   nodeSelector: {}
@@ -18,6 +25,11 @@ linux:
     limits:
       cpu: 50m
       memory: 100Mi
+  priorityClassName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
 
 windows:
   nodeSelector: {}
@@ -30,6 +42,11 @@ windows:
     limits:
       cpu: 100m
       memory: 200Mi
+  priorityClassName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
@@ -42,15 +59,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.16
+      tag: v0.0.17
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v1.2.0
+      tag: v2.0.1
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.0.0
+      tag: v2.1.0
       pullPolicy: IfNotPresent
 
   windows:
@@ -59,19 +76,17 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.16
+      tag: v0.0.17
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v1.2.1-alpha.1-windows-1809-amd64
+      tag: v2.0.1
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.0.1-alpha.1-windows-1809-amd64
+      tag: v2.1.0
       pullPolicy: IfNotPresent
 
-  logLevel:
-    debug: true
   grpcSupportedProviders: azure
   enableSecretRotation: false
   rotationPollInterval: 2m

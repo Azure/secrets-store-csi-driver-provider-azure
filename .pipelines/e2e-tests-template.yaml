@@ -28,7 +28,7 @@ jobs:
         steps:
         - task: GoTool@0
           inputs:
-            version: '1.14.1'
+            version: 1.15
 
         - script: |
             sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq

@@ -23,7 +23,7 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.9
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.10
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
@@ -48,9 +48,7 @@ spec:
               name: providervol
             - name: mountpoint-dir
               mountPath: "C:\\var\\lib\\kubelet\\pods"
-              mountPropagation: Bidirectional
-          securityContext:
-            privileged: true
+              mountPropagation: HostToContainer
       volumes:
         - name: providervol
           hostPath:
