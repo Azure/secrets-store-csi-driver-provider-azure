@@ -343,3 +343,7 @@ manifest_staging/charts/csi-secrets-store-provider-azure/charts/
 
 # Go tools
 .tools/
+
+# website
+website/public
+website/resources
