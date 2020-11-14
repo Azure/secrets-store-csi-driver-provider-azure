@@ -7,7 +7,7 @@ metadata:
 {{ include "sscdpa.labels" . | indent 2 }}
 spec:
   updateStrategy:
-    type: RollingUpdate
+{{ toYaml .Values.linux.updateStrategy | indent 4 }}
   selector:
     matchLabels:
       app: {{ template "sscdpa.name" . }}
@@ -27,6 +27,12 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --endpoint=unix:///provider/azure.sock
+            {{- if .Values.logFormatJSON }}
+            - --log-format-json={{ .Values.logFormatJSON }}
+            {{- end }}
+            {{- if .Values.logVerbosity }}
+            - -v={{ .Values.logVerbosity }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:
@@ -39,9 +45,10 @@ spec:
               mountPath: /provider
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-          securityContext:
-            privileged: true
+              mountPropagation: HostToContainer
+      {{- if .Values.linux.priorityClassName }}
+      priorityClassName: {{ .Values.linux.priorityClassName | quote }}
+      {{- end }}
       volumes:
         - name: provider-vol
           hostPath:

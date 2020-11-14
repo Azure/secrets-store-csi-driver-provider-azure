@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/kubernetes-csi/csi-lib-utils/protosanitizer"
 	"google.golang.org/grpc"
@@ -26,7 +26,7 @@ func LogGRPC(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, h
 	klog.V(2).Infof("GRPC request: %s", protosanitizer.StripSecrets(req).String())
 	resp, err := handler(ctx, req)
 	if err != nil {
-		klog.Errorf("GRPC error: %v", err)
+		klog.ErrorS(err, "GRPC error")
 	} else {
 		klog.V(2).Infof("GRPC response: %s", protosanitizer.StripSecrets(resp).String())
 	}

@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	provider2 "github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
-
-	"k8s.io/klog"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
 )
 
@@ -30,28 +29,28 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 
 	err = json.Unmarshal([]byte(req.GetAttributes()), &attrib)
 	if err != nil {
-		klog.Errorf("failed to unmarshal attributes, error: %+v", err)
+		klog.ErrorS(err, "failed to unmarshal attributes")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal attributes, error: %v", err)
 	}
 	err = json.Unmarshal([]byte(req.GetSecrets()), &secret)
 	if err != nil {
-		klog.Errorf("failed to unmarshal secrets, error: %+v", err)
+		klog.ErrorS(err, "failed to unmarshal node publish secrets ref")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal secrets, error: %v", err)
 	}
 	err = json.Unmarshal([]byte(req.GetPermission()), &filePermission)
 	if err != nil {
-		klog.Errorf("failed to unmarshal file permission, error: %+v", err)
+		klog.ErrorS(err, "failed to unmarshal file permission")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %v", err)
 	}
-	provider, err := provider2.NewProvider()
+	provider, err := provider.NewProvider()
 	if err != nil {
-		klog.Errorf("failed to initialize new provider, error: %v", err)
+		klog.ErrorS(err, "failed to initialize new provider")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to initialize new provider, error: %v", err)
 	}
 
 	objectVersions, err := provider.MountSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), filePermission)
 	if err != nil {
-		klog.Errorf("failed to process mount request, error: %+v", err)
+		klog.ErrorS(err, "failed to process mount request")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %v", err)
 	}
 	var ov []*v1alpha1.ObjectVersion

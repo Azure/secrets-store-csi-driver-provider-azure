@@ -11,28 +11,32 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
-	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
-
-	"google.golang.org/grpc"
-
-	"k8s.io/klog"
-
 	"github.com/Azure/go-autorest/autorest/adal"
-
 	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
+	json "k8s.io/component-base/logs/json"
+	"k8s.io/klog/v2"
+	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
 )
 
 var (
-	versionInfo = pflag.Bool("version", false, "prints the version information")
-	endpoint    = pflag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
+	versionInfo   = pflag.Bool("version", false, "prints the version information")
+	endpoint      = pflag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
+	logFormatJSON = pflag.Bool("log-format-json", false, "set log formatter to json")
 )
 
 func main() {
 	klog.InitFlags(nil)
+	defer klog.Flush()
+
 	pflag.Parse()
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
+
+	if *logFormatJSON {
+		klog.SetLogger(json.JSONLogger)
+	}
 
 	if *versionInfo {
 		if err := version.PrintVersion(); err != nil {
