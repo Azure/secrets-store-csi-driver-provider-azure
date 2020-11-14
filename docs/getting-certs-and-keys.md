@@ -1,6 +1,6 @@
 # Getting Certificates and Keys using Azure Key Vault Provider
 
-> Note: This behavior was introduced in 0.0.6 release of Azure Key Vault Provider for Secrets Store CSI Driver. This is backward incompatible with the prior releases. 
+> Note: This behavior was introduced in 0.0.6 release of Azure Key Vault Provider for Secrets Store CSI Driver. This is backward incompatible with the prior releases.
 
 The Azure Key Vault Provider for Secrets Store CSI Driver has been designed to closely align with the current behavior of  [az keyvault certificate/secret/key download](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest).
 
