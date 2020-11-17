@@ -185,7 +185,7 @@ Depending on the TLS certificate lifecycle, follow one of the following steps:
               name: secrets-store-creds
 ```
 
-If not using [service principal mode](./service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](./samples/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./samples/ingress-controller-tls/deployment-app-two.yaml)
+If not using [service principal mode](./service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](./sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./sample/ingress-controller-tls/deployment-app-two.yaml)
 
 ```yaml
             nodePublishSecretRef:
@@ -212,7 +212,7 @@ Next, [Deploy the ingress resource](#Deploy-an-Ingress-Resource-referencing-the-
 
 * ### Deploy Application with Ingress reference to Secrets Store CSI
 
-remove the following snippet from [deployment-app-one.yaml](./samples/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./samples/ingress-controller-tls/deployment-app-two.yaml)
+remove the following snippet from [deployment-app-one.yaml](./sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./sample/ingress-controller-tls/deployment-app-two.yaml)
 
 ```yaml
           volumeMounts:

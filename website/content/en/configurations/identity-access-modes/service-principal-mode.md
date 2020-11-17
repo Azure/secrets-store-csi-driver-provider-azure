@@ -48,7 +48,7 @@ description: >
     az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn $AZURE_CLIENT_ID
     ```
 
-1. Update your [linux deployment yaml](../examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](../examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to reference the service principal kubernetes secret created in the previous step
+2. Update your [linux deployment yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to reference the service principal kubernetes secret created in the previous step
 
     If you did not change the name of the secret reference previously, no changes are needed.
 

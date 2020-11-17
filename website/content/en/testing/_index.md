@@ -9,7 +9,7 @@ description: >
 
 ## Local End-To-End Testing for the Azure Key Vault Provider
 
-This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the [test/bats](/test/bats) folder to see the tests and the deployments needed for creating the e2e tests.
+This section will show you how to locally test the Azure Key Vault Provider end-to-end (e2e). The e2e tests utilize Bats for testing the scripts. Take a look inside the [test/bats](https://github.com/Azure/secrets-store-csi-driver-provider-azure/tree/master/test/bats) folder to see the tests and the deployments needed for creating the e2e tests.
 
 ### E2E Prerequisites
 
@@ -25,11 +25,11 @@ As as prerequisite, you will need to have an [Azure Key Vault](https://docs.micr
 
 ### Set up an Azure Key Vault
 
-For assistance on setting up an Azure Key Vault specific to testing this project, please refer to [this guide](/docs/setup-keyvault.md)
+For assistance on setting up an Azure Key Vault specific to testing this project, please refer to [this guide](../demos-and-tutorials/tutorials/setup-keyvault/)
 
 ### Assign a Service Principal to Your Azure Key Vault
 
-For assistance on assigning an existing or new Service Principal to your Key Vault, please follow [this guide](/docs/service-principal-mode.md).
+For assistance on assigning an existing or new Service Principal to your Key Vault, please follow [this guide](../configurations/identity-access-modes/service-principal-mode/).
 
 ### Preparing your secrets
 

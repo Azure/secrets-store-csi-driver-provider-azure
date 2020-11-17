@@ -9,14 +9,16 @@ description: >
 
 ## Upgrading to Key Vault provider 0.0.9+
 
-**tl;dr** - :warning: `0.0.9+` release of the Azure Key Vault provider is incompatible with the Secrets Store CSI Driver versions < `v0.0.14`.
+{{% alert title="Warning" color="warning" %}}
+**tl;dr** - `0.0.9+` release of the Azure Key Vault provider is incompatible with the Secrets Store CSI Driver versions < `v0.0.14`.
+{{% /alert %}}
 
 Prior to `v0.0.14` release of the Secrets Store CSI Driver, the driver communicated with the provider by invoking the provider binary installed on the host. However with `v0.0.14` the driver now introduces a new option to communicate with the provider using gRPC. This feature is enabled by a feature flag in the driver `--grpc-supported-providers=azure`. The `0.0.9` release of the Azure Key Vault provider implements the gRPC server changes and is no longer backward compatible with the Secrets Store CSI Driver versions < `v0.0.14`.
 
 Please carefully read this doc as you upgrade to the latest release of the Azure Key Vault Provider
 
 
-### If the Secrets Store CSI Driver and Azure Key Vault Provider were installed using helm charts from this [repo](../charts/csi-secrets-store-provider-azure/README.md)
+### If the Secrets Store CSI Driver and Azure Key Vault Provider were installed using helm charts from this [repo](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md)
 
 `helm upgrade` to the latest chart release in the repo will update the Azure Key Vault Provider and Secrets Store CSI Driver to the compatible versions
 
@@ -47,7 +49,7 @@ mcr.microsoft.com/k8s/csi/secrets-store/driver:v0.0.14
 mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.9
 ```
 
-### If the Secrets Store CSI Driver and Azure Key Vault Provider were installed using [deployment yamls](install-yamls.md)
+### If the Secrets Store CSI Driver and Azure Key Vault Provider were installed using [deployment yamls](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/install-yamls.md)
 
 The driver and provider need to be updated one after the other to ensure compatible versions are being run.
 
@@ -55,4 +57,4 @@ The driver and provider need to be updated one after the other to ensure compati
      - **ACTION REQUIRED** If using the yamls from the Secrets Store CSI Driver, add the following flag `--grpc-supported-providers=azure` to the [Linux](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/deploy/secrets-store-csi-driver.yaml) and [Windows](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/deploy/secrets-store-csi-driver-windows.yaml) daemonset manifests.
        - The flag needs to be added to the secrets-store container args
      - **ACTION REQUIRED** If using the helm charts from secrets-store-csi-driver, then run `helm upgrade` with `--set grpcSupportedProviders=azure`
-2. After the driver is upgraded to the latest version install the latest Azure Key Vault provider by following the [doc](install-yamls.md)
+2. After the driver is upgraded to the latest version install the latest Azure Key Vault provider by following the [doc](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/install-yamls.md)

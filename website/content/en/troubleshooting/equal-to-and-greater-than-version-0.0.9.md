@@ -1,7 +1,7 @@
 ---
 type: docs
-title: "For Azure Key Vault Provider version `0.0.9+`"
-linkTitle: "For Azure Key Vault Provider version `0.0.9+`"
+title: "For Azure Key Vault Provider version 0.0.9+"
+linkTitle: "For Azure Key Vault Provider version 0.0.9+"
 weight: 2
 description: >
   For versions equal to and greater than 0.0.9
