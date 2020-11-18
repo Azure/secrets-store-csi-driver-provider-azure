@@ -31,7 +31,7 @@ az keyvault key create --vault-name $KEYVAULT_NAME --name <keyNameHere>
 az keyvault certificate create --vault-name $KEYVAULT_NAME --name <certNameHere> -p "$(az keyvault certificate get-default-policy)"
 ```
 
-**Please keep track of the Key Vault Objects' name, type, and version** . You will be adding them to a `secrets.env` file for testing as described [here](/docs/testing.md#preparing-your-secrets)
+**Please keep track of the Key Vault Objects' name, type, and version** . You will be adding them to a `secrets.env` file for testing as described [here](../../../testing/#preparing-your-secrets)
 
 You can retrieve the value of a Key Vault secret with the following script:
 

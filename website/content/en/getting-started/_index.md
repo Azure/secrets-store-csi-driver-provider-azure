@@ -18,9 +18,9 @@ Recommended Kubernetes version:
 
 **Deployment using Helm**
 
-Follow [this guide](charts/csi-secrets-store-provider-azure/README.md) to install the Secrets Store CSI driver and the Azure Key Vault provider using Helm.
+Follow [this guide](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md) to install the Secrets Store CSI driver and the Azure Key Vault provider using Helm.
 
-Alternatively, follow [this guide](docs/install-yamls.md) to install using deployment yamls.
+Alternatively, follow [this guide](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/install-yamls.md) to install using deployment yamls.
 
 **In addition, if you are using Secrets Store CSI Driver and the Azure Keyvault Provider in a cluster with [pod security policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/) enabled**, review and create the following policy that enables the spec required for Secrets Store CSI Driver and the Azure Keyvault Provider to work:
 
@@ -51,7 +51,7 @@ Create a `SecretProviderClass` custom resource to provide provider-specific para
 
 > NOTE: The `SecretProviderClass` has to be in the same namespace as the pod referencing it.
 
-Update [this sample deployment](examples/v1alpha1_secretproviderclass_service_principal.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
+Update [this sample deployment](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/v1alpha1_secretproviderclass_service_principal.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
 
@@ -111,16 +111,16 @@ To provide identity to access key vault, refer to the following [section](#provi
 
 The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 
-1. [Service Principal](docs/service-principal-mode.md)
-1. [Pod Identity](docs/pod-identity-mode.md)
-1. [VMSS User Assigned Managed Identity](docs/user-assigned-msi-mode.md)
-1. [VMSS System Assigned Managed Identity](docs/system-assigned-msi-mode.md)
+1. [Service Principal](../configurations/identity-access-modes/service-principal-mode)
+2. [Pod Identity](../configurations/identity-access-modes/pod-identity-mode)
+3. [VMSS User Assigned Managed Identity](../configurations/identity-access-modes/user-assigned-msi-mode)
+4. [VMSS System Assigned Managed Identity](../configurations/identity-access-modes/system-assigned-msi-mode)
 
 #### Update your Deployment Yaml
 
 To ensure your application is using the Secrets Store CSI driver, update your deployment yaml to use the `secrets-store.csi.k8s.io` driver and reference the `SecretProviderClass` resource created in the previous step.
 
-Update your [linux deployment yaml](examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
+Update your [linux deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step. 
     
   ```yaml
     volumes:
