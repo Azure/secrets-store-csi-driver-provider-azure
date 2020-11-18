@@ -1,0 +1,185 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Azure Key Vault Provider for Secrets Store CSI Driver – Identity Access Modes</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/</link><description>Recent content in Identity Access Modes on Azure Key Vault Provider for Secrets Store CSI Driver</description><generator>Hugo -- gohugo.io</generator><atom:link href="https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/index.xml" rel="self" type="application/rss+xml"/><item><title>Configurations: Service Principal</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/service-principal-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/service-principal-mode/</guid><description>
+&lt;blockquote>
+&lt;p>Supported with Linux and Windows&lt;/p>
+&lt;/blockquote>
+&lt;ol>
+&lt;li>
+&lt;p>Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about &lt;a href="https://docs.microsoft.com/azure/aks/kubernetes-service-principal">service principals in AKS here.&lt;/a>&lt;/p>
+&lt;p>A properly configured service principal will need to be passed in with the SP&amp;rsquo;s App ID and Password. Ensure this service principal has all the required permissions to access content in your Azure Key Vault instance.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Client ID (AZURE_CLIENT_ID) will be the App ID of your service principal&lt;/span>
+&lt;span style="color:#8f5902;font-style:italic"># Client Secret (AZURE_CLIENT_SECRET) will be the Password of your service principal&lt;/span>
+kubectl create secret generic secrets-store-creds --from-literal &lt;span style="color:#000">clientid&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;AZURE_CLIENT_ID&amp;gt; --from-literal &lt;span style="color:#000">clientsecret&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;AZURE_CLIENT_SECRET&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;strong>If you do not have a service principal&lt;/strong>, run the following Azure CLI command to create a new service principal.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># OPTIONAL: Create a new service principal, be sure to notate the SP secret returned on creation.&lt;/span>
+az ad sp create-for-rbac --skip-assignment --name &lt;span style="color:#000">$SPNAME&lt;/span>
+&lt;span style="color:#8f5902;font-style:italic"># If you lose your AZURE_CLIENT_SECRET (SP Secret), you can reset and receive it with this command:&lt;/span>
+&lt;span style="color:#8f5902;font-style:italic"># az ad sp credential reset --name $SPNAME --credential-description &amp;#34;APClientSecret&amp;#34; --query password -o tsv&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>With an existing service principal, assign the following permissions.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Set environment variables&lt;/span>
+&lt;span style="color:#000">SPNAME&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;servicePrincipalName&amp;gt;
+&lt;span style="color:#000">AZURE_CLIENT_ID&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&lt;span style="color:#204a87;font-weight:bold">$(&lt;/span>az ad sp show --id http://&lt;span style="color:#4e9a06">${&lt;/span>&lt;span style="color:#000">SPNAME&lt;/span>&lt;span style="color:#4e9a06">}&lt;/span> --query appId -o tsv&lt;span style="color:#204a87;font-weight:bold">)&lt;/span>
+&lt;span style="color:#000">KEYVAULT_NAME&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;key-vault-name&amp;gt;
+&lt;span style="color:#000">KEYVAULT_RESOURCE_GROUP&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;resource-group-name-for-KV&amp;gt;
+&lt;span style="color:#000">SUBID&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;subscription-id&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to the service principal for your keyvault&lt;/span>
+az role assignment create --role Reader --assignee &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span> --scope /subscriptions/&lt;span style="color:#000">$SUBID&lt;/span>/resourcegroups/&lt;span style="color:#000">$KEYVAULT_RESOURCE_GROUP&lt;/span>/providers/Microsoft.KeyVault/vaults/&lt;span style="color:#000">$KEYVAULT_NAME&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Update your &lt;a href="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-inline-volume-service-principal.yaml">linux deployment yaml&lt;/a> or &lt;a href="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml">windows deployment yaml&lt;/a> to reference the service principal kubernetes secret created in the previous step&lt;/p>
+&lt;p>If you did not change the name of the secret reference previously, no changes are needed.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">nodePublishSecretRef&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">name&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">secrets-store-creds&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;/ol></description></item><item><title>Configurations: Pod Identity</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/pod-identity-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/pod-identity-mode/</guid><description>
+&lt;blockquote>
+&lt;p>Supported only on Linux&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;strong>Prerequisites&lt;/strong>&lt;/p>
+&lt;p>💡 Make sure you have installed pod identity to your Kubernetes cluster&lt;/p>
+&lt;p>&lt;strong>This project makes use of the aad-pod-identity project located &lt;a href="https://github.com/Azure/aad-pod-identity#getting-started">here&lt;/a> to handle the identity management of the pods. Reference the aad-pod-identity README if you need further instructions on any of these steps.&lt;/strong>&lt;/p>
+&lt;p>Not all steps need to be followed on the instructions for the aad-pod-identity project as we will also complete some of the steps on our installation here.&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>Install the aad-pod-identity components to your cluster&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>Install the RBAC enabled aad-pod-identiy infrastructure components:&lt;/p>
+&lt;pre>&lt;code>kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>
+&lt;p>💡 Follow the &lt;a href="https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment/">Role assignment&lt;/a> documentation to setup all the required roles for aad-pod-identity components.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>Create an Azure User Identity&lt;/p>
+&lt;p>Create an Azure User Identity with the following command.
+Get &lt;code>clientId&lt;/code> and &lt;code>id&lt;/code> from the output.&lt;/p>
+&lt;pre>&lt;code>az identity create -g &amp;lt;resourcegroup&amp;gt; -n &amp;lt;idname&amp;gt;
+&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>
+&lt;p>Assign permissions to new identity
+Ensure your Azure user identity has all the required permissions to read the keyvault instance and to access content within your key vault instance.
+If not, you can run the following using the Azure cli:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to new Identity for your keyvault&lt;/span>
+az role assignment create --role Reader --assignee &amp;lt;principalid&amp;gt; --scope /subscriptions/&amp;lt;subscriptionid&amp;gt;/resourcegroups/&amp;lt;resourcegroup&amp;gt;/providers/Microsoft.KeyVault/vaults/&amp;lt;keyvaultname&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;YOUR AZURE USER IDENTITY CLIENT ID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;YOUR AZURE USER IDENTITY CLIENT ID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &amp;lt;YOUR AZURE USER IDENTITY CLIENT ID&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Add a new &lt;code>AzureIdentity&lt;/code> for the new identity to your cluster&lt;/p>
+&lt;p>Edit and save this as &lt;code>aadpodidentity.yaml&lt;/code>&lt;/p>
+&lt;p>Set &lt;code>type: 0&lt;/code> for Managed Service Identity; &lt;code>type: 1&lt;/code> for Service Principal
+In this case, we are using managed service identity, &lt;code>type: 0&lt;/code>.
+Create a new name for the AzureIdentity.
+Set &lt;code>resourceID&lt;/code> to &lt;code>id&lt;/code> of the Azure User Identity created from the previous step.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">apiVersion&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;aadpodidentity.k8s.io/v1&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">kind&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">AzureIdentity&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">metadata&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">name&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;any-name&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">spec&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">type&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#0000cf;font-weight:bold">0&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">resourceID&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">/subscriptions/&amp;lt;subid&amp;gt;/resourcegroups/&amp;lt;resourcegroup&amp;gt;/providers/Microsoft.ManagedIdentity/userAssignedIdentities/&amp;lt;idname&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">clientID&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;clientid&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">kubectl create -f aadpodidentity.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Add a new &lt;code>AzureIdentityBinding&lt;/code> for the new Azure identity to your cluster&lt;/p>
+&lt;p>Edit and save this as &lt;code>aadpodidentitybinding.yaml&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">apiVersion&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;aadpodidentity.k8s.io/v1&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">kind&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">AzureIdentityBinding&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">metadata&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">name&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;any-name&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">spec&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">azureIdentity&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;name of AzureIdentity created from previous step&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">selector&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;label value to match in your app&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;pre>&lt;code>kubectl create -f aadpodidentitybinding.yaml
+&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>
+&lt;p>Add the following to &lt;a href="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-inline-volume-pod-identity.yaml">this&lt;/a> deployment yaml:&lt;/p>
+&lt;p>Include the &lt;code>aadpodidbinding&lt;/code> label matching the &lt;code>selector&lt;/code> value set in the previous step so that this pod will be assigned an identity&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">metadata&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">labels&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">aadpodidbinding&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;AzureIdentityBinding Selector created from previous step&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Update &lt;a href="https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml">this sample deployment&lt;/a> to create a &lt;code>SecretProviderClass&lt;/code> resource with &lt;code>usePodIdentity: &amp;quot;true&amp;quot;&lt;/code> to provide Azure-specific parameters for the Secrets Store CSI driver.&lt;/p>
+&lt;p>Make sure to update &lt;code>usepodidentity&lt;/code> to &lt;code>true&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">usepodidentity&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Deploy your app&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">kubectl apply -f ../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>NOTE&lt;/strong> When using the &lt;code>Pod Identity&lt;/code> option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode &lt;code>aad-pod-identity&lt;/code> will need to create the &lt;code>AzureAssignedIdentity&lt;/code> for the pod based on the &lt;code>AzureIdentity&lt;/code> and &lt;code>AzureIdentityBinding&lt;/code>, retrieve token for keyvault. This process can take time to complete and it&amp;rsquo;s possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.&lt;/p></description></item><item><title>Configurations: VMSS User Assigned Managed Identity</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/user-assigned-msi-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/user-assigned-msi-mode/</guid><description>
+&lt;blockquote>
+&lt;p>Supported with Linux and Windows&lt;/p>
+&lt;/blockquote>
+&lt;p>This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.&lt;/p>
+&lt;p>In AKS you can use the &lt;a href="https://docs.microsoft.com/en-us/azure/aks/use-managed-identity">user assigned Kubelet managed identity&lt;/a> (doesn&amp;rsquo;t support BYO today) or create your own user assigned managed identity as described below.&lt;/p>
+&lt;blockquote>
+&lt;p>You can create AKS with &lt;a href="https://docs.microsoft.com/en-us/azure/aks/use-managed-identity">managed identities&lt;/a> now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az aks show -g &amp;lt;resource group&amp;gt; -n &amp;lt;aks cluster name&amp;gt; --query identityProfile.kubeletidentity.clientId -o tsv
+&lt;/code>&lt;/pre>&lt;/div>&lt;/blockquote>
+&lt;ol>
+&lt;li>Create Azure Managed Identity&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az identity create -g &amp;lt;RESOURCE GROUP&amp;gt; -n &amp;lt;IDENTITY NAME&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="2">
+&lt;li>Assign Azure Managed Identity to VMSS&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az vmss identity assign -g &amp;lt;RESOURCE GROUP&amp;gt; -n &amp;lt;K8S-AGENT-POOL-VMSS&amp;gt; --identities &amp;lt;USER ASSIGNED IDENTITY RESOURCE ID&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="3">
+&lt;li>
+&lt;p>Grant Azure Managed Identity KeyVault permissions&lt;/p>
+&lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Deploy your application. Specify &lt;code>useVMManagedIdentity&lt;/code> to &lt;code>true&lt;/code> and provide &lt;code>userAssignedIdentityID&lt;/code>.&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">useVMManagedIdentity&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#8f5902;font-style:italic"># [OPTIONAL available for version &amp;gt; 0.0.4] if not provided, will default to &amp;#34;false&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">userAssignedIdentityID&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;clientid&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#8f5902;font-style:italic"># [OPTIONAL available for version &amp;gt; 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM&amp;#39;s managed identity, then specify the identity&amp;#39;s client id. If empty, then defaults to use the system assigned identity on the VM&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Configurations: VMSS System Assigned Managed Identity</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/system-assigned-msi-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/system-assigned-msi-mode/</guid><description>
+&lt;blockquote>
+&lt;p>Supported with Linux and Windows&lt;/p>
+&lt;/blockquote>
+&lt;p>This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.&lt;/p>
+&lt;p>AKS uses system-assigned managed identity as &lt;a href="https://docs.microsoft.com/en-us/azure/aks/use-managed-identity">cluster managed identity&lt;/a>. This managed identity shouldn&amp;rsquo;t be used to authenticate with KeyVault. You should consider using a &lt;a href="user-assigned-msi-mode.md">user-assigned managed identity&lt;/a> instead.&lt;/p>
+&lt;p>Before this step, you need to turn on system assigned managed identity on your VMSS clsuter configuration.&lt;/p>
+&lt;ol>
+&lt;li>Verify that the nodes have its own system assigned managed identity&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az vmss identity show -g &amp;lt;resource group&amp;gt; -n &amp;lt;vmss scalset name&amp;gt; -o yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>The output should contain &lt;code>type: SystemAssigned&lt;/code> and note &lt;code>principalId&lt;/code>.&lt;/p>
+&lt;ol start="2">
+&lt;li>
+&lt;p>Grant Azure Managed Identity KeyVault permissions&lt;/p>
+&lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Key Vault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>Deploy your application. Specify &lt;code>useVMManagedIdentity&lt;/code> to &lt;code>true&lt;/code>.&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">useVMManagedIdentity&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#8f5902;font-style:italic"># [OPTIONAL available for version &amp;gt; 0.0.4] if not provided, will default to &amp;#34;false&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>
