@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -30,6 +31,10 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
+)
+
+var (
+	ConstructPEMChain = flag.Bool("construct-pem-chain", false, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
 )
 
 // Type of Azure Key Vault objects
@@ -463,6 +468,16 @@ func decodePKCS12(value string) (content string, err error) {
 			pemKeyData = append(pemKeyData, pem.EncodeToMemory(block)...)
 		}
 	}
+
+	// construct the pem chain in the order
+	// SERVER, INTERMEDIATE, ROOT
+	if *ConstructPEMChain {
+		pemCertData, err = fetchCertChains(pemCertData)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	pemData = append(pemData, pemKeyData...)
 	pemData = append(pemData, pemCertData...)
 	return string(pemData), nil
@@ -620,4 +635,84 @@ func validateFileName(fileName string) error {
 		return fmt.Errorf("file name must not contain '..'")
 	}
 	return nil
+}
+
+type node struct {
+	cert     *x509.Certificate
+	parent   *node
+	isParent bool
+}
+
+func fetchCertChains(data []byte) ([]byte, error) {
+	var newCertChain []*x509.Certificate
+	var pemData []byte
+	nodes := make([]*node, 0)
+
+	for {
+		// decode pem to der first
+		block, rest := pem.Decode(data)
+		data = rest
+
+		if block == nil {
+			break
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return pemData, err
+		}
+		nodes = append(nodes, &node{
+			cert:     cert,
+			parent:   nil,
+			isParent: false,
+		})
+	}
+
+	// at the end of this computation, the output will be a single linked list
+	// the tail of the list will be the root node (which has no parents)
+	// the head of the list will be the leaf node (whose parent will be intermediate certs)
+	// (head) leaf -> intermediates -> root (tail)
+	for i := range nodes {
+		for j := range nodes {
+			// ignore same node to prevent generating a cycle
+			if i == j {
+				continue
+			}
+			// if ith node issuer is same as jth node subject, jth node was used
+			// to sign the ith certificate
+			if nodes[i].cert.Issuer.CommonName == nodes[j].cert.Subject.CommonName {
+				nodes[j].isParent = true
+				nodes[i].parent = nodes[j]
+				break
+			}
+		}
+	}
+
+	var leaf *node
+	for i := range nodes {
+		if !nodes[i].isParent {
+			// this is the leaf node as it's not a parent for any other node
+			// TODO (aramase) handle errors if there are more than 1 leaf nodes
+			leaf = nodes[i]
+			break
+		}
+	}
+
+	if leaf == nil {
+		return nil, fmt.Errorf("no leaf found")
+	}
+
+	// iterate through the directed list and append the nodes to new cert chain
+	for leaf != nil {
+		newCertChain = append(newCertChain, leaf.cert)
+		leaf = leaf.parent
+	}
+
+	for _, cert := range newCertChain {
+		b := &pem.Block{
+			Type:  certificateType,
+			Bytes: cert.Raw,
+		}
+		pemData = append(pemData, pem.EncodeToMemory(b)...)
+	}
+	return pemData, nil
 }

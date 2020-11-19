@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestGetVaultURL(t *testing.T) {
@@ -553,6 +554,134 @@ func TestValidateFilePath(t *testing.T) {
 			err := validateFileName(tc.fileName)
 			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
 				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestFetchCertChain(t *testing.T) {
+	rootCACert := `
+-----BEGIN CERTIFICATE-----
+MIIBeTCCAR6gAwIBAgIRAM3RAPH7k1Q+bICMC0mzKhkwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAxNFoXDTMwMTIw
+MTAwMTAxNFowGjEYMBYGA1UEAxMPRXhhbXBsZSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAE1/AGExuSemtxPRzFECpefowtkcOQr7jaq355kfb2hUR2
+LnMn+71fD4mZmMXT0kuxgeE2zC2CxOHdoJ/FmcQJxaNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFKTuLl7BATUYGD6ZeUV3
+2f8UAWoqMAoGCCqGSM49BAMCA0kAMEYCIQDEz2XKXPb0Q/Y40Gtxo8r6sa0Ra6U0
+fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
+-----END CERTIFICATE-----
+`
+
+	intermediateCert := `
+-----BEGIN CERTIFICATE-----
+MIIBozCCAUmgAwIBAgIRANEldEfXaQ+L2M1ahC6w4vAwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAyNFoXDTMwMTIw
+MTAwMTAyNFowJDEiMCAGA1UEAxMZRXhhbXBsZSBJbnRlcm1lZGlhdGUgQ0EgMTBZ
+MBMGByqGSM49AgEGCCqGSM49AwEHA0IABOhTE8r5NpDIDF/6VLgPT+//0IR59Uzn
+78JfV54E0qFA21khrcqc20/RJD+lyUv313gYQD9SxBXXxcGtl1OJ0s2jZjBkMA4G
+A1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBR+2JY0
+VhjrWsrUng+V8dgeZBOGJzAfBgNVHSMEGDAWgBSk7i5ewQE1GBg+mXlFd9n/FAFq
+KjAKBggqhkjOPQQDAgNIADBFAiB9EQB+siuNboL7k78CUzhZJ+5lD0cXUpGYGWYT
+rxcX6QIhALGptitzrZ4z/MDMBPkan48bqk6O08e1tQ9dJOIoEKq7
+-----END CERTIFICATE-----
+`
+
+	serverCert := `
+-----BEGIN CERTIFICATE-----
+MIIBwjCCAWmgAwIBAgIQGIPRUsQ/sFI1fkxZHCSU6jAKBggqhkjOPQQDAjAkMSIw
+IAYDVQQDExlFeGFtcGxlIEludGVybWVkaWF0ZSBDQSAxMB4XDTIwMTIwMzAwMTAz
+NloXDTIwMTIwNDAwMTAzNlowFjEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS0FvMzMHAfc6mOIEgijRngeRcNaDdp63AbCVeJ
+tuKNX7j4KLbkQcACj6g+hblJu4NCJChFmeEYf8b7xw+q0dPOo4GKMIGHMA4GA1Ud
+DwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0O
+BBYEFIRRQ0915ExZz30TeVhCpwgP3SEYMB8GA1UdIwQYMBaAFH7YljRWGOtaytSe
+D5Xx2B5kE4YnMBYGA1UdEQQPMA2CC2V4YW1wbGUuY29tMAoGCCqGSM49BAMCA0cA
+MEQCIH9NxXnWaip9fZyv9VJcfFz7tcdxTq10SrTO7gKhyJkpAiAljZFFK687kc6J
+kzqEt441cQasPp5ohL5U4cJN6lAuwA==
+-----END CERTIFICATE-----
+`
+
+	expectedCertChain := `-----BEGIN CERTIFICATE-----
+MIIBwjCCAWmgAwIBAgIQGIPRUsQ/sFI1fkxZHCSU6jAKBggqhkjOPQQDAjAkMSIw
+IAYDVQQDExlFeGFtcGxlIEludGVybWVkaWF0ZSBDQSAxMB4XDTIwMTIwMzAwMTAz
+NloXDTIwMTIwNDAwMTAzNlowFjEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS0FvMzMHAfc6mOIEgijRngeRcNaDdp63AbCVeJ
+tuKNX7j4KLbkQcACj6g+hblJu4NCJChFmeEYf8b7xw+q0dPOo4GKMIGHMA4GA1Ud
+DwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0O
+BBYEFIRRQ0915ExZz30TeVhCpwgP3SEYMB8GA1UdIwQYMBaAFH7YljRWGOtaytSe
+D5Xx2B5kE4YnMBYGA1UdEQQPMA2CC2V4YW1wbGUuY29tMAoGCCqGSM49BAMCA0cA
+MEQCIH9NxXnWaip9fZyv9VJcfFz7tcdxTq10SrTO7gKhyJkpAiAljZFFK687kc6J
+kzqEt441cQasPp5ohL5U4cJN6lAuwA==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIBozCCAUmgAwIBAgIRANEldEfXaQ+L2M1ahC6w4vAwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAyNFoXDTMwMTIw
+MTAwMTAyNFowJDEiMCAGA1UEAxMZRXhhbXBsZSBJbnRlcm1lZGlhdGUgQ0EgMTBZ
+MBMGByqGSM49AgEGCCqGSM49AwEHA0IABOhTE8r5NpDIDF/6VLgPT+//0IR59Uzn
+78JfV54E0qFA21khrcqc20/RJD+lyUv313gYQD9SxBXXxcGtl1OJ0s2jZjBkMA4G
+A1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBR+2JY0
+VhjrWsrUng+V8dgeZBOGJzAfBgNVHSMEGDAWgBSk7i5ewQE1GBg+mXlFd9n/FAFq
+KjAKBggqhkjOPQQDAgNIADBFAiB9EQB+siuNboL7k78CUzhZJ+5lD0cXUpGYGWYT
+rxcX6QIhALGptitzrZ4z/MDMBPkan48bqk6O08e1tQ9dJOIoEKq7
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIBeTCCAR6gAwIBAgIRAM3RAPH7k1Q+bICMC0mzKhkwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAxNFoXDTMwMTIw
+MTAwMTAxNFowGjEYMBYGA1UEAxMPRXhhbXBsZSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAE1/AGExuSemtxPRzFECpefowtkcOQr7jaq355kfb2hUR2
+LnMn+71fD4mZmMXT0kuxgeE2zC2CxOHdoJ/FmcQJxaNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFKTuLl7BATUYGD6ZeUV3
+2f8UAWoqMAoGCCqGSM49BAMCA0kAMEYCIQDEz2XKXPb0Q/Y40Gtxo8r6sa0Ra6U0
+fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
+-----END CERTIFICATE-----
+`
+
+	cases := []struct {
+		desc        string
+		cert        string
+		expectedErr bool
+	}{
+		{
+			desc:        "order: root, intermediate, server certs",
+			cert:        rootCACert + intermediateCert + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: root, server, intermediate certs",
+			cert:        rootCACert + serverCert + intermediateCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate, root, server certs",
+			cert:        intermediateCert + rootCACert + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate, server, root certs",
+			cert:        intermediateCert + serverCert + rootCACert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, root, intermediate certs",
+			cert:        serverCert + rootCACert + intermediateCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, intermediate, root certs",
+			cert:        serverCert + intermediateCert + rootCACert,
+			expectedErr: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			certChain, err := fetchCertChains([]byte(tc.cert))
+			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
+				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
+			}
+			if string(certChain) != expectedCertChain {
+				t.Fatalf(cmp.Diff(expectedCertChain, string(certChain)))
 			}
 		})
 	}
