@@ -8,6 +8,7 @@ IMAGE_VERSION ?= 0.0.10
 IMAGE_NAME ?= secrets-store-csi-driver-provider-azure
 
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
+BUILD_COMMIT := $$(git rev-parse --short HEAD)
 GO_FILES=$(shell go list ./...)
 ORG_PATH=github.com/Azure
 REPO_PATH="$(ORG_PATH)/$(IMAGE_NAME)"
@@ -15,12 +16,13 @@ E2E_IMAGE_TAG=$(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 BUILD_DATE_VAR := $(REPO_PATH)/pkg/version.BuildDate
 BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
+VCS_VAR := $(REPO_PATH)/pkg/version.Vcs
 
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 TOOLS_MOD_DIR := ./tools
 TOOLS_DIR := $(abspath ./.tools)
 
-LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION)"
+LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION) -X $(VCS_VAR)=$(BUILD_COMMIT)"
 
 GO111MODULE ?= on
 export GO111MODULE

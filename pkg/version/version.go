@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 )
 
 var (
@@ -10,6 +11,8 @@ var (
 	BuildDate string
 	// BuildVersion is the version of binary
 	BuildVersion string
+	// Vcs is is the commit hash for the binary build
+	Vcs string
 
 	minDriverVersion = "v0.0.8"
 )
@@ -40,5 +43,5 @@ func PrintVersion() (err error) {
 
 // GetUserAgent returns UserAgent string to append to the agent identifier.
 func GetUserAgent() string {
-	return fmt.Sprintf("csi-secrets-store/%s", BuildVersion)
+	return fmt.Sprintf("csi-secrets-store/%s (%s/%s) %s/%s", BuildVersion, runtime.GOOS, runtime.GOARCH, Vcs, BuildDate)
 }

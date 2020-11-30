@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net"
+	"net/http"
+	_ "net/http/pprof" // #nosec
 	"os"
 	"os/signal"
 	"runtime"
@@ -23,6 +26,8 @@ var (
 	versionInfo   = pflag.Bool("version", false, "prints the version information")
 	endpoint      = pflag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
 	logFormatJSON = pflag.Bool("log-format-json", false, "set log formatter to json")
+	enableProfile = pflag.Bool("enable-pprof", false, "enable pprof profiling")
+	profilePort   = pflag.Int("pprof-port", 6060, "port for pprof profiling")
 )
 
 func main() {
@@ -38,12 +43,21 @@ func main() {
 		klog.SetLogger(json.JSONLogger)
 	}
 
+	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
 	if *versionInfo {
 		if err := version.PrintVersion(); err != nil {
 			klog.Fatalf("failed to print version, err: %+v", err)
 		}
 		os.Exit(0)
 	}
+	if *enableProfile {
+		klog.Infof("Starting profiling on port %d", *profilePort)
+		go func() {
+			addr := fmt.Sprintf("%s:%d", "localhost", *profilePort)
+			klog.ErrorS(http.ListenAndServe(addr, nil), "unable to start profiling server")
+		}()
+	}
+
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
 		klog.Fatalf("failed to add user agent to adal: %+v", err)
