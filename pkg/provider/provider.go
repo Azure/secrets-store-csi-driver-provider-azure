@@ -660,6 +660,11 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		if err != nil {
 			return pemData, err
 		}
+		// this should not be the case because ParseCertificate should return a non nil
+		// certificate when there is no error.
+		if cert == nil {
+			return pemData, fmt.Errorf("certificate is nil")
+		}
 		nodes = append(nodes, &node{
 			cert:     cert,
 			parent:   nil,
@@ -677,9 +682,9 @@ func fetchCertChains(data []byte) ([]byte, error) {
 			if i == j {
 				continue
 			}
-			// if ith node issuer is same as jth node subject, jth node was used
+			// if ith node AuthorityKeyId is same as jth node SubjectKeyId, jth node was used
 			// to sign the ith certificate
-			if nodes[i].cert.Issuer.CommonName == nodes[j].cert.Subject.CommonName {
+			if string(nodes[i].cert.AuthorityKeyId) == string(nodes[j].cert.SubjectKeyId) {
 				nodes[j].isParent = true
 				nodes[i].parent = nodes[j]
 				break
@@ -701,8 +706,14 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("no leaf found")
 	}
 
+	processedNodes := 0
 	// iterate through the directed list and append the nodes to new cert chain
 	for leaf != nil {
+		processedNodes++
+		// ensure we aren't stuck in a cyclic loop
+		if processedNodes > len(nodes) {
+			return pemData, fmt.Errorf("constructing chain resulted in cycle")
+		}
 		newCertChain = append(newCertChain, leaf.cert)
 		leaf = leaf.parent
 	}
