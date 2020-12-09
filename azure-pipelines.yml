@@ -7,6 +7,12 @@ pr:
   branches:
     include:
       - master
+  paths:
+    exclude:
+      - docs/*
+
+pool:
+  vmImage: ubuntu-latest
 
 jobs:
 - job: unit_tests
@@ -27,41 +33,31 @@ jobs:
       displayName: Run unit tests
     - script: make helm-lint
       displayName: Run helm lint
+    - template: .pipelines/templates/scan-images.yaml
 
 - job: e2e_test_kind
-  pool:
-    vmImage: 'ubuntu-latest'
   timeoutInMinutes: 10
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
-
-  variables:
-    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
-    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
-    GOBIN:  '$(GOPATH)/bin' # Go binaries path
 
   steps:
   - task: GoTool@0
     inputs:
       version: 1.15
   - script: |
-      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
       sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
       bats --version
     displayName: 'Set up workspace and install dependencies'
   - script: |
-      # Generate image version
-      IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
+      export REGISTRY="e2e"
+      export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
+
       echo "Image version: ${IMAGE_VERSION}"
-      export IMAGE_VERSION="${IMAGE_VERSION}"
-      export IMAGE_TAG="${IMAGE_VERSION}"
       echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
-      echo "##vso[task.setvariable variable=IMAGE_TAG]${IMAGE_VERSION}"
-      
+      echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
+
       make e2e-bootstrap
-      export KUBECONFIG=$(kind get kubeconfig-path)
-      kubectl create ns dev
       make e2e-test
     displayName: "Run e2e tests on kind cluster"
     env:
@@ -70,48 +66,40 @@ jobs:
       KEY_NAME: $(KEY_NAME)
       KEY_VERSION: $(KEY_VERSION)
       KEYVAULT_NAME: $(KEYVAULT_NAME)
-      RESOURCE_GROUP: $(RESOURCE_GROUP)
       SECRET_NAME: $(SECRET_NAME)
-      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
+  - template: .pipelines/templates/get-logs.yaml
+    parameters:
+      logUID: e2e_test_kind
   - script: |
       make e2e-kind-cleanup
     displayName: 'Delete kind cluster'
+    condition: always()
 
 - job: custom_cloud_e2e_test_kind
-  pool:
-    vmImage: 'ubuntu-latest'
   timeoutInMinutes: 10
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
-
-  variables:
-    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
-    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
 
   steps:
   - task: GoTool@0
     inputs:
       version: 1.15
   - script: |
-      sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
       sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
       bats --version
     displayName: 'Set up workspace and install dependencies'
   - script: |
-      # Generate image version
-      IMAGE_VERSION=linux-e2e-$(git rev-parse --short HEAD)
+      export REGISTRY="e2e"
+      export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
+
       echo "Image version: ${IMAGE_VERSION}"
-      export IMAGE_VERSION="${IMAGE_VERSION}"
-      export IMAGE_TAG="${IMAGE_VERSION}"
       echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
-      echo "##vso[task.setvariable variable=IMAGE_TAG]${IMAGE_VERSION}"
+      echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
       
       make e2e-bootstrap
-      export KUBECONFIG=$(kind get kubeconfig-path)
-      kubectl create ns dev
       make e2e-test
     displayName: "Run custom cloud e2e tests on kind cluster"
     env:
@@ -120,13 +108,15 @@ jobs:
       KEY_NAME: $(KEY_NAME)
       KEY_VERSION: $(KEY_VERSION)
       KEYVAULT_NAME: $(KEYVAULT_NAME)
-      RESOURCE_GROUP: $(RESOURCE_GROUP)
       SECRET_NAME: $(SECRET_NAME)
-      SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
       AZURE_ENVIRONMENT: AzureStackCloud
       AZURE_ENVIRONMENT_FILEPATH: /provider/custom_environment.json
+  - template: .pipelines/templates/get-logs.yaml
+    parameters:
+      logUID: custom_cloud_e2e_test_kind
   - script: |
       make e2e-kind-cleanup
     displayName: 'Delete kind cluster'
+    condition: always()
