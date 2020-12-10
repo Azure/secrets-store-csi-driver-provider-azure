@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
@@ -23,18 +23,18 @@ import (
 )
 
 var (
-	versionInfo   = pflag.Bool("version", false, "prints the version information")
-	endpoint      = pflag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
-	logFormatJSON = pflag.Bool("log-format-json", false, "set log formatter to json")
-	enableProfile = pflag.Bool("enable-pprof", false, "enable pprof profiling")
-	profilePort   = pflag.Int("pprof-port", 6060, "port for pprof profiling")
+	versionInfo   = flag.Bool("version", false, "prints the version information")
+	endpoint      = flag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
+	logFormatJSON = flag.Bool("log-format-json", false, "set log formatter to json")
+	enableProfile = flag.Bool("enable-pprof", false, "enable pprof profiling")
+	profilePort   = flag.Int("pprof-port", 6060, "port for pprof profiling")
 )
 
 func main() {
 	klog.InitFlags(nil)
 	defer klog.Flush()
 
-	pflag.Parse()
+	flag.Parse()
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)

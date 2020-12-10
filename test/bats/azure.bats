@@ -74,6 +74,7 @@ setup() {
       --set image.pullPolicy="IfNotPresent" \
       --set secrets-store-csi-driver.enableSecretRotation=true \
       --set secrets-store-csi-driver.rotationPollInterval=30s \
+      --set logVerbosity=2 \
       --dependency-update
 
   assert_success
