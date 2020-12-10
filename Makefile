@@ -93,7 +93,10 @@ endif
 .PHONY: e2e-container
 e2e-container: build build-windows
 	docker buildx rm container-builder || true
-	docker buildx create --use --name=container-builder
+	# only moby/buildkit:foreign-mediatype works on building Windows image now
+	# https://github.com/moby/buildkit/pull/1879
+	# Github issue: https://github.com/moby/buildkit/issues/1877
+	docker buildx create --use --name=container-builder --driver-opt image=moby/buildkit:v0.7.2
 ifdef CI_KIND_CLUSTER
 		DOCKER_IMAGE=$(REGISTRY)/$(IMAGE_NAME) make image
 		kind load docker-image --name kind $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
