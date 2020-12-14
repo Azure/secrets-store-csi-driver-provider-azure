@@ -1,6 +1,6 @@
 image:
   repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-  tag: 0.0.10
+  tag: 0.0.11
   pullPolicy: IfNotPresent
 
 # One or more secrets to be used when pulling images
@@ -59,7 +59,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.17
+      tag: v0.0.18
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -76,7 +76,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.17
+      tag: v0.0.18
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
