@@ -134,12 +134,12 @@ controller:
   extraVolumes:
       - name: secrets-store-inline
         csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "azure-tls"
-            nodePublishSecretRef:
-              name: secrets-store-creds
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-tls"
+          nodePublishSecretRef:
+            name: secrets-store-creds
   extraVolumeMounts:
       - name: secrets-store-inline
         mountPath: "/mnt/secrets-store"
