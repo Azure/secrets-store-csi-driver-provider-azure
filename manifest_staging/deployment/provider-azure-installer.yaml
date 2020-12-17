@@ -33,6 +33,14 @@ spec:
               exec:
                 command:
                   - "rm /provider/azure.sock"
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 3
+          livenessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 5
           resources:
             requests:
               cpu: 50m

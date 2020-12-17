@@ -17,6 +17,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
 	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
@@ -87,6 +88,8 @@ func main() {
 	}
 	s := grpc.NewServer(opts...)
 	k8spb.RegisterCSIDriverProviderServer(s, &server.CSIDriverProviderServer{})
+	// Register the health service.
+	grpc_health_v1.RegisterHealthServer(s, &server.CSIDriverProviderServer{})
 
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go s.Serve(listener)
