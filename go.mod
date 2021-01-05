@@ -8,6 +8,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.8.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/google/go-cmp v0.5.0
 	github.com/kubernetes-csi/csi-lib-utils v0.7.0
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9

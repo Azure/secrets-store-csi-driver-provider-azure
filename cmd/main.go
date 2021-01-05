@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
@@ -60,6 +61,9 @@ func main() {
 		}()
 	}
 
+	if *provider.ConstructPEMChain {
+		klog.Infof("construct pem chain feature enabled")
+	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
 		klog.Fatalf("failed to add user agent to adal: %+v", err)
