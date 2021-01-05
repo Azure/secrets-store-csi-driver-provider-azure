@@ -31,7 +31,6 @@ jobs:
             version: 1.15
 
         - script: |
-            sudo add-apt-repository ppa:rmescandon/yq && sudo apt-get -o Acquire::Retries=30 update && sudo apt-get install yq
             sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
             bats --version
 
@@ -57,7 +56,8 @@ jobs:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
         - script: |
-            kubectl create ns dev            
+            export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
+
             make e2e-test
           displayName: "Run e2e tests"
           env:
@@ -73,6 +73,9 @@ jobs:
             ${{ if eq(osType, 'windows') }}:
               TEST_WINDOWS: true
 
-        - template: templates/teardown.yaml
+        - template: templates/get-logs.yaml
+          parameters:
+            logUID: $(CLUSTER_TYPE)-$(CLUSTER_CONFIG)
 
+        - template: templates/teardown.yaml
         - template: templates/cleanup-images.yaml

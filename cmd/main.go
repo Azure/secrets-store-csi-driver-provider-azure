@@ -43,13 +43,14 @@ func main() {
 		klog.SetLogger(json.JSONLogger)
 	}
 
-	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
 	if *versionInfo {
 		if err := version.PrintVersion(); err != nil {
 			klog.Fatalf("failed to print version, err: %+v", err)
 		}
 		os.Exit(0)
 	}
+	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
+
 	if *enableProfile {
 		klog.Infof("Starting profiling on port %d", *profilePort)
 		go func() {
