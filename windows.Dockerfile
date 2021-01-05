@@ -1,13 +1,11 @@
-FROM mcr.microsoft.com/windows/servercore:1809 as core
+ARG OSVERSION
+FROM --platform=linux/amd64 gcr.io/k8s-staging-e2e-test-images/windows-servercore-cache:1.0-linux-amd64-${OSVERSION} as core
 
-ARG TARGETARCH
-ARG TARGETOS
-
-FROM mcr.microsoft.com/powershell:lts-nanoserver-1809
+FROM mcr.microsoft.com/powershell:lts-nanoserver-${OSVERSION}
+LABEL maintainers="aramase"
 LABEL description="Secrets Store CSI Driver Provider Azure"
 
 COPY ./_output/secrets-store-csi-driver-provider-azure.exe /secrets-store-csi-driver-provider-azure.exe
-
 COPY --from=core /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
 USER ContainerAdministrator
 

@@ -1,0 +1,12 @@
+steps:
+  - script: |
+      export REGISTRY="e2e"
+      export IMAGE_VERSION="test"
+      OUTPUT_TYPE=docker  make container
+      wget https://github.com/aquasecurity/trivy/releases/download/v$(TRIVY_VERSION)/trivy_$(TRIVY_VERSION)_Linux-64bit.tar.gz
+      tar zxvf trivy_$(TRIVY_VERSION)_Linux-64bit.tar.gz
+      # show all vulnerabilities in the logs
+      ./trivy "${REGISTRY}/provider-azure:${IMAGE_VERSION}"
+      
+      ./trivy --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure:${IMAGE_VERSION}" || exit 1
+    displayName: "Scan images for vulnerability"

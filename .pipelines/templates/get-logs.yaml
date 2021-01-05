@@ -1,0 +1,19 @@
+parameters:
+- name: logUID
+  displayName: 'uid for log directory'
+  type: string
+
+steps:
+  - script: |
+      mkdir -p $(Build.ArtifactStagingDirectory)/logs/${{ parameters.logUID }}
+      kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c secrets-store --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/${{ parameters.logUID }}/secrets-store-csi-driver.json
+      kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c node-driver-registrar --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/${{ parameters.logUID }}/node-driver-registrar.json
+      kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c liveness-probe --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/${{ parameters.logUID }}/liveness-probe.json
+      kubectl logs -n kube-system -l app.kubernetes.io/name=csi-secrets-store-provider-azure --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/${{ parameters.logUID }}/csi-secrets-store-provider-azure.json
+
+      kubectl get pods -A -o wide
+    condition: always()
+    displayName: "Get logs"
+  - task: PublishBuildArtifacts@1
+    displayName: Save artifacts
+    condition: succeededOrFailed()
