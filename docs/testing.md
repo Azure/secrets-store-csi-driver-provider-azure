@@ -68,14 +68,10 @@ This step will make sure that you have all the necessary environment variables p
 
   # ...
 
-  # the name you want to give for the docker image
-  DOCKER_IMAGE=e2e/secrets-store-csi-driver-provider-azure
-  # the tag you'd like to give your docker image
-  IMAGE_TAG=<image_tag>
   # assign an image version to know which changes you are testing.
   IMAGE_VERSION=<image_version>
-  # name of docker image provided for the azure.bats tests. SHOULD be the same as DOCKER_IMAGE
-  PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+  # name of registry provided for the azure.bats tests.
+  REGISTRY=e2e
   # local path to folder container cloned Secrets Store CSI Driver
   SECRETS_STORE_CSI_DRIVER_PATH=<your_local_path_to_the_secrets_store_csi_driver>
   # will disable tests not related to the Kind Cluster
@@ -110,10 +106,8 @@ This step will make sure that you have all the necessary environment variables p
     AZURE_CLIENT_SECRET=<yourAzureServicePrincipalSecret>
     TENANT_ID=<yourAzureTenantId>
 
-    DOCKER_IMAGE=e2e/secrets-store-csi-driver-provider-azure
-    IMAGE_TAG=<image_tag>
     IMAGE_VERSION=<image_version>
-    PROVIDER_TEST_IMAGE=e2e/secrets-store-csi-driver-provider-azure
+    REGISTRY=e2e
     SECRETS_STORE_CSI_DRIVER_PATH=<your_local_path_to_the_secrets_store_csi_driver>
     CI_KIND_CLUSTER=true
   </p>

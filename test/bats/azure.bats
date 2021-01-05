@@ -5,8 +5,8 @@ load helpers
 BATS_TESTS_DIR=test/bats/tests
 WAIT_TIME=60
 SLEEP_TIME=1
-IMAGE_TAG=${IMAGE_TAG:-e2e-$(git rev-parse --short HEAD)}
-PROVIDER_TEST_IMAGE=${PROVIDER_TEST_IMAGE:-"upstreamk8sci.azurecr.io/public/k8s/csi/secrets-store/provider-azure"}
+IMAGE_VERSION=${IMAGE_VERSION:-"0.0.10"}
+REGISTRY=${REGISTRY:-"mcr.microsoft.com/oss/azure/secrets-store"}
 AZURE_ENVIRONMENT=${AZURE_ENVIRONMENT:-"AzurePublicCloud"}
 AZURE_ENVIRONMENT_FILEPATH=${AZURE_ENVIRONMENT_FILEPATH:-""}
 NODE_SELECTOR_OS=linux
@@ -67,13 +67,14 @@ setup() {
 }
 
 @test "install driver helm chart" {
-  run helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace dev --set windows.enabled=true \
+  run helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace kube-system --set windows.enabled=true \
       --set secrets-store-csi-driver.windows.enabled=true \
-      --set image.repository=${PROVIDER_TEST_IMAGE} \
-      --set image.tag=${IMAGE_TAG} \
+      --set image.repository=${REGISTRY}/provider-azure \
+      --set image.tag=${IMAGE_VERSION} \
       --set image.pullPolicy="IfNotPresent" \
       --set secrets-store-csi-driver.enableSecretRotation=true \
       --set secrets-store-csi-driver.rotationPollInterval=30s \
+      --set logVerbosity=2 \
       --dependency-update
 
   assert_success

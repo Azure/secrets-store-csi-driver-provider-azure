@@ -48,10 +48,10 @@ jobs:
         displayName: "Check cluster's health"
 
       - script: |
-          export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/secrets-store-csi-driver-provider-azure}"
+          export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
 
           helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace $NAMESPACE --wait --timeout=10m -v=5 --debug \
-            --set image.repository=${REGISTRY} \
+            --set image.repository=${REGISTRY}/provider-azure \
             --set image.tag=${IMAGE_VERSION} \
             --set secrets-store-csi-driver.enableSecretRotation=true \
             --dependency-update
@@ -101,15 +101,9 @@ jobs:
         condition: succeededOrFailed()
         displayName: "Get stats"
 
-      - script: |
-          mkdir -p $(Build.ArtifactStagingDirectory)/logs
-          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c secrets-store --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/secrets-store-csi-driver.json
-          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c node-driver-registrar --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/node-driver-registrar.json
-          kubectl logs -n kube-system -l app.kubernetes.io/name=secrets-store-csi-driver -c liveness-probe --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/liveness-probe.json
-          kubectl logs -n kube-system -l app.kubernetes.io/name=csi-secrets-store-provider-azure --tail=-1 > $(Build.ArtifactStagingDirectory)/logs/csi-secrets-store-provider-azure.json
-        workingDirectory: "$(perf-tests.repo.path)"
-        condition: succeededOrFailed()
-        displayName: "Get logs"
+      - template: templates/get-logs.yaml
+        parameters:
+          logUID: load-test
 
       - template: templates/publish-load-test-result.yaml
 

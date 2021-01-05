@@ -18,6 +18,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
 	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
@@ -44,13 +45,14 @@ func main() {
 		klog.SetLogger(json.JSONLogger)
 	}
 
-	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
 	if *versionInfo {
 		if err := version.PrintVersion(); err != nil {
 			klog.Fatalf("failed to print version, err: %+v", err)
 		}
 		os.Exit(0)
 	}
+	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
+
 	if *enableProfile {
 		klog.Infof("Starting profiling on port %d", *profilePort)
 		go func() {
@@ -91,6 +93,8 @@ func main() {
 	}
 	s := grpc.NewServer(opts...)
 	k8spb.RegisterCSIDriverProviderServer(s, &server.CSIDriverProviderServer{})
+	// Register the health service.
+	grpc_health_v1.RegisterHealthServer(s, &server.CSIDriverProviderServer{})
 
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go s.Serve(listener)
