@@ -19,14 +19,4 @@ Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kuber
 - Supports pod portability with the SecretProviderClass CRD
 - Supports windows containers (Kubernetes version v1.18+)
 - Supports sync with Kubernetes Secrets (Secrets Store CSI Driver v0.0.10+)
-- Supports multiple secrets stores providers in the same cluster.
-
-### Secret Content is Mounted on Pod Start
-On pod start and restart, the driver will call the Azure provider binary to retrieve the secret content from the Azure Key Vault instance you have specified in the `SecretProviderClass` custom resource. Then the content will be mounted to the container's file system. 
-
-To validate, once the pod is started, you should see the new mounted content at the volume path specified in your deployment yaml.
-
-```bash
-kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
-foo
-```
+- Supports auto rotation of secrets (Secrets Store CSI Driver v0.0.16+)
