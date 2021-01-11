@@ -49,6 +49,8 @@ spec:
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}
+          securityContext:
+            privileged: true          
       volumes:
         - name: provider-vol
           hostPath:
