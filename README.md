@@ -1,6 +1,7 @@
 # Azure Key Vault Provider for Secrets Store CSI Driver
 
 [![Build Status](https://dev.azure.com/azure/secrets-store-csi-driver-provider-azure/_apis/build/status/secrets-store-csi-driver-provider-azure-ci?branchName=master)](https://dev.azure.com/azure/secrets-store-csi-driver-provider-azure/_build/latest?definitionId=67&branchName=master)
+[![codecov](https://codecov.io/gh/Azure/secrets-store-csi-driver-provider-azure/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/secrets-store-csi-driver-provider-azure)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/Azure/secrets-store-csi-driver-provider-azure)
 [![Go Report Card](https://goreportcard.com/badge/Azure/secrets-store-csi-driver-provider-azure)](https://goreportcard.com/report/Azure/secrets-store-csi-driver-provider-azure)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Azure/secrets-store-csi-driver-provider-azure)
