@@ -4,39 +4,98 @@ title: "Pod Identity"
 linkTitle: "Pod Identity"
 weight: 2
 description: >
-  Use Pod Identity
+  Use Pod Identity to access Keyvault.
 ---
 
 > Supported only on Linux
+
+<details>
+<summary>Examples</summary>
+
+- `SecretProviderClass`
+```yaml
+# This is a SecretProviderClass example using aad-pod-identity to access Key Vault
+apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+kind: SecretProviderClass
+metadata:
+  name: azure-kvname-podid
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "true"          # set to true for pod identity access mode
+    keyvaultName: "kvname"
+    cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
+    objects:  |
+      array:
+        - |
+          objectName: secret1
+          objectType: secret        # object types: secret, key or cert
+          objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+        - |
+          objectName: key1
+          objectType: key
+          objectVersion: ""
+    tenantId: "tid"                    # the tenant ID of the KeyVault  
+``` 
+
+- `Pod` yaml
+```yaml
+# This is a sample pod definition for using SecretProviderClass and aad-pod-identity to access Key Vault
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nginx-secrets-store-inline-podid
+  labels:
+    aadpodidbinding: "demo"         # Set the label value to match selector defined in AzureIdentityBinding
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      volumeMounts:
+      - name: secrets-store01-inline
+        mountPath: "/mnt/secrets-store"
+        readOnly: true
+  volumes:
+    - name: secrets-store01-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kvname-podid"
+```
+</details>
+
+## Configure AAD Pod Identity to access Keyvault
 
 **Prerequisites**
 
 💡 Make sure you have installed pod identity to your Kubernetes cluster
 
-   __This project makes use of the aad-pod-identity project located  [here](https://github.com/Azure/aad-pod-identity#getting-started) to handle the identity management of the pods. Reference the aad-pod-identity README if you need further instructions on any of these steps.__
+   __This project makes use of the [aad-pod-identity](https://github.com/Azure/aad-pod-identity#getting-started) project to handle the identity management of the pods. Reference the aad-pod-identity README if you need further instructions on any of these steps.__
 
 Not all steps need to be followed on the instructions for the aad-pod-identity project as we will also complete some of the steps on our installation here.
 
 1. Install the aad-pod-identity components to your cluster
+
+   - 💡 Follow the [Role assignment](https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment/) documentation to setup all the required roles for aad-pod-identity components.
 
    - Install the RBAC enabled aad-pod-identiy infrastructure components:
       ```
       kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
       ```
 
-   - 💡 Follow the [Role assignment](https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment/) documentation to setup all the required roles for aad-pod-identity components.
 
-1. Create an Azure User Identity
+2. Create an Azure User-assigned Managed Identity
 
-    Create an Azure User Identity with the following command.
+    Create an Azure User-assigned Managed Identity with the following command.
     Get `clientId` and `id` from the output.
     ```
     az identity create -g <resourcegroup> -n <idname>
     ```
 
-1. Assign permissions to new identity
+3. Assign permissions to new identity
     Ensure your Azure user identity has all the required permissions to read the keyvault instance and to access content within your key vault instance.
-    If not, you can run the following using the Azure cli:
+    If not, you can run the following using the Azure CLI:
 
     ```bash
     # Assign Reader Role to new Identity for your keyvault
@@ -50,11 +109,11 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     ```
 
-1. Add a new `AzureIdentity` for the new identity to your cluster
+4. Add an `AzureIdentity` for the new identity to your cluster
 
     Edit and save this as `aadpodidentity.yaml`
 
-    Set `type: 0` for Managed Service Identity; `type: 1` for Service Principal
+    Set `type: 0` for User-Assigned Managed Identity; `type: 1` for Service Principal
     In this case, we are using managed service identity, `type: 0`.
     Create a new name for the AzureIdentity.
     Set `resourceID` to `id` of the Azure User Identity created from the previous step.
@@ -74,7 +133,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl create -f aadpodidentity.yaml
     ```
 
-1. Add a new `AzureIdentityBinding` for the new Azure identity to your cluster
+5. Add `AzureIdentityBinding` for the `AzureIdentity` to your cluster
 
     Edit and save this as `aadpodidentitybinding.yaml`
     ```yaml
@@ -83,15 +142,15 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     metadata:
       name: <any-name>
     spec:
-      azureIdentity: <name of AzureIdentity created from previous step>
-      selector: <label value to match in your app>
+      azureIdentity: <name of the AzureIdentity created in previous step>
+      selector: <label value to match in your pod>
     ```
 
     ```
     kubectl create -f aadpodidentitybinding.yaml
     ```
 
-2. Add the following to [this](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
+6. Add the following to [this](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
 
     Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
@@ -100,17 +159,17 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
     
-3. Update [this sample deployment](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
+7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
-    Make sure to update `usepodidentity` to `true`
+    Make sure to set `usepodidentity` to `true`
     ```yaml
     usepodidentity: "true"
     ```
     
-4. Deploy your app
+8. Deploy your app
 
     ```bash
-    kubectl apply -f ../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
+    kubectl apply -f pod.yaml
     ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
