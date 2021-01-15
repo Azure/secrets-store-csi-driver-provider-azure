@@ -205,6 +205,8 @@ In some cases, you may want to create a Kubernetes Secret to mirror the mounted 
 
 > NOTE: Make sure the `objectName` in `secretObjects` matches the name of the mounted content. This could be the object name or the object alias.
 
+> NOTE: The secrets will only sync once you *start a pod mounting the secret store*. Solely relying on the syncing with Kubernetes secrets feature thus does not work.
+
 A `SecretProviderClass` custom resource should have the following components:
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
