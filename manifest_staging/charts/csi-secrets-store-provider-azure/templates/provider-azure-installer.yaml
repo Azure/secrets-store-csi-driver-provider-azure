@@ -33,6 +33,9 @@ spec:
             {{- if .Values.logVerbosity }}
             - -v={{ .Values.logVerbosity }}
             {{- end }}
+            {{- if .Values.constructPEMChain }}
+            - --construct-pem-chain={{ .Values.constructPEMChain }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:

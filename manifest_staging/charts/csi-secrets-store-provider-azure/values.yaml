@@ -1,6 +1,6 @@
 image:
   repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-  tag: 0.0.11
+  tag: 0.0.12
   pullPolicy: IfNotPresent
 
 # One or more secrets to be used when pulling images
@@ -59,15 +59,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.18
+      tag: v0.0.19
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.0.1
+      tag: v2.1.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
 
   windows:
@@ -76,15 +76,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.18
+      tag: v0.0.19
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.0.1
+      tag: v2.1.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
 
   grpcSupportedProviders: azure
@@ -94,3 +94,6 @@ secrets-store-csi-driver:
 ## Install default service account
 rbac:
   install: true
+
+# explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
+constructPEMChain: false
