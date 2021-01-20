@@ -98,9 +98,6 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     If not, you can run the following using the Azure CLI:
 
     ```bash
-    # Assign Reader Role to new Identity for your keyvault
-    az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
-
     # set policy to access keys in your keyvault
     az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     # set policy to access secrets in your keyvault
