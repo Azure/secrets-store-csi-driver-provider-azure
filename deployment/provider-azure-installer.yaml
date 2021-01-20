@@ -24,15 +24,24 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.11
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.12
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix:///provider/azure.sock
+            - --construct-pem-chain=false
           lifecycle:
             preStop:
               exec:
                 command:
                   - "rm /provider/azure.sock"
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 3
+          livenessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 5
           resources:
             requests:
               cpu: 50m
