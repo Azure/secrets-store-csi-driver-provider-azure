@@ -90,9 +90,6 @@ Before this step, you need to turn on system-assigned managed identity on your c
    Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
 
    ```bash
-   # Assign Reader Role to new Identity for your keyvault
-   az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
-
    # set policy to access keys in your Key Vault
    az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --object-id <YOUR AZURE VMSS PRINCIPALID>
    # set policy to access secrets in your Key Vault

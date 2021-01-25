@@ -53,8 +53,8 @@ Refer to [Identity Access Modes](../../configurations/identity-access-modes) to 
 In this walkthrough, we will be using the [Service Principal](../../configurations/identity-access-modes/service-principal-mode) auth mode for accessing the Key Vault instance we just created.
 
 ```bash
-# Create a service principal with Reader Role for your keyvault
-export SERVICE_PRINCIPAL_CLIENT_SECRET="$(az ad sp create-for-rbac --role="Reader" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourcegroups/${KEYVAULT_RESOURCE_GROUP}/providers/Microsoft.KeyVault/vaults/${KEYVAULT_NAME} --name http://secrets-store-test --query 'password' -otsv)"
+# Create a service principal to access keyvault
+export SERVICE_PRINCIPAL_CLIENT_SECRET="$(az ad sp create-for-rbac --skip-assignment --name http://secrets-store-test --query 'password' -otsv)"
 export SERVICE_PRINCIPAL_CLIENT_ID="(az ad sp show --id http://secrets-store-test --query 'appId' -otsv)"
 ```
 
