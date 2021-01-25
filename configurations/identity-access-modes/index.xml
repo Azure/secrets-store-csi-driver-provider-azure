@@ -81,8 +81,6 @@ az ad sp create-for-rbac --skip-assignment --name &lt;span style="color:#000">$S
 &lt;span style="color:#000">KEYVAULT_NAME&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;key-vault-name&amp;gt;
 &lt;span style="color:#000">KEYVAULT_RESOURCE_GROUP&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;resource-group-name-for-KV&amp;gt;
 &lt;span style="color:#000">SUBID&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;subscription-id&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to the service principal for your keyvault&lt;/span>
-az role assignment create --role Reader --assignee &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span> --scope /subscriptions/&lt;span style="color:#000">$SUBID&lt;/span>/resourcegroups/&lt;span style="color:#000">$KEYVAULT_RESOURCE_GROUP&lt;/span>/providers/Microsoft.KeyVault/vaults/&lt;span style="color:#000">$KEYVAULT_NAME&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &lt;span style="color:#000">$AZURE_CLIENT_ID&lt;/span>
@@ -178,9 +176,7 @@ Get &lt;code>clientId&lt;/code> and &lt;code>id&lt;/code> from the output.&lt;/p
 &lt;p>Assign permissions to new identity
 Ensure your Azure user identity has all the required permissions to read the keyvault instance and to access content within your key vault instance.
 If not, you can run the following using the Azure CLI:&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to new Identity for your keyvault&lt;/span>
-az role assignment create --role Reader --assignee &amp;lt;principalid&amp;gt; --scope /subscriptions/&amp;lt;subscriptionid&amp;gt;/resourcegroups/&amp;lt;resourcegroup&amp;gt;/providers/Microsoft.KeyVault/vaults/&amp;lt;keyvaultname&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your keyvault&lt;/span>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your keyvault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;YOUR AZURE USER IDENTITY CLIENT ID&amp;gt;
 &lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your keyvault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;YOUR AZURE USER IDENTITY CLIENT ID&amp;gt;
@@ -311,9 +307,7 @@ Set &lt;code>resourceID&lt;/code> to &lt;code>id&lt;/code> of the Azure User Ide
 &lt;li>
 &lt;p>Grant Azure Managed Identity permission to access Keyvault&lt;/p>
 &lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to new Identity for your keyvault&lt;/span>
-az role assignment create --role Reader --assignee &amp;lt;principalid&amp;gt; --scope /subscriptions/&amp;lt;subscriptionid&amp;gt;/resourcegroups/&amp;lt;resourcegroup&amp;gt;/providers/Microsoft.KeyVault/vaults/&amp;lt;keyvaultname&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
 &lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
@@ -398,9 +392,7 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;li>
 &lt;p>Grant Azure Managed Identity permission to access Keyvault&lt;/p>
 &lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Assign Reader Role to new Identity for your keyvault&lt;/span>
-az role assignment create --role Reader --assignee &amp;lt;principalid&amp;gt; --scope /subscriptions/&amp;lt;subscriptionid&amp;gt;/resourcegroups/&amp;lt;resourcegroup&amp;gt;/providers/Microsoft.KeyVault/vaults/&amp;lt;keyvaultname&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
 &lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
