@@ -69,9 +69,12 @@ setup() {
 @test "install driver helm chart" {
   run helm install csi manifest_staging/charts/csi-secrets-store-provider-azure --namespace kube-system --set windows.enabled=true \
       --set secrets-store-csi-driver.windows.enabled=true \
-      --set image.repository=${REGISTRY}/provider-azure \
-      --set image.tag=${IMAGE_VERSION} \
-      --set image.pullPolicy="IfNotPresent" \
+      --set linux.image.repository=${REGISTRY}/provider-azure \
+      --set linux.image.tag=${IMAGE_VERSION} \
+      --set linux.image.pullPolicy="IfNotPresent" \
+      --set windows.image.repository=${REGISTRY}/provider-azure \
+      --set windows.image.tag=${IMAGE_VERSION} \
+      --set windows.image.pullPolicy="IfNotPresent" \
       --set secrets-store-csi-driver.enableSecretRotation=true \
       --set secrets-store-csi-driver.rotationPollInterval=30s \
       --set logVerbosity=2 \
