@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	// Pod Identity nmiEndpoint
-	nmiEndpoint = "http://localhost:2579/host/token/"
 	// Pod Identity podNameHeader
 	podNameHeader = "podname"
 	// Pod Identity podNamespaceHeader
@@ -65,7 +63,7 @@ func NewConfig(usePodIdentity, useVMManagedIdentity bool, userAssignedIdentityID
 	return config, nil
 }
 
-func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEndpoint, tenantID string) (*adal.ServicePrincipalToken, error) {
+func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(aadEndpoint, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OAuth config: %v", err)
@@ -83,7 +81,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 			return nil, fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount: true")
 		}
 
-		endpoint := fmt.Sprintf("%s?resource=%s", nmiEndpoint, resource)
+		endpoint := fmt.Sprintf("http://localhost:%s/host/token/?resource=%s", nmiPort, resource)
 		client := &http.Client{}
 		req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 		if err != nil {
@@ -144,7 +142,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 	}
 
 	// for Service Principal access mode, clientID + client secret are used to retrieve token for resource
-	if len(c.AADClientSecret) > 0 {
+	if len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0 {
 		klog.InfoS("using service principal to retrieve access token", "clientID", utils.RedactClientID(c.AADClientID), "secret", utils.RedactClientID(c.AADClientSecret), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		return adal.NewServicePrincipalToken(
 			*oauthConfig,

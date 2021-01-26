@@ -53,6 +53,10 @@ const (
 	objectEncodingHex                 = "hex"
 	objectEncodingBase64              = "base64"
 	objectEncodingUtf8                = "utf-8"
+
+	// pod identity NMI port
+	// TODO (aramase) make this configurable during the provider deployment
+	podIdentityNMIPort = "2579"
 )
 
 // Provider implements the secrets-store-csi-driver provider interface
@@ -167,7 +171,7 @@ func (p *Provider) getVaultURL(ctx context.Context) (vaultURL *string, err error
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
 func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrincipalToken, error) {
-	return p.AuthConfig.GetServicePrincipalToken(p.PodName, p.PodNamespace, resource, p.AzureCloudEnvironment.ActiveDirectoryEndpoint, p.TenantID)
+	return p.AuthConfig.GetServicePrincipalToken(p.PodName, p.PodNamespace, resource, p.AzureCloudEnvironment.ActiveDirectoryEndpoint, p.TenantID, podIdentityNMIPort)
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
