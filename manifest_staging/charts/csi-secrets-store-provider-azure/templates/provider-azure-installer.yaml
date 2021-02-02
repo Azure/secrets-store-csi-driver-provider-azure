@@ -48,8 +48,10 @@ spec:
             initialDelaySeconds: 5
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
+          {{- if .Values.linux.privileged }}
           securityContext:
-            privileged: true   
+            privileged: true
+          {{- end }}
           volumeMounts:
             - name: provider-vol
               mountPath: /provider

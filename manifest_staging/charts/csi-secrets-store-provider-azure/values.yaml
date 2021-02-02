@@ -30,6 +30,7 @@ linux:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
+  privileged: false
 
 windows:
   nodeSelector: {}
