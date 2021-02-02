@@ -8,7 +8,7 @@ REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 REGISTRY_NAME ?= upstreamk8sci
 REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
-IMAGE_VERSION ?= 0.0.11
+IMAGE_VERSION ?= 0.0.12
 IMAGE_NAME ?= provider-azure
 IMAGE_TAG ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
@@ -20,7 +20,7 @@ BUILD_VERSION_VAR := $(REPO_PATH)/pkg/version.BuildVersion
 VCS_VAR := $(REPO_PATH)/pkg/version.Vcs
 LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(IMAGE_VERSION) -X $(VCS_VAR)=$(BUILD_COMMIT)"
 
-GO_FILES=$(shell go list ./...)
+GO_FILES=$(shell go list ./... | grep -v /test/e2e)
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 TOOLS_MOD_DIR := ./tools
 TOOLS_DIR := $(abspath ./.tools)
@@ -66,7 +66,7 @@ lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
 
 .PHONY: unit-test
 unit-test:
-	go test $(GO_FILES) -v
+	CGO_ENABLED=1 go test -race -coverprofile=coverage.txt -covermode=atomic $(GO_FILES) -v
 
 .PHONY: build
 build:

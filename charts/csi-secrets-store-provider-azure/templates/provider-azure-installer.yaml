@@ -33,11 +33,22 @@ spec:
             {{- if .Values.logVerbosity }}
             - -v={{ .Values.logVerbosity }}
             {{- end }}
+            {{- if .Values.constructPEMChain }}
+            - --construct-pem-chain={{ .Values.constructPEMChain }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:
                 command:
                   - "rm /provider/azure.sock"
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 3
+          livenessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            initialDelaySeconds: 5
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           volumeMounts:

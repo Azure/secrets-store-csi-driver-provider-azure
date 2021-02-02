@@ -1,29 +1,91 @@
 ---
 type: docs
-title: "VMSS System Assigned Managed Identity"
-linkTitle: "VMSS System Assigned Managed Identity"
+title: "System-assigned Managed Identity"
+linkTitle: "System-assigned Managed Identity"
 weight: 4
 description: >
-  Allows Azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly
+  Use a System-assigned Managed Identity to access Keyvault.
 ---
 
 > Supported with Linux and Windows
 
-This option allows azure KeyVault to use the system assigned managed identity on the k8s cluster VMSS directly.
+<details>
+<summary>Examples</summary>
 
-AKS uses system-assigned managed identity as [cluster managed identity](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity). This managed identity shouldn't be used to authenticate with KeyVault. You should consider using a [user-assigned managed identity](user-assigned-msi-mode.md) instead.
+- `SecretProviderClass`
+```yaml
+# This is a SecretProviderClass example using system-assigned identity to access Key Vault
+apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+kind: SecretProviderClass
+metadata:
+  name: azure-kvname-system-msi
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: ""      # If empty, then defaults to use the system assigned identity on the VM
+    keyvaultName: "kvname"
+    cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
+    objects:  |
+      array:
+        - |
+          objectName: secret1
+          objectType: secret        # object types: secret, key or cert
+          objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+        - |
+          objectName: key1
+          objectType: key
+          objectVersion: ""
+    tenantId: "tid"                 # the tenant ID of the KeyVault  
+``` 
 
-Before this step, you need to turn on system assigned managed identity on your VMSS clsuter configuration.
+- `Pod` yaml
+```yaml
 
-1. Verify that the nodes have its own system assigned managed identity
-
-```bash
-az vmss identity show -g <resource group>  -n <vmss scalset name> -o yaml
+# This is a sample pod definition for using SecretProviderClass and system-assigned identity to access Key Vault
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nginx-secrets-store-inline-system-msi
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      volumeMounts:
+      - name: secrets-store01-inline
+        mountPath: "/mnt/secrets-store"
+        readOnly: true
+  volumes:
+    - name: secrets-store01-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kvname-system-msi"
 ```
+</details>
 
-The output should contain `type: SystemAssigned` and note `principalId`.
+## Configure System-assigned Managed Identity to access Keyvault
 
-2. Grant Azure Managed Identity KeyVault permissions
+AKS uses system-assigned managed identity as [cluster managed identity](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity). This managed identity shouldn't be used to access Keyvault. You should consider using a [User-assigned managed identity](./user-assigned-msi-mode) instead.
+
+Before this step, you need to turn on system-assigned managed identity on your cluster VM/VMSS.
+
+1. Verify that the nodes have their own system-assigned managed identity
+
+    For VMSS:
+    ```bash
+    az vmss identity show -g <resource group>  -n <vmss scalset name> -o yaml
+    ```
+
+    If the cluster is using `AvailabilitySet`, then check the system-assigned identity exists on all the VM instances:
+    ```bash
+    az vm identity show -g <resource group> -n <vm name> -o yaml
+    ```
+    The output should contain `type: SystemAssigned`. Take a note of the `principalId`.
+
+2. Grant Azure Managed Identity permission to access Keyvault
 
    Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
 
@@ -38,6 +100,6 @@ The output should contain `type: SystemAssigned` and note `principalId`.
 
 3. Deploy your application. Specify `useVMManagedIdentity` to `true`.
 
-```yaml
-useVMManagedIdentity: "true"            # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
-```
+    ```yaml
+    useVMManagedIdentity: "true"
+    ```

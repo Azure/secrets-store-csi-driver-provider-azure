@@ -347,3 +347,6 @@ manifest_staging/charts/csi-secrets-store-provider-azure/charts/
 # website
 website/public
 website/resources
+
+# cover profile
+coverage.txt

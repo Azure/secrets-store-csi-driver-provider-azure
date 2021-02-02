@@ -1,37 +1,99 @@
 ---
 type: docs
-title: "VMSS User Assigned Managed Identity"
-linkTitle: "VMSS User Assigned Managed Identity"
+title: "User-assigned Managed Identity"
+linkTitle: "User-assigned Managed Identity"
 weight: 3
 description: >
-  Allows Azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly
+  Use a User-assigned Managed Identity to access Keyvault.
 ---
 
 > Supported with Linux and Windows
 
-This option allows azure KeyVault to use the user assigned managed identity on the k8s cluster VMSS directly.
+<details>
+<summary>Examples</summary>
 
-In AKS you can use the [user assigned Kubelet managed identity](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) (doesn't support BYO today) or create your own user assigned managed identity as described below.
+- `SecretProviderClass`
+```yaml
+# This is a SecretProviderClass example using user-assigned identity to access Key Vault
+apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+kind: SecretProviderClass
+metadata:
+  name: azure-kvname-user-msi
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: "<client id of user assigned identity>"
+    keyvaultName: "kvname"
+    cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
+    objects:  |
+      array:
+        - |
+          objectName: secret1
+          objectType: secret        # object types: secret, key or cert
+          objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+        - |
+          objectName: key1
+          objectType: key
+          objectVersion: ""
+    tenantId: "tid"                 # the tenant ID of the KeyVault  
+``` 
 
-> You can create AKS with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then you can skip steps 1 and 2. To be able to get the CLIENT ID, the user can run the following command
+- `Pod` yaml
+```yaml
+# This is a sample pod definition for using SecretProviderClass and user-assigned identity to access Key Vault
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nginx-secrets-store-inline-user-msi
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      volumeMounts:
+      - name: secrets-store01-inline
+        mountPath: "/mnt/secrets-store"
+        readOnly: true
+  volumes:
+    - name: secrets-store01-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kvname-user-msi"
+```
+</details>
+
+## Configure User-assigned Managed Identity to access Keyvault
+
+In AKS you can use the [User-assigned Kubelet managed identity](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) (doesn't support BYO today) or create your own user-assigned managed identity as described below.
+
+> You can create an AKS cluster with [managed identities](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity) now and then skip steps 1 and 2. To get the `clientID` of the managed identity, run the following command:
 >
 >```bash
 >az aks show -g <resource group> -n <aks cluster name> --query identityProfile.kubeletidentity.clientId -o tsv
 >```
 
-1. Create Azure Managed Identity
+1. Create Azure User-assigned Managed Identity
 
-```bash
-az identity create -g <RESOURCE GROUP> -n <IDENTITY NAME>
-```
+    ```bash
+    az identity create -g <RESOURCE GROUP> -n <IDENTITY NAME>
+    ```
 
-2. Assign Azure Managed Identity to VMSS
+2. Assign Azure User-assigned Managed Identity to VM/VMSS
 
-```bash
-az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
-```
+    For VMSS:
+    ```bash
+    az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
+    ```
 
-3. Grant Azure Managed Identity KeyVault permissions
+    If the cluster is using `AvailabilitySet`, then assign the identity to each of the VM instances:
+    ```bash
+    az vm identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VM> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
+    ```
+
+3. Grant Azure Managed Identity permission to access Keyvault
 
    Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
 
@@ -46,7 +108,7 @@ az vmss identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VMSS> --identitie
 
 4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.
 
-```yaml
-useVMManagedIdentity: "true"               # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
-userAssignedIdentityID: "clientid"      # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
-```
+    ```yaml
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: "<client id of the managed identity>"
+    ```

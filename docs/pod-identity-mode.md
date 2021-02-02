@@ -32,9 +32,6 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     If not, you can run the following using the Azure cli:
 
     ```bash
-    # Assign Reader Role to new Identity for your keyvault
-    az role assignment create --role Reader --assignee <principalid> --scope /subscriptions/<subscriptionid>/resourcegroups/<resourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>
-
     # set policy to access keys in your keyvault
     az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <YOUR AZURE USER IDENTITY CLIENT ID>
     # set policy to access secrets in your keyvault
@@ -84,7 +81,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl create -f aadpodidentitybinding.yaml
     ```
 
-2. Add the following to [this](../examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
+1. Add the following to [this](../examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
 
     Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
@@ -93,14 +90,14 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
     
-3. Update [this sample deployment](../examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
+1. Update [this sample deployment](../examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
     Make sure to update `usepodidentity` to `true`
     ```yaml
     usepodidentity: "true"
     ```
     
-4. Deploy your app
+1. Deploy your app
 
     ```bash
     kubectl apply -f ../examples/nginx-pod-secrets-store-inline-volume-secretproviderclass-podid.yaml
