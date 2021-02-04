@@ -22,8 +22,8 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository | default .Values.windows.image.repository }}:{{ .Values.image.tag | default .Values.windows.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.windows.image.pullPolicy }}
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
             {{- if .Values.logFormatJSON }}

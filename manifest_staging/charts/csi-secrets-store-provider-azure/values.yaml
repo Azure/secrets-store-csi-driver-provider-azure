@@ -1,7 +1,8 @@
+# [DEPRECATED] use linux.image and windows.image instead.
 image:
-  repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-  tag: 0.0.12
-  pullPolicy: IfNotPresent
+  repository: ""
+  tag: ""
+  pullPolicy: ""
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
@@ -15,6 +16,10 @@ logFormatJSON: false
 logVerbosity: 0
 
 linux:
+  image:
+    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
+    tag: 0.0.12
+    pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
   enabled: true
@@ -33,6 +38,10 @@ linux:
   privileged: false
 
 windows:
+  image:
+    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
+    tag: 0.0.12
+    pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
   enabled: false
