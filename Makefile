@@ -152,7 +152,7 @@ endif
 
 .PHONY: e2e-test
 e2e-test:
-	bats -t test/bats/azure.bats
+	make -C test/e2e/ run
 
 .PHONY: setup-kind
 setup-kind:
