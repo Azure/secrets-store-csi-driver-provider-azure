@@ -13,3 +13,11 @@ pool:
 
 jobs:
   - template: load-tests-template.yaml
+  - template: e2e-tests-template.yaml
+    parameters:
+      clusterTypes:
+      - "aks"
+      - "aks-engine"
+      osTypes:
+      - "linux"
+      - "windows"
