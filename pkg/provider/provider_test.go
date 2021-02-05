@@ -3,6 +3,10 @@ package provider
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rsa"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,8 +15,13 @@ import (
 	"strings"
 	"testing"
 
+	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 )
 
 func TestGetVaultURL(t *testing.T) {
@@ -685,4 +694,341 @@ fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
 			}
 		})
 	}
+}
+
+func TestInitializeKVClient(t *testing.T) {
+	p, err := NewProvider()
+	assert.NoError(t, err)
+
+	testEnvs := []azure.Environment{
+		azure.PublicCloud,
+		azure.GermanCloud,
+		azure.ChinaCloud,
+		azure.USGovernmentCloud,
+	}
+	for i := range testEnvs {
+		authConfig, err := auth.NewConfig(false, true, "", nil)
+		assert.NoError(t, err)
+
+		p.AzureCloudEnvironment = &testEnvs[i]
+		p.AuthConfig = authConfig
+		p.PodName = "pod"
+		p.PodNamespace = "default"
+
+		version.BuildVersion = "version"
+		version.BuildDate = "Now"
+		version.Vcs = "hash"
+
+		kvBaseClient, err := p.initializeKvClient()
+		assert.NoError(t, err)
+		assert.NotNil(t, kvBaseClient)
+		assert.NotNil(t, kvBaseClient.Authorizer)
+		assert.Contains(t, kvBaseClient.UserAgent, "csi-secrets-store")
+	}
+}
+
+func TestMountSecretsStoreObjectContent(t *testing.T) {
+	cases := []struct {
+		desc        string
+		parameters  map[string]string
+		secrets     map[string]string
+		expectedErr bool
+	}{
+		{
+			desc:        "keyvault name not provided",
+			parameters:  map[string]string{},
+			expectedErr: true,
+		},
+		{
+			desc: "tenantID not provided",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "usePodIdentity not a boolean as expected",
+			parameters: map[string]string{
+				"keyvaultName":   "testKV",
+				"tenantId":       "tid",
+				"usePodIdentity": "tru",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "useVMManagedIdentity not a boolean as expected",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"usePodIdentity":       "false",
+				"useVMManagedIdentity": "tru",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "invalid cloud name",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"cloudName":    "AzureCloud",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "check azure cloud env file path is set",
+			parameters: map[string]string{
+				"keyvaultName":     "testKV",
+				"tenantId":         "tid",
+				"cloudName":        "AzureStackCloud",
+				"cloudEnvFileName": "/etc/kubernetes/akscustom.json",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "objects array not set",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "objects not configured as an array",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+				"objects": `
+        - |
+          objectName: secret1
+          objectType: secret
+          objectVersion: ""`,
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "objects array is empty",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+				"objects": `
+      array:`,
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "invalid object format",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectFormat: pkcs
+          objectVersion: ""`,
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "invalid object encoding",
+			parameters: map[string]string{
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectEncoding: utf-16
+          objectVersion: ""`,
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "error fetching from keyvault",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectVersion: ""`,
+			},
+			secrets: map[string]string{
+				"clientid":     "AADClientID",
+				"clientsecret": "AADClientSecret",
+			},
+			expectedErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, err := NewProvider()
+			assert.NoError(t, err)
+
+			tmpDir, err := ioutil.TempDir("", "ut")
+			assert.NoError(t, err)
+
+			_, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
+			if tc.expectedErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestGetCurve(t *testing.T) {
+	cases := []struct {
+		crv           kv.JSONWebKeyCurveName
+		expectedCurve elliptic.Curve
+		expectedErr   error
+	}{
+		{
+			crv:           kv.P256,
+			expectedCurve: elliptic.P256(),
+			expectedErr:   nil,
+		},
+		{
+			crv:           kv.P384,
+			expectedCurve: elliptic.P384(),
+			expectedErr:   nil,
+		},
+		{
+			crv:           kv.P521,
+			expectedCurve: elliptic.P521(),
+			expectedErr:   nil,
+		},
+		{
+			crv:           kv.SECP256K1,
+			expectedCurve: nil,
+			expectedErr:   fmt.Errorf("curve SECP256K1 is not suppported"),
+		},
+	}
+
+	for _, tc := range cases {
+		actual, err := getCurve(tc.crv)
+		assert.Equal(t, tc.expectedCurve, actual)
+		assert.Equal(t, tc.expectedErr, err)
+	}
+}
+
+func TestParsePrivateKey(t *testing.T) {
+	cases := []struct {
+		desc       string
+		privateKey string
+		checker    func(key interface{})
+	}{
+		{
+			desc: "pkcs1 format rsa private key",
+			privateKey: `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA0AWQCdeukwkzIKKJNp3DaRe9azBZ8J/NFb2Nczq3Y8xcMDB/
+eT7lfMMNYluLQPDzkRN9QHKiz8ei9ynxRiEC/Al2OsdZPdPqNxnBVDsFcD729nof
+roBUXRch5dP5amXu5gP628Yu7l8pBoV+lOyyDGkRVHPecegxiVbxtjqhlrwlhRRF
+zFGat1CiDq03Gtz1xH/pgaFQzKbTZ1rQE8JcTryZaTYfo5PrUDwhv8PfVHoHMEqp
+N54onSoA2JLBeZz7xJvL6pBg0c6OhNCnUYEZBDnyHDBBJJ6FUijKQp6mZNbedi6I
+h4QGJYeLP4HaJdPf9aXlChnbbwEaeBeedXzPjwIDAQABAoIBAQDMU7pwwIb8bDvp
+IV2v5PTNZIEtKTgez4hNg3vOJG2APHqM5wY/HNWjX5/k7dBxgHtuE/uiczeS6iAb
+sPoKDWD2GYElKSxyO5ZCeyzXxIWKBH7mCXzXFbxIF/G24yiJJwiqrFwaxabRg20z
+t6pnM7uLzyQzlQB5WD5YDauseBjCidOb9Ri92rNnW+g/H6YZtI3beEAg/gTD/rP5
+5ucRjp6rmbwZ90VA8O8frYpV7ofXxpekvD1Q8Vrk3XwBubq01tg7a8Ugal44ApaO
+X7e/X6xw6bwISe1zCCm1YKPjNKrhqcE4ujHAghVbST+sb9XiNk0TvMb1qF/dh+zx
+7iCalqxZAoGBAPjNNeay5hApmoQdiyyfPwR/RzAH9eSam8Wn5pJzQz2nLFGbozmn
+fO5jvI06ACumgS8LZiIGmBlbPrKQtL91Z1ftwKgBGCgqI9BpskHDP04Z/QNDlRNA
+gz3qtANTmKl69RvBv82QyLzsWwcLJhVxgMTsNPnd4Z7iB9soB2mG0iFNAoGBANYK
+TzDvwM6oCmtRn38zgrX+6jc2ptCAuQYeL7pn51TbljcP0XkJ8LkFaBK3lzG1NUhL
+DgOcEbFEtZpwpYgDYlbVwyt3m3QUQDqm93J86pf1J1jWF81PYgUJaS7/8lBzDUiK
++PZ4XV6zYBFxUCy2yh5rxsyhBoxLV0oRD+wbGkZLAoGBAM0izYVYDY5X7xltDnoN
+FrVLh9NXTOteen7+j4JCXLdxpX3n2C3KJZycSTMcFlXnI+449M2rKC8H52rtGsod
+L8b0tXsP4+4ByKOm8h18sS5hCRZu23QTJeKgKCnx/BYI1h07ozwHWytBqU/mZlEZ
+03UJ2CgIRGVusdGFcI8WZRylAoGASMxE1u4Uc7UvpgSi7M6GPIQxAQpzfiLpyyzl
+Ks9AHNp6osucgUBiQWuXVBZhNCTftHDimVOxqMsnwRljE3mjLsmRke0iUD67Abfc
+HXJjD7/v3AUlH01Kl0/2GGgw8C/RasTpnFqf1x/HIueZTzv0Tph1iw+RfJH7ZFOd
+SL6HFzUCgYBpod9mhdljh4VsysZqeFfbliESb+ue7PVZb/+X9lJ7DATIq4/farhi
+9YkknRAqJmKEcsomn5b35Kj0QBwiDdEE7tISdkj36jgoaz6pyyuj9ys1BlCN0fBH
+2QJGFpJ3TBKqIo2iGmPHLXZVFajPF/KNVDVNlc9EUIraVgmWwDuZ7g==
+-----END RSA PRIVATE KEY-----
+`,
+			checker: func(key interface{}) {
+				_, ok := key.(*rsa.PrivateKey)
+				assert.True(t, ok)
+			},
+		},
+		{
+			desc: "pkcs8 format rsa private key",
+			privateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDQBZAJ166TCTMg
+ook2ncNpF71rMFnwn80VvY1zOrdjzFwwMH95PuV8ww1iW4tA8PORE31AcqLPx6L3
+KfFGIQL8CXY6x1k90+o3GcFUOwVwPvb2eh+ugFRdFyHl0/lqZe7mA/rbxi7uXykG
+hX6U7LIMaRFUc95x6DGJVvG2OqGWvCWFFEXMUZq3UKIOrTca3PXEf+mBoVDMptNn
+WtATwlxOvJlpNh+jk+tQPCG/w99UegcwSqk3niidKgDYksF5nPvEm8vqkGDRzo6E
+0KdRgRkEOfIcMEEknoVSKMpCnqZk1t52LoiHhAYlh4s/gdol09/1peUKGdtvARp4
+F551fM+PAgMBAAECggEBAMxTunDAhvxsO+khXa/k9M1kgS0pOB7PiE2De84kbYA8
+eoznBj8c1aNfn+Tt0HGAe24T+6JzN5LqIBuw+goNYPYZgSUpLHI7lkJ7LNfEhYoE
+fuYJfNcVvEgX8bbjKIknCKqsXBrFptGDbTO3qmczu4vPJDOVAHlYPlgNq6x4GMKJ
+05v1GL3as2db6D8fphm0jdt4QCD+BMP+s/nm5xGOnquZvBn3RUDw7x+tilXuh9fG
+l6S8PVDxWuTdfAG5urTW2DtrxSBqXjgClo5ft79frHDpvAhJ7XMIKbVgo+M0quGp
+wTi6McCCFVtJP6xv1eI2TRO8xvWoX92H7PHuIJqWrFkCgYEA+M015rLmECmahB2L
+LJ8/BH9HMAf15JqbxafmknNDPacsUZujOad87mO8jToAK6aBLwtmIgaYGVs+spC0
+v3VnV+3AqAEYKCoj0GmyQcM/Thn9A0OVE0CDPeq0A1OYqXr1G8G/zZDIvOxbBwsm
+FXGAxOw0+d3hnuIH2ygHaYbSIU0CgYEA1gpPMO/AzqgKa1GffzOCtf7qNzam0IC5
+Bh4vumfnVNuWNw/ReQnwuQVoEreXMbU1SEsOA5wRsUS1mnCliANiVtXDK3ebdBRA
+Oqb3cnzql/UnWNYXzU9iBQlpLv/yUHMNSIr49nhdXrNgEXFQLLbKHmvGzKEGjEtX
+ShEP7BsaRksCgYEAzSLNhVgNjlfvGW0Oeg0WtUuH01dM6156fv6PgkJct3GlfefY
+LcolnJxJMxwWVecj7jj0zasoLwfnau0ayh0vxvS1ew/j7gHIo6byHXyxLmEJFm7b
+dBMl4qAoKfH8FgjWHTujPAdbK0GpT+ZmURnTdQnYKAhEZW6x0YVwjxZlHKUCgYBI
+zETW7hRztS+mBKLszoY8hDEBCnN+IunLLOUqz0Ac2nqiy5yBQGJBa5dUFmE0JN+0
+cOKZU7GoyyfBGWMTeaMuyZGR7SJQPrsBt9wdcmMPv+/cBSUfTUqXT/YYaDDwL9Fq
+xOmcWp/XH8ci55lPO/ROmHWLD5F8kftkU51IvocXNQKBgGmh32aF2WOHhWzKxmp4
+V9uWIRJv657s9Vlv/5f2UnsMBMirj99quGL1iSSdEComYoRyyiaflvfkqPRAHCIN
+0QTu0hJ2SPfqOChrPqnLK6P3KzUGUI3R8EfZAkYWkndMEqoijaIaY8ctdlUVqM8X
+8o1UNU2Vz0RQitpWCZbAO5nu
+-----END PRIVATE KEY-----
+`,
+			checker: func(key interface{}) {
+				_, ok := key.(*rsa.PrivateKey)
+				assert.True(t, ok)
+			},
+		},
+		{
+			desc: "ec private key",
+			privateKey: `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIB79Z1qMNIo69fgeElbOqLaqZpM79lUUo0j7h9swUakEoAoGCCqGSM49
+AwEHoUQDQgAEO+YO1IMQkGJlsX59o3+qpamhHxOOVKUbF8m69XbYo7RpIxPr/COw
+PxrUsXyXty7ERMp5QNyxjMWS+0w93FrAIw==
+-----END EC PRIVATE KEY-----
+`,
+			checker: func(key interface{}) {
+				_, ok := key.(*ecdsa.PrivateKey)
+				assert.True(t, ok)
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			pemBlock, _ := pem.Decode([]byte(tc.privateKey))
+
+			actual, err := parsePrivateKey(pemBlock.Bytes)
+			assert.NoError(t, err)
+			tc.checker(actual)
+		})
+	}
+}
+
+func TestGetObjectVersion(t *testing.T) {
+	id := "https://kindkv.vault.azure.net/secrets/secret1/c55925c29c6743dcb9bb4bf091be03b0"
+	expectedVersion := "c55925c29c6743dcb9bb4bf091be03b0"
+	actual := getObjectVersion(id)
+	assert.Equal(t, expectedVersion, actual)
 }
