@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
+	"github.com/magiconair/properties"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
@@ -79,6 +81,8 @@ type Provider struct {
 	// EnvironmentFilepathName captures the name of the environment variable containing the path to the file
 	// to be used while populating the Azure Environment.
 	EnvironmentFilepathName string
+	// the file formatting of the output
+	FileFormatting FileFormatting
 }
 
 // KeyVaultObject holds keyvault object related config
@@ -102,6 +106,34 @@ type KeyVaultObject struct {
 // StringArray ...
 type StringArray struct {
 	Array []string `json:"array" yaml:"array"`
+}
+
+// FileFormatting Enum
+type FileFormatting string
+
+const (
+	// Multiple means the normal
+	Multiple FileFormatting = "Multiple"
+	// JSON means a single JSON file with all secret names and values is generated
+	JSON FileFormatting = "JSON"
+	// Yaml means a single Yaml file with all secret names and values is generated
+	Yaml FileFormatting = "Yaml"
+	// KeyValue means a single file with all with all secret names and values is generated, key=value style
+	KeyValue FileFormatting = "KeyValue"
+	// JavaProperties means a single file with all secret names and values is generated, but "--" is replaced with "." notation
+	// For example: secretgroup1--secret-name: secretvalue -> secretgroup1.secret-name=secretvalue
+	JavaProperties FileFormatting = "JavaProperties"
+	// Empty ..
+	Empty FileFormatting = ""
+)
+
+// IsValid checks if the FileFormatting option is valid
+func (ff FileFormatting) IsValid() error {
+	switch ff {
+	case Multiple, JSON, Yaml, KeyValue, JavaProperties, Empty:
+		return nil
+	}
+	return errors.Errorf("Invalid FileFormatting type")
 }
 
 // NewProvider creates a new Azure Key Vault Provider.
@@ -182,6 +214,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	useVMManagedIdentityStr := strings.TrimSpace(attrib["useVMManagedIdentity"])
 	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
 	tenantID := strings.TrimSpace(attrib["tenantId"])
+	p.FileFormatting = FileFormatting(attrib["fileFormatting"])
 	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
 	p.PodName = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
 	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
@@ -254,6 +287,23 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.AzureCloudEnvironment = azureCloudEnv
 	p.TenantID = tenantID
 
+	if p.FileFormatting == JSON || p.FileFormatting == Yaml {
+		objectVersionMap, err := CreateJSONOrYamlFile(ctx, p, keyVaultObjects, targetPath, permission, p.FileFormatting)
+		if err != nil {
+			return nil, err
+		}
+		return objectVersionMap, nil
+
+	}
+	objectVersionMap, err := CreateMultipleFiles(ctx, p, keyVaultObjects, targetPath, permission)
+	if err != nil {
+		return nil, err
+	}
+	return objectVersionMap, nil
+}
+
+// CreateMultipleFiles creates multiple files based on the multiple keyVaultObjects passed through
+func CreateMultipleFiles(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode) (map[string]string, error) {
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
@@ -291,6 +341,110 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	}
+	return objectVersionMap, nil
+}
+
+// CreateJSONOrYamlFile creates one JSON/Yaml file based on the multiple keyVaultObjects passed through
+func CreateJSONOrYamlFile(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode, fileFormatting FileFormatting) (map[string]string, error) {
+	data := make(map[string]interface{})
+	objectVersionMap := make(map[string]string)
+	for _, keyVaultObject := range keyVaultObjects {
+		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
+		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+		if err != nil {
+			return nil, err
+		}
+		// objectUID is a unique identifier in the format <object type>/<object name>
+		// This is the object id the user sees in the SecretProviderClassPodStatus
+		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+		objectVersionMap[objectUID] = newObjectVersion
+
+		secretName := keyVaultObject.ObjectName
+		if keyVaultObject.ObjectAlias != "" {
+			secretName = keyVaultObject.ObjectAlias
+		}
+		data[secretName] = content
+	}
+
+	fileName := ""
+	var objectContent []byte
+	var err error
+	if fileFormatting == Yaml {
+		objectContent, err = yaml.Marshal(data)
+		fileName = "secrets.yaml"
+		if err != nil {
+			return nil, err
+		}
+		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
+		}
+	} else {
+		objectContent, err = json.Marshal(data)
+		fileName = "secrets.json"
+		if err != nil {
+			return nil, err
+		}
+		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
+		}
+	}
+
+	klog.Infof("successfully wrote file %s", fileName)
+
+	return objectVersionMap, nil
+}
+
+// CreateJavaPropertiesFile creates one application.properties file based on the multiple keyVaultObjects passed through
+func CreateJavaPropertiesFile(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode, fileFormatting string) (map[string]string, error) {
+	props := properties.NewProperties()
+	objectVersionMap := make(map[string]string)
+	for _, keyVaultObject := range keyVaultObjects {
+		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
+		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+		if err != nil {
+			return nil, err
+		}
+		// objectUID is a unique identifier in the format <object type>/<object name>
+		// This is the object id the user sees in the SecretProviderClassPodStatus
+		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+		objectVersionMap[objectUID] = newObjectVersion
+
+		secretName := keyVaultObject.ObjectName
+		if keyVaultObject.ObjectAlias != "" {
+			secretName = keyVaultObject.ObjectAlias
+		}
+		secretNameCleaned := strings.ReplaceAll(secretName, "--", ".")
+		props.MustSet(secretNameCleaned, content)
+	}
+
+	fileName := "application.properties"
+	f, err := os.OpenFile(filepath.Join(targetPath, fileName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, permission)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = props.Write(f, properties.UTF8)
+	if err != nil {
+		return nil, errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", fileName, targetPath)
+	}
+	err = f.Close()
+	if err != nil {
+		return nil, errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", fileName, targetPath)
+	}
+
+	klog.Infof("successfully wrote file %s", fileName)
 
 	return objectVersionMap, nil
 }
