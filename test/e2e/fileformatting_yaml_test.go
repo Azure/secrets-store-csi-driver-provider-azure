@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
 
-var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
+var _ = Describe("When deploying SecretProviderClass CRD with secrets and fileformatting is `Yaml`", func() {
 	var (
 		specName             = "secret"
 		spc                  *v1alpha1.SecretProviderClass
@@ -83,11 +83,12 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		p = pod.Create(pod.CreateInput{
 			Creator:                  kubeClient,
 			Config:                   config,
-			Name:                     "nginx-secrets-store-inline-crd",
+			Name:                     "nginx-secrets-store-inline-crd-yaml",
 			Namespace:                ns.Name,
 			SecretProviderClassName:  spc.Name,
 			NodePublishSecretRefName: nodePublishSecretRef.Name,
 		})
+
 	})
 
 	AfterEach(func() {
@@ -111,7 +112,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets.yaml")
 		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		expectedResult := fmt.Sprintf("SECRET_1: %s\nsecret: %s", config.SecretValue, config.SecretValue)
+		expectedResult := fmt.Sprintf("SECRET_1: %s\n***: %s", config.SecretValue, config.SecretValue)
 		Expect(secret).To(Equal(expectedResult))
 	})
 })
