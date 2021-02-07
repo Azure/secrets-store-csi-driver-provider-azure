@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
@@ -110,6 +111,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets.yaml")
 		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		Expect(secret).To(Equal("wrong_value"))
+		expectedResult := fmt.Sprintf("SECRET_1: %s\nsecret: %s", config.SecretValue, config.SecretValue)
+		Expect(secret).To(Equal(expectedResult))
 	})
 })
