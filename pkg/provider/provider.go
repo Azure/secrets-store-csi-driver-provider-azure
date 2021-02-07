@@ -254,6 +254,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return nil, fmt.Errorf("failed to create auth config, error: %+v", err)
 	}
 
+	err = p.FileFormatting.IsValid()
+	if err != nil {
+		return nil, fmt.Errorf("fileFormatting is not valid")
+	}
+
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
 		return nil, fmt.Errorf("objects is not set")
@@ -333,7 +338,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 
 	if p.FileFormatting == JSON {
-		err := WriteJsonFile(targetPath, "secrets.json", outputMap, permission)
+		err := WriteJSONFile(targetPath, "secrets.json", outputMap, permission)
 		if err != nil {
 			return nil, err
 		}
@@ -364,8 +369,8 @@ func WriteSimpleOutputFile(targetPath string, fileName string, objectContent []b
 	return nil
 }
 
-// WriteJsonFile writes all properties to one JSON file
-func WriteJsonFile(targetPath string, fileName string, outputMap map[string]string, permission os.FileMode) error {
+// WriteJSONFile writes all properties to one JSON file
+func WriteJSONFile(targetPath string, fileName string, outputMap map[string]string, permission os.FileMode) error {
 	fileContent, err := json.Marshal(outputMap)
 	if err != nil {
 		return err

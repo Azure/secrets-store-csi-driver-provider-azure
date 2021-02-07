@@ -785,6 +785,15 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			expectedErr: true,
 		},
 		{
+			desc: "fileFormatting is not valid",
+			parameters: map[string]string{
+				"keyvaultName":   "testKV",
+				"tenantId":       "tid",
+				"fileFormatting": "xml",
+			},
+			expectedErr: true,
+		},
+		{
 			desc: "objects array not set",
 			parameters: map[string]string{
 				"keyvaultName":         "testKV",
@@ -793,6 +802,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			},
 			expectedErr: true,
 		},
+
 		{
 			desc: "objects not configured as an array",
 			parameters: map[string]string{
