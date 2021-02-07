@@ -3,7 +3,6 @@
 package e2e
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
@@ -12,13 +11,18 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secret"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
-
 	"github.com/ghodss/yaml"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
+
+type resultYaml struct {
+	Alias  string `json:"SECRET_1"`
+	Secret string `json:"secret1"`
+}
 
 var _ = Describe("When deploying SecretProviderClass CRD with secrets and fileformatting is `Yaml`", func() {
 	var (
@@ -27,6 +31,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		ns                   *corev1.Namespace
 		nodePublishSecretRef *corev1.Secret
 		p                    *corev1.Pod
+		result               resultYaml
 	)
 
 	BeforeEach(func() {
@@ -100,7 +105,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		})
 	})
 
-	It("should read secrets from yaml file in pod", func() {
+	It("should parse secrets as yaml file in pod", func() {
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -110,9 +115,18 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		})
 
 		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets.yaml")
-		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		secretsYaml, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		expectedResult := fmt.Sprintf("SECRET_1: %s\n***: %s", config.SecretValue, config.SecretValue)
-		Expect(secret).To(Equal(expectedResult))
+
+		err = yaml.Unmarshal([]byte(secretsYaml), &result)
+		Expect(err).To(BeNil())
+	})
+
+	It("should validate alias value from yaml file in pod", func() {
+		Expect(result.Alias).To(Equal(config.SecretValue))
+	})
+
+	It("should validate secret value from yaml file in pod", func() {
+		Expect(result.Secret).To(Equal(config.SecretValue))
 	})
 })

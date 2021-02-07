@@ -3,7 +3,6 @@
 package e2e
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
@@ -20,13 +19,19 @@ import (
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
 
-var _ = Describe("When deploying SecretProviderClass CRD with secrets and fileformatting is `Yaml`", func() {
+type resultJson struct {
+	Alias  string `json:"SECRET_1"`
+	Secret string `json:"secret1"`
+}
+
+var _ = Describe("When deploying SecretProviderClass CRD with secrets and fileformatting is `json`", func() {
 	var (
 		specName             = "secret"
 		spc                  *v1alpha1.SecretProviderClass
 		ns                   *corev1.Namespace
 		nodePublishSecretRef *corev1.Secret
 		p                    *corev1.Pod
+		result               resultJson
 	)
 
 	BeforeEach(func() {
@@ -74,7 +79,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 				Parameters: map[string]string{
 					"keyvaultName":   config.KeyvaultName,
 					"tenantId":       config.TenantID,
-					"fileFormatting": "json",
+					"fileFormatting": "JSON",
 					"objects":        string(objects),
 				},
 			},
@@ -100,7 +105,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		})
 	})
 
-	It("should read secrets from json file in pod", func() {
+	It("should parse secrets as json file in pod", func() {
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -110,9 +115,18 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		})
 
 		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets.json")
-		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		secretsJson, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		expectedResult := fmt.Sprintf("{\"SECRET_1\": \"%s\"\n\"***\": \"%s\"}", config.SecretValue, config.SecretValue)
-		Expect(secret).To(Equal(expectedResult))
+
+		err = yaml.Unmarshal([]byte(secretsJson), &result)
+		Expect(err).To(BeNil())
+	})
+
+	It("should validate alias value from json file in pod", func() {
+		Expect(result.Alias).To(Equal(config.SecretValue))
+	})
+
+	It("should validate secret value from json file in pod", func() {
+		Expect(result.Secret).To(Equal(config.SecretValue))
 	})
 })

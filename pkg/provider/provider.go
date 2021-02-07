@@ -113,16 +113,16 @@ type FileFormatting string
 
 const (
 	// Multiple means the normal
-	Multiple FileFormatting = "Multiple"
+	Multiple FileFormatting = "multiple"
 	// JSON means a single JSON file with all secret names and values is generated
-	JSON FileFormatting = "JSON"
+	JSON FileFormatting = "json"
 	// Yaml means a single Yaml file with all secret names and values is generated
-	Yaml FileFormatting = "Yaml"
+	Yaml FileFormatting = "yaml"
 	// KeyValue means a single file with all with all secret names and values is generated, key=value style
-	KeyValue FileFormatting = "KeyValue"
+	KeyValue FileFormatting = "keyvalue"
 	// JavaProperties means a single file with all secret names and values is generated, but "--" is replaced with "." notation
 	// For example: secretgroup1--secret-name: secretvalue -> secretgroup1.secret-name=secretvalue
-	JavaProperties FileFormatting = "JavaProperties"
+	JavaProperties FileFormatting = "javaproperties"
 	// Empty ..
 	Empty FileFormatting = ""
 )
@@ -214,7 +214,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	useVMManagedIdentityStr := strings.TrimSpace(attrib["useVMManagedIdentity"])
 	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
 	tenantID := strings.TrimSpace(attrib["tenantId"])
-	p.FileFormatting = FileFormatting(attrib["fileFormatting"])
+	p.FileFormatting = FileFormatting(strings.ToLower((attrib["fileFormatting"])))
 	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
 	p.PodName = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
 	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
