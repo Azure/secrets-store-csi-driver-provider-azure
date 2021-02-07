@@ -302,6 +302,42 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	return objectVersionMap, nil
 }
 
+// // GetSecrets reduces a list of Secret KeyVault Object to two maps
+// func GetSecrets(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject) (map[string]string, map[string][]byte, error) {
+// 	objectContentMap := make(map[string][]byte)
+// 	objectVersionMap := make(map[string]string)
+// 	for _, keyVaultObject := range keyVaultObjects {
+// 		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+// 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
+// 			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+// 		}
+// 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
+// 			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+// 		}
+// 		// fetch the object from Key Vault
+// 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+// 		if err != nil {
+// 			return nil, nil, err
+// 		}
+// 		// objectUID is a unique identifier in the format <object type>/<object name>
+// 		// This is the object id the user sees in the SecretProviderClassPodStatus
+// 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+// 		objectVersionMap[objectUID] = newObjectVersion
+
+// 		secretName := keyVaultObject.ObjectName
+// 		if keyVaultObject.ObjectAlias != "" {
+// 			secretName = keyVaultObject.ObjectAlias
+// 		}
+// 		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+// 		if err != nil {
+// 			return nil, nil, err
+// 		}
+
+// 		objectContentMap[secretName] = objectContent
+// 	}
+// 	return objectVersionMap, data, nil
+// }
+
 // CreateMultipleFiles creates multiple files based on the multiple keyVaultObjects passed through
 func CreateMultipleFiles(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode) (map[string]string, error) {
 	objectVersionMap := make(map[string]string)
@@ -313,49 +349,7 @@ func CreateMultipleFiles(ctx context.Context, p *Provider, keyVaultObjects []Key
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
-		fileName := keyVaultObject.ObjectName
-		if keyVaultObject.ObjectAlias != "" {
-			fileName = keyVaultObject.ObjectAlias
-		}
-		if err := validateFileName(fileName); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
-
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
-		if err != nil {
-			return nil, err
-		}
-
-		// objectUID is a unique identifier in the format <object type>/<object name>
-		// This is the object id the user sees in the SecretProviderClassPodStatus
-		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
-		objectVersionMap[objectUID] = newObjectVersion
-
-		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
-		if err != nil {
-			return nil, err
-		}
-		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
-			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
-		}
-		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
-	}
-	return objectVersionMap, nil
-}
-
-// CreateJSONOrYamlFile creates one JSON/Yaml file based on the multiple keyVaultObjects passed through
-func CreateJSONOrYamlFile(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode, fileFormatting FileFormatting) (map[string]string, error) {
-	data := make(map[string]interface{})
-	objectVersionMap := make(map[string]string)
-	for _, keyVaultObject := range keyVaultObjects {
-		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
-		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
-		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
 			return nil, err
@@ -369,28 +363,77 @@ func CreateJSONOrYamlFile(ctx context.Context, p *Provider, keyVaultObjects []Ke
 		if keyVaultObject.ObjectAlias != "" {
 			secretName = keyVaultObject.ObjectAlias
 		}
-		data[secretName] = content
+		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		if err != nil {
+			return nil, err
+		}
+		// All similar thus far
+
+		if err := validateFileName(secretName); err != nil {
+			return nil, errors.Wrapf(err, "name %s is not a a valid file name", secretName)
+		}
+		if err := ioutil.WriteFile(filepath.Join(targetPath, secretName), objectContent, permission); err != nil {
+			return nil, errors.Wrapf(err, "failed to write file %s at %s", secretName, targetPath)
+		}
+		klog.InfoS("successfully wrote file", "file", secretName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+	}
+	return objectVersionMap, nil
+}
+
+// CreateJSONOrYamlFile creates one JSON/Yaml file based on the multiple keyVaultObjects passed through
+func CreateJSONOrYamlFile(ctx context.Context, p *Provider, keyVaultObjects []KeyVaultObject, targetPath string, permission os.FileMode, fileFormatting FileFormatting) (map[string]string, error) {
+	objectContentMap := make(map[string]string)
+	objectVersionMap := make(map[string]string)
+	for _, keyVaultObject := range keyVaultObjects {
+		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+		// fetch the object from Key Vault
+		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+		if err != nil {
+			return nil, err
+		}
+		// objectUID is a unique identifier in the format <object type>/<object name>
+		// This is the object id the user sees in the SecretProviderClassPodStatus
+		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+		objectVersionMap[objectUID] = newObjectVersion
+
+		secretName := keyVaultObject.ObjectName
+		if keyVaultObject.ObjectAlias != "" {
+			secretName = keyVaultObject.ObjectAlias
+		}
+		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		if err != nil {
+			return nil, err
+		}
+		// All similar thus far
+
+		objectContentMap[secretName] = string(objectContent[:])
 	}
 
 	fileName := ""
-	var objectContent []byte
+	var fileContent []byte
 	var err error
 	if fileFormatting == Yaml {
-		objectContent, err = yaml.Marshal(data)
+		fileContent, err = yaml.Marshal(objectContentMap)
 		fileName = "secrets.yaml"
 		if err != nil {
 			return nil, err
 		}
-		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), fileContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
 	} else {
-		objectContent, err = json.Marshal(data)
+		fileContent, err = json.Marshal(objectContentMap)
 		fileName = "secrets.json"
 		if err != nil {
 			return nil, err
 		}
-		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), fileContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
 	}
@@ -405,13 +448,14 @@ func CreateJavaPropertiesFile(ctx context.Context, p *Provider, keyVaultObjects 
 	props := properties.NewProperties()
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
-		klog.V(2).Infof("fetching object: %s, type: %s from key vault %s", keyVaultObject.ObjectName, keyVaultObject.ObjectType, p.KeyvaultName)
+		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
+		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
 			return nil, err
@@ -425,8 +469,14 @@ func CreateJavaPropertiesFile(ctx context.Context, p *Provider, keyVaultObjects 
 		if keyVaultObject.ObjectAlias != "" {
 			secretName = keyVaultObject.ObjectAlias
 		}
+		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		if err != nil {
+			return nil, err
+		}
+		// All similar thus far
+
 		secretNameCleaned := strings.ReplaceAll(secretName, "--", ".")
-		props.MustSet(secretNameCleaned, content)
+		props.MustSet(secretNameCleaned, string(objectContent[:]))
 	}
 
 	fileName := "application.properties"
