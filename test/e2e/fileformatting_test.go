@@ -107,7 +107,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 			Namespace:      ns.Name,
 		})
 
-		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets")
+		cmd := getPodExecCommand("cat /mnt/secrets-store/secrets.yaml")
 		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
 		Expect(secret).To(Equal("wrong_value"))
