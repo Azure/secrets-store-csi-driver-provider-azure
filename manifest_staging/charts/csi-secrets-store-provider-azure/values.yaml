@@ -30,6 +30,7 @@ linux:
     limits:
       cpu: 50m
       memory: 100Mi
+  podLabels: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate
@@ -52,6 +53,7 @@ windows:
     limits:
       cpu: 100m
       memory: 200Mi
+  podLabels: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate
