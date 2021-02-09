@@ -70,6 +70,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
@@ -185,6 +189,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
@@ -303,6 +311,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
