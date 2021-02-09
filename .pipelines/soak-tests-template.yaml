@@ -1,0 +1,74 @@
+parameters:
+  - name: clusterConfigs
+    type: object
+
+jobs:
+  - ${{ each clusterConfig in parameters.clusterConfigs }}:
+    - job:
+      displayName: ${{ format('soak/{0}', clusterConfig) }}
+      timeoutInMinutes: 60
+      cancelTimeoutInMinutes: 5
+      workspace:
+        clean: all
+      variables:
+        - group: csi-secrets-store-e2e
+        - group: ${{ format('{0}', clusterConfig) }}
+        - name: CLUSTER_CONFIG
+          value: ${{ format('{0}', clusterConfig) }}
+        - name: IS_SOAK_TEST
+          value: "true"
+      steps:
+        - task: GoTool@0
+          inputs:
+            version: 1.15
+
+        - script: |
+            # Download kubectl
+            echo "Installing kubectl..."
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          displayName: "Install kubectl"
+
+        - script: |
+            # Download kubeconfig for soak cluster
+            az login \
+              --service-principal \
+              -u=$(AAD_CLIENT_ID) \
+              -p=$(AAD_CLIENT_SECRET) \
+              -t=$(TENANT_ID) > /dev/null
+            az account set -s=$(SUBSCRIPTION_ID)
+
+            az aks get-credentials \
+              --resource-group $(CLUSTER_RESOURCE_GROUP) \
+              --name $(CLUSTER_CONFIG)
+          displayName: "Set KUBECONFIG"
+
+        - script: |
+            kubectl wait --for=condition=ready node --all
+            kubectl wait pod -n kube-system --for=condition=Ready --all
+            kubectl get nodes -o wide
+          displayName: "Check cluster's health"
+
+        - script: |
+            export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
+            export IMAGE_VERSION="${IMAGE_VERSION}"
+            make e2e-test
+          env:
+            AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+            AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+            KEY_NAME: $(KEY_NAME)
+            KEY_VERSION: $(KEY_VERSION)
+            KEYVAULT_NAME: $(KEYVAULT_NAME)
+            RESOURCE_GROUP: $(RESOURCE_GROUP)
+            SECRET_NAME: $(SECRET_NAME)
+            SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+            TENANT_ID: $(TENANT_ID)
+            ${{ if eq(clusterConfig, 'csi-secrets-store-soak-win-aks') }}:
+              TEST_WINDOWS: true
+          displayName: "Run E2E tests"
+
+        - script: |
+            kubectl top pods -n kube-system
+          displayName: "Get pod metrics"
+          condition: always()

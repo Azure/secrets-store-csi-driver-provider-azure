@@ -15,10 +15,6 @@ jobs:
           clean: all
 
         variables:
-          - name: GOPATH
-            value: '$(system.defaultWorkingDirectory)/gopath'
-          - name: modulePath
-            value: '$(GOPATH)/src/github.com/$(build.repository.name)'
           - name: CLUSTER_CONFIG
             value: ${{ format('{0}', osType) }}
           - name: CLUSTER_TYPE
