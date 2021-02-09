@@ -39,6 +39,9 @@ spec:
             {{- if .Values.constructPEMChain }}
             - --construct-pem-chain={{ .Values.constructPEMChain }}
             {{- end }}
+            {{- if .Values.linux.customUserAgent }}
+            - --custom-user-agent={{ .Values.linux.customUserAgent }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:

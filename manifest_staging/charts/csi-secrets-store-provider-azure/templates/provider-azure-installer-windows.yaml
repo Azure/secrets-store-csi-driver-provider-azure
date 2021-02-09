@@ -38,6 +38,9 @@ spec:
             {{- if .Values.constructPEMChain }}
             - --construct-pem-chain={{ .Values.constructPEMChain }}
             {{- end }}
+            {{- if .Values.windows.customUserAgent }}
+            - --custom-user-agent={{ .Values.windows.customUserAgent }}
+            {{- end }}
           lifecycle:
             preStop:
               exec:
