@@ -127,6 +127,15 @@ const (
 	Empty FileFormatting = ""
 )
 
+// secretObject holds secret object related config
+type secretObject struct {
+	// the value of the secret
+	value []byte
+	// the name of the created secret
+	// depending on fileformatting this is file name or variable name
+	name string
+}
+
 // IsValid checks if the FileFormatting option is valid
 func (ff FileFormatting) IsValid() error {
 	switch ff {
@@ -206,8 +215,8 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 	return p.AuthConfig.GetServicePrincipalToken(p.PodName, p.PodNamespace, resource, p.AzureCloudEnvironment.ActiveDirectoryEndpoint, p.TenantID, podIdentityNMIPort)
 }
 
-// MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string]string, error) {
+// GetSecretsStoreObjectContent gets content for the secrets store object
+func (p *Provider) getSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) ([]secretObject, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -220,55 +229,55 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
 
 	if keyvaultName == "" {
-		return nil, fmt.Errorf("keyvaultName is not set")
+		return nil, nil, fmt.Errorf("keyvaultName is not set")
 	}
 	if tenantID == "" {
-		return nil, fmt.Errorf("tenantId is not set")
+		return nil, nil, fmt.Errorf("tenantId is not set")
 	}
 	if len(usePodIdentityStr) == 0 {
 		usePodIdentityStr = "false"
 	}
 	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
 	}
 	if len(useVMManagedIdentityStr) == 0 {
 		useVMManagedIdentityStr = "false"
 	}
 	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
+		return nil, nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
 	}
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
-		return nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
+		return nil, nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
 	}
 
 	p.AuthConfig, err = auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create auth config, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to create auth config, error: %+v", err)
 	}
 
 	err = p.FileFormatting.IsValid()
 	if err != nil {
-		return nil, fmt.Errorf("fileFormatting is not valid")
+		return nil, nil, fmt.Errorf("fileFormatting is not valid")
 	}
 
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
-		return nil, fmt.Errorf("objects is not set")
+		return nil, nil, fmt.Errorf("objects is not set")
 	}
 	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	var keyVaultObjects []KeyVaultObject
@@ -276,7 +285,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
+			return nil, nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
@@ -286,69 +295,72 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	if len(keyVaultObjects) == 0 {
-		return nil, fmt.Errorf("objects array is empty")
+		return nil, nil, fmt.Errorf("objects array is empty")
 	}
 	p.KeyvaultName = keyvaultName
 	p.AzureCloudEnvironment = azureCloudEnv
 	p.TenantID = tenantID
 
 	objectVersionMap := make(map[string]string)
-	outputMap := make(map[string]string)
-	props := properties.NewProperties()
+	var secretObjects []secretObject
 	for _, keyVaultObject := range keyVaultObjects {
+		var secretObject secretObject
 		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		// objectUID is a unique identifier in the format <object type>/<object name>
 		// This is the object id the user sees in the SecretProviderClassPodStatus
 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
 		objectVersionMap[objectUID] = newObjectVersion
 
-		secretName := keyVaultObject.ObjectName
+		secretObject.name = keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
-			secretName = keyVaultObject.ObjectAlias
+			secretObject.name = keyVaultObject.ObjectAlias
 		}
-		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		secretObject.value, err = getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		// Different objects to save for different output formatting
-		if p.FileFormatting == JSON || p.FileFormatting == Yaml {
-			outputMap[secretName] = string(objectContent[:])
-		} else if p.FileFormatting == JavaProperties {
-			props.MustSet(strings.ReplaceAll(secretName, "--", "."), string(objectContent[:]))
-		} else {
-			// Default behaviour: saving directly to multiple unformatted files
-			err := WriteSimpleOutputFile(targetPath, secretName, objectContent, permission)
-			if err != nil {
-				return nil, err
-			}
-			klog.InfoS("successfully wrote file", "file", secretName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
-		}
+		secretObjects = append(secretObjects, secretObject)
+	}
+
+	return secretObjects, objectVersionMap, nil
+}
+
+// MountSecretsStoreObjectContent mounts content of the secrets store object to target path
+func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string]string, error) {
+	secretObjects, objectVersionMap, err := p.getSecretsStoreObjectContent(ctx, attrib, secrets, targetPath, permission)
+	if err != nil {
+		return nil, err
 	}
 
 	if p.FileFormatting == JSON {
-		err := WriteJSONFile(targetPath, "secrets.json", outputMap, permission)
+		err := CreateJSON(secretObjects, targetPath, "secrets.json", permission)
 		if err != nil {
 			return nil, err
 		}
 	} else if p.FileFormatting == Yaml {
-		err := WriteYamlFile(targetPath, "secrets.yaml", outputMap, permission)
+		err := CreateYAML(secretObjects, targetPath, "secrets.yaml", permission)
 		if err != nil {
 			return nil, err
 		}
 	} else if p.FileFormatting == JavaProperties {
-		err := WriteJavaPropertiesFile(targetPath, "application.properties", props, permission)
+		err := CreateJavaProperties(secretObjects, targetPath, "application.properties", permission)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := CreateMultipleFiles(secretObjects, targetPath, permission)
 		if err != nil {
 			return nil, err
 		}
@@ -357,20 +369,12 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	return objectVersionMap, nil
 }
 
-// WriteSimpleOutputFile writes one properties to one file
-func WriteSimpleOutputFile(targetPath string, fileName string, objectContent []byte, permission os.FileMode) error {
-	if err := validateFileName(fileName); err != nil {
-		return errors.Wrapf(err, "name %s is not a a valid file name", fileName)
+// CreateJSON makes a JSON file based on the provided keyVaultObjects
+func CreateJSON(secretObjects []secretObject, targetPath string, fileName string, permission os.FileMode) error {
+	outputMap := make(map[string]string)
+	for _, secretObject := range secretObjects {
+		outputMap[secretObject.name] = string(secretObject.value[:])
 	}
-	if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
-		return errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
-	}
-
-	return nil
-}
-
-// WriteJSONFile writes all properties to one JSON file
-func WriteJSONFile(targetPath string, fileName string, outputMap map[string]string, permission os.FileMode) error {
 	fileContent, err := json.Marshal(outputMap)
 	if err != nil {
 		return err
@@ -383,8 +387,12 @@ func WriteJSONFile(targetPath string, fileName string, outputMap map[string]stri
 	return nil
 }
 
-// WriteYamlFile writes all properties to one Yaml file
-func WriteYamlFile(targetPath string, fileName string, outputMap map[string]string, permission os.FileMode) error {
+// CreateYAML makes a YAML file based on the provided keyVaultObjects
+func CreateYAML(secretObjects []secretObject, targetPath string, fileName string, permission os.FileMode) error {
+	outputMap := make(map[string]string)
+	for _, secretObject := range secretObjects {
+		outputMap[secretObject.name] = string(secretObject.value[:])
+	}
 	fileContent, err := yaml.Marshal(outputMap)
 	if err != nil {
 		return err
@@ -397,13 +405,17 @@ func WriteYamlFile(targetPath string, fileName string, outputMap map[string]stri
 	return nil
 }
 
-// WriteJavaPropertiesFile writes all properties to one JavaProperties file
-func WriteJavaPropertiesFile(targetPath string, fileName string, props *properties.Properties, permission os.FileMode) error {
+// CreateJavaProperties makes a JavaProperties file based on keyVaultObjects
+func CreateJavaProperties(secretObjects []secretObject, targetPath string, fileName string, permission os.FileMode) error {
+	props := properties.NewProperties()
+	for _, secretObject := range secretObjects {
+		props.MustSet(strings.ReplaceAll(secretObject.name, "--", "."), string(secretObject.value[:]))
+	}
+
 	f, err := os.OpenFile(filepath.Join(targetPath, fileName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, permission)
 	if err != nil {
 		return err
 	}
-
 	_, err = props.Write(f, properties.UTF8)
 	if err != nil {
 		return errors.Wrapf(err, "secrets store csi driver failed to mount %s at %s", fileName, targetPath)
@@ -414,6 +426,20 @@ func WriteJavaPropertiesFile(targetPath string, fileName string, props *properti
 	}
 
 	klog.Infof("successfully wrote file %s", fileName)
+	return nil
+}
+
+// CreateMultipleFiles makes multiple files based on the keyVaultObjects
+func CreateMultipleFiles(secretObjects []secretObject, targetPath string, permission os.FileMode) error {
+	for _, secretObject := range secretObjects {
+		if err := validateFileName(secretObject.name); err != nil {
+			return errors.Wrapf(err, "name %s is not a a valid file name", secretObject.name)
+		}
+		if err := ioutil.WriteFile(filepath.Join(targetPath, secretObject.name), secretObject.value, permission); err != nil {
+			return errors.Wrapf(err, "failed to write file %s at %s", secretObject.name, targetPath)
+		}
+		klog.InfoS("successfully wrote file", "file", secretObject.name)
+	}
 	return nil
 }
 

@@ -787,9 +787,10 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 		{
 			desc: "fileFormatting is not valid",
 			parameters: map[string]string{
-				"keyvaultName":   "testKV",
-				"tenantId":       "tid",
-				"fileFormatting": "xml",
+				"keyvaultName":         "testKV",
+				"tenantId":             "tid",
+				"useVMManagedIdentity": "true",
+				"fileFormatting":       "xml",
 			},
 			expectedErr: true,
 		},
