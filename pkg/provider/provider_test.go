@@ -17,10 +17,11 @@ import (
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 )
 
 func TestGetVaultURL(t *testing.T) {

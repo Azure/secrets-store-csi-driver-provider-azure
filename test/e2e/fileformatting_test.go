@@ -237,3 +237,99 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets and filefo
 		Expect(result.Secret).To(Equal(config.SecretValue))
 	})
 })
+
+var _ = Describe("When deploying SecretProviderClass CRD with secrets and fileformatting is `JavaProperties`", func() {
+	var (
+		specName             = "secret"
+		spc                  *v1alpha1.SecretProviderClass
+		ns                   *corev1.Namespace
+		nodePublishSecretRef *corev1.Secret
+		p                    *corev1.Pod
+	)
+
+	BeforeEach(func() {
+		ns = namespace.Create(namespace.CreateInput{
+			Creator: kubeClient,
+			Name:    specName,
+		})
+
+		nodePublishSecretRef = secret.Create(secret.CreateInput{
+			Creator:   kubeClient,
+			Name:      "secrets-store-creds",
+			Namespace: ns.Name,
+			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
+		})
+
+		keyVaultObjects := []provider.KeyVaultObject{
+			{
+				ObjectName: "secret1",
+				ObjectType: provider.VaultObjectTypeSecret,
+			},
+			{
+				ObjectName:  "secret1",
+				ObjectType:  provider.VaultObjectTypeSecret,
+				ObjectAlias: "SECRET_1",
+			},
+		}
+
+		yamlArray := provider.StringArray{Array: []string{}}
+		for _, object := range keyVaultObjects {
+			obj, err := yaml.Marshal(object)
+			Expect(err).To(BeNil())
+			yamlArray.Array = append(yamlArray.Array, string(obj))
+		}
+
+		objects, err := yaml.Marshal(yamlArray)
+		Expect(err).To(BeNil())
+
+		spc = secretproviderclass.Create(secretproviderclass.CreateInput{
+			Creator:   kubeClient,
+			Config:    config,
+			Name:      "azure",
+			Namespace: ns.Name,
+			Spec: v1alpha1.SecretProviderClassSpec{
+				Provider: "azure",
+				Parameters: map[string]string{
+					"keyvaultName":   config.KeyvaultName,
+					"tenantId":       config.TenantID,
+					"fileFormatting": "JavaProperties",
+					"objects":        string(objects),
+				},
+			},
+		})
+
+		p = pod.Create(pod.CreateInput{
+			Creator:                  kubeClient,
+			Config:                   config,
+			Name:                     "nginx-secrets-store-inline-crd-javaproperties",
+			Namespace:                ns.Name,
+			SecretProviderClassName:  spc.Name,
+			NodePublishSecretRefName: nodePublishSecretRef.Name,
+		})
+
+	})
+
+	AfterEach(func() {
+		Cleanup(CleanupInput{
+			Namespace: ns,
+			Getter:    kubeClient,
+			Lister:    kubeClient,
+			Deleter:   kubeClient,
+		})
+	})
+
+	It("should validate secrets as java properties file in pod", func() {
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		cmd := getPodExecCommand("cat /mnt/secrets-store/application.properties")
+		secretsJavaProperties, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(secretsJavaProperties).To(Equal("secret1 = test\nSECRET_1 = test"))
+	})
+})
