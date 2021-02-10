@@ -899,6 +899,121 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 	}
 }
 
+type pWrapperMock struct{}
+
+var getSecretsMock func(KeyVaultObject) (content, version string, err error)
+
+func (pr pWrapperMock) getKeyVaultObjectContent(ctx context.Context, kvObject KeyVaultObject, p *Provider) (content, version string, err error) {
+	return getSecretsMock(kvObject)
+}
+func TestGetSecretsStoreObjectContent(t *testing.T) {
+	cases := []struct {
+		desc        string
+		parameters  map[string]string
+		secrets     map[string]string
+		expectedErr bool
+	}{
+		{
+			desc: "mocked success fetching secret from keyvault",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectVersion: ""`,
+			},
+			secrets: map[string]string{
+				"clientid":     "AADClientID",
+				"clientsecret": "AADClientSecret",
+			},
+			expectedErr: false,
+		},
+		{
+			desc: "mocked error fetching unknown secret from keyvault",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"objects": `
+      array:
+        - |
+          objectName: secret2
+          objectType: secret
+          objectVersion: ""`,
+			},
+			secrets: map[string]string{
+				"clientid":     "AADClientID",
+				"clientsecret": "AADClientSecret",
+			},
+			expectedErr: true,
+		},
+		{
+			desc: "mocked success fetching aliased secret from keyvault",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectAlias: SECRET_1
+          objectVersion: ""`,
+			},
+			secrets: map[string]string{
+				"clientid":     "AADClientID",
+				"clientsecret": "AADClientSecret",
+			},
+			expectedErr: false,
+		},
+		{
+			desc: "mocked error fetching wrong encoded secret from keyvault",
+			parameters: map[string]string{
+				"keyvaultName": "testKV",
+				"tenantId":     "tid",
+				"objects": `
+      array:
+        - |
+          objectName: secret1
+          objectType: secret
+          objectEncoding: "NotAnEncoding"
+          objectVersion: ""`,
+			},
+			secrets: map[string]string{
+				"clientid":     "AADClientID",
+				"clientsecret": "AADClientSecret",
+			},
+			expectedErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, err := NewProvider()
+			assert.NoError(t, err)
+
+			tmpDir, err := ioutil.TempDir("", "ut")
+			assert.NoError(t, err)
+
+			pWrap := pWrapperMock{}
+			getSecretsMock = func(k KeyVaultObject) (content, version string, err error) {
+				if k.ObjectName == "secret1" {
+					return "test", "c55925c29c6743dcb9bb4bf091be03b0", nil
+				}
+				return "", "", fmt.Errorf("secret not found")
+			}
+			_, _, err = p.getSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420, pWrap)
+			if tc.expectedErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
 func TestGetCurve(t *testing.T) {
 	cases := []struct {
 		crv           kv.JSONWebKeyCurveName

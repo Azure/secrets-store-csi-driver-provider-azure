@@ -158,7 +158,7 @@ type Wrapper interface {
 
 type pWrapper struct{}
 
-// NewProviderWrapper creates the wrap arround provider to improve unit testing
+// NewProviderWrapper creates the wrap around provider to improve unit testing
 func NewProviderWrapper() Wrapper {
 	return pWrapper{}
 }
