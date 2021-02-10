@@ -151,6 +151,18 @@ func NewProvider() (*Provider, error) {
 	return &p, nil
 }
 
+// Wrapper interface creates the opportunity to temporarily replace methods for unit tests
+type Wrapper interface {
+	getKeyVaultObjectContent(context.Context, KeyVaultObject, *Provider) (string, string, error)
+}
+
+type pWrapper struct{}
+
+// NewProviderWrapper creates the wrap arround provider to improve unit testing
+func NewProviderWrapper() Wrapper {
+	return pWrapper{}
+}
+
 // ParseAzureEnvironment returns azure environment by name
 func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 	var env azure.Environment
@@ -216,7 +228,7 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 }
 
 // GetSecretsStoreObjectContent gets content for the secrets store object
-func (p *Provider) getSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) ([]secretObject, map[string]string, error) {
+func (p *Provider) getSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode, pWrap Wrapper) ([]secretObject, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -313,7 +325,7 @@ func (p *Provider) getSecretsStoreObjectContent(ctx context.Context, attrib map[
 			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+		content, newObjectVersion, err := pWrap.getKeyVaultObjectContent(ctx, keyVaultObject, p)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -339,7 +351,7 @@ func (p *Provider) getSecretsStoreObjectContent(ctx context.Context, attrib map[
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
 func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string]string, error) {
-	secretObjects, objectVersionMap, err := p.getSecretsStoreObjectContent(ctx, attrib, secrets, targetPath, permission)
+	secretObjects, objectVersionMap, err := p.getSecretsStoreObjectContent(ctx, attrib, secrets, targetPath, permission, NewProviderWrapper())
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +453,10 @@ func CreateMultipleFiles(secretObjects []secretObject, targetPath string, permis
 		klog.InfoS("successfully wrote file", "file", secretObject.name)
 	}
 	return nil
+}
+
+func (pw pWrapper) getKeyVaultObjectContent(ctx context.Context, kvObject KeyVaultObject, p *Provider) (content, version string, err error) {
+	return p.GetKeyVaultObjectContent(ctx, kvObject)
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
