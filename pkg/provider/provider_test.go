@@ -1170,8 +1170,8 @@ func TestMountSecrets(t *testing.T) {
 			desc: "Valid JSON created",
 			parameters: []secretObject{
 				{
-					value: []byte("{}{{}{}}}"),
 					name:  "1324i354ipo43o./?{",
+					value: []byte("{}{{}{}}}"),
 				},
 			},
 			fileFormat:  JSON,
@@ -1181,8 +1181,8 @@ func TestMountSecrets(t *testing.T) {
 			desc: "Valid YAML created",
 			parameters: []secretObject{
 				{
-					value: []byte(""),
 					name:  "",
+					value: []byte(""),
 				},
 			},
 			fileFormat:  Yaml,
@@ -1192,8 +1192,19 @@ func TestMountSecrets(t *testing.T) {
 			desc: "File cannot be created",
 			parameters: []secretObject{
 				{
-					value: []byte("wer"),
 					name:  "1324i354ipo43o./?{",
+					value: []byte("wer"),
+				},
+			},
+			fileFormat:  Empty,
+			expectedErr: true,
+		},
+		{
+			desc: "Filename invalid",
+			parameters: []secretObject{
+				{
+					name:  "..",
+					value: []byte("invalid"),
 				},
 			},
 			fileFormat:  Empty,
@@ -1203,7 +1214,7 @@ func TestMountSecrets(t *testing.T) {
 			desc: "File can be created",
 			parameters: []secretObject{
 				{
-					value: []byte("wer"),
+					value: []byte("test"),
 					name:  "1324i354i",
 				},
 			},
@@ -1214,8 +1225,8 @@ func TestMountSecrets(t *testing.T) {
 			desc: "JavaProperties file can be created",
 			parameters: []secretObject{
 				{
-					value: []byte("secret"),
 					name:  "test--123",
+					value: []byte("secret"),
 				},
 			},
 			fileFormat:  JavaProperties,
