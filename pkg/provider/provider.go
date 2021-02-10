@@ -355,30 +355,23 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	if err != nil {
 		return nil, err
 	}
-
-	if p.FileFormatting == JSON {
-		err := CreateJSON(secretObjects, targetPath, "secrets.json", permission)
-		if err != nil {
-			return nil, err
-		}
-	} else if p.FileFormatting == Yaml {
-		err := CreateYAML(secretObjects, targetPath, "secrets.yaml", permission)
-		if err != nil {
-			return nil, err
-		}
-	} else if p.FileFormatting == JavaProperties {
-		err := CreateJavaProperties(secretObjects, targetPath, "application.properties", permission)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := CreateMultipleFiles(secretObjects, targetPath, permission)
-		if err != nil {
-			return nil, err
-		}
+	p.mountSecrets(targetPath, secretObjects, permission)
+	if err != nil {
+		return nil, err
 	}
 
 	return objectVersionMap, nil
+}
+
+func (p *Provider) mountSecrets(targetPath string, secretObjects []secretObject, permission os.FileMode) error {
+	if p.FileFormatting == JSON {
+		return CreateJSON(secretObjects, targetPath, "secrets.json", permission)
+	} else if p.FileFormatting == Yaml {
+		return CreateYAML(secretObjects, targetPath, "secrets.yaml", permission)
+	} else if p.FileFormatting == JavaProperties {
+		return CreateJavaProperties(secretObjects, targetPath, "application.properties", permission)
+	}
+	return CreateMultipleFiles(secretObjects, targetPath, permission)
 }
 
 // CreateJSON makes a JSON file based on the provided keyVaultObjects

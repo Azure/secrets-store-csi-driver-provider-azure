@@ -17,11 +17,10 @@ import (
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetVaultURL(t *testing.T) {
@@ -1157,4 +1156,86 @@ func TestGetObjectVersion(t *testing.T) {
 	expectedVersion := "c55925c29c6743dcb9bb4bf091be03b0"
 	actual := getObjectVersion(id)
 	assert.Equal(t, expectedVersion, actual)
+}
+
+func TestMountSecrets(t *testing.T) {
+	cases := []struct {
+		desc        string
+		parameters  []secretObject
+		fileFormat  FileFormatting
+		expectedErr bool
+	}{
+		{
+			desc: "Valid JSON created",
+			parameters: []secretObject{
+				{
+					value: []byte("{}{{}{}}}"),
+					name:  "1324i354ipo43o./?{",
+				},
+			},
+			fileFormat:  JSON,
+			expectedErr: false,
+		},
+		{
+			desc: "Valid YAML created",
+			parameters: []secretObject{
+				{
+					value: []byte(""),
+					name:  "",
+				},
+			},
+			fileFormat:  Yaml,
+			expectedErr: false,
+		},
+		{
+			desc: "File cannot be created",
+			parameters: []secretObject{
+				{
+					value: []byte("wer"),
+					name:  "1324i354ipo43o./?{",
+				},
+			},
+			fileFormat:  Empty,
+			expectedErr: true,
+		},
+		{
+			desc: "File can be created",
+			parameters: []secretObject{
+				{
+					value: []byte("wer"),
+					name:  "1324i354i",
+				},
+			},
+			fileFormat:  Empty,
+			expectedErr: false,
+		},
+		{
+			desc: "JavaProperties file can be created",
+			parameters: []secretObject{
+				{
+					value: []byte("secret"),
+					name:  "test--123",
+				},
+			},
+			fileFormat:  JavaProperties,
+			expectedErr: false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, err := NewProvider()
+			p.FileFormatting = tc.fileFormat
+			assert.NoError(t, err)
+
+			tmpDir, err := ioutil.TempDir("", "ut")
+			assert.NoError(t, err)
+
+			err = p.mountSecrets(tmpDir, tc.parameters, 0777)
+			if tc.expectedErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
 }
