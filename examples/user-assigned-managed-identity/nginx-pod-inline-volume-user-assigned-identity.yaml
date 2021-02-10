@@ -1,8 +1,8 @@
-# This is a sample pod definition for using SecretProviderClass and system-assigned identity to access Key Vault
+# This is a sample pod definition for using SecretProviderClass and user-assigned identity to access Keyvault
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline-system-msi
+  name: nginx-secrets-store-inline-user-msi
 spec:
   containers:
     - name: nginx
@@ -17,4 +17,4 @@ spec:
         driver: secrets-store.csi.k8s.io
         readOnly: true
         volumeAttributes:
-          secretProviderClass: "azure-kvname-system-msi"
+          secretProviderClass: "azure-kvname-user-msi"

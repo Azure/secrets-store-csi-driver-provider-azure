@@ -1,4 +1,4 @@
-# This is a sample pod definition for using SecretProviderClass and service-principal to access Key Vault
+# This is a sample pod definition for using SecretProviderClass and service-principal to access Keyvault
 kind: Pod
 apiVersion: v1
 metadata:
@@ -19,4 +19,4 @@ spec:
         volumeAttributes:
           secretProviderClass: "azure-kvname"
         nodePublishSecretRef:                       # Only required when using service principal mode
-          name: secrets-store-creds                 # Only required when using service principal mode
+          name: secrets-store-creds                 # Only required when using service principal mode. The name of the Kubernetes secret that contains the service principal credentials to access keyvault.

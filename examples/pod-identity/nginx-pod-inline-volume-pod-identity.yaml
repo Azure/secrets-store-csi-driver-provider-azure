@@ -1,8 +1,10 @@
-# This is a sample pod definition for using SecretProviderClass and user-assigned identity to access Key Vault
+# This is a sample pod definition for using SecretProviderClass and aad-pod-identity to access Keyvault
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline-user-msi
+  name: nginx-secrets-store-inline-podid
+  labels:
+    aadpodidbinding: "demo"                             # Set the label value to the selector defined in AzureIdentityBinding
 spec:
   containers:
     - name: nginx
@@ -17,4 +19,4 @@ spec:
         driver: secrets-store.csi.k8s.io
         readOnly: true
         volumeAttributes:
-          secretProviderClass: "azure-kvname-user-msi"
+          secretProviderClass: "azure-kvname-podid"
