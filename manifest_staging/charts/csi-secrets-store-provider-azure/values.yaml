@@ -37,6 +37,9 @@ linux:
     rollingUpdate:
       maxUnavailable: 1
   privileged: false
+  # If provided, the userAgent string will be appended to the
+  # AKV provider user agents for all adal and keyvault requests.
+  customUserAgent: ""
 
 windows:
   image:
@@ -59,6 +62,9 @@ windows:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
+  # If provided, the userAgent string will be appended to the
+  # AKV provider user agents for all adal and keyvault requests.
+  customUserAgent: ""
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md

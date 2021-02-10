@@ -45,6 +45,8 @@ func Install(input InstallInput) {
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
 		fmt.Sprintf("--set=logVerbosity=1"),
+		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
+		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
 		"--dependency-update",
 		"--wait",
 		"--timeout=5m",

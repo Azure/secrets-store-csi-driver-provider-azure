@@ -2,8 +2,11 @@ package version
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"runtime"
+
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -14,22 +17,20 @@ var (
 	// Vcs is is the commit hash for the binary build
 	Vcs string
 
-	minDriverVersion = "v0.0.8"
+	// custom user agent to append for adal and keyvault calls
+	customUserAgent = flag.String("custom-user-agent", "", "user agent to append in addition to akv provider versions")
 )
 
 // providerVersion holds current provider version
 type providerVersion struct {
 	Version   string `json:"version"`
 	BuildDate string `json:"buildDate"`
-	// MinDriverVersion is minimum driver version the provider works with
-	MinDriverVersion string `json:"minDriverVersion"`
 }
 
 func PrintVersion() (err error) {
 	pv := providerVersion{
-		Version:          BuildVersion,
-		BuildDate:        BuildDate,
-		MinDriverVersion: minDriverVersion,
+		Version:   BuildVersion,
+		BuildDate: BuildDate,
 	}
 
 	var res []byte
@@ -43,5 +44,9 @@ func PrintVersion() (err error) {
 
 // GetUserAgent returns UserAgent string to append to the agent identifier.
 func GetUserAgent() string {
+	if *customUserAgent != "" {
+		klog.V(5).Infof("Appending custom user agent: %s", *customUserAgent)
+		return fmt.Sprintf("csi-secrets-store/%s (%s/%s) %s/%s %s", BuildVersion, runtime.GOOS, runtime.GOARCH, Vcs, BuildDate, *customUserAgent)
+	}
 	return fmt.Sprintf("csi-secrets-store/%s (%s/%s) %s/%s", BuildVersion, runtime.GOOS, runtime.GOARCH, Vcs, BuildDate)
 }
