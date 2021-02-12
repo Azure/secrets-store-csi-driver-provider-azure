@@ -147,7 +147,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl create -f aadpodidentitybinding.yaml
     ```
 
-6. Add the following to [this](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
+6. Add the following to [this](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
 
     Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
@@ -156,7 +156,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
     
-7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
+7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
     Make sure to set `usepodidentity` to `true`
     ```yaml
