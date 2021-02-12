@@ -213,14 +213,14 @@ Set &lt;code>resourceID&lt;/code> to &lt;code>id&lt;/code> of the Azure User Ide
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;pre>&lt;code>kubectl create -f aadpodidentitybinding.yaml
 &lt;/code>&lt;/pre>&lt;/li>
 &lt;li>
-&lt;p>Add the following to &lt;a href="https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-pod-identity.yaml">this&lt;/a> deployment yaml:&lt;/p>
+&lt;p>Add the following to &lt;a href="https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/nginx-pod-inline-volume-pod-identity.yaml">this&lt;/a> deployment yaml:&lt;/p>
 &lt;p>Include the &lt;code>aadpodidbinding&lt;/code> label matching the &lt;code>selector&lt;/code> value set in the previous step so that this pod will be assigned an identity&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">metadata&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
 &lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">&lt;/span>&lt;span style="color:#204a87;font-weight:bold">labels&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
 &lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">aadpodidbinding&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#000">&amp;lt;AzureIdentityBinding Selector created from previous step&amp;gt;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;li>
-&lt;p>Update &lt;a href="https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml">this sample deployment&lt;/a> to create a &lt;code>SecretProviderClass&lt;/code> resource with &lt;code>usePodIdentity: &amp;quot;true&amp;quot;&lt;/code> to provide Azure-specific parameters for the Secrets Store CSI driver.&lt;/p>
+&lt;p>Update &lt;a href="https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/v1alpha1_secretproviderclass_pod_identity.yaml">this sample deployment&lt;/a> to create a &lt;code>SecretProviderClass&lt;/code> resource with &lt;code>usePodIdentity: &amp;quot;true&amp;quot;&lt;/code> to provide Azure-specific parameters for the Secrets Store CSI driver.&lt;/p>
 &lt;p>Make sure to set &lt;code>usepodidentity&lt;/code> to &lt;code>true&lt;/code>&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#204a87;font-weight:bold">usepodidentity&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
