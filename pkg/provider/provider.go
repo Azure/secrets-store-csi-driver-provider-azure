@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
@@ -61,24 +62,23 @@ const (
 
 // Provider implements the secrets-store-csi-driver provider interface
 type Provider struct {
+	reporter StatsReporter
+}
+
+// mountConfig holds the information for the mount event
+type mountConfig struct {
 	// the name of the Azure Key Vault instance
-	KeyvaultName string
+	keyvaultName string
 	// the type of azure cloud based on azure go sdk
-	AzureCloudEnvironment *azure.Environment
-	// the name of the Azure Key Vault objects, since attributes can only be strings
-	// this will be mapped to StringArray, which is an array of KeyVaultObject
-	Objects []KeyVaultObject
-	// AuthConfig is the config parameters for accessing Key Vault
-	AuthConfig auth.Config
-	// TenantID in AAD
-	TenantID string
-	// PodName is the pod name
-	PodName string
-	// PodNamespace is the pod namespace
-	PodNamespace string
-	// EnvironmentFilepathName captures the name of the environment variable containing the path to the file
-	// to be used while populating the Azure Environment.
-	EnvironmentFilepathName string
+	azureCloudEnvironment *azure.Environment
+	// authConfig is the config parameters for accessing Key Vault
+	authConfig auth.Config
+	// tenantID in AAD
+	tenantID string
+	// podName is the pod name
+	podName string
+	// podNamespace is the pod namespace
+	podNamespace string
 }
 
 // KeyVaultObject holds keyvault object related config
@@ -105,9 +105,10 @@ type StringArray struct {
 }
 
 // NewProvider creates a new Azure Key Vault Provider.
-func NewProvider() (*Provider, error) {
-	var p Provider
-	return &p, nil
+func NewProvider() *Provider {
+	return &Provider{
+		reporter: NewStatsReporter(),
+	}
 }
 
 // ParseAzureEnvironment returns azure environment by name
@@ -123,12 +124,12 @@ func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 }
 
 // GetKeyvaultToken retrieves a new service principal token to access keyvault
-func (p *Provider) GetKeyvaultToken() (authorizer autorest.Authorizer, err error) {
-	kvEndPoint := p.AzureCloudEnvironment.KeyVaultEndpoint
+func (mc *mountConfig) GetKeyvaultToken() (authorizer autorest.Authorizer, err error) {
+	kvEndPoint := mc.azureCloudEnvironment.KeyVaultEndpoint
 	if '/' == kvEndPoint[len(kvEndPoint)-1] {
 		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
 	}
-	servicePrincipalToken, err := p.GetServicePrincipalToken(kvEndPoint)
+	servicePrincipalToken, err := mc.GetServicePrincipalToken(kvEndPoint)
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +137,13 @@ func (p *Provider) GetKeyvaultToken() (authorizer autorest.Authorizer, err error
 	return authorizer, nil
 }
 
-func (p *Provider) initializeKvClient() (*kv.BaseClient, error) {
+func (mc *mountConfig) initializeKvClient() (*kv.BaseClient, error) {
 	kvClient := kv.New()
 	err := kvClient.AddToUserAgent(version.GetUserAgent())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to add user agent to keyvault client")
 	}
-	token, err := p.GetKeyvaultToken()
+	token, err := mc.GetKeyvaultToken()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get key vault token")
 	}
@@ -151,27 +152,27 @@ func (p *Provider) initializeKvClient() (*kv.BaseClient, error) {
 	return &kvClient, nil
 }
 
-func (p *Provider) getVaultURL(ctx context.Context) (vaultURL *string, err error) {
-	klog.V(2).Infof("vaultName: %s", p.KeyvaultName)
+func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
+	klog.V(2).Infof("vaultName: %s", mc.keyvaultName)
 
 	// Key Vault name must be a 3-24 character string
-	if len(p.KeyvaultName) < 3 || len(p.KeyvaultName) > 24 {
-		return nil, errors.Errorf("Invalid vault name: %q, must be between 3 and 24 chars", p.KeyvaultName)
+	if len(mc.keyvaultName) < 3 || len(mc.keyvaultName) > 24 {
+		return nil, errors.Errorf("Invalid vault name: %q, must be between 3 and 24 chars", mc.keyvaultName)
 	}
 	// See docs for validation spec: https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates#objects-identifiers-and-versioning
 	isValid := regexp.MustCompile(`^[-A-Za-z0-9]+$`).MatchString
-	if !isValid(p.KeyvaultName) {
-		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", p.KeyvaultName)
+	if !isValid(mc.keyvaultName) {
+		return nil, errors.Errorf("Invalid vault name: %q, must match [-a-zA-Z0-9]{3,24}", mc.keyvaultName)
 	}
 
-	vaultDNSSuffixValue := p.AzureCloudEnvironment.KeyVaultDNSSuffix
-	vaultURI := "https://" + p.KeyvaultName + "." + vaultDNSSuffixValue + "/"
+	vaultDNSSuffixValue := mc.azureCloudEnvironment.KeyVaultDNSSuffix
+	vaultURI := "https://" + mc.keyvaultName + "." + vaultDNSSuffixValue + "/"
 	return &vaultURI, nil
 }
 
 // GetServicePrincipalToken creates a new service principal token based on the configuration
-func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrincipalToken, error) {
-	return p.AuthConfig.GetServicePrincipalToken(p.PodName, p.PodNamespace, resource, p.AzureCloudEnvironment.ActiveDirectoryEndpoint, p.TenantID, podIdentityNMIPort)
+func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServicePrincipalToken, error) {
+	return mc.authConfig.GetServicePrincipalToken(mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
@@ -183,8 +184,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
 	tenantID := strings.TrimSpace(attrib["tenantId"])
 	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
-	p.PodName = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
-	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
+	podName := strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
+	podNamespace := strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
 
 	if keyvaultName == "" {
 		return nil, fmt.Errorf("keyvaultName is not set")
@@ -216,23 +217,32 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
 	}
 
-	p.AuthConfig, err = auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
+	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth config, error: %+v", err)
+	}
+
+	mc := &mountConfig{
+		keyvaultName:          keyvaultName,
+		azureCloudEnvironment: azureCloudEnv,
+		authConfig:            authConfig,
+		tenantID:              tenantID,
+		podName:               podName,
+		podNamespace:          podNamespace,
 	}
 
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
 		return nil, fmt.Errorf("objects is not set")
 	}
-	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
 		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
 	}
-	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	var keyVaultObjects []KeyVaultObject
 	for i, object := range objects.Array {
 		var keyVaultObject KeyVaultObject
@@ -245,18 +255,15 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
-	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	if len(keyVaultObjects) == 0 {
 		return nil, fmt.Errorf("objects array is empty")
 	}
-	p.KeyvaultName = keyvaultName
-	p.AzureCloudEnvironment = azureCloudEnv
-	p.TenantID = tenantID
 
 	objectVersionMap := make(map[string]string)
 	for _, keyVaultObject := range keyVaultObjects {
-		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
@@ -272,7 +279,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
+		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject, mc)
 		if err != nil {
 			return nil, err
 		}
@@ -289,22 +296,32 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
-		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
 	return objectVersionMap, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVaultObject) (content, version string, err error) {
-	vaultURL, err := p.getVaultURL(ctx)
+func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVaultObject, mc *mountConfig) (content, version string, err error) {
+	vaultURL, err := mc.getVaultURL()
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to get vault")
 	}
-	kvClient, err := p.initializeKvClient()
+	kvClient, err := mc.initializeKvClient()
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to get keyvault client")
 	}
+
+	begin := time.Now()
+	defer func() {
+		if err != nil {
+			p.reporter.ReportKeyvaultGetErrorCtMetric(kvObject.ObjectType)
+			return
+		}
+		p.reporter.ReportKeyvaultGetCtMetric(kvObject.ObjectType)
+		p.reporter.ReportKeyvaultGetDuration(time.Since(begin).Seconds())
+	}()
 
 	switch kvObject.ObjectType {
 	case VaultObjectTypeSecret:

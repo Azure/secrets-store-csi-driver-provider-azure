@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
@@ -60,6 +61,11 @@ func main() {
 			klog.ErrorS(http.ListenAndServe(addr, nil), "unable to start profiling server")
 		}()
 	}
+	// initialize metrics exporter before creating measurements
+	err := metrics.InitMetricsExporter()
+	if err != nil {
+		klog.Fatalf("failed to initialize metrics exporter, error: %+v", err)
+	}
 
 	if *provider.ConstructPEMChain {
 		klog.Infof("construct pem chain feature enabled")
@@ -92,9 +98,10 @@ func main() {
 		grpc.UnaryInterceptor(utils.LogGRPC),
 	}
 	s := grpc.NewServer(opts...)
-	k8spb.RegisterCSIDriverProviderServer(s, &server.CSIDriverProviderServer{})
+	csiDriverProviderServer := server.New()
+	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
-	grpc_health_v1.RegisterHealthServer(s, &server.CSIDriverProviderServer{})
+	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)
 
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go s.Serve(listener)
