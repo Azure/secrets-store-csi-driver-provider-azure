@@ -1,6 +1,12 @@
-# Using Secrets Store CSI and Azure Key Vault Provider to Enable NGINX Ingress Controller with TLS
+---
+type: docs
+title: "Enable NGINX Ingress Controller with TLS"
+linkTitle: "Enable NGINX Ingress Controller with TLS"
+weight: 3
+description: >
+  This guide demonstrates steps required to setup Secrets Store CSI driver and Azure Key Vault Provider to enable applications to work with NGINX Ingress Controller with TLS certificates stored in Key Vault
+---
 
-This guide demonstrates steps required to setup Secrets Store CSI driver and Azure Key Vault Provider to enable applications to work with NGINX Ingress Controller with TLS certificates stored in Key Vault.
 For more information on securing an Ingress with TLS, refer to [this guide](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
 
 Importing the ingress TLS certificate to the cluster can be included in the following deployments:
@@ -32,13 +38,20 @@ az keyvault certificate import --vault-name $AKV_NAME -n $CERT_NAME -f $CERT_NAM
 
 ## Setup Cluster Prerequisites
 
-### Deploy Secrets-store CSI and the Azure Key Vault Provider
+### Deploy Secrets Store CSI Driver and the Azure Key Vault Provider
 
-[Follow this tutorial](https://github.com/Azure/secrets-store-csi-driver-provider-azure#install-the-secrets-store-csi-driver-and-the-azure-keyvault-provider) to setup the secret store csi driver and azure key vault provider in the cluster.
+Deploy the Azure Key Vault Provider and Secrets Store CSI Driver components:
+
+```bash
+helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+```
+
+Refer to [installation](../../getting-started/installation) for more details and validation.
 
 ### Optional: Deploy AAD Pod Identity
 
-If using AAD pod identity to access Azure Key Vault, make sure it is [configured properly](https://azure.github.io/aad-pod-identity/docs/demo/standard_walkthrough/) in the cluster.
+If using AAD pod identity to access Azure Keyvault, make sure it is [configured properly](https://azure.github.io/aad-pod-identity/docs/demo/standard_walkthrough/) in the cluster. Refer to [doc](../identity-access-modes/pod-identity-mode) on how to use AAD Pod identity to access keyvault.
 
 ```bash
 export AAD_POD_IDENTITY_NAME=azure-kv
@@ -55,15 +68,17 @@ kubectl create ns $NAMESPACE
 
 ### Create the SecretProviderClass
 
-* To provide identity to access key vault, refer to the following [section](https://github.com/Azure/secrets-store-csi-driver-provider-azure#provide-identity-to-access-key-vault).
+* To provide identity to access key vault, refer to the following [section](../identity-access-modes).
 * Set the `tenantId` and `keyvaultName`
 * If using **AAD pod identity** to access Azure Key Vault - set `usePodIdentity: "true"`
-* Use `objectType: secret` for the certificate, as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/getting-certs-and-keys.md#getting-certificates-and-keys-using-azure-key-vault-provider)
+* Use `objectType: secret` for the certificate, as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](../getting-certs-and-keys)
 * Set secret type to `kubernetes.io/tls`
 
 ```bash
 export TENANT_ID=[YOUR TENANT ID]
+```
 
+```yaml
 cat <<EOF | kubectl apply -n $NAMESPACE -f -
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
@@ -71,7 +86,7 @@ metadata:
   name: azure-tls
 spec:
   provider: azure
-  secretObjects:                                # secretObjects defines the desired state of synced K8s secret objects
+  secretObjects:                            # secretObjects defines the desired state of synced K8s secret objects
   - secretName: ingress-tls-csi
     type: kubernetes.io/tls
     data: 
@@ -81,13 +96,13 @@ spec:
       key: tls.crt
   parameters:
     usePodIdentity: "false"
-    keyvaultName: $AKV_NAME                        # the name of the KeyVault
+    keyvaultName: $AKV_NAME                 # the name of the KeyVault
     objects: |
       array:
         - |
           objectName: $CERT_NAME
           objectType: secret
-    tenantId: $TENANT_ID                  # the tenant ID of the KeyVault
+    tenantId: $TENANT_ID                    # the tenant ID of the KeyVault
 EOF
 ```
 
@@ -116,11 +131,11 @@ helm install ingress-nginx/ingress-nginx --generate-name \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
 ```
 
-Next, [Deploy the application](#Deploy-Application-with-Reference-to-Secrets-Store-CSI).
+Next, [Deploy the application](#deploy-application-with-reference-to-secrets-store-csi).
 
 * #### Bind certificate to Ingress
 
-> NOTE: Ingress controller references a Secrets Store CSI volume and a `secretProviderClass` object created earlier. A Kubernetes secret `ingress-tls-csi` will be created by the CSI driver as a result of ingress creation.
+> NOTE: Ingress controller references a Secrets Store CSI volume and a `secretProviderClass` object created earlier. A Kubernetes secret `ingress-tls-csi` will be created by the CSI driver as a result of ingress controller creation.
 
 ```bash
 helm install ingress-nginx/ingress-nginx --generate-name \
@@ -147,7 +162,7 @@ controller:
 EOF
 ```
 
-If not using [service principal mode](./service-principal-mode.md), remove the following snippet from the script:
+If not using [service principal mode](../identity-access-modes/service-principal-mode), remove the following snippet from the script:
 
 ```bash
             nodePublishSecretRef:
@@ -163,7 +178,7 @@ NAME                                             TYPE                           
 ingress-tls-csi                                  kubernetes.io/tls                     2      1m34s
 ```
 
-Next, [Deploy the application](#Deploy-Application-with-Ingress-reference-to-Secrets-Store-CSI).
+Next, [Deploy the application](#deploy-application-with-ingress-reference-to-secrets-store-csi).
 
 ## Deploy Test Apps
 
@@ -185,7 +200,7 @@ Depending on the TLS certificate lifecycle, follow one of the following steps:
               name: secrets-store-creds
 ```
 
-If not using [service principal mode](./service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](./sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./sample/ingress-controller-tls/deployment-app-two.yaml)
+If not using [service principal mode](../identity-access-modes/service-principal-mode), remove the following snippet from [deployment-app-one.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml)
 
 ```yaml
             nodePublishSecretRef:
@@ -195,8 +210,8 @@ If not using [service principal mode](./service-principal-mode.md), remove the f
 #### Deploy the test apps (application-bound certificate)
 
 ```bash
-kubectl apply -f sample/ingress-controller-tls/deployment-app-one.yaml -n $NAMESPACE
-kubectl apply -f sample/ingress-controller-tls/deployment-app-two.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml -n $NAMESPACE
 ```
 
 #### Check for the Kubernetes Secret created by the CSI driver (application-bound certificate)
@@ -208,11 +223,11 @@ NAME                                             TYPE                           
 ingress-tls-csi                                  kubernetes.io/tls                     2      1m34s
 ```
 
-Next, [Deploy the ingress resource](#Deploy-an-Ingress-Resource-referencing-the-Secret-created-by-the-CSI-driver)
+Next, [Deploy the ingress resource](#deploy-an-ingress-resource-referencing-the-secret-created-by-the-csi-driver)
 
 * ### Deploy Application with Ingress reference to Secrets Store CSI
 
-remove the following snippet from [deployment-app-one.yaml](./sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](./sample/ingress-controller-tls/deployment-app-two.yaml)
+remove the following snippet from [deployment-app-one.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml)
 
 ```yaml
           volumeMounts:
@@ -233,11 +248,11 @@ remove the following snippet from [deployment-app-one.yaml](./sample/ingress-con
 #### Deploy the test apps (ingress-bound certificate)
 
 ```bash
-kubectl apply -f sample/ingress-controller-tls/deployment-app-one.yaml -n $NAMESPACE
-kubectl apply -f sample/ingress-controller-tls/deployment-app-two.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml -n $NAMESPACE
 ```
 
-Next, [Deploy the ingress resource](#Deploy-an-Ingress-Resource-referencing-the-Secret-created-by-the-CSI-driver)
+Next, [Deploy the ingress resource](#deploy-an-ingress-resource-referencing-the-secret-created-by-the-csi-driver)
 
 ## Deploy an Ingress Resource referencing the Secret created by the CSI driver
 
@@ -252,7 +267,7 @@ tls:
 ```
 
 ```bash
-kubectl apply -f sample/ingress-controller-tls/ingress.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/ingress.yaml -n $NAMESPACE
 ```
 
 ## Get the External IP of the Ingress Controller
@@ -265,7 +280,8 @@ nginx-ingress-1588032400-default-backend   ClusterIP      10.0.223.214   <none> 
 ```
 
 ## Test Ingress with TLS
-Using `curl` to verify ingress configuration using TLS. 
+
+Using `curl` to verify ingress configuration using TLS.
 Replace the public IP with the external IP of the ingress controller service from the previous step.  
 
 ```bash
