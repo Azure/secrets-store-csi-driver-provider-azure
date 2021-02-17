@@ -93,17 +93,17 @@ In AKS you can use the [User-assigned Kubelet managed identity](https://docs.mic
     az vm identity assign -g <RESOURCE GROUP> -n <K8S-AGENT-POOL-VM> --identities <USER ASSIGNED IDENTITY RESOURCE ID>
     ```
 
-3. Grant Azure Managed Identity permission to access Keyvault
+3. Grant User-assigned Managed Identity permission to access Keyvault
 
-   Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:
+   Ensure that your User-assigned Managed Identity has the role assignments required to access content in keyvault instance. Run the following Azure CLI commands to assign the roles if required:
 
    ```bash
-   # set policy to access keys in your Key Vault
-   az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
-   # set policy to access secrets in your Key Vault
-   az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
-   # set policy to access certs in your Key Vault
-   az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <YOUR AZURE MANAGED IDENTITY CLIENT ID>
+   # set policy to access keys in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
+   # set policy to access secrets in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
+   # set policy to access certs in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
    ```
 
 4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.

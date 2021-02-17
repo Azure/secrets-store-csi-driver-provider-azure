@@ -74,6 +74,8 @@ kubectl create secret generic secrets-store-creds --from-literal clientid=${SERV
 
 ### 5. Deploy `SecretProviderClass`
 
+Refer to [section](../../getting-started/usage/#create-your-own-secretproviderclass-object) on the required and configurable parameters in `SecretProviderClass` object.
+
 Create `SecretProviderClass` in your cluster that contains all the required parameters:
 
 ```yaml
