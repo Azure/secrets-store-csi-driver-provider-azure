@@ -305,14 +305,14 @@ Set &lt;code>resourceID&lt;/code> to &lt;code>id&lt;/code> of the Azure User Ide
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az vm identity assign -g &amp;lt;RESOURCE GROUP&amp;gt; -n &amp;lt;K8S-AGENT-POOL-VM&amp;gt; --identities &amp;lt;USER ASSIGNED IDENTITY RESOURCE ID&amp;gt;
 &lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;li>
-&lt;p>Grant Azure Managed Identity permission to access Keyvault&lt;/p>
-&lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &amp;lt;YOUR AZURE MANAGED IDENTITY CLIENT ID&amp;gt;
+&lt;p>Grant User-assigned Managed Identity permission to access Keyvault&lt;/p>
+&lt;p>Ensure that your User-assigned Managed Identity has the role assignments required to access content in keyvault instance. Run the following Azure CLI commands to assign the roles if required:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
 &lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;li>
 &lt;p>Deploy your application. Specify &lt;code>useVMManagedIdentity&lt;/code> to &lt;code>true&lt;/code> and provide &lt;code>userAssignedIdentityID&lt;/code>.&lt;/p>
@@ -378,8 +378,7 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#204a87;font-weight:bold">secretProviderClass&lt;/span>&lt;span style="color:#000;font-weight:bold">:&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline"> &lt;/span>&lt;span style="color:#4e9a06">&amp;#34;azure-kvname-system-msi&amp;#34;&lt;/span>&lt;span style="color:#f8f8f8;text-decoration:underline">
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/details>
 &lt;h2 id="configure-system-assigned-managed-identity-to-access-keyvault">Configure System-assigned Managed Identity to access Keyvault&lt;/h2>
-&lt;p>AKS uses system-assigned managed identity as &lt;a href="https://docs.microsoft.com/en-us/azure/aks/use-managed-identity">cluster managed identity&lt;/a>. This managed identity shouldn&amp;rsquo;t be used to access Keyvault. You should consider using a &lt;a href="./user-assigned-msi-mode">User-assigned managed identity&lt;/a> instead.&lt;/p>
-&lt;p>Before this step, you need to turn on system-assigned managed identity on your cluster VM/VMSS.&lt;/p>
+&lt;p>Before this step, you need to &lt;a href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/qs-configure-cli-windows-vm#enable-system-assigned-managed-identity-on-an-existing-azure-vm">enable system-assigned managed identity&lt;/a> in your cluster VM/VMSS.&lt;/p>
 &lt;ol>
 &lt;li>
 &lt;p>Verify that the nodes have their own system-assigned managed identity&lt;/p>
@@ -387,17 +386,17 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az vmss identity show -g &amp;lt;resource group&amp;gt; -n &amp;lt;vmss scalset name&amp;gt; -o yaml
 &lt;/code>&lt;/pre>&lt;/div>&lt;p>If the cluster is using &lt;code>AvailabilitySet&lt;/code>, then check the system-assigned identity exists on all the VM instances:&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">az vm identity show -g &amp;lt;resource group&amp;gt; -n &amp;lt;vm name&amp;gt; -o yaml
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>The output should contain &lt;code>type: SystemAssigned&lt;/code>. Take a note of the &lt;code>principalId&lt;/code>.&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>The output should contain &lt;code>type: SystemAssigned&lt;/code>. Make a note of the &lt;code>principalId&lt;/code>.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Grant Azure Managed Identity permission to access Keyvault&lt;/p>
-&lt;p>Ensure that your Azure Identity has the role assignments required to see your Key Vault instance and to access its content. Run the following Azure CLI commands to assign these roles if needed:&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
-&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Key Vault&lt;/span>
-az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --object-id &amp;lt;YOUR AZURE VMSS PRINCIPALID&amp;gt;
+&lt;p>Grant System-assigned Managed Identity permission to access Keyvault&lt;/p>
+&lt;p>Ensure that your System-assigned Managed Identity has the role assignments required to access content in keyvault instance. Run the following Azure CLI commands to assign the roles if required:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get --object-id &amp;lt;SYSTEM-ASSIGNED MANAGED IDENTITY PRINCIPALID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --object-id &amp;lt;SYSTEM-ASSIGNED MANAGED IDENTITY PRINCIPALID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --object-id &amp;lt;SYSTEM-ASSIGNED MANAGED IDENTITY PRINCIPALID&amp;gt;
 &lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;li>
 &lt;p>Deploy your application. Specify &lt;code>useVMManagedIdentity&lt;/code> to &lt;code>true&lt;/code>.&lt;/p>
