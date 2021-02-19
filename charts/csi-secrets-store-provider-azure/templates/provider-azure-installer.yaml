@@ -14,6 +14,9 @@ spec:
   template:
     metadata:
 {{ include "sscdpa.labels" . | indent 6 }}
+{{- if .Values.linux.podLabels }}
+{{- toYaml .Values.linux.podLabels | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -23,8 +26,8 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository | default .Values.linux.image.repository }}:{{ .Values.image.tag | default .Values.linux.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.linux.image.pullPolicy }}
           args:
             - --endpoint=unix:///provider/azure.sock
             {{- if .Values.logFormatJSON }}
@@ -35,6 +38,9 @@ spec:
             {{- end }}
             {{- if .Values.constructPEMChain }}
             - --construct-pem-chain={{ .Values.constructPEMChain }}
+            {{- end }}
+            {{- if .Values.linux.customUserAgent }}
+            - --custom-user-agent={{ .Values.linux.customUserAgent }}
             {{- end }}
           lifecycle:
             preStop:
@@ -51,6 +57,10 @@ spec:
             initialDelaySeconds: 5
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
+          {{- if .Values.linux.privileged }}
+          securityContext:
+            privileged: true
+          {{- end }}
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
