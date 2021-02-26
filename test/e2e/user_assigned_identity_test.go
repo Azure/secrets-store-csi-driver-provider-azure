@@ -73,7 +73,7 @@ var _ = Describe("CSI inline volume test with user assigned identity", func() {
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline-msi",
+			Name:                    "busybox-secrets-store-inline-msi",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 		})

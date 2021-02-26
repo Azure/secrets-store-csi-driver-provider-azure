@@ -1,22 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-two
+  name: busybox-two
   labels:
-    app: nginx-two
+    app: busybox-two
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx-two
+      app: busybox-two
   template:
     metadata:
       labels:
-        app: nginx-two
+        app: busybox-two
     spec:
       containers:
-      - image: nginx
-        name: nginx
+      - name: busybox
+        image: k8s.gcr.io/e2e-test-images/busybox:1.29
+        command:
+          - "/bin/sh"
+          - "10000"
         volumeMounts:
         - name: secrets-store-inline
           mountPath: "/mnt/secrets-store"
@@ -34,10 +37,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-two
+  name: busybox-two
 spec:
   type: ClusterIP
   ports:
   - port: 80
   selector:
-    app: nginx-two
+    app: busybox-two

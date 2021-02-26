@@ -13,10 +13,10 @@ kubectl create secret generic secrets-store-creds --from-literal clientid=$CLIEN
 
 # Deploy app
 kubectl apply -f v1alpha1_secretproviderclass.yaml
-kubectl apply -f nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml
+kubectl apply -f pod-secrets-store-inline-volume-secretproviderclass.yaml
 
 # wait for deployment
-kubectl wait --for=condition=ready pods/nginx-secrets-store-inline --timeout=300s
+kubectl wait --for=condition=ready pods/busybox-secrets-store-inline --timeout=300s
 
 # validate
-kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
+kubectl exec busybox-secrets-store-inline ls /mnt/secrets-store/

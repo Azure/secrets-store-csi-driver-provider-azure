@@ -4,21 +4,21 @@
 
 ## Prerequisite
 
-- Follow [instructions](https://github.com/kubernetes-sigs/kind#installation-and-usage) to setup kind in your machine
+- Follow [instructions](https://github.com/kubernetes-sigs/kind#installation-and-usage) to set up kind in your machine
 
-> Windows 10 users can use WSL 2 to install kind. Integrate docker for windows with WSL 2 by following the [instructions](https://kind.sigs.k8s.io/docs/user/using-wsl2/)..
+> Windows 10 users can use WSL 2 to install kind. Integrate docker for windows with WSL 2 by following the [instructions](https://kind.sigs.k8s.io/docs/user/using-wsl2/).
 
 ## Setup
 
-- Follow the [instructions](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/docs/service-principal-mode.md) to setup Service Principal and give it access to Azure Key Vault. Keep `ClientID` and `ClientSecret` of the Service Principal handy.
+- Follow the [instructions](https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/service-principal-mode/) to set up Service Principal and give it access to Azure Key Vault. Keep `ClientID` and `ClientSecret` of the Service Principal handy.
 
-- Copy [v1alpha1_secretproviderclass.yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/v1alpha1_secretproviderclass.yaml) and [nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-secrets-store-inline-volume-secretproviderclass.yaml) to this directory.
+- Copy [v1alpha1_secretproviderclass.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml) and [pod-secrets-store-inline-volume-secretproviderclass.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/pod-secrets-store-inline-volume-secretproviderclass.yaml) to this directory.
 
-- Update `v1alpha1_secretproviderclass.yaml` to provide keyvault name and the keyvault resources to fetch.
+- Update `v1alpha1_secretproviderclass.yaml` to provide keyvault name and keyvault resources to fetch.
 
 ```yaml
 cloudName: 'AzurePublicCloud' # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
-keyvaultName: '' # the name of the KeyVault
+keyvaultName: ''              # the name of the KeyVault
 objects: |
   array:
     - |
@@ -29,9 +29,7 @@ objects: |
     objectName: key1
     objectType: key
     objectVersion: ""
-resourceGroup: '' # [REQUIRED for version < 0.0.4] the resource group of the KeyVault
-subscriptionId: '' # [REQUIRED for version < 0.0.4] the subscription ID of the KeyVault
-tenantId: '' # the tenant ID of the KeyVault
+tenantId: '<tenant id>'       # the tenant ID of the KeyVault
 ```
 
 ## Usage
@@ -52,7 +50,7 @@ The final output would contain the list of keys and secrets pulled from the keyv
 kind create cluster --name kind-csi-demo
 ```
 
-- Install [csi-secrets-store-provider-azure](https://github.com/Azure/secrets-store-csi-driver-provider-azure#install-the-secrets-store-csi-driver-and-the-azure-keyvault-provider)
+- Install [csi-secrets-store-provider-azure](https://azure.github.io/secrets-store-csi-driver-provider-azure/getting-started/installation/)
 
 - Add your Service Principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver.
 
@@ -60,16 +58,16 @@ kind create cluster --name kind-csi-demo
 kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
 ```
 
-- Deploy the app. This will deploy a nginx container and mount the secrets as volume at path `/mnt/secrets-store`
+- Deploy the app. This will deploy a busybox container and mount the secrets as volume at path `/mnt/secrets-store`
 
 ```sh
-kubectl apply -f nginx-pod-secrets-store-inline-volume.yaml
+kubectl apply -f pod-secrets-store-inline-volume.yaml
 ```
 
 ### Validate the secret
 
-Run the below command and it should list the secrets pulled from keyvault. Each of the file contains the value of the secret.
+Run the below command to list the secrets pulled from keyvault. Each of the file contains the value of the secret.
 
 ```sh
-kubectl exec -it nginx-secrets-store-inline ls /mnt/secrets-store/
+kubectl exec busybox-secrets-store-inline ls /mnt/secrets-store/
 ```

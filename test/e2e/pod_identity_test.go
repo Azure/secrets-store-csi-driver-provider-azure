@@ -100,7 +100,7 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline-pi",
+			Name:                    "busybox-secrets-store-inline-pi",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 			Labels:                  map[string]string{"aadpodidbinding": ns.Name},
