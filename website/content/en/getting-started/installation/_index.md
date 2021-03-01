@@ -137,7 +137,7 @@ If the driver and provider were installed using deployment yamls, then you can d
 kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
 
 # To delete AKV provider pods from Windows nodes
-kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
+kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
 ```
 
 Delete the Secrets Store CSI Driver by running `kubectl delete` with all the manifests in [here](https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/deploy). If the Secrets Store CSI Driver was installed using the helm charts hosted in [kubernetes-sigs/secrets-store-csi-driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver), then run the following command to delete the driver components:
