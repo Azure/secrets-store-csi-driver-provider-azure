@@ -10,7 +10,6 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -286,7 +285,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err != nil {
 			return nil, err
 		}
-		if err := ioutil.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+		if err := os.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
 			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
 		}
 		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})

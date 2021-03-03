@@ -20,7 +20,7 @@ jobs:
       steps:
         - task: GoTool@0
           inputs:
-            version: 1.15
+            version: 1.16
 
         - script: |
             # Download kubectl

@@ -4,7 +4,6 @@ package openssl
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,7 +15,7 @@ import (
 // ParsePKCS12 parses PKCS#12 pfx data and returns pem with private key
 // and certificate
 func ParsePKCS12(pfxData, password string) (string, error) {
-	tmpFile, err := ioutil.TempFile("", "")
+	tmpFile, err := os.CreateTemp("", "")
 	Expect(err).To(BeNil())
 
 	_, err = tmpFile.Write([]byte(pfxData))

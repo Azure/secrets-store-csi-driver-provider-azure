@@ -24,7 +24,7 @@ jobs:
         steps:
         - task: GoTool@0
           inputs:
-            version: 1.15
+            version: 1.16
 
         - script: |
             curl -LO https://github.com/Azure/aks-engine/releases/download/v${AKS_ENGINE_VERSION}/aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz

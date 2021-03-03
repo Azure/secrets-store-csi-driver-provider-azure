@@ -24,7 +24,7 @@ jobs:
   steps:
     - task: GoTool@0
       inputs:
-        version: 1.15
+        version: 1.16
     - script: make lint
       displayName: Run lint
     - script: make build build-windows
@@ -48,7 +48,7 @@ jobs:
   steps:
   - task: GoTool@0
     inputs:
-      version: 1.15
+      version: 1.16
   - script: |
       export REGISTRY="e2e"
       export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
@@ -87,7 +87,7 @@ jobs:
   steps:
   - task: GoTool@0
     inputs:
-      version: 1.15
+      version: 1.16
   - script: |
       export REGISTRY="e2e"
       export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
