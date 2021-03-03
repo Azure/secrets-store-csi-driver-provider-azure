@@ -5,7 +5,6 @@ package e2e
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -389,9 +388,9 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Selector:          ns.Name,
 		}
 
-		azureIdentityFile, err := ioutil.TempFile("", "")
+		azureIdentityFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
-		azureIdentityBindingFile, err := ioutil.TempFile("", "")
+		azureIdentityBindingFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
 		defer func() {
 			os.Remove(azureIdentityFile.Name())

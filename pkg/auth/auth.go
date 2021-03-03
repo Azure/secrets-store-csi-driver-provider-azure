@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -99,7 +99,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 			return nil, fmt.Errorf("nmi response failed with status code: %d, err: %+v", resp.StatusCode, err)
 		}
 
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
 		}

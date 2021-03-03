@@ -4,7 +4,6 @@ package e2e
 
 import (
 	"html/template"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -150,9 +149,9 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 			Selector:          ns.Name,
 		}
 
-		azureIdentityFile, err := ioutil.TempFile("", "")
+		azureIdentityFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
-		azureIdentityBindingFile, err := ioutil.TempFile("", "")
+		azureIdentityBindingFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
 		defer func() {
 			err = os.Remove(azureIdentityFile.Name())
