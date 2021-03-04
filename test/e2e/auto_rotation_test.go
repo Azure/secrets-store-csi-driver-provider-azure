@@ -124,7 +124,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                  kubeClient,
 			Config:                   config,
-			Name:                     "nginx-secrets-store-inline",
+			Name:                     "busybox-secrets-store-inline",
 			Namespace:                ns.Name,
 			SecretProviderClassName:  spc.Name,
 			NodePublishSecretRefName: nodePublishSecretRef.Name,
@@ -244,7 +244,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline",
+			Name:                    "busybox-secrets-store-inline",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 		})
@@ -422,7 +422,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline",
+			Name:                    "busybox-secrets-store-inline",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 			Labels:                  map[string]string{"aadpodidbinding": ns.Name},

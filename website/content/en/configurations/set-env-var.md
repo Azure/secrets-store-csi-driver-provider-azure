@@ -48,21 +48,24 @@ spec:
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline
+  name: busybox-secrets-store-inline
 spec:
   containers:
-    - name: nginx
-      image: nginx
+    - name: busybox
+      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      command:
+        - "/bin/sleep"
+        - "10000"
       volumeMounts:
       - name: secrets-store01-inline
         mountPath: "/mnt/secrets-store"
         readOnly: true
-        env:
-        - name: SECRET_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: foosecret
-              key: username
+      env:
+      - name: SECRET_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: foosecret
+            key: username
   volumes:
     - name: secrets-store01-inline
       csi:
@@ -80,8 +83,11 @@ Once the secret is created, you may wish to set an ENV VAR in your deployment to
 ```yaml
 spec:
   containers:
-  - image: nginx
-    name: nginx
+  - name: busybox
+    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    command:
+      - "/bin/sleep"
+      - "10000"
     env:
     - name: SECRET_USERNAME
       valueFrom:
@@ -89,4 +95,4 @@ spec:
           name: foosecret
           key: username
 ```
-Here is a sample [deployment yaml](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/test/bats/tests/azure/nginx-deployment-synck8s-azure.yaml) that creates an ENV VAR from the synced Kubernetes secret.
+Here is a sample [deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/sync-as-kubernetes-secret/deployment-synck8s.yaml) that creates an ENV VAR from the synced Kubernetes secret.

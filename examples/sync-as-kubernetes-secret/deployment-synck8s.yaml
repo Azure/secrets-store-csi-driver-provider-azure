@@ -1,23 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: busybox-deployment
   labels:
-    app: nginx
+    app: busybox
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: busybox
   template:
     metadata:
       labels:
-        app: nginx
+        app: busybox
     spec:
       terminationGracePeriodSeconds: 0
       containers:
-        - image: nginx
-          name: nginx
+        - name: busybox
+          image: k8s.gcr.io/e2e-test-images/busybox:1.29
+          command:
+            - "/bin/sh"
+            - "10000"
           env:
             - name: SECRET_USERNAME
               valueFrom:

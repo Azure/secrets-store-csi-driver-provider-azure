@@ -129,7 +129,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		p = pod.Create(pod.CreateInput{
 			Creator:                  kubeClient,
 			Config:                   config,
-			Name:                     "nginx-secrets-store-inline-crd-certs",
+			Name:                     "busybox-secrets-store-inline-crd-certs",
 			Namespace:                ns.Name,
 			SecretProviderClassName:  spc.Name,
 			NodePublishSecretRefName: nodePublishSecretRef.Name,

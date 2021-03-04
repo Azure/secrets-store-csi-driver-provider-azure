@@ -2,13 +2,16 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline-podid
+  name: busybox-secrets-store-inline-podid
   labels:
     aadpodidbinding: "demo"                             # Set the label value to the selector defined in AzureIdentityBinding
 spec:
   containers:
-    - name: nginx
-      image: nginx
+    - name: busybox
+      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      command:
+        - "/bin/sh"
+        - "10000"
       volumeMounts:
       - name: secrets-store01-inline
         mountPath: "/mnt/secrets-store"

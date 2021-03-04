@@ -111,11 +111,14 @@ cat <<EOF | kubectl apply -f -
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline
+  name: busybox-secrets-store-inline
 spec:
   containers:
-  - image: nginx
-    name: nginx
+  - name: busybox
+    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    command:
+      - "/bin/sleep"
+      - "10000"
     volumeMounts:
     - name: secrets-store-inline
       mountPath: "/mnt/secrets-store"
@@ -136,18 +139,18 @@ To validate, once the pod is started, you should see the new mounted content at 
 
   ```bash
   ## show secrets held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- ls /mnt/secrets-store/
+  kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
 
   ## print a test secret held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- cat /mnt/secrets-store/secret1
+  kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
   ```
 
 If successful, the output will be similar to:
 
-```bash
-➜ kubectl exec nginx-secrets-store-inline -- ls /mnt/secrets-store/
-secret1
-
-➜ kubectl exec nginx-secrets-store-inline -- cat /mnt/secrets-store/secret1
-Hello!
-```
+  ```bash
+  kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
+  secret1
+  
+  kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
+  Hello!
+  ```
