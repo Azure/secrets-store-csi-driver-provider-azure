@@ -38,10 +38,7 @@ For a list of customizable values that can be injected when invoking helm instal
 
 1. **Install the Secrets Store CSI Driver**
 
-    💡 Follow the [Installation guide for the Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver#usage) to install the driver.
-
-    > **NOTE:** `0.0.9+` release of the Azure Key Vault provider is incompatible with the Secrets Store CSI Driver versions < `v0.0.14`. While installing the Secrets Store CSI Driver using yamls, add the following flag `--grpc-supported-providers=azure` to the [Linux](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/deploy/secrets-store-csi-driver.yaml) and [Windows](https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/master/deploy/secrets-store-csi-driver-windows.yaml) *daemonset* manifests.
-    > - The flag needs to be added to the `secrets-store` container args
+    💡 Follow the [Installation guide for the Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html) to install the driver.
 
     <details>
     <summary>Result</summary>
