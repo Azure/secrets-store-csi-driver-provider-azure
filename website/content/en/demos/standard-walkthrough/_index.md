@@ -36,12 +36,14 @@ Refer to [installation](../../getting-started/installation) for more details and
 ### 2. Create Keyvault and set secrets
 
 Create an Azure Keyvault instance:
+
 ```bash
   az group create -n ${KEYVAULT_RESOURCE_GROUP} --location ${KEYVAULT_LOCATION}
   az keyvault create -n ${KEYVAULT_NAME} -g ${KEYVAULT_RESOURCE_GROUP} --location ${KEYVAULT_LOCATION}
 ```
 
 Add a secret to your Keyvault:
+
 ```bash
 az keyvault secret set --vault-name ${KEYVAULT_NAME} --name secret1 --value "Hello!"
 ```
@@ -55,10 +57,11 @@ In this walkthrough, we will be using the [Service Principal](../../configuratio
 ```bash
 # Create a service principal to access keyvault
 export SERVICE_PRINCIPAL_CLIENT_SECRET="$(az ad sp create-for-rbac --skip-assignment --name http://secrets-store-test --query 'password' -otsv)"
-export SERVICE_PRINCIPAL_CLIENT_ID="(az ad sp show --id http://secrets-store-test --query 'appId' -otsv)"
+export SERVICE_PRINCIPAL_CLIENT_ID="$(az ad sp show --id http://secrets-store-test --query 'appId' -otsv)"
 ```
 
 Set the access policy for keyvault objects:
+
 ```bash
 az keyvault set-policy -n ${KEYVAULT_NAME} --secret-permissions get --spn ${SERVICE_PRINCIPAL_CLIENT_ID}
 ```
@@ -66,6 +69,7 @@ az keyvault set-policy -n ${KEYVAULT_NAME} --secret-permissions get --spn ${SERV
 ### 4. Create the Kubernetes Secret with credentials
 
 Create the Kubernetes secret with the service principal credentials:
+
 ```bash
 kubectl create secret generic secrets-store-creds --from-literal clientid=${SERVICE_PRINCIPAL_CLIENT_ID} --from-literal clientsecret=${SERVICE_PRINCIPAL_CLIENT_SECRET}
 ```
