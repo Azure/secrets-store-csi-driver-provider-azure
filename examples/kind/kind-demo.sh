@@ -10,6 +10,8 @@ helm install csi-secrets-store-provider-azure/csi-secrets-store-provider-azure -
 
 # create secret in k8
 kubectl create secret generic secrets-store-creds --from-literal clientid=$CLIENT_ID --from-literal clientsecret=$CLIENT_SECRET
+# label the secret
+kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
 
 # Deploy app
 kubectl apply -f v1alpha1_secretproviderclass.yaml

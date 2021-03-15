@@ -6,10 +6,13 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof" // #nosec
+	"net/url"
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
@@ -30,6 +33,10 @@ var (
 	logFormatJSON = flag.Bool("log-format-json", false, "set log formatter to json")
 	enableProfile = flag.Bool("enable-pprof", false, "enable pprof profiling")
 	profilePort   = flag.Int("pprof-port", 6060, "port for pprof profiling")
+
+	healthzPort    = flag.Int("healthz-port", 8989, "port for health check")
+	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
+	healthzTimeout = flag.Duration("healthz-timeout", 5*time.Second, "RPC timeout for health check")
 )
 
 func main() {
@@ -98,6 +105,16 @@ func main() {
 
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go s.Serve(listener)
+
+	healthz := &server.HealthZ{
+		HealthCheckURL: &url.URL{
+			Host: net.JoinHostPort("", strconv.FormatUint(uint64(*healthzPort), 10)),
+			Path: *healthzPath,
+		},
+		UnixSocketPath: listener.Addr().String(),
+		RPCTimeout:     *healthzTimeout,
+	}
+	go healthz.Serve()
 
 	<-signalChan
 	// gracefully stop the grpc server

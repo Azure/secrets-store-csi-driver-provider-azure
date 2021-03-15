@@ -78,6 +78,19 @@ func Uninstall() {
 	_ = helm(args)
 }
 
+// ReleaseExists checks if csi release exists
+func ReleaseExists() bool {
+	args := []string{
+		"status",
+		chartName,
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+	}
+
+	err := helm(args)
+	// chart not found error
+	return err == nil
+}
+
 func generateValueArgs(config *framework.Config) []string {
 	args := []string{
 		fmt.Sprintf("--set=image.repository=%s/%s", config.Registry, config.ImageName),

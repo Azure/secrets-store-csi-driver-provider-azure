@@ -79,6 +79,10 @@ spec:
     # Client Secret (AZURE_CLIENT_SECRET) will be the Password of your service principal
 
     kubectl create secret generic secrets-store-creds --from-literal clientid=<AZURE_CLIENT_ID> --from-literal clientsecret=<AZURE_CLIENT_SECRET>
+
+    # Label the secret
+    # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on why this is necessary in future releases.
+    kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
     ```
 
     {{% alert title="NOTE" color="warning" %}}

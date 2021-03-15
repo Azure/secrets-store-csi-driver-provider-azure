@@ -18,7 +18,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.13
+    tag: 0.0.14
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -31,6 +31,7 @@ linux:
       cpu: 50m
       memory: 100Mi
   podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate
@@ -40,11 +41,16 @@ linux:
   # If provided, the userAgent string will be appended to the
   # AKV provider user agents for all adal and keyvault requests.
   customUserAgent: ""
+  healthzPort: 8989
+  healthzPath: "/healthz"
+  healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
 
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.13
+    tag: 0.0.14
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -57,6 +63,7 @@ windows:
       cpu: 100m
       memory: 200Mi
   podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate
@@ -65,6 +72,11 @@ windows:
   # If provided, the userAgent string will be appended to the
   # AKV provider user agents for all adal and keyvault requests.
   customUserAgent: ""
+  healthzPort: 8989
+  healthzPath: "/healthz"
+  healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
@@ -77,7 +89,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.20
+      tag: v0.0.21
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -94,7 +106,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.20
+      tag: v0.0.21
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -105,13 +117,15 @@ secrets-store-csi-driver:
       tag: v2.2.0
       pullPolicy: IfNotPresent
 
-  grpcSupportedProviders: azure
   enableSecretRotation: false
   rotationPollInterval: 2m
+  # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on actions to take before enabling this feature
+  filteredWatchSecret: false
 
 ## Install default service account
 rbac:
   install: true
+  pspEnabled: false
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: false
