@@ -17,6 +17,10 @@ spec:
 {{- if .Values.windows.podLabels }}
 {{- toYaml .Values.windows.podLabels | nindent 8 }}
 {{- end }}
+{{- if .Values.windows.podAnnotations }}
+      annotations:
+{{- toYaml .Values.windows.podAnnotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

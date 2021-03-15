@@ -31,6 +31,7 @@ linux:
       cpu: 50m
       memory: 100Mi
   podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate
@@ -57,6 +58,7 @@ windows:
       cpu: 100m
       memory: 200Mi
   podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   updateStrategy:
     type: RollingUpdate

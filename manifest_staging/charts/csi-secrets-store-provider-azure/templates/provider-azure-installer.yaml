@@ -17,6 +17,10 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
+{{- if .Values.linux.podAnnotations }}
+      annotations:
+{{- toYaml .Values.linux.podAnnotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
