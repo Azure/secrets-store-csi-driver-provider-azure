@@ -21,6 +21,7 @@ jobs:
       osTypes:
       - "linux"
       - "windows"
+      testClusterUpgrade: true
   - template: soak-tests-template.yaml
     parameters:
       clusterConfigs:

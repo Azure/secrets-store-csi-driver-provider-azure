@@ -1,0 +1,18 @@
+steps:
+  - script: |
+      AKS_UPGRADE_VERSION=$(az aks get-upgrades -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} --query 'max(controlPlaneProfile.upgrades[].kubernetesVersion)' -otsv)
+      echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION]${AKS_UPGRADE_VERSION}"
+    displayName: "Get upgrade version"
+
+  - script: |
+      echo "Upgrading to Kubernetes ${AKS_UPGRADE_VERSION}"
+      az aks upgrade -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} -k ${AKS_UPGRADE_VERSION} --yes
+
+      # Sleep for 120 seconds to wait for nodes and pods to become ready
+      sleep 2m
+      kubectl wait --for=condition=ready node --all
+      kubectl wait pod -n kube-system --for=condition=Ready --all
+      kubectl get nodes -owide
+      kubectl cluster-info
+    displayName: "Upgrade kubernetes version"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))

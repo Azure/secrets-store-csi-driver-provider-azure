@@ -25,6 +25,7 @@ type Config struct {
 	PodIdentityUserMSIName            string `envconfig:"POD_IDENTITY_USER_MSI_NAME"`
 	PodIdentityUserAssignedIdentityID string `envconfig:"POD_IDENTITY_USER_ASSIGN_IDENTITY_ID"`
 	ResourceGroup                     string `envconfig:"RESOURCE_GROUP"`
+	IsUpgradeTest                     bool   `envconfig:"IS_UPGRADE_TEST"`
 }
 
 func (c *Config) DeepCopy() *Config {
@@ -46,6 +47,7 @@ func (c *Config) DeepCopy() *Config {
 	copy.PodIdentityUserMSIName = c.PodIdentityUserMSIName
 	copy.PodIdentityUserAssignedIdentityID = c.PodIdentityUserAssignedIdentityID
 	copy.ResourceGroup = c.ResourceGroup
+	copy.IsUpgradeTest = c.IsUpgradeTest
 
 	return copy
 }

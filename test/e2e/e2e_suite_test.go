@@ -46,10 +46,12 @@ var _ = BeforeSuite(func() {
 	kvClient = keyvault.NewClient(config)
 
 	if !config.IsSoakTest {
-		By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
-		helm.Install(helm.InstallInput{
-			Config: config,
-		})
+		if !(config.IsUpgradeTest && helm.ReleaseExists()) {
+			By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
+			helm.Install(helm.InstallInput{
+				Config: config,
+			})
+		}
 	}
 
 	kubeClient = clusterProxy.GetClient()
@@ -58,7 +60,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	defer func() {
-		if !config.IsSoakTest {
+		if !config.IsSoakTest && !config.IsUpgradeTest {
 			By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 			helm.Uninstall()
 		}
