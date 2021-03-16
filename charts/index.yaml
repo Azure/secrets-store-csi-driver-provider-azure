@@ -20,7 +20,7 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - //raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.17.tgz
+    - https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.17.tgz
     version: 0.0.17
   - apiVersion: v1
     appVersion: 0.0.12
@@ -41,7 +41,7 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - //raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.16.tgz
+    - https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts/csi-secrets-store-provider-azure-0.0.16.tgz
     version: 0.0.16
   - apiVersion: v1
     appVersion: 0.0.11
