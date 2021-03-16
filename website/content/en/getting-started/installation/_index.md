@@ -12,6 +12,7 @@ description: >
 #### Prerequisites
 
 Recommended Kubernetes version:
+
 - For Linux - v1.16.0+
 - For Windows - v1.18.0+
 
@@ -30,6 +31,8 @@ helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azu
 
 The helm charts hosted in [Azure/secrets-store-csi-driver-provider-azure](https://github.com/Azure/secrets-store-csi-driver-provider-azure/tree/master/charts/csi-secrets-store-provider-azure) repo include the Secrets Store CSI Driver helm charts as a dependency. Running the above `helm install` command will install both the Secrets Store CSI Driver and Azure Key Vault provider.
 
+> Refer to [doc](../../configurations/deploy-in-openshift) for installing the Azure Key Vault Provider for Secrets Store CSI Driver on Azure RedHat OpenShift (ARO)
+
 ##### Values
 
 For a list of customizable values that can be injected when invoking helm install, please see the [Helm chart configurations](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md#configuration).
@@ -43,7 +46,7 @@ For a list of customizable values that can be injected when invoking helm instal
     <details>
     <summary>Result</summary>
 
-    ```
+    ```bash
     csidriver.storage.k8s.io/secrets-store.csi.k8s.io created
     serviceaccount/secrets-store-csi-driver created
     clusterrole.rbac.authorization.k8s.io/secretproviderclasses-role created
@@ -107,7 +110,7 @@ For a list of customizable values that can be injected when invoking helm instal
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/pod-security-policy.yaml
 ```
 
-### Uninstallation
+### Uninstall
 
 #### Using Helm
 
@@ -116,6 +119,8 @@ If you deployed the Secrets Store CSI Driver and Azure Key Vault provider using 
 ```bash
 helm delete <release name>
 ```
+
+> Refer to [doc](../../configurations/deploy-in-openshift) to uninstall the Azure Key Vault Provider for Secrets Store CSI Driver on Azure RedHat OpenShift (ARO)
 
 ##### Using deployment yamls
 
