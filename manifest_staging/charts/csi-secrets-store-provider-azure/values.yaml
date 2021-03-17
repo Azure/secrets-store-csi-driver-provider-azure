@@ -44,6 +44,8 @@ linux:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
 
 windows:
   image:
@@ -73,6 +75,8 @@ windows:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
