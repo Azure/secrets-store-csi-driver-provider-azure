@@ -3,6 +3,7 @@
  We have laid out steps for contributing to the **Azure Key Vault Provider for Secrets Store CSI Driver** using the `VS Code - Remote Container Extension`.
 
 ## Prerequisites
+
 1. Azure Subscription
 
 ## Fork and Clone Repository
@@ -10,7 +11,7 @@
 Before we dive into setting up a remote container environment, fork and clone the repository first. Once cloned, enter into the `root` folder of the project:
 
   ```bash
-  $ cd secrets-store-csi-driver-provider-azure
+  cd secrets-store-csi-driver-provider-azure
   ```
 
 ## VS Code with Remote Container Extension

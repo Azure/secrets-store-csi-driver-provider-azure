@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
@@ -50,6 +51,7 @@ func NewClient(config *framework.Config) Client {
 
 // SetSecret sets the secret in key vault
 func (c *client) SetSecret(name, value string) error {
+	By(fmt.Sprintf("Setting secret \"%s\" in keyvault \"%s\"", name, c.config.KeyvaultName))
 	_, err := c.keyvaultClient.SetSecret(context.Background(), getVaultURL(c.config.KeyvaultName), name, kv.SecretSetParameters{
 		Value: to.StringPtr(value),
 	})
@@ -58,6 +60,7 @@ func (c *client) SetSecret(name, value string) error {
 
 // DeleteSecret deletes the secret in key vault
 func (c *client) DeleteSecret(name string) error {
+	By(fmt.Sprintf("Deleting secret \"%s\" in keyvault \"%s\"", name, c.config.KeyvaultName))
 	_, err := c.keyvaultClient.DeleteSecret(context.Background(), getVaultURL(c.config.KeyvaultName), name)
 	return err
 }

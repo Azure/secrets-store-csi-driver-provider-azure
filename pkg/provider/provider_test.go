@@ -9,7 +9,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -265,7 +264,7 @@ Uz7sJMWoq7mOrINHQ0ZmaiE=
 
 func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	azureStackCloudEnvName := "AZURESTACKCLOUD"
-	file, err := ioutil.TempFile("", "ut")
+	file, err := os.CreateTemp("", "ut")
 	defer os.Remove(file.Name())
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
@@ -886,7 +885,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			p, err := NewProvider()
 			assert.NoError(t, err)
 
-			tmpDir, err := ioutil.TempDir("", "ut")
+			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)
 
 			_, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)

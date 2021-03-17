@@ -44,11 +44,14 @@ spec:
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline
+  name: busybox-secrets-store-inline
 spec:
   containers:
-  - image: nginx
-    name: nginx
+  - name: busybox
+    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    command:
+      - "/bin/sleep"
+      - "10000"
     volumeMounts:
     - name: secrets-store-inline
       mountPath: "/mnt/secrets-store"
@@ -107,7 +110,7 @@ spec:
     az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn $AZURE_CLIENT_ID
     ```
 
-2. Update your [linux deployment yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to reference the service principal kubernetes secret created in the previous step
+2. Update your [deployment yaml](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/examples/service-principal/pod-inline-volume-service-principal.yaml) to reference the service principal kubernetes secret created in the previous step
 
     If you did not change the name of the secret reference previously, no changes are needed.
 

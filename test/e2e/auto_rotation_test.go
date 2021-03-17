@@ -5,7 +5,6 @@ package e2e
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -70,6 +69,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
@@ -121,7 +124,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                  kubeClient,
 			Config:                   config,
-			Name:                     "nginx-secrets-store-inline",
+			Name:                     "busybox-secrets-store-inline",
 			Namespace:                ns.Name,
 			SecretProviderClassName:  spc.Name,
 			NodePublishSecretRefName: nodePublishSecretRef.Name,
@@ -185,6 +188,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
@@ -237,7 +244,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline",
+			Name:                    "busybox-secrets-store-inline",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 		})
@@ -303,6 +310,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
 
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
@@ -377,9 +388,9 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Selector:          ns.Name,
 		}
 
-		azureIdentityFile, err := ioutil.TempFile("", "")
+		azureIdentityFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
-		azureIdentityBindingFile, err := ioutil.TempFile("", "")
+		azureIdentityBindingFile, err := os.CreateTemp("", "")
 		Expect(err).To(BeNil())
 		defer func() {
 			os.Remove(azureIdentityFile.Name())
@@ -411,7 +422,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
-			Name:                    "nginx-secrets-store-inline",
+			Name:                    "busybox-secrets-store-inline",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
 			Labels:                  map[string]string{"aadpodidbinding": ns.Name},

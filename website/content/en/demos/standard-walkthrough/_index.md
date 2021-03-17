@@ -36,12 +36,14 @@ Refer to [installation](../../getting-started/installation) for more details and
 ### 2. Create Keyvault and set secrets
 
 Create an Azure Keyvault instance:
+
 ```bash
   az group create -n ${KEYVAULT_RESOURCE_GROUP} --location ${KEYVAULT_LOCATION}
   az keyvault create -n ${KEYVAULT_NAME} -g ${KEYVAULT_RESOURCE_GROUP} --location ${KEYVAULT_LOCATION}
 ```
 
 Add a secret to your Keyvault:
+
 ```bash
 az keyvault secret set --vault-name ${KEYVAULT_NAME} --name secret1 --value "Hello!"
 ```
@@ -55,10 +57,11 @@ In this walkthrough, we will be using the [Service Principal](../../configuratio
 ```bash
 # Create a service principal to access keyvault
 export SERVICE_PRINCIPAL_CLIENT_SECRET="$(az ad sp create-for-rbac --skip-assignment --name http://secrets-store-test --query 'password' -otsv)"
-export SERVICE_PRINCIPAL_CLIENT_ID="(az ad sp show --id http://secrets-store-test --query 'appId' -otsv)"
+export SERVICE_PRINCIPAL_CLIENT_ID="$(az ad sp show --id http://secrets-store-test --query 'appId' -otsv)"
 ```
 
 Set the access policy for keyvault objects:
+
 ```bash
 az keyvault set-policy -n ${KEYVAULT_NAME} --secret-permissions get --spn ${SERVICE_PRINCIPAL_CLIENT_ID}
 ```
@@ -66,6 +69,7 @@ az keyvault set-policy -n ${KEYVAULT_NAME} --secret-permissions get --spn ${SERV
 ### 4. Create the Kubernetes Secret with credentials
 
 Create the Kubernetes secret with the service principal credentials:
+
 ```bash
 kubectl create secret generic secrets-store-creds --from-literal clientid=${SERVICE_PRINCIPAL_CLIENT_ID} --from-literal clientsecret=${SERVICE_PRINCIPAL_CLIENT_SECRET}
 ```
@@ -73,6 +77,8 @@ kubectl create secret generic secrets-store-creds --from-literal clientid=${SERV
 > NOTE: This step is required only if you're using service principal to provide access to Keyvault.
 
 ### 5. Deploy `SecretProviderClass`
+
+Refer to [section](../../getting-started/usage/#create-your-own-secretproviderclass-object) on the required and configurable parameters in `SecretProviderClass` object.
 
 Create `SecretProviderClass` in your cluster that contains all the required parameters:
 
@@ -109,11 +115,14 @@ cat <<EOF | kubectl apply -f -
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline
+  name: busybox-secrets-store-inline
 spec:
   containers:
-  - image: nginx
-    name: nginx
+  - name: busybox
+    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    command:
+      - "/bin/sleep"
+      - "10000"
     volumeMounts:
     - name: secrets-store-inline
       mountPath: "/mnt/secrets-store"
@@ -134,18 +143,18 @@ To validate, once the pod is started, you should see the new mounted content at 
 
   ```bash
   ## show secrets held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- ls /mnt/secrets-store/
+  kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
 
   ## print a test secret held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- cat /mnt/secrets-store/secret1
+  kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
   ```
 
 If successful, the output will be similar to:
 
-```bash
-➜ kubectl exec nginx-secrets-store-inline -- ls /mnt/secrets-store/
-secret1
-
-➜ kubectl exec nginx-secrets-store-inline -- cat /mnt/secrets-store/secret1
-Hello!
-```
+  ```bash
+  kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
+  secret1
+  
+  kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
+  Hello!
+  ```

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -35,8 +36,41 @@ func TestPrintVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	expected := fmt.Sprintf(`{"version":"version","buildDate":"Now","minDriverVersion":"%s"}`, minDriverVersion)
+	expected := `{"version":"version","buildDate":"Now"}`
 	if !strings.EqualFold(out, expected) {
 		t.Fatalf("string doesn't match, expected %s, got %s", expected, out)
+	}
+}
+
+func TestGetUserAgent(t *testing.T) {
+	BuildDate = "now"
+	Vcs = "commit"
+	BuildVersion = "version"
+
+	tests := []struct {
+		name              string
+		customUserAgent   string
+		expectedUserAgent string
+	}{
+		{
+			name:              "default user agent",
+			customUserAgent:   "",
+			expectedUserAgent: fmt.Sprintf("csi-secrets-store/version (%s/%s) commit/now", runtime.GOOS, runtime.GOARCH),
+		},
+		{
+			name:              "default user agent and custom user agent",
+			customUserAgent:   "managedBy:aks",
+			expectedUserAgent: fmt.Sprintf("csi-secrets-store/version (%s/%s) commit/now managedBy:aks", runtime.GOOS, runtime.GOARCH),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			customUserAgent = &test.customUserAgent
+			actualUserAgent := GetUserAgent()
+			if !strings.EqualFold(test.expectedUserAgent, actualUserAgent) {
+				t.Fatalf("expected user agent: %s, got: %s.", test.expectedUserAgent, actualUserAgent)
+			}
+		})
 	}
 }

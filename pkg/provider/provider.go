@@ -11,7 +11,6 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"

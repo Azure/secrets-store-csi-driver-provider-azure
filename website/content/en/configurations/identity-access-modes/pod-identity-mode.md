@@ -44,13 +44,16 @@ spec:
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx-secrets-store-inline-podid
+  name: busybox-secrets-store-inline-podid
   labels:
     aadpodidbinding: "demo"         # Set the label value to match selector defined in AzureIdentityBinding
 spec:
   containers:
-    - name: nginx
-      image: nginx
+    - name: busybox
+      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      command:
+        - "/bin/sleep"
+        - "10000"
       volumeMounts:
       - name: secrets-store01-inline
         mountPath: "/mnt/secrets-store"
@@ -147,7 +150,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     kubectl create -f aadpodidentitybinding.yaml
     ```
 
-6. Add the following to [this](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-pod-identity.yaml) deployment yaml:
+6. Add the following to [this](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/pod-inline-volume-pod-identity.yaml) deployment yaml:
 
     Include the `aadpodidbinding` label matching the `selector` value set in the previous step so that this pod will be assigned an identity
     ```yaml
@@ -156,7 +159,7 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
     
-7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
+7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
     Make sure to set `usepodidentity` to `true`
     ```yaml

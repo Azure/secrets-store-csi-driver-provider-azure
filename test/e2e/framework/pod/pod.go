@@ -70,8 +70,9 @@ func Create(input CreateInput) *corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:            "tester",
-					Image:           "nginx",
+					Image:           "k8s.gcr.io/e2e-test-images/busybox:1.29",
 					ImagePullPolicy: corev1.PullIfNotPresent,
+					Command:         []string{"/bin/sleep", "10000"},
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      "secrets-store-inline",
@@ -103,8 +104,6 @@ func Create(input CreateInput) *corev1.Pod {
 	}
 
 	if input.Config.IsWindowsTest {
-		pod.Spec.Containers[0].Image = "e2eteam/busybox:1.29"
-		pod.Spec.Containers[0].Command = []string{"powershell.exe", "-Command", "while (1) { sleep 1}"}
 		pod.Spec.NodeSelector = map[string]string{"kubernetes.io/os": "windows"}
 	} else {
 		pod.Spec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}

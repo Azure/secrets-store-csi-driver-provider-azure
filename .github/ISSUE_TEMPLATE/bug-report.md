@@ -4,8 +4,12 @@ about: Create a report to help us improve
 title: ''
 labels: bug
 assignees: ''
-
 ---
+
+**Have you**
+
+- [ ] Read [Troubleshooting Guide](https://azure.github.io/secrets-store-csi-driver-provider-azure/troubleshooting/)
+- [ ] Searched on [GitHub issues](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues) and [Discussions](https://github.com/Azure/secrets-store-csi-driver-provider-azure/discussions)
 
 **What steps did you take and what happened:**
 [A clear and concise description of what the bug is.]

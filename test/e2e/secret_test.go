@@ -81,7 +81,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		p = pod.Create(pod.CreateInput{
 			Creator:                  kubeClient,
 			Config:                   config,
-			Name:                     "nginx-secrets-store-inline-crd",
+			Name:                     "busybox-secrets-store-inline-crd",
 			Namespace:                ns.Name,
 			SecretProviderClassName:  spc.Name,
 			NodePublishSecretRefName: nodePublishSecretRef.Name,

@@ -15,10 +15,6 @@ jobs:
           clean: all
 
         variables:
-          - name: GOPATH
-            value: '$(system.defaultWorkingDirectory)/gopath'
-          - name: modulePath
-            value: '$(GOPATH)/src/github.com/$(build.repository.name)'
           - name: CLUSTER_CONFIG
             value: ${{ format('{0}', osType) }}
           - name: CLUSTER_TYPE
@@ -28,12 +24,9 @@ jobs:
         steps:
         - task: GoTool@0
           inputs:
-            version: 1.15
+            version: 1.16
 
         - script: |
-            sudo apt-get -o Acquire::Retries=30 update && sudo apt-get -o Acquire::Retries=30 install -y bats
-            bats --version
-
             curl -LO https://github.com/Azure/aks-engine/releases/download/v${AKS_ENGINE_VERSION}/aks-engine-v${AKS_ENGINE_VERSION}-linux-amd64.tar.gz
             tar -zxvf aks-engine-v$(AKS_ENGINE_VERSION)-linux-amd64.tar.gz
             chmod +x aks-engine-v$(AKS_ENGINE_VERSION)-linux-amd64/aks-engine

@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-tls
@@ -15,10 +15,14 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: nginx-one
-          servicePort: 80
+          service:
+            name: busybox-one
+            port:
+              number: 80
         path: /(.*)
       - backend:
-          serviceName: nginx-two
-          servicePort: 80
+          service:
+            name: busybox-two
+            port:
+              number: 80
         path: /two(/|$)(.*)

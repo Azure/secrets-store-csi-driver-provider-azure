@@ -26,7 +26,7 @@ Create a `SecretProviderClass` custom resource to provide provider-specific para
 
 > NOTE: The `SecretProviderClass` has to be in the same namespace as the pod referencing it.
 
-Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/v1alpha1_secretproviderclass_service_principal.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
+Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
 To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
 
@@ -91,7 +91,7 @@ The Azure Key Vault Provider offers four modes for accessing a Key Vault instanc
 
 To ensure your application is using the Secrets Store CSI driver, update your deployment yaml to use the `secrets-store.csi.k8s.io` driver and reference the `SecretProviderClass` resource created in the previous step.
 
-Update your [linux deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/nginx-pod-inline-volume-service-principal.yaml) or [windows deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/windows-pod-secrets-store-inline-volume-secret-providerclass.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step.
+Update your [deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/pod-inline-volume-service-principal.yaml) to use the Secrets Store CSI driver and reference the `SecretProviderClass` resource created in the previous step.
 
   ```yaml
     volumes:
@@ -107,11 +107,11 @@ Update your [linux deployment yaml](https://raw.githubusercontent.com/Azure/secr
 
   1. Deploy the SecretProviderClass yaml created previously. For example:
 
-     `kubectl apply -f ./examples/v1alpha1_secretproviderclass.yaml`
+     `kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml`
 
   1. Deploy the application yaml created previously. For example:
 
-     `kubectl apply -f ./examples/nginx-pod-inline-volume-service-principal.yaml`
+     `kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/pod-inline-volume-service-principal.yaml`
 
 #### Validate the secret
 
@@ -119,8 +119,8 @@ To validate, once the pod is started, you should see the new mounted content at 
 
   ```bash
   ## show secrets held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- ls /mnt/secrets-store/
+  kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
 
   ## print a test secret held in secrets-store
-  kubectl exec nginx-secrets-store-inline -- cat /mnt/secrets-store/secret1
+  kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
   ```

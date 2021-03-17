@@ -21,3 +21,8 @@ jobs:
       osTypes:
       - "linux"
       - "windows"
+  - template: soak-tests-template.yaml
+    parameters:
+      clusterConfigs:
+      - "csi-secrets-store-soak-linux-aks"
+      - "csi-secrets-store-soak-win-aks"
