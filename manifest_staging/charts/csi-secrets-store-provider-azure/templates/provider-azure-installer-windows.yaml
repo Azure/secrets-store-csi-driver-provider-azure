@@ -45,15 +45,17 @@ spec:
             {{- if .Values.windows.customUserAgent }}
             - --custom-user-agent={{ .Values.windows.customUserAgent }}
             {{- end }}
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  [
-                      "cmd",
-                      "/c",
-                      "del /f C:\\provider\\azure.sock",
-                  ]
+            - --healthz-port={{ .Values.linux.healthzPort }}
+            - --healthz-path={{ .Values.linux.healthzPath }}
+            - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.linux.healthzPath }}
+              port: {{ .Values.linux.healthzPort }}
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           resources:
 {{ toYaml .Values.windows.resources | indent 12 }}
           volumeMounts:

@@ -41,6 +41,9 @@ linux:
   # If provided, the userAgent string will be appended to the
   # AKV provider user agents for all adal and keyvault requests.
   customUserAgent: ""
+  healthzPort: 8989
+  healthzPath: "/healthz"
+  healthzTimeout: "5s"
 
 windows:
   image:
@@ -67,6 +70,9 @@ windows:
   # If provided, the userAgent string will be appended to the
   # AKV provider user agents for all adal and keyvault requests.
   customUserAgent: ""
+  healthzPort: 8989
+  healthzPath: "/healthz"
+  healthzTimeout: "5s"
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md

@@ -28,15 +28,17 @@ spec:
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
             - --construct-pem-chain=false
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  [
-                    "cmd",
-                    "/c",
-                    "del /f C:\\provider\\azure.sock",
-                  ]
+            - --healthz-port=8989
+            - --healthz-path=/healthz
+            - --healthz-timeout=5s
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8989
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           resources:
             requests:
               cpu: 100m
