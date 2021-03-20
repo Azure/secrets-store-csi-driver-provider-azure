@@ -29,19 +29,17 @@ spec:
           args:
             - --endpoint=unix:///provider/azure.sock
             - --construct-pem-chain=false
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - "rm /provider/azure.sock"
-          readinessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
-            initialDelaySeconds: 3
+            - --healthz-port=8989
+            - --healthz-path=/healthz
+            - --healthz-timeout=5s
           livenessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            httpGet:
+              path: /healthz
+              port: 8989
+            failureThreshold: 3
             initialDelaySeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           resources:
             requests:
               cpu: 50m
