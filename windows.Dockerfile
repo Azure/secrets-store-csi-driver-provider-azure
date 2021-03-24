@@ -1,7 +1,7 @@
 ARG OSVERSION
 FROM --platform=linux/amd64 gcr.io/k8s-staging-e2e-test-images/windows-servercore-cache:1.0-linux-amd64-${OSVERSION} as core
 
-FROM mcr.microsoft.com/powershell:lts-nanoserver-${OSVERSION}
+FROM mcr.microsoft.com/windows/nanoserver:${OSVERSION}
 LABEL maintainers="aramase"
 LABEL description="Secrets Store CSI Driver Provider Azure"
 
