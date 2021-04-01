@@ -71,24 +71,16 @@ For a list of customizable values that can be injected when invoking helm instal
     csi-secrets-store-bp4f4   3/3     Running   0          24s
     ```
 
-    To validate the `--grpc-supported-providers=azure` arg has been configured correctly, run the following command:
-
-    ```bash
-    kubectl get ds -l app=csi-secrets-store -o jsonpath='{range .items[*]}{.spec.template.spec.containers[1].args}{"\n"}'
-    ```
-
-    You should see the args for the `secrets-store` container in the driver pods for each node:
-    ```bash
-    ["--debug=true","--endpoint=$(CSI_ENDPOINT)","--nodeid=$(KUBE_NODE_NAME)","--provider-volume=/etc/kubernetes/secrets-store-csi-providers","--grpc-supported-providers=azure","--metrics-addr=:8080"]
-    ```
-
 2. **Install the Azure Key Vault provider**
 
     For linux nodes
+
     ```bash
     kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
     ```
+
     For windows nodes
+
     ```bash
     kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
     ```

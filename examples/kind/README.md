@@ -56,6 +56,7 @@ kind create cluster --name kind-csi-demo
 
 ```sh
 kubectl create secret generic secrets-store-creds --from-literal clientid=<CLIENTID> --from-literal clientsecret=<CLIENTSECRET>
+kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
 ```
 
 - Deploy the app. This will deploy a busybox container and mount the secrets as volume at path `/mnt/secrets-store`
