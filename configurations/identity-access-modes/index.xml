@@ -66,6 +66,9 @@
 &lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># Client ID (AZURE_CLIENT_ID) will be the App ID of your service principal&lt;/span>
 &lt;span style="color:#8f5902;font-style:italic"># Client Secret (AZURE_CLIENT_SECRET) will be the Password of your service principal&lt;/span>
 kubectl create secret generic secrets-store-creds --from-literal &lt;span style="color:#000">clientid&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;AZURE_CLIENT_ID&amp;gt; --from-literal &lt;span style="color:#000">clientsecret&lt;/span>&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&amp;lt;AZURE_CLIENT_SECRET&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># Label the secret&lt;/span>
+&lt;span style="color:#8f5902;font-style:italic"># Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on why this is necessary in future releases.&lt;/span>
+kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used&lt;span style="color:#ce5c00;font-weight:bold">=&lt;/span>&lt;span style="color:#204a87">true&lt;/span>
 &lt;/code>&lt;/pre>&lt;/div>
 &lt;div class="alert alert-warning" role="alert">
 &lt;h4 class="alert-heading">NOTE&lt;/h4>
