@@ -72,6 +72,7 @@ Create the Kubernetes secret with the service principal credentials:
 
 ```bash
 kubectl create secret generic secrets-store-creds --from-literal clientid=${SERVICE_PRINCIPAL_CLIENT_ID} --from-literal clientsecret=${SERVICE_PRINCIPAL_CLIENT_SECRET}
+kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
 ```
 
 > NOTE: This step is required only if you're using service principal to provide access to Keyvault.

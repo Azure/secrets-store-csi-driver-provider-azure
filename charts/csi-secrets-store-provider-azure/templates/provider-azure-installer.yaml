@@ -17,6 +17,10 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
+{{- if .Values.linux.podAnnotations }}
+      annotations:
+{{- toYaml .Values.linux.podAnnotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -42,19 +46,17 @@ spec:
             {{- if .Values.linux.customUserAgent }}
             - --custom-user-agent={{ .Values.linux.customUserAgent }}
             {{- end }}
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - "rm /provider/azure.sock"
-          readinessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
-            initialDelaySeconds: 3
+            - --healthz-port={{ .Values.linux.healthzPort }}
+            - --healthz-path={{ .Values.linux.healthzPath }}
+            - --healthz-timeout={{ .Values.linux.healthzTimeout }}
           livenessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=unix:///provider/azure.sock"]
+            httpGet:
+              path: {{ .Values.linux.healthzPath }}
+              port: {{ .Values.linux.healthzPort }}
+            failureThreshold: 3
             initialDelaySeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           {{- if .Values.linux.privileged }}
