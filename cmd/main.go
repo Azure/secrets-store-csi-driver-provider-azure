@@ -71,6 +71,9 @@ func main() {
 	if *provider.ConstructPEMChain {
 		klog.Infof("construct pem chain feature enabled")
 	}
+	if *provider.DriverWriteSecrets {
+		klog.Infof("secrets will be written to filesystem by the CSI driver")
+	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
 		klog.Fatalf("failed to add user agent to adal: %+v", err)

@@ -29,6 +29,8 @@ type Config struct {
 	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
 	IsClusterUpgraded                 bool   `envconfig:"IS_CLUSTER_UPGRADED"`
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
+	DriverWriteSecrets                bool   `envconfig:"DRIVER_WRITE_SECRETS" default:"false"`
+	AzureEnvironmentFilePath          string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
 }
 
 func (c *Config) DeepCopy() *Config {
@@ -54,6 +56,8 @@ func (c *Config) DeepCopy() *Config {
 	copy.HelmChartDir = c.HelmChartDir
 	copy.IsClusterUpgraded = c.IsClusterUpgraded
 	copy.IsBackwardCompatibilityTest = c.IsBackwardCompatibilityTest
+	copy.DriverWriteSecrets = c.DriverWriteSecrets
+	copy.AzureEnvironmentFilePath = c.AzureEnvironmentFilePath
 
 	return copy
 }

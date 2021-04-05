@@ -12,7 +12,7 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - template: e2e-tests-template.yaml
+  - template: templates/e2e-test-azure.yaml
     parameters:
       clusterTypes:
       - "aks"
