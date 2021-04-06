@@ -69,6 +69,9 @@ spec:
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: HostToContainer
+            {{- if .Values.linux.volumeMounts }}
+            {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
+            {{- end}}
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}
@@ -79,6 +82,9 @@ spec:
         - name: mountpoint-dir
           hostPath:
             path: "/var/lib/kubelet/pods"
+        {{- if .Values.linux.volumes }}
+        {{- toYaml .Values.linux.volumes | nindent 8 }}
+        {{- end}}
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
