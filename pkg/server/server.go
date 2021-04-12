@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -63,7 +64,11 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 }
 
 func (s *CSIDriverProviderServer) Version(ctx context.Context, req *v1alpha1.VersionRequest) (*v1alpha1.VersionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
+	return &v1alpha1.VersionResponse{
+		Version:        "v1alpha1",
+		RuntimeVersion: version.BuildVersion,
+		RuntimeName:    "secrets-store-csi-driver-provider-azure",
+	}, nil
 }
 
 func (s *CSIDriverProviderServer) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
