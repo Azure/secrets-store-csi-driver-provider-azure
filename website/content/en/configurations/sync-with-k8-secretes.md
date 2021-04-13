@@ -74,12 +74,16 @@ spec:
 
 In some cases, you may want to create a Kubernetes Secret to mirror the mounted content. Use the optional `secretObjects` field to define the desired state of the synced Kubernetes secret objects.
 
-> NOTE: Make sure the `objectName` in `secretObjects` matches the file name of the mounted content. This could be the object name or the object alias.
+> NOTE: Make sure the `objectName` in `secretObjects` matches the file name of the mounted content. If object alias used, then it should be the object alias else this would be the object name.
 
-> The secrets will only sync once you *start a pod mounting the secrets*. Solely relying on the syncing with Kubernetes secrets feature thus does not work.
+{{% alert title="NOTE" color="warning" %}}
 
+- The secrets will only sync once you *start a pod mounting the secrets*. Solely relying on the syncing with Kubernetes secrets feature thus does not work.
+- The Kubernetes secrets will be synced to the same namespace as the application pod and `SecretProviderClass`.
+{{% /alert %}}
 
 A `SecretProviderClass` custom resource should have the following components:
+
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
