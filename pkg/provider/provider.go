@@ -343,7 +343,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		version := getObjectVersion(*keybundle.Key.Kid)
 		// for object type "key" the public key is written to the file in PEM format
 		switch keybundle.Key.Kty {
-		case kv.RSA:
+		case kv.RSA, kv.RSAHSM:
 			// decode the base64 bytes for n
 			nb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.N)
 			if err != nil {
@@ -370,7 +370,7 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 			var pemData []byte
 			pemData = append(pemData, pem.EncodeToMemory(pubKeyBlock)...)
 			return string(pemData), version, nil
-		case kv.EC:
+		case kv.EC, kv.ECHSM:
 			// decode the base64 bytes for x
 			xb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.X)
 			if err != nil {

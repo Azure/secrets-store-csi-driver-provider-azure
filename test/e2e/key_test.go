@@ -79,15 +79,6 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 				},
 			},
 		})
-
-		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
-		})
 	})
 
 	AfterEach(func() {
@@ -100,6 +91,15 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 	})
 
 	It("should read key from pod", func() {
+		p = pod.Create(pod.CreateInput{
+			Creator:                  kubeClient,
+			Config:                   config,
+			Name:                     "busybox-secrets-store-inline-crd",
+			Namespace:                ns.Name,
+			SecretProviderClassName:  spc.Name,
+			NodePublishSecretRefName: nodePublishSecretRef.Name,
+		})
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -115,6 +115,15 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 	})
 
 	It("should read key from pod with alias", func() {
+		p = pod.Create(pod.CreateInput{
+			Creator:                  kubeClient,
+			Config:                   config,
+			Name:                     "busybox-secrets-store-inline-crd",
+			Namespace:                ns.Name,
+			SecretProviderClassName:  spc.Name,
+			NodePublishSecretRefName: nodePublishSecretRef.Name,
+		})
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -127,5 +136,105 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		key, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
 		Expect(key).To(ContainSubstring(config.KeyValue))
+	})
+
+	It("should read RSA-HSM key from pod", func() {
+		// update the secretproviderclass to reference rsa-hsm keys
+		keyVaultObjects := []provider.KeyVaultObject{
+			{
+				ObjectName: "rsahsmkey1",
+				ObjectType: provider.VaultObjectTypeKey,
+			},
+		}
+
+		yamlArray := provider.StringArray{Array: []string{}}
+		for _, object := range keyVaultObjects {
+			obj, err := yaml.Marshal(object)
+			Expect(err).To(BeNil())
+			yamlArray.Array = append(yamlArray.Array, string(obj))
+		}
+
+		objects, err := yaml.Marshal(yamlArray)
+		Expect(err).To(BeNil())
+
+		spc.Spec.Parameters["objects"] = string(objects)
+		spc = secretproviderclass.Update(secretproviderclass.UpdateInput{
+			Updater:             kubeClient,
+			SecretProviderClass: spc,
+		})
+
+		p = pod.Create(pod.CreateInput{
+			Creator:                  kubeClient,
+			Config:                   config,
+			Name:                     "busybox-secrets-store-inline-crd",
+			Namespace:                ns.Name,
+			SecretProviderClassName:  spc.Name,
+			NodePublishSecretRefName: nodePublishSecretRef.Name,
+		})
+
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		cmd := getPodExecCommand("cat /mnt/secrets-store/rsahsmkey1")
+		key, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(key).NotTo(BeEmpty())
+		Expect(key).To(ContainSubstring("BEGIN PUBLIC KEY"))
+		Expect(key).To(ContainSubstring("END PUBLIC KEY"))
+	})
+
+	It("should read EC-HSM key from pod", func() {
+		// update the secretproviderclass to reference rsa-hsm keys
+		keyVaultObjects := []provider.KeyVaultObject{
+			{
+				ObjectName: "echsmkey1",
+				ObjectType: provider.VaultObjectTypeKey,
+			},
+		}
+
+		yamlArray := provider.StringArray{Array: []string{}}
+		for _, object := range keyVaultObjects {
+			obj, err := yaml.Marshal(object)
+			Expect(err).To(BeNil())
+			yamlArray.Array = append(yamlArray.Array, string(obj))
+		}
+
+		objects, err := yaml.Marshal(yamlArray)
+		Expect(err).To(BeNil())
+
+		spc.Spec.Parameters["objects"] = string(objects)
+		spc = secretproviderclass.Update(secretproviderclass.UpdateInput{
+			Updater:             kubeClient,
+			SecretProviderClass: spc,
+		})
+
+		p = pod.Create(pod.CreateInput{
+			Creator:                  kubeClient,
+			Config:                   config,
+			Name:                     "busybox-secrets-store-inline-crd",
+			Namespace:                ns.Name,
+			SecretProviderClassName:  spc.Name,
+			NodePublishSecretRefName: nodePublishSecretRef.Name,
+		})
+
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		cmd := getPodExecCommand("cat /mnt/secrets-store/echsmkey1")
+		key, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(key).NotTo(BeEmpty())
+		Expect(key).To(ContainSubstring("BEGIN PUBLIC KEY"))
+		Expect(key).To(ContainSubstring("END PUBLIC KEY"))
 	})
 })
