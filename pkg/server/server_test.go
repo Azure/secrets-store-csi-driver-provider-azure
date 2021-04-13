@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 	"sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
 )
 
@@ -57,8 +59,17 @@ func TestMount(t *testing.T) {
 
 func TestVersion(t *testing.T) {
 	testServer := &CSIDriverProviderServer{}
-	_, err := testServer.Version(context.TODO(), &v1alpha1.VersionRequest{})
-	if err == nil {
-		t.Fatalf("expected error to not be nil")
+	version.BuildVersion = "test"
+	resp, err := testServer.Version(context.TODO(), &v1alpha1.VersionRequest{})
+	if err != nil {
+		t.Fatalf("expected error to be nil")
+	}
+	expectedVersionResponse := &v1alpha1.VersionResponse{
+		Version:        "v1alpha1",
+		RuntimeVersion: "test",
+		RuntimeName:    "secrets-store-csi-driver-provider-azure",
+	}
+	if !reflect.DeepEqual(resp, expectedVersionResponse) {
+		t.Fatalf("expected resp: %v, got: %v", expectedVersionResponse, resp)
 	}
 }
