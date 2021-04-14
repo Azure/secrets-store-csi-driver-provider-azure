@@ -59,3 +59,20 @@ func Delete(input DeleteInput) {
 	By(fmt.Sprintf("Deleting SecretProviderClass \"%s\"", input.SecretProviderClass.Name))
 	Expect(input.Deleter.Delete(context.TODO(), input.SecretProviderClass)).Should(Succeed())
 }
+
+// UpdateInput is the input for Update.
+type UpdateInput struct {
+	Updater             framework.Updater
+	SecretProviderClass *v1alpha1.SecretProviderClass
+}
+
+// Update updates a SecretProviderClass resource.
+func Update(input UpdateInput) *v1alpha1.SecretProviderClass {
+	Expect(input.Updater).NotTo(BeNil(), "input.Updater is required for SecretProviderClass.Update")
+	Expect(input.SecretProviderClass).NotTo(BeNil(), "input.SecretProviderClass is required for SecretProviderClass.Update")
+
+	By(fmt.Sprintf("Updating SecretProviderClass \"%s/%s\"", input.SecretProviderClass.Namespace, input.SecretProviderClass.Name))
+
+	Expect(input.Updater.Update(context.TODO(), input.SecretProviderClass)).Should(Succeed())
+	return input.SecretProviderClass
+}
