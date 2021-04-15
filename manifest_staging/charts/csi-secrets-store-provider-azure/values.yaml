@@ -125,6 +125,7 @@ secrets-store-csi-driver:
 ## Install default service account
 rbac:
   install: true
+  pspEnabled: false
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: false
