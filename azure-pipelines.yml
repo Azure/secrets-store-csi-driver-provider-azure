@@ -33,8 +33,6 @@ jobs:
       displayName: Run unit tests
     - script: bash <(curl -s https://codecov.io/bash)
       displayName: Upload coverage to codecov
-      env:
-        CODECOV_TOKEN: $(CODECOV_TOKEN)
     - script: make helm-lint
       displayName: Run helm lint
     - template: .pipelines/templates/scan-images.yaml
