@@ -44,6 +44,15 @@ linux:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 windows:
   image:
@@ -73,6 +82,15 @@ windows:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
