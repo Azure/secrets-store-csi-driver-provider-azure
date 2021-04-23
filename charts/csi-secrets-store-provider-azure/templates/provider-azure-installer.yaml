@@ -69,8 +69,6 @@ spec:
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: HostToContainer
-      affinity:
-{{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}

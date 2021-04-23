@@ -72,6 +72,8 @@ spec:
             {{- if .Values.linux.volumeMounts }}
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
+      affinity:
+{{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}

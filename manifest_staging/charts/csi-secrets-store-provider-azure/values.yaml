@@ -46,6 +46,15 @@ linux:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 windows:
   image:
@@ -77,6 +86,15 @@ windows:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
