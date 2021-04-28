@@ -65,6 +65,45 @@ func Install(input InstallInput) {
 	Expect(err).To(BeNil())
 }
 
+//Upgrade upgrades csi-secrets-store-provider-azure to current version using helm 3
+func Upgrade(input InstallInput) {
+	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm.Install")
+
+	cwd, err := os.Getwd()
+	Expect(err).To(BeNil())
+
+	// Change current working directory to repo root
+	// Before installing csi-secrets-store-provider-azure through Helm
+	os.Chdir("../..")
+	defer os.Chdir(cwd)
+
+	args := append([]string{
+		"upgrade",
+		chartName,
+		"charts/csi-secrets-store-provider-azure",
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
+		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
+		fmt.Sprintf("--set=logVerbosity=1"),
+		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
+		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
+		"--wait",
+		"--timeout=5m",
+		"--debug",
+	})
+
+	if input.Config.IsWindowsTest {
+		args = append(args,
+			fmt.Sprintf("--set=windows.enabled=true"),
+			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
+	}
+
+	args = append(args, generateValueArgs(input.Config)...)
+
+	err = helm(args)
+	Expect(err).To(BeNil())
+}
+
 // Uninstall uninstalls csi-secrets-store-provider-azure via Helm 3.
 func Uninstall() {
 	args := []string{
