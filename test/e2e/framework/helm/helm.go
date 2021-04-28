@@ -77,6 +77,19 @@ func Upgrade(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
+	//resolve helm dependency
+	dependencyArgs := append([]string{
+		"dependency",
+		"update",
+		"charts/csi-secrets-store-provider-azure",
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+		"--debug",
+	})
+
+	err = helm(dependencyArgs)
+	Expect(err).To(BeNil())
+
+	//Upgrade to 'release' chart (Current released version)
 	args := append([]string{
 		"upgrade",
 		chartName,
