@@ -83,7 +83,7 @@ func Upgrade(input InstallInput) {
 		"update",
 		"charts/csi-secrets-store-provider-azure",
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
-		"--debug",
+		"--debug", 
 	})
 
 	err = helm(dependencyArgs)
