@@ -59,14 +59,14 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	dumpLogs()
+
 	defer func() {
 		if !config.IsSoakTest && !config.IsUpgradeTest {
 			By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 			helm.Uninstall()
 		}
 	}()
-
-	dumpLogs()
 })
 
 func initScheme() *runtime.Scheme {
