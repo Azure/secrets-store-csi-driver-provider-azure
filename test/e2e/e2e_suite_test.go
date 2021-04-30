@@ -62,26 +62,13 @@ var _ = BeforeSuite(func() {
 
 	kubeClient = clusterProxy.GetClient()
 	kubeconfigPath = clusterProxy.GetKubeconfigPath()
-
-	// //Setup Secrets
-	// utils.SetupSecrets(utils.Input{
-	// 	Config:  config,
-	// 	Creator: kubeClient,
-	// })
 })
 
 var _ = AfterSuite(func() {
+	//Don't uninstall helmchart. This will be useful while performing tests after upgrade.
+	//Also with kind cluster cleanup target, everything will get deleted. Dump logs for later debugging.
+
 	dumpLogs()
-
-	//Don't uninstall helmchart. This will be needed to perform tests again after upgrade.
-	//Also with kind cluster cleanup target everything will get deleted.
-
-	// defer func() {
-	// 	if !config.IsSoakTest && !config.IsUpgradeTest {
-	// 		By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
-	// 		helm.Uninstall()
-	// 	}
-	// }()
 })
 
 func initScheme() *runtime.Scheme {
