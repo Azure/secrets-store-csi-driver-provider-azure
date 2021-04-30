@@ -23,7 +23,6 @@ const (
 type InstallInput struct {
 	Config           *framework.Config
 	NamespacedMode   bool
-	ChartVersionName string //CurrentVersion | NewVersion
 }
 
 // Install installs csi-secrets-store-provider-azure via Helm 3.
@@ -38,10 +37,24 @@ func Install(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
+	chartDir := "charts/csi-secrets-store-provider-azure"
+
+	//resolve helm dependency
+	dependencyArgs := append([]string{
+		"dependency",
+		"update",
+		chartDir,
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+		"--debug",
+	})
+	err = helm(dependencyArgs)
+	Expect(err).To(BeNil())
+
 	args := append([]string{
 		"install",
 		chartName,
-		"manifest_staging/charts/csi-secrets-store-provider-azure",
+		// "manifest_staging/charts/csi-secrets-store-provider-azure",
+		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
@@ -78,13 +91,7 @@ func Upgrade(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
-	chartDir := ""
-	switch input.ChartVersionName {
-	case "CurrentVersion":
-		chartDir = "charts/csi-secrets-store-provider-azure"
-	case "NewVersion":
-		chartDir = "manifest_staging/charts/csi-secrets-store-provider-azure"
-	}
+	chartDir := "manifest_staging/charts/csi-secrets-store-provider-azure"
 
 	//resolve helm dependency
 	dependencyArgs := append([]string{
@@ -94,7 +101,6 @@ func Upgrade(input InstallInput) {
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		"--debug",
 	})
-
 	err = helm(dependencyArgs)
 	Expect(err).To(BeNil())
 

@@ -61,7 +61,7 @@ jobs:
       CI_KIND_CLUSTER: true
   - script: |
       make e2e-test
-    displayName: "Run e2e tests on kind cluster"
+    displayName: "Run e2e tests on kind cluster for Released Version"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
@@ -71,6 +71,19 @@ jobs:
       SECRET_NAME: $(SECRET_NAME)
       TENANT_ID: $(TENANT_ID)
       CI_KIND_CLUSTER: true
+  - script: |
+      make e2e-test
+    displayName: "Run e2e tests on kind cluster for New Version"
+    env:
+      AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      KEY_NAME: $(KEY_NAME)
+      KEY_VERSION: $(KEY_VERSION)
+      KEYVAULT_NAME: $(KEYVAULT_NAME)
+      SECRET_NAME: $(SECRET_NAME)
+      TENANT_ID: $(TENANT_ID)
+      CI_KIND_CLUSTER: true
+      IS_UPGRADE_TEST: true
   - script: |
       make e2e-kind-cleanup
     displayName: 'Delete kind cluster'

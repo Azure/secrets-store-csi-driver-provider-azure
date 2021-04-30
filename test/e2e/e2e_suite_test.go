@@ -11,7 +11,6 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/utils"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -48,8 +47,14 @@ var _ = BeforeSuite(func() {
 
 	if !config.IsSoakTest {
 		if !(config.IsUpgradeTest && helm.ReleaseExists()) {
-			By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
+			By("Installing Current Released Version of Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 			helm.Install(helm.InstallInput{
+				Config: config,
+			})
+		} else {
+			//This is for upgrade test.
+			By("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version.")
+			helm.Upgrade(helm.InstallInput{
 				Config: config,
 			})
 		}
@@ -58,22 +63,25 @@ var _ = BeforeSuite(func() {
 	kubeClient = clusterProxy.GetClient()
 	kubeconfigPath = clusterProxy.GetKubeconfigPath()
 
-	//Setup Secrets
-	utils.SetupSecrets(utils.Input{
-		Config:  config,
-		Creator: kubeClient,
-	})
+	// //Setup Secrets
+	// utils.SetupSecrets(utils.Input{
+	// 	Config:  config,
+	// 	Creator: kubeClient,
+	// })
 })
 
 var _ = AfterSuite(func() {
 	dumpLogs()
 
-	defer func() {
-		if !config.IsSoakTest && !config.IsUpgradeTest {
-			By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
-			helm.Uninstall()
-		}
-	}()
+	//Don't uninstall helmchart. This will be needed to perform tests again after upgrade.
+	//Also with kind cluster cleanup target everything will get deleted.
+
+	// defer func() {
+	// 	if !config.IsSoakTest && !config.IsUpgradeTest {
+	// 		By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
+	// 		helm.Uninstall()
+	// 	}
+	// }()
 })
 
 func initScheme() *runtime.Scheme {
