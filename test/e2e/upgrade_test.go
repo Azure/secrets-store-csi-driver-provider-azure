@@ -11,15 +11,14 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/utils"
 )
 
-var _ = Describe("Test backward compatibility", func() {
+var _ = PDescribe("Test backward compatibility", func() {
 	Context("By upgrading to current release", func() {
 		BeforeEach(func() {
 			//Upgrade to Current Version
 			if helm.ReleaseExists() {
 				By("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 				helm.Upgrade(helm.InstallInput{
-					Config:           config,
-					ChartVersionName: "CurrentVersion",
+					Config: config,
 				})
 			}
 
@@ -46,7 +45,6 @@ var _ = Describe("Test backward compatibility", func() {
 				By("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 				helm.Upgrade(helm.InstallInput{
 					Config:           config,
-					ChartVersionName: "NewVersion",
 				})
 			}
 		})
