@@ -19,6 +19,7 @@ import (
 type CreateInput struct {
 	Creator framework.Creator
 	Name    string
+	NS      *corev1.Namespace
 }
 
 // Create creates a namespace.
@@ -26,10 +27,13 @@ func Create(input CreateInput) *corev1.Namespace {
 	Expect(input.Creator).NotTo(BeNil(), "input.Creator is required for Namespace.Create")
 	Expect(input.Name).NotTo(BeEmpty(), "input.Name is required for Namespace.Create")
 
-	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
+	ns := &corev1.Namespace{}
+	if input.NS != nil {
+		ns = input.NS
+	} else { //Will eventually move away from GenerateName to be more predictable and as we write more upgrade test
+		ns.ObjectMeta = metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", input.Name),
-		},
+		}
 	}
 
 	Expect(input.Creator.Create(context.TODO(), ns)).Should(Succeed())
