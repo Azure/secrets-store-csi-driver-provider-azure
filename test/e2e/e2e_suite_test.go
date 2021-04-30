@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/utils"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -56,6 +57,12 @@ var _ = BeforeSuite(func() {
 
 	kubeClient = clusterProxy.GetClient()
 	kubeconfigPath = clusterProxy.GetKubeconfigPath()
+
+	//Setup Secrets
+	utils.SetupSecrets(utils.Input{
+		Config:  config,
+		Creator: kubeClient,
+	})
 })
 
 var _ = AfterSuite(func() {
