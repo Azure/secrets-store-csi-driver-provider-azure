@@ -38,7 +38,7 @@ jobs:
     - template: .pipelines/templates/scan-images.yaml
 
 - job: e2e_test_kind
-  timeoutInMinutes: 15
+  timeoutInMinutes: 10
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
@@ -77,7 +77,7 @@ jobs:
     condition: always()
 
 - job: custom_cloud_e2e_test_kind
-  timeoutInMinutes: 15
+  timeoutInMinutes: 10
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
