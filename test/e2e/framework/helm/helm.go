@@ -21,8 +21,8 @@ const (
 
 // InstallInput is the input for Install.
 type InstallInput struct {
-	Config           *framework.Config
-	NamespacedMode   bool
+	Config         *framework.Config
+	NamespacedMode bool
 }
 
 // Install installs csi-secrets-store-provider-azure via Helm 3.
@@ -37,7 +37,8 @@ func Install(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
-	chartDir := "charts/csi-secrets-store-provider-azure"
+	// chartDir := "charts/csi-secrets-store-provider-azure"
+	chartDir := input.Config.HelmChartDir
 
 	//resolve helm dependency
 	dependencyArgs := append([]string{
@@ -53,7 +54,6 @@ func Install(input InstallInput) {
 	args := append([]string{
 		"install",
 		chartName,
-		// "manifest_staging/charts/csi-secrets-store-provider-azure",
 		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
@@ -91,7 +91,8 @@ func Upgrade(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
-	chartDir := "manifest_staging/charts/csi-secrets-store-provider-azure"
+	// chartDir := "manifest_staging/charts/csi-secrets-store-provider-azure"
+	chartDir := input.Config.HelmChartDir
 
 	//resolve helm dependency
 	dependencyArgs := append([]string{
