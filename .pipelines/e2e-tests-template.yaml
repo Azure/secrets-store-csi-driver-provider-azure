@@ -107,27 +107,6 @@ jobs:
               SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
               TENANT_ID: $(TENANT_ID)
               IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-              HELM_CHART_DIR: "charts/csi-secrets-store-provider-azure"
-              ${{ if eq(osType, 'windows') }}:
-                TEST_WINDOWS: true
-
-          - script: |
-              export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
-
-              make e2e-test
-            displayName: "Run e2e tests after cluster upgrade with New Version"
-            env:
-              AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-              AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-              KEY_NAME: $(KEY_NAME)
-              KEY_VERSION: $(KEY_VERSION)
-              KEYVAULT_NAME: $(KEYVAULT_NAME)
-              RESOURCE_GROUP: $(RESOURCE_GROUP)
-              SECRET_NAME: $(SECRET_NAME)
-              SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
-              TENANT_ID: $(TENANT_ID)
-              IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-              HELM_CHART_DIR: "manifest_staging/charts/csi-secrets-store-provider-azure"
               ${{ if eq(osType, 'windows') }}:
                 TEST_WINDOWS: true
 
