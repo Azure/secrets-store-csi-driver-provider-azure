@@ -37,7 +37,6 @@ func Install(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
-	// chartDir := "charts/csi-secrets-store-provider-azure"
 	chartDir := input.Config.HelmChartDir
 
 	//resolve helm dependency
@@ -91,7 +90,6 @@ func Upgrade(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
-	// chartDir := "manifest_staging/charts/csi-secrets-store-provider-azure"
 	chartDir := input.Config.HelmChartDir
 
 	//resolve helm dependency
