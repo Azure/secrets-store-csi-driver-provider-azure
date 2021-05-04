@@ -47,13 +47,13 @@ var _ = BeforeSuite(func() {
 
 	if !config.IsSoakTest {
 		if !(config.IsUpgradeTest && helm.ReleaseExists()) {
-			By("Installing Current Released Version of Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
+			By(fmt.Sprintf("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm from - %s.", config.HelmChartDir))
 			helm.Install(helm.InstallInput{
 				Config: config,
 			})
 		} else {
 			//This is for upgrade test.
-			By("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version.")
+			By(fmt.Sprintf("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version from - %s.", config.HelmChartDir))
 			helm.Upgrade(helm.InstallInput{
 				Config: config,
 			})
