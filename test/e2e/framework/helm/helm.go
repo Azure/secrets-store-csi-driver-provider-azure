@@ -39,17 +39,6 @@ func Install(input InstallInput) {
 
 	chartDir := input.Config.HelmChartDir
 
-	//resolve helm dependency
-	dependencyArgs := append([]string{
-		"dependency",
-		"update",
-		chartDir,
-		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
-		"--debug",
-	})
-	err = helm(dependencyArgs)
-	Expect(err).To(BeNil())
-
 	args := append([]string{
 		"install",
 		chartName,
