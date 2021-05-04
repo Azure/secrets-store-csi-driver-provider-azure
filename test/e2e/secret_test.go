@@ -11,12 +11,12 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secret"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
-	"github.com/ghodss/yaml"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 
+	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
 
 var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
