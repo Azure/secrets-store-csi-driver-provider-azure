@@ -67,7 +67,7 @@ func Install(input InstallInput) {
 	Expect(err).To(BeNil())
 }
 
-//Upgrade upgrades csi-secrets-store-provider-azure to current version using helm 3
+//Upgrade upgrades csi-secrets-store-provider-azure to chart specified in config
 func Upgrade(input InstallInput) {
 	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm upgrade")
 
@@ -92,7 +92,6 @@ func Upgrade(input InstallInput) {
 	err = helm(dependencyArgs)
 	Expect(err).To(BeNil())
 
-	//Upgrade to 'release' chart (Current released version)
 	args := append([]string{
 		"upgrade",
 		chartName,
