@@ -26,7 +26,7 @@ type Config struct {
 	PodIdentityUserAssignedIdentityID string `envconfig:"POD_IDENTITY_USER_ASSIGN_IDENTITY_ID"`
 	ResourceGroup                     string `envconfig:"RESOURCE_GROUP"`
 	IsUpgradeTest                     bool   `envconfig:"IS_UPGRADE_TEST"`
-	HelmChartDir                       string `envconfig:"Helm_Chart_Dir" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
+	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
 }
 
 func (c *Config) DeepCopy() *Config {
