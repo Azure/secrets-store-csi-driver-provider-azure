@@ -54,7 +54,7 @@ var _ = BeforeSuite(func() {
 		} else {
 			//This is for upgrade test.
 			By(fmt.Sprintf("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version from - %s.", config.HelmChartDir))
-			helm.Upgrade(helm.InstallInput{
+			helm.Upgrade(helm.UpgradeInput{
 				Config: config,
 			})
 		}
