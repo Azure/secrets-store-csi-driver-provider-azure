@@ -69,7 +69,7 @@ func Install(input InstallInput) {
 
 //Upgrade upgrades csi-secrets-store-provider-azure to current version using helm 3
 func Upgrade(input InstallInput) {
-	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm.Install")
+	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm upgrade")
 
 	cwd, err := os.Getwd()
 	Expect(err).To(BeNil())
