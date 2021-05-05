@@ -6,9 +6,6 @@ parameters:
   - name: testClusterUpgrade
     type: boolean
     default: false
-  - name: runBackwardCompatibilityTest
-    type: boolean
-    default: false
 
 jobs:
   - ${{ each clusterType in parameters.clusterTypes }}:
@@ -51,29 +48,28 @@ jobs:
           parameters:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
-        - ${{ if parameters.runBackwardCompatibilityTest }}:
-          - script: |
-              export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
-  
-              #This gets latest released chart(tgz) version from charts directory
-              export HELM_CHART_DIR=charts/$(ls -h charts | sort --version-sort --field-separator=- --key=6 | tail -n 1)
-  
-              make e2e-test
-            displayName: "Run e2e tests with Released Version"
-            env:
-              AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-              AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-              KEY_NAME: $(KEY_NAME)
-              KEY_VERSION: $(KEY_VERSION)
-              KEYVAULT_NAME: $(KEYVAULT_NAME)
-              RESOURCE_GROUP: $(RESOURCE_GROUP)
-              SECRET_NAME: $(SECRET_NAME)
-              SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
-              TENANT_ID: $(TENANT_ID)
-              IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-              HELM_CHART_DIR: "charts/csi-secrets-store-provider-azure"
-              ${{ if eq(osType, 'windows') }}:
-                TEST_WINDOWS: true
+        - script: |
+            export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
+
+            #This gets latest released chart(tgz) version from charts directory
+            export HELM_CHART_DIR=charts/$(ls -h charts | sort --version-sort --field-separator=- --key=6 | tail -n 1)
+
+            make e2e-test
+          displayName: "Run e2e tests with Released Version"
+          env:
+            AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+            AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+            KEY_NAME: $(KEY_NAME)
+            KEY_VERSION: $(KEY_VERSION)
+            KEYVAULT_NAME: $(KEYVAULT_NAME)
+            RESOURCE_GROUP: $(RESOURCE_GROUP)
+            SECRET_NAME: $(SECRET_NAME)
+            SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+            TENANT_ID: $(TENANT_ID)
+            IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
+            HELM_CHART_DIR: "charts/csi-secrets-store-provider-azure"
+            ${{ if eq(osType, 'windows') }}:
+              TEST_WINDOWS: true
 
         - script: |
             export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
