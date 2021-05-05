@@ -32,7 +32,7 @@ jobs:
     - script: make unit-test
       displayName: Run unit tests
     - script: bash <(curl -s https://codecov.io/bash)
-      displayName: Upload coverage to codecov 
+      displayName: Upload coverage to codecov
     - script: make helm-lint
       displayName: Run helm lint
     - template: .pipelines/templates/scan-images.yaml
