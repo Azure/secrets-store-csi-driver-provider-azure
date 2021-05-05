@@ -65,8 +65,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	dumpLogs()
-
 	//Cleanup
 	defer func() {
 		//Unistall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test.
@@ -77,6 +75,8 @@ var _ = AfterSuite(func() {
 			}
 		}
 	}()
+	
+	dumpLogs()
 })
 
 func initScheme() *runtime.Scheme {
