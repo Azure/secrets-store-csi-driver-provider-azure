@@ -22,6 +22,7 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
+      runBackwardCompatibilityTest: true
   - template: soak-tests-template.yaml
     parameters:
       clusterConfigs:
