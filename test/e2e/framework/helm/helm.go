@@ -69,8 +69,9 @@ func Install(input InstallInput) {
 
 // UpgradeInput is the input for helm upgrade.
 type UpgradeInput struct {
-	Config         *framework.Config
+	Config *framework.Config
 }
+
 //Upgrade upgrades csi-secrets-store-provider-azure to chart specified in config
 func Upgrade(input UpgradeInput) {
 	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm upgrade")
