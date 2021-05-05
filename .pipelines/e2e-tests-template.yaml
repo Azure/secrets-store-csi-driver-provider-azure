@@ -52,7 +52,7 @@ jobs:
             export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
 
             #This gets latest released chart(tgz) version from charts directory
-            export HELM_CHART_DIR=charts/$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
+            export HELM_CHART_DIR=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
 
             make e2e-test
           displayName: "Run e2e tests with Released Version"
