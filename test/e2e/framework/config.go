@@ -27,6 +27,8 @@ type Config struct {
 	ResourceGroup                     string `envconfig:"RESOURCE_GROUP"`
 	IsUpgradeTest                     bool   `envconfig:"IS_UPGRADE_TEST"`
 	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
+	IsClusterUpgraded                 bool   `envconfig:"IS_CLUSTER_UPGRADED"`
+	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
 }
 
 func (c *Config) DeepCopy() *Config {
@@ -50,6 +52,8 @@ func (c *Config) DeepCopy() *Config {
 	copy.ResourceGroup = c.ResourceGroup
 	copy.IsUpgradeTest = c.IsUpgradeTest
 	copy.HelmChartDir = c.HelmChartDir
+	copy.IsClusterUpgraded = c.IsClusterUpgraded
+	copy.IsBackwardCompatibilityTest = c.IsBackwardCompatibilityTest
 
 	return copy
 }
