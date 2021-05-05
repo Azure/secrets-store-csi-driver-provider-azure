@@ -19,7 +19,6 @@ import (
 type CreateInput struct {
 	Creator framework.Creator
 	Name    string
-	NS      *corev1.Namespace
 }
 
 // Create creates a namespace.
