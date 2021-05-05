@@ -99,6 +99,7 @@ jobs:
     env:
       CI_KIND_CLUSTER: true
   - script: |
+      export HELM_CHART_DIR=$(ls -h charts | sort --version-sort --field-separator=- --key=6 | tail -n 1)
       make e2e-test
     displayName: "Run custom cloud e2e tests on kind cluster for New version"
     env:
