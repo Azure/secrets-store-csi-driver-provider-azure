@@ -52,6 +52,9 @@ jobs:
             #This gets latest released chart(tgz) version from charts directory
             export HELM_CHART_DIR=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
 
+            #Image version of latest released chart
+            IMAGE_VERSION=0.0.14
+
             make e2e-test
           displayName: "Run e2e tests with Released Version"
           env:
@@ -65,7 +68,6 @@ jobs:
             SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
             TENANT_ID: $(TENANT_ID)
             IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-            CONFIG_IMAGE_VERSION: "0.0.14"
             ${{ if eq(osType, 'windows') }}:
               TEST_WINDOWS: true
 
