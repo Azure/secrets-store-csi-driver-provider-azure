@@ -139,6 +139,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 	})
 
 	It("should read RSA-HSM key from pod", func() {
+		if config.ImageVersion <= "0.0.14" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		// update the secretproviderclass to reference rsa-hsm keys
 		keyVaultObjects := []provider.KeyVaultObject{
 			{
