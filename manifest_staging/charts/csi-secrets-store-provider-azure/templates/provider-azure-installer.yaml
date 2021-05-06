@@ -30,8 +30,8 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: "{{ .Values.image.repository | default .Values.linux.image.repository }}:{{ .Values.image.tag | default .Values.linux.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.linux.image.pullPolicy }}
+          image: "{{ .Values.linux.image.repository }}:{{ .Values.linux.image.tag }}"
+          imagePullPolicy: {{ .Values.linux.image.pullPolicy }}
           args:
             - --endpoint=unix:///provider/azure.sock
             {{- if .Values.logFormatJSON }}

@@ -93,8 +93,10 @@ func ReleaseExists() bool {
 
 func generateValueArgs(config *framework.Config) []string {
 	args := []string{
-		fmt.Sprintf("--set=image.repository=%s/%s", config.Registry, config.ImageName),
-		fmt.Sprintf("--set=image.tag=%s", config.ImageVersion),
+		fmt.Sprintf("--set=linux.image.repository=%s/%s", config.Registry, config.ImageName),
+		fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion),
+		fmt.Sprintf("--set=windows.image.repository=%s/%s", config.Registry, config.ImageName),
+		fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion),
 	}
 	return args
 }
