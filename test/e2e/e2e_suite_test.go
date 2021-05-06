@@ -4,7 +4,6 @@ package e2e
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
@@ -35,12 +34,9 @@ func TestE2E(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	fmt.Printf("Test Image env var IMAGE_VERSION - %s\n", os.Getenv("IMAGE_VERSION"))
-	fmt.Printf("Test Image env var CONFIG_IMAGE_VERSION - %s\n", os.Getenv("CONFIG_IMAGE_VERSION"))
 	By("Parsing test configuration")
 	var err error
 	config, err = framework.ParseConfig()
-	fmt.Printf("Test Image var - %s\n", config.ImageVersion)
 	Expect(err).To(BeNil())
 
 	By("Creating a Cluster Proxy")
