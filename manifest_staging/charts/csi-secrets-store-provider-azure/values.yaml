@@ -1,9 +1,3 @@
-# [DEPRECATED] use linux.image and windows.image instead.
-image:
-  repository: ""
-  tag: ""
-  pullPolicy: ""
-
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
