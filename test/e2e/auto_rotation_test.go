@@ -182,8 +182,6 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 	It("should auto rotate mount contents with user managed identity", func() {
 		if config.IsKindCluster {
 			Skip("test case not supported for kind cluster")
-		} else if config.ImageVersion <= "0.0.14" {
-			Skip("functionality not yet supported in release version")
 		}
 
 		secretName := fmt.Sprintf("secret-msi-%s", utilrand.String(randomLength))
