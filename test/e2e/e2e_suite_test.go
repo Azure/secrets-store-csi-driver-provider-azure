@@ -67,7 +67,7 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	//Cleanup
 	defer func() {
-		//Unistall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test.
+		//Uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test.
 		if !config.IsSoakTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {
 			if helm.ReleaseExists() {
 				By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
