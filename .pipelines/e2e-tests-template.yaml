@@ -68,6 +68,7 @@ jobs:
             SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
             TENANT_ID: $(TENANT_ID)
             IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
+            IS_BACKWARD_COMPATIBILITY_TEST: true
             ${{ if eq(osType, 'windows') }}:
               TEST_WINDOWS: true
 
