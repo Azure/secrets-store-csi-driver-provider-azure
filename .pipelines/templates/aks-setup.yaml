@@ -9,7 +9,7 @@ steps:
       aksProfile=$(az aks get-versions -l $(AZURE_LOCATION) --query 'reverse(sort_by(orchestrators, &orchestratorVersion)[*].{version: orchestratorVersion, upgrades: upgrades})' | jq -c)
       echo "AKS Profile - $aksProfile"
 
-      aksVersions=$(go run ${{variables['System.DefaultWorkingDirectory']}}/test/aks-version.go --upgrade-profile='$aksProfile')
+      aksVersions=$(go run $(System.DefaultWorkingDirectory)/test/aks-version.go --upgrade-profile='$aksProfile')
       echo "AKS Versions - $aksVersions"
 
       IFS="~" read -ra versions <<<"$aksVersion"
