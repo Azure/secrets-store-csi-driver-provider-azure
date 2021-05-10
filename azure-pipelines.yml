@@ -61,7 +61,7 @@ jobs:
       CI_KIND_CLUSTER: true
   - script: |
       make e2e-test
-    displayName: "Run e2e tests on kind cluster"
+    displayName: "Run e2e tests on kind cluster for New Version"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
@@ -100,7 +100,7 @@ jobs:
       CI_KIND_CLUSTER: true
   - script: |
       make e2e-test
-    displayName: "Run custom cloud e2e tests on kind cluster"
+    displayName: "Run custom cloud e2e tests on kind cluster for New version"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
