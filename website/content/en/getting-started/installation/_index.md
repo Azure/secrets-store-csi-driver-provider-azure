@@ -12,6 +12,7 @@ description: >
 #### Prerequisites
 
 Recommended Kubernetes version:
+
 - For Linux - v1.16.0+
 - For Windows - v1.18.0+
 
@@ -28,6 +29,20 @@ helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com
 helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
 ```
 
+> Important: It's recommended to install the Azure Key Vault Provider for Secrets Store CSI Driver in the `kube-system` namespace using Helm.
+
+```bash
+helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --namespace kube-system
+```
+
+{{% alert title="Why kube-system" color="warning" %}}
+
+1. The driver and provider are installed as a *DaemonSet* with the ability to mount kubelet hostPath volumes and view pod service account tokens. It should be treated as privileged and regular cluster users should not have permissions to deploy or modify the driver.
+1. For AKS clusters with [limited egress traffic](https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic), installing the driver and provider in `kube-system` is required to be able to establish connectivity to the `kube-apiserver`. Refer to [#488](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/488) for more details.
+2. The driver pods need to run as root to mount the volume as tmpfs in the pod. Deploying the driver and provider in `kube-system` will prevent [ASC](https://docs.microsoft.com/en-us/azure/security-center/container-security) from generating alert "Running containers as root user should be avoided". Refer to [#327](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/327) for more details.
+
+{{% /alert %}}
+
 The helm charts hosted in [Azure/secrets-store-csi-driver-provider-azure](https://github.com/Azure/secrets-store-csi-driver-provider-azure/tree/master/charts/csi-secrets-store-provider-azure) repo include the Secrets Store CSI Driver helm charts as a dependency. Running the above `helm install` command will install both the Secrets Store CSI Driver and Azure Key Vault provider.
 
 ##### Values
@@ -43,7 +58,7 @@ For a list of customizable values that can be injected when invoking helm instal
     <details>
     <summary>Result</summary>
 
-    ```
+    ```bash
     csidriver.storage.k8s.io/secrets-store.csi.k8s.io created
     serviceaccount/secrets-store-csi-driver created
     clusterrole.rbac.authorization.k8s.io/secretproviderclasses-role created
@@ -107,7 +122,7 @@ For a list of customizable values that can be injected when invoking helm instal
 kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/pod-security-policy.yaml
 ```
 
-### Uninstallation
+### Uninstall
 
 #### Using Helm
 
