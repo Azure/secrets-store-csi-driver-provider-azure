@@ -54,7 +54,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%v\n", strings.Join(aksVersions, "~"))
+	fmt.Printf("%s\n", strings.Join(aksVersions, "~"))
 }
 
 func contains(versions []string, versionPrefix string) bool {
