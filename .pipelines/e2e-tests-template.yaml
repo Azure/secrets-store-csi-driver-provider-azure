@@ -69,6 +69,8 @@ jobs:
 
         - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
           - template: templates/aks-upgrade.yaml
+            parameters:
+              upgradeVersion: "$(AKS_UPGRADE_VERSION_1)"
 
           - script: |
               export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
