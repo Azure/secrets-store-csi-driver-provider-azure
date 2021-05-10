@@ -156,11 +156,10 @@ func generateValueArgs(config *framework.Config) []string {
 		imageArgs = append(imageArgs, fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion))
 		imageArgs = append(imageArgs, fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion))
 	}
+
 	args := []string{
 		fmt.Sprintf("--set=linux.image.repository=%s/%s", config.Registry, config.ImageName),
-		// fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion),
 		fmt.Sprintf("--set=windows.image.repository=%s/%s", config.Registry, config.ImageName),
-		// fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion),
 	}
 	args = append(args, imageArgs...)
 
