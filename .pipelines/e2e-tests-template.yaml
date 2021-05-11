@@ -11,7 +11,7 @@ parameters:
   - name: aksUpgradeVersions
     type: object
 
-jobs:
+# jobs:
   - ${{ each aksUpgradeVersion in parameters.aksUpgradeVersions }}:
     - job:
       displayName: ${{ aksUpgradeVersion }}
