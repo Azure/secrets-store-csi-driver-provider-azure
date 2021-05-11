@@ -10,7 +10,8 @@ steps:
     displayName: "Set cluster name"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
     
-  - script: |
+    #Run test with latest aks version available
+  - script: | 
       aksVersion=$(az aks get-versions -l eastus2euap --query 'max(sort(orchestrators[].orchestratorVersion))'  -otsv)
       echo "AKS Install version - $aksVersion"
 
@@ -18,7 +19,7 @@ steps:
     displayName: "Determine aks install versions"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
-  - ${{ if eq(parameters.testClusterUpgrade, true) }}:
+  - ${{ if eq(parameters.testClusterUpgrade, true) }}: #Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
     - script: |
         aksProfile=$(az aks get-versions -l $(AZURE_LOCATION) --query 'reverse(sort_by(orchestrators, &orchestratorVersion)[*].{version: orchestratorVersion, upgrades: upgrades})' | jq -c)
         echo "AKS Profile - $aksProfile"
