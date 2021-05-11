@@ -6,20 +6,8 @@ parameters:
   - name: testClusterUpgrade
     type: boolean
     default: false
-  - name: aksInstallVersion
-    type: string
-  - name: aksUpgradeVersions
-    type: object
 
 jobs:
-  - ${{ each aksUpgradeVersion in parameters.aksUpgradeVersions }}:
-    - job:
-      displayName: ${{ aksUpgradeVersion }}
-      steps:
-      - script: |
-          echo "AKS Version - ${{ aksUpgradeVersion }}"
-        displayName: 'Install kubectl'
-
   - ${{ each clusterType in parameters.clusterTypes }}:
     - ${{ each osType in parameters.osTypes }}:
       - job:
@@ -103,7 +91,6 @@ jobs:
               ${{ if eq(osType, 'windows') }}:
                 TEST_WINDOWS: true
 
-        - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
           - template: templates/aks-upgrade.yaml
             parameters:
               upgradeVersion: "$(AKS_UPGRADE_VERSION_2)"

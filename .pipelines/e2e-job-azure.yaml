@@ -11,12 +11,7 @@ pr:
 pool:
   vmImage: ubuntu-latest
 
-jobs:
-  - job:
-    displayName: "AKS Version"
-    steps:
-    - template: templates/aks-version.yaml    
-  
+jobs:  
   - template: e2e-tests-template.yaml
     parameters:
       clusterTypes:
@@ -26,7 +21,3 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
-      aksInstallVersion: $(AKS_INSTALL_VERSION)
-      aksUpgradeVersions:
-      - $(AKS_UPGRADE_VERSION_1)
-      - $(AKS_UPGRADE_VERSION_2)
