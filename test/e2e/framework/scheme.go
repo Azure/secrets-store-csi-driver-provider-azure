@@ -8,9 +8,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
@@ -35,9 +33,6 @@ func TryAddDefaultSchemes(scheme *runtime.Scheme) {
 	// Add rbac to the scheme.
 	_ = rbacv1.AddToScheme(scheme)
 
-	scheme.AddKnownTypes(schema.GroupVersion{Group: v1alpha1.GroupVersion.Group, Version: v1alpha1.GroupVersion.Version},
-		&v1alpha1.SecretProviderClass{},
-		&v1alpha1.SecretProviderClassList{},
-	)
-	metav1.AddToGroupVersion(scheme, schema.GroupVersion{Group: v1alpha1.GroupVersion.Group, Version: v1alpha1.GroupVersion.Version})
+	// Add secrets-store-csi v1alpha1 to the scheme
+	_ = v1alpha1.AddToScheme(scheme)
 }
