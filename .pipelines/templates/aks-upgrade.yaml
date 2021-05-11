@@ -3,11 +3,6 @@ parameters:
     type: string
 
 steps:
-  # - script: |
-  #     AKS_UPGRADE_VERSION=$(az aks get-upgrades -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} --query 'max(controlPlaneProfile.upgrades[].kubernetesVersion)' -otsv)
-  #     echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION]${AKS_UPGRADE_VERSION}"
-  #   displayName: "Get upgrade version"
-
   - script: |
       echo "Upgrading to Kubernetes ${{ parameters.upgradeVersion }}"
       az aks upgrade -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} -k ${{ parameters.upgradeVersion }} --yes
