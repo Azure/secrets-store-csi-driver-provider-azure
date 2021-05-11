@@ -40,6 +40,8 @@ jobs:
 
         - ${{ if eq(clusterType, 'aks') }}:
           - template: templates/aks-setup.yaml
+            parameters:
+              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
 
         - ${{ if eq(clusterType, 'aks-engine') }}:
           - template: templates/aks-engine-setup.yaml
