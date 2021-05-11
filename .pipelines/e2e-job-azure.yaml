@@ -12,7 +12,9 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - template: templates/aks-version.yaml    
+  - job: AKS Version
+    steps:
+    - template: templates/aks-version.yaml    
   
   - template: e2e-tests-template.yaml
     parameters:
