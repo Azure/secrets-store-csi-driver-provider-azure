@@ -37,10 +37,12 @@ func Install(input InstallInput) {
 	os.Chdir("../..")
 	defer os.Chdir(cwd)
 
+	chartDir := input.Config.HelmChartDir
+
 	args := append([]string{
 		"install",
 		chartName,
-		"manifest_staging/charts/csi-secrets-store-provider-azure",
+		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
@@ -48,6 +50,63 @@ func Install(input InstallInput) {
 		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
 		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
 		"--dependency-update",
+		"--wait",
+		"--timeout=5m",
+		"--debug",
+	})
+
+	if input.Config.IsWindowsTest {
+		args = append(args,
+			fmt.Sprintf("--set=windows.enabled=true"),
+			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
+	}
+
+	args = append(args, generateValueArgs(input.Config)...)
+
+	err = helm(args)
+	Expect(err).To(BeNil())
+}
+
+// UpgradeInput is the input for helm upgrade.
+type UpgradeInput struct {
+	Config *framework.Config
+}
+
+//Upgrade upgrades csi-secrets-store-provider-azure to chart specified in config
+func Upgrade(input UpgradeInput) {
+	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm upgrade")
+
+	cwd, err := os.Getwd()
+	Expect(err).To(BeNil())
+
+	// Change current working directory to repo root
+	// Before installing csi-secrets-store-provider-azure through Helm
+	os.Chdir("../..")
+	defer os.Chdir(cwd)
+
+	chartDir := input.Config.HelmChartDir
+
+	//resolve helm dependency
+	dependencyArgs := append([]string{
+		"dependency",
+		"update",
+		chartDir,
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+		"--debug",
+	})
+	err = helm(dependencyArgs)
+	Expect(err).To(BeNil())
+
+	args := append([]string{
+		"upgrade",
+		chartName,
+		chartDir,
+		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
+		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
+		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
+		fmt.Sprintf("--set=logVerbosity=1"),
+		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
+		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
 		"--wait",
 		"--timeout=5m",
 		"--debug",
@@ -92,12 +151,18 @@ func ReleaseExists() bool {
 }
 
 func generateValueArgs(config *framework.Config) []string {
+	imageArgs := []string{}
+	if config.ImageVersion != "" { //Set image.tag only if there is an image version provided. Else rely on default values.
+		imageArgs = append(imageArgs, fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion))
+		imageArgs = append(imageArgs, fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion))
+	}
+
 	args := []string{
 		fmt.Sprintf("--set=linux.image.repository=%s/%s", config.Registry, config.ImageName),
-		fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion),
 		fmt.Sprintf("--set=windows.image.repository=%s/%s", config.Registry, config.ImageName),
-		fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion),
 	}
+	args = append(args, imageArgs...)
+
 	return args
 }
 
