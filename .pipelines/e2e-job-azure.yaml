@@ -12,7 +12,8 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - job: AKS Version
+  - job:
+    displayName: "AKS Version"
     steps:
     - template: templates/aks-version.yaml    
   
