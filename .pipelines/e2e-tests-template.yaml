@@ -12,7 +12,7 @@ jobs:
     - ${{ each osType in parameters.osTypes }}:
       - job:
         displayName: ${{ format('{0}/{1}', clusterType, osType) }}
-        timeoutInMinutes: 60
+        timeoutInMinutes: 90
         cancelTimeoutInMinutes: 5
         workspace:
           clean: all
