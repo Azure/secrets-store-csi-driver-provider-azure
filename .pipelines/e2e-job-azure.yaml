@@ -12,33 +12,35 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  steps:
-  - script: |
-      aksProfile=$(az aks get-versions -l $(AZURE_LOCATION) --query 'reverse(sort_by(orchestrators, &orchestratorVersion)[*].{version: orchestratorVersion, upgrades: upgrades})' | jq -c)
-      echo "AKS Profile - $aksProfile"
-
-      aksVersions=$(go run $(System.DefaultWorkingDirectory)/test/aks-version.go -upgrade-profile="$aksProfile")
-      echo "AKS Versions - $aksVersions"
-
-      IFS="~" read -ra versions <<<"$aksVersions"
-      echo "Versions - ${versions[0]} = ${versions[1]} = ${versions[2]}"
-
-      echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]${versions[2]}"
-      echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION_1]${versions[1]}"
-      echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION_2]${versions[0]}"
-    displayName: "Determine aks install and upgrade versions"
-    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
-
-  - template: e2e-tests-template.yaml
-    parameters:
-      clusterTypes:
-      - "aks"
-      - "aks-engine"
-      osTypes:
-      - "linux"
-      - "windows"
-      testClusterUpgrade: true
-      aksInstallVersion: $(AKS_INSTALL_VERSION)
-      aksUpgradeVersions:
-      - $(AKS_UPGRADE_VERSION_1)
-      - $(AKS_UPGRADE_VERSION_2)
+  - job:
+    displayName: "Azure e2e"
+    steps:
+    - script: |
+        aksProfile=$(az aks get-versions -l $(AZURE_LOCATION) --query 'reverse(sort_by(orchestrators, &orchestratorVersion)[*].{version: orchestratorVersion, upgrades: upgrades})' | jq   -c)
+        echo "AKS Profile - $aksProfile"
+  
+        aksVersions=$(go run $(System.DefaultWorkingDirectory)/test/aks-version.go -upgrade-profile="$aksProfile")
+        echo "AKS Versions - $aksVersions"
+  
+        IFS="~" read -ra versions <<<"$aksVersions"
+        echo "Versions - ${versions[0]} = ${versions[1]} = ${versions[2]}"
+  
+        echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]${versions[2]}"
+        echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION_1]${versions[1]}"
+        echo "##vso[task.setvariable variable=AKS_UPGRADE_VERSION_2]${versions[0]}"
+      displayName: "Determine aks install and upgrade versions"
+      condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+  
+    - template: e2e-tests-template.yaml
+      parameters:
+        clusterTypes:
+        - "aks"
+        - "aks-engine"
+        osTypes:
+        - "linux"
+        - "windows"
+        testClusterUpgrade: true
+        aksInstallVersion: $(AKS_INSTALL_VERSION)
+        aksUpgradeVersions:
+        - $(AKS_UPGRADE_VERSION_1)
+        - $(AKS_UPGRADE_VERSION_2)
