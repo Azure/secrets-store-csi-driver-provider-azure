@@ -15,6 +15,10 @@ jobs:
   - ${{ each aksUpgradeVersion in parameters.aksUpgradeVersions }}:
     - job:
       displayName: ${{ aksUpgradeVersion }}
+      steps:
+      - script: |
+          echo "AKS Version - ${{ aksUpgradeVersion }}"
+        displayName: 'Install kubectl'
 
   - ${{ each clusterType in parameters.clusterTypes }}:
     - ${{ each osType in parameters.osTypes }}:
