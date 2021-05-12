@@ -26,7 +26,7 @@ steps:
         echo "AKS Install version - $aksVersion"
 
         echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
-      displayName: "Determine aks install and upgrade versions"
+      displayName: "Determine aks install versions for upgrade test"
       condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
   - script: |
