@@ -21,11 +21,11 @@ parameters:
 
 steps:
   - script: |
-      if [ ${{ parameters.setRegistry }} = true ] ; then
+      if [ ${{ parameters.setRegistry }} == true ] ; then
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
       fi
 
-      if [ ${{ parameters.testReleasedVersion }} = true ]; then
+      if [ ${{ parameters.testReleasedVersion }} == true ]; then
         #This gets latest released chart(tgz) version from charts directory
         export HELM_CHART_DIR=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
       else
