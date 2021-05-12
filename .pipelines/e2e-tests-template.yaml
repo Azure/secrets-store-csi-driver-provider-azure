@@ -89,7 +89,6 @@ jobs:
               osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               isBackwardCompatibilityTest: true
-              helmChartDir: "manifest_staging/charts/csi-secrets-store-provider-azure"
               setRegistry: true
 
         - template: templates/teardown.yaml
