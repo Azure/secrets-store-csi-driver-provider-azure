@@ -23,15 +23,15 @@ jobs:
           git clone -b $(checkout.branch) $(checkout.repo) $(perf-tests.repo.path)
         displayName: Checkout $(checkout.repo) @ $(checkout.branch)
 
-      - template: templates/build-images.yaml
+      - template: build-images.yaml
 
       - script: |
           az account set -s=$(LOAD_TEST_SUBSCRIPTION_ID)
         displayName: "Set subscription for load tests"
 
-      - template: templates/aks-setup.yaml
+      - template: aks-setup.yaml
 
-      - template: templates/assign-user-identity.yaml
+      - template: assign-user-identity.yaml
         parameters:
           identitySubscriptionID: $(LOAD_TEST_SUBSCRIPTION_ID)
 
@@ -101,11 +101,11 @@ jobs:
         condition: succeededOrFailed()
         displayName: "Get stats"
 
-      - template: templates/get-logs.yaml
+      - template: get-logs.yaml
         parameters:
           logUID: load-test
 
-      - template: templates/publish-load-test-result.yaml
+      - template: publish-load-test-result.yaml
 
       - script: |
           az aks delete -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} --yes --no-wait
@@ -113,4 +113,4 @@ jobs:
         displayName: "Delete resource group"
         condition: always()
 
-      - template: templates/cleanup-images.yaml
+      - template: cleanup-images.yaml

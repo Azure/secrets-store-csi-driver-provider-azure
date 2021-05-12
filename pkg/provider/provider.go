@@ -33,7 +33,8 @@ import (
 )
 
 var (
-	ConstructPEMChain = flag.Bool("construct-pem-chain", false, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
+	ConstructPEMChain  = flag.Bool("construct-pem-chain", false, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
+	DriverWriteSecrets = flag.Bool("driver-write-secrets", false, "Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
 )
 
 // Type of Azure Key Vault objects
@@ -174,7 +175,7 @@ func (p *Provider) GetServicePrincipalToken(resource string) (*adal.ServicePrinc
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string]string, error) {
+func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string][]byte, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -186,50 +187,50 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	p.PodNamespace = strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
 
 	if keyvaultName == "" {
-		return nil, fmt.Errorf("keyvaultName is not set")
+		return nil, nil, fmt.Errorf("keyvaultName is not set")
 	}
 	if tenantID == "" {
-		return nil, fmt.Errorf("tenantId is not set")
+		return nil, nil, fmt.Errorf("tenantId is not set")
 	}
 	if len(usePodIdentityStr) == 0 {
 		usePodIdentityStr = "false"
 	}
 	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
 	}
 	if len(useVMManagedIdentityStr) == 0 {
 		useVMManagedIdentityStr = "false"
 	}
 	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
+		return nil, nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
 	}
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
-		return nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
+		return nil, nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
 	}
 
 	p.AuthConfig, err = auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create auth config, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to create auth config, error: %+v", err)
 	}
 
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
-		return nil, fmt.Errorf("objects is not set")
+		return nil, nil, fmt.Errorf("objects is not set")
 	}
 	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	var keyVaultObjects []KeyVaultObject
@@ -237,7 +238,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
+			return nil, nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
@@ -247,33 +248,34 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 
 	if len(keyVaultObjects) == 0 {
-		return nil, fmt.Errorf("objects array is empty")
+		return nil, nil, fmt.Errorf("objects array is empty")
 	}
 	p.KeyvaultName = keyvaultName
 	p.AzureCloudEnvironment = azureCloudEnv
 	p.TenantID = tenantID
 
 	objectVersionMap := make(map[string]string)
+	files := make(map[string][]byte)
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", p.KeyvaultName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		fileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
 			fileName = keyVaultObject.ObjectAlias
 		}
 		if err := validateFileName(fileName); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 
 		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// objectUID is a unique identifier in the format <object type>/<object name>
@@ -283,15 +285,23 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		if err := os.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
-			return nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
+		// if the feature to return secrets to CSI driver isn't enabled, the provider will continue to write
+		// the contents to the filesystem.
+		if !*DriverWriteSecrets {
+			if err := os.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
+				return nil, nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
+			}
+			klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
+		} else {
+			// these files will be returned to the CSI driver as part of gRPC response
+			files[fileName] = objectContent
+			klog.InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 		}
-		klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	}
 
-	return objectVersionMap, nil
+	return files, objectVersionMap, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object

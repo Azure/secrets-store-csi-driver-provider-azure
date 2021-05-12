@@ -12,8 +12,8 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - template: load-tests-template.yaml
-  - template: e2e-tests-template.yaml
+  - template: templates/load-test.yaml
+  - template: templates/e2e-test-azure.yaml
     parameters:
       clusterTypes:
       - "aks"
@@ -22,7 +22,7 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
-  - template: soak-tests-template.yaml
+  - template: templates/soak-test.yaml
     parameters:
       clusterConfigs:
       - "csi-secrets-store-soak-linux-aks"

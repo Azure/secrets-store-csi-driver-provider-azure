@@ -36,15 +36,15 @@ jobs:
             sudo mv kubectl /usr/local/bin/
           displayName: 'Install kubectl'
           
-        - template: templates/build-images.yaml
+        - template: build-images.yaml
 
         - ${{ if eq(clusterType, 'aks') }}:
-          - template: templates/aks-setup.yaml
+          - template: aks-setup.yaml
 
         - ${{ if eq(clusterType, 'aks-engine') }}:
-          - template: templates/aks-engine-setup.yaml
+          - template: aks-engine-setup.yaml
 
-        - template: templates/assign-user-identity.yaml
+        - template: assign-user-identity.yaml
           parameters:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
@@ -92,7 +92,7 @@ jobs:
               TEST_WINDOWS: true
 
         - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
-          - template: templates/aks-upgrade.yaml
+          - template: aks-upgrade.yaml
 
           - script: |
               export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
@@ -114,5 +114,5 @@ jobs:
               ${{ if eq(osType, 'windows') }}:
                 TEST_WINDOWS: true
 
-        - template: templates/teardown.yaml
-        - template: templates/cleanup-images.yaml
+        - template: teardown.yaml
+        - template: cleanup-images.yaml

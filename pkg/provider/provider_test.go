@@ -877,7 +877,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)
 
-			_, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
+			_, _, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
 			if tc.expectedErr {
 				assert.NotNil(t, err)
 			} else {

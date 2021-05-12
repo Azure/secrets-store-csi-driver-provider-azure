@@ -151,18 +151,27 @@ func ReleaseExists() bool {
 }
 
 func generateValueArgs(config *framework.Config) []string {
-	imageArgs := []string{}
-	if config.ImageVersion != "" { //Set image.tag only if there is an image version provided. Else rely on default values.
-		imageArgs = append(imageArgs, fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion))
-		imageArgs = append(imageArgs, fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion))
-	}
-
 	args := []string{
 		fmt.Sprintf("--set=linux.image.repository=%s/%s", config.Registry, config.ImageName),
 		fmt.Sprintf("--set=windows.image.repository=%s/%s", config.Registry, config.ImageName),
 	}
-	args = append(args, imageArgs...)
 
+	//Set image.tag only if there is an image version provided. Else rely on default values.
+	if config.ImageVersion != "" {
+		args = append(args, fmt.Sprintf("--set=linux.image.tag=%s", config.ImageVersion), fmt.Sprintf("--set=windows.image.tag=%s", config.ImageVersion))
+	}
+
+	if config.DriverWriteSecrets {
+		args = append(args, fmt.Sprintf("--set=driverWriteSecrets=true"))
+	}
+
+	// add the custom env file volume and mount if exists
+	if config.AzureEnvironmentFilePath != "" {
+		args = append(args,
+			fmt.Sprintf("--set=linux.volumes[0].name=cloudenvfile-vol,linux.volumes[0].hostPath.path=%s,linux.volumes[0].hostPath.type=File", config.AzureEnvironmentFilePath),
+			fmt.Sprintf("--set=linux.volumeMounts[0].name=cloudenvfile-vol,linux.volumeMounts[0].mountPath=%s", config.AzureEnvironmentFilePath),
+		)
+	}
 	return args
 }
 
