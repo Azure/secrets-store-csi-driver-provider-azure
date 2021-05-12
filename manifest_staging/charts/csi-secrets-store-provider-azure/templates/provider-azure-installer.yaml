@@ -49,6 +49,9 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+            {{- if .Values.driverWriteSecrets }}
+            - --driver-write-secrets={{ .Values.driverWriteSecrets }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}

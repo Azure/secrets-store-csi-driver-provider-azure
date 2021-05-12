@@ -4,7 +4,7 @@ nodes:
 - role: control-plane
   extraMounts:
   # Load environment json into kind node to enable custom cloud coverage
-  - containerPath: /etc/kubernetes/secrets-store-csi-providers/custom_environment.json
+  - containerPath: /etc/kubernetes/custom_environment.json
     hostPath: test/custom_environment.json
     readOnly: true
     propagation: None
