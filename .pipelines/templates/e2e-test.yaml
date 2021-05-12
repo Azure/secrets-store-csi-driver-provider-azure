@@ -3,8 +3,6 @@ parameters:
     type: string
   - name: osType
     type: string
-  - name: helmChartDir
-    type: string
   - name: testReleasedVersion
     type: boolean
     default: false    
@@ -48,8 +46,6 @@ steps:
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-      ${{ if parameters.helmChartDir }}:
-        HELM_CHART_DIR: ${{ parameters.helmChartDir }}
       ${{ if parameters.resetImageVersion }}:
         CONFIG_IMAGE_VERSION: ""
       ${{ if parameters.isBackwardCompatibilityTest }}:
