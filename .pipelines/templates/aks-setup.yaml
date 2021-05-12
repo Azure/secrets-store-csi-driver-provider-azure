@@ -12,7 +12,7 @@ steps:
     
     #Run test with latest aks version available
   - script: | 
-      aksVersion=$(az aks get-versions -l eastus2euap --query 'max(sort(orchestrators[].orchestratorVersion))'  -otsv)
+      aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query 'max(orchestrators[?isPreview=='null'].orchestratorVersion)' -otsv)
       echo "AKS Install version - $aksVersion"
 
       echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
