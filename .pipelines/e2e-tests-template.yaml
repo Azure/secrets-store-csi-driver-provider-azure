@@ -51,13 +51,6 @@ jobs:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
         # Run e2e tests with Released Version
-        - script: |
-            #This gets latest released chart(tgz) version from charts directory
-            helmChartDir=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
-
-            echo "##vso[task.setvariable variable=HELM_CHART_DIR]$helmChartDir"
-          displayName: "Set latest helm chart directory"
-
         - template: templates/e2e-test.yaml
           parameters:
             testName: "Run e2e test with Released Version"
@@ -65,7 +58,7 @@ jobs:
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             resetImageVersion: true
             isBackwardCompatibilityTest: true
-            helmChartDir: $(HELM_CHART_DIR)
+            testReleasedVersion: true
 
         # Run e2e tests with New Version
         - template: templates/e2e-test.yaml
@@ -74,7 +67,6 @@ jobs:
             osType: ${{ osType }}
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             isBackwardCompatibilityTest: true
-            helmChartDir: "manifest_staging/charts/csi-secrets-store-provider-azure"
             setRegistry: true
 
         - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
@@ -87,7 +79,6 @@ jobs:
               osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               isBackwardCompatibilityTest: true
-              helmChartDir: "manifest_staging/charts/csi-secrets-store-provider-azure"
               setRegistry: true
 
           - template: templates/aks-upgrade.yaml
