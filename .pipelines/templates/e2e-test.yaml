@@ -1,4 +1,6 @@
 parameters:
+  - name: testName
+    type: string
   - name: osType
     type: string
   - name: helmChartDir
@@ -23,7 +25,7 @@ steps:
       fi
 
       make e2e-test
-    displayName: "Run e2e tests"
+    displayName: "${{ parameters.testName }}"
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
@@ -35,7 +37,7 @@ steps:
       SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       TENANT_ID: $(TENANT_ID)
       IS_UPGRADE_TEST: ${{ parameters.testClusterUpgrade }}
-      ${{ if ne(parameters.helmChartDir, '') }}:
+      ${{ if parameters.helmChartDir }}:
         HELM_CHART_DIR: ${{ parameters.helmChartDir }}
       ${{ if parameters.resetImageVersion }}:
         CONFIG_IMAGE_VERSION: ""
