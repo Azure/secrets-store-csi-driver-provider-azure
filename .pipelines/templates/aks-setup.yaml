@@ -16,7 +16,7 @@ steps:
       echo "AKS Install version - $aksVersion"
 
       echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
-    displayName: "Determine aks install versions"
+    displayName: "Determine aks install version"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
   - ${{ if eq(parameters.testClusterUpgrade, true) }}: #Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
