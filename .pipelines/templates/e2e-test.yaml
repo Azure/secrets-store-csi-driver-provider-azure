@@ -21,19 +21,14 @@ parameters:
 
 steps:
   - script: |
-      echo "Is set registry - ${{ parameters.setRegistry }}"
       if [ "${{ parameters.setRegistry }}" == True ] ; then
-        echo "setting azurecr registry"
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
       fi
 
-      echo "Is test release - ${{ parameters.testReleasedVersion }}"
       if [ "${{ parameters.testReleasedVersion }}" == True ] ; then
-        echo "Testing released version"
         #This gets latest released chart(tgz) version from charts directory
         export HELM_CHART_DIR=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
       else
-        echo "Testing new version"
         export HELM_CHART_DIR=manifest_staging/charts/csi-secrets-store-provider-azure
       fi
 

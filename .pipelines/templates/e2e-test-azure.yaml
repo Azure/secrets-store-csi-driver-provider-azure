@@ -78,7 +78,6 @@ jobs:
               testName: "Run e2e test with New Version"
               osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              isBackwardCompatibilityTest: true
               setRegistry: true
 
           - template: aks-upgrade.yaml
@@ -88,7 +87,6 @@ jobs:
               testName: "Run e2e test with New Version"
               osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              isBackwardCompatibilityTest: true
               setRegistry: true
 
         - template: teardown.yaml
