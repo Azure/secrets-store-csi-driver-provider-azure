@@ -20,4 +20,3 @@ jobs:
       osTypes:
       - "linux"
       - "windows"
-      testClusterUpgrade: true
