@@ -1,9 +1,34 @@
+parameters:
+  - name: testClusterUpgrade
+    type: boolean
+    default: false
+
 steps:
   - script: |
       echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]sscd-e2e-$(openssl rand -hex 6)"
       echo ${AZURE_CLUSTER_NAME}
     displayName: "Set cluster name"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+    
+  - script: | 
+      #Run test with latest on preview aks version available
+      aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "max(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
+      echo "AKS Install version - $aksVersion"
+
+      echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
+    displayName: "Determine aks install version"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+
+  - ${{ if eq(parameters.testClusterUpgrade, true) }}:
+    #Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
+    #If we are running test with cluster upgrade, start with minimum possible non preview version. 
+    - script: |
+        aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "min(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
+        echo "AKS Install version - $aksVersion"
+
+        echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
+      displayName: "Determine aks install version"
+      condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
   - script: |
       az group create -n ${AZURE_CLUSTER_NAME} -l $(AZURE_LOCATION)
@@ -11,6 +36,7 @@ steps:
       az aks create \
         -g ${AZURE_CLUSTER_NAME} \
         -n ${AZURE_CLUSTER_NAME} \
+        --kubernetes-version $(AKS_INSTALL_VERSION) \
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
         --node-vm-size Standard_DS2_v2 \
