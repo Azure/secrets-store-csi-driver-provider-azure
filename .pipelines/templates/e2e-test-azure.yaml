@@ -51,7 +51,7 @@ jobs:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
         # Run e2e tests with Released Version
-        - template: templates/e2e-test.yaml
+        - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with Released Version"
             osType: ${{ osType }}
@@ -61,7 +61,7 @@ jobs:
             testReleasedVersion: true
 
         # Run e2e tests with New Version
-        - template: templates/e2e-test.yaml
+        - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with New Version"
             osType: ${{ osType }}
@@ -73,7 +73,7 @@ jobs:
           - template: aks-upgrade.yaml
 
           # Run e2e tests after cluster upgrade
-          - template: templates/e2e-test.yaml
+          - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
               osType: ${{ osType }}
@@ -81,9 +81,9 @@ jobs:
               isBackwardCompatibilityTest: true
               setRegistry: true
 
-          - template: templates/aks-upgrade.yaml
+          - template: aks-upgrade.yaml
 
-          - template: templates/e2e-test.yaml
+          - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
               osType: ${{ osType }}
