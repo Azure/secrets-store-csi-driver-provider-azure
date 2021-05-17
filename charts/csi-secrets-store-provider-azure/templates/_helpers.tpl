@@ -32,3 +32,7 @@ labels:
   app: {{ template "sscdpa.name" . }}
   helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 {{- end -}}
+
+{{- define "sscdpa.psp.fullname" -}}
+{{- printf "%s-psp" (include "sscdpa.fullname" .) -}}
+{{- end }}

@@ -30,8 +30,8 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: "{{ .Values.image.repository | default .Values.linux.image.repository }}:{{ .Values.image.tag | default .Values.linux.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.linux.image.pullPolicy }}
+          image: "{{ .Values.linux.image.repository }}:{{ .Values.linux.image.tag }}"
+          imagePullPolicy: {{ .Values.linux.image.pullPolicy }}
           args:
             - --endpoint=unix:///provider/azure.sock
             {{- if .Values.logFormatJSON }}
@@ -49,6 +49,9 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+            {{- if .Values.driverWriteSecrets }}
+            - --driver-write-secrets={{ .Values.driverWriteSecrets }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}
@@ -69,6 +72,11 @@ spec:
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: HostToContainer
+            {{- if .Values.linux.volumeMounts }}
+            {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
+            {{- end}}
+      affinity:
+{{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
       priorityClassName: {{ .Values.linux.priorityClassName | quote }}
       {{- end }}
@@ -79,6 +87,9 @@ spec:
         - name: mountpoint-dir
           hostPath:
             path: "/var/lib/kubelet/pods"
+        {{- if .Values.linux.volumes }}
+        {{- toYaml .Values.linux.volumes | nindent 8 }}
+        {{- end}}
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}

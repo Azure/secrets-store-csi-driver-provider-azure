@@ -12,7 +12,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.14
+    tag: 0.0.15
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -53,7 +53,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.14
+    tag: 0.0.15
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -101,15 +101,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.21
+      tag: v0.0.22
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.2.0
+      tag: v2.3.0
       pullPolicy: IfNotPresent
 
   windows:
@@ -118,15 +118,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.21
+      tag: v0.0.22
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.2.0
+      tag: v2.3.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
