@@ -29,8 +29,8 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: "{{ .Values.image.repository | default .Values.windows.image.repository }}:{{ .Values.image.tag | default .Values.windows.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.windows.image.pullPolicy }}
+          image: "{{ .Values.windows.image.repository }}:{{ .Values.windows.image.tag }}"
+          imagePullPolicy: {{ .Values.windows.image.pullPolicy }}
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
             {{- if .Values.logFormatJSON }}
@@ -48,6 +48,9 @@ spec:
             - --healthz-port={{ .Values.windows.healthzPort }}
             - --healthz-path={{ .Values.windows.healthzPath }}
             - --healthz-timeout={{ .Values.windows.healthzTimeout }}
+            {{- if .Values.driverWriteSecrets }}
+            - --driver-write-secrets={{ .Values.driverWriteSecrets }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.windows.healthzPath }}
@@ -64,6 +67,11 @@ spec:
             - name: mountpoint-dir
               mountPath: "C:\\var\\lib\\kubelet\\pods"
               mountPropagation: HostToContainer
+            {{- if .Values.windows.volumeMounts }}
+            {{- toYaml .Values.windows.volumeMounts | nindent 12 }}
+            {{- end}}
+      affinity:
+{{ toYaml .Values.windows.affinity | indent 8 }}
       {{- if .Values.windows.priorityClassName }}
       priorityClassName: {{ .Values.windows.priorityClassName | quote }}
       {{- end }}
@@ -75,6 +83,9 @@ spec:
         - name: mountpoint-dir
           hostPath:
             path: C:\var\lib\kubelet\pods\
+        {{- if .Values.windows.volumes }}
+        {{- toYaml .Values.windows.volumes | nindent 8 }}
+        {{- end}}
       nodeSelector:
         kubernetes.io/os: windows
 {{- if .Values.windows.nodeSelector }}

@@ -1,9 +1,3 @@
-# [DEPRECATED] use linux.image and windows.image instead.
-image:
-  repository: ""
-  tag: ""
-  pullPolicy: ""
-
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
@@ -18,7 +12,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.14
+    tag: 0.0.15
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -44,11 +38,22 @@ linux:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.14
+    tag: 0.0.15
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -73,6 +78,17 @@ windows:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  volumes: []
+  volumeMounts: []
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: type
+            operator: NotIn
+            values:
+            - virtual-kubelet
 
 ## Configuration values for the secrets-store-csi-driver dependency.
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
@@ -85,15 +101,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.21
+      tag: v0.0.22
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.2.0
+      tag: v2.3.0
       pullPolicy: IfNotPresent
 
   windows:
@@ -102,15 +118,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.21
+      tag: v0.0.22
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.1.0
+      tag: v2.2.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.2.0
+      tag: v2.3.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
@@ -121,6 +137,10 @@ secrets-store-csi-driver:
 ## Install default service account
 rbac:
   install: true
+  pspEnabled: false
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: false
+
+# Return secrets in grpc response to the driver (supported in driver v0.0.21+) instead of writing to filesystem
+driverWriteSecrets: false
