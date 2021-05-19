@@ -12,7 +12,7 @@ require (
 	github.com/kubernetes-csi/csi-lib-utils v0.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	golang.org/x/crypto v0.0.0-20201216223049-8b5274cf687f
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	google.golang.org/grpc v1.31.0
 	gopkg.in/yaml.v2 v2.3.0
