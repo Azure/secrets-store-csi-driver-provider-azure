@@ -20,4 +20,8 @@ require (
 	sigs.k8s.io/secrets-store-csi-driver v0.0.21
 )
 
-replace github.com/Azure/secrets-store-csi-driver-provider-azure => ../..
+replace (
+	github.com/Azure/secrets-store-csi-driver-provider-azure => ../..
+	// fixes CVE-2020-29652
+	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20201216223049-8b5274cf687f
+)
