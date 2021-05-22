@@ -66,9 +66,9 @@ spec:
   - hostPath
   - secret
   hostNetwork: true
-  hostPorts:
+  hostPort:
   - min: 0
-    max: 65535
+  - max: 65535
   fsGroup:
     rule: RunAsAny
   runAsUser:
