@@ -12,6 +12,13 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
+  # to get image scan results on nightly runs
+  - template: templates/unit-test.yaml
+  - template: templates/e2e-test-kind.yaml
+    parameters:
+      driverWriteSecrets:
+      - "true"
+      - "false"
   - template: templates/load-test.yaml
   - template: templates/e2e-test-azure.yaml
     parameters:
