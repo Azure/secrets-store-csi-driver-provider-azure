@@ -20,5 +20,5 @@ jobs:
   - template: .pipelines/templates/e2e-test-kind.yaml
     parameters:
       driverWriteSecrets:
-        - "true"
-        - "false"
+      - "true"
+      - "false"

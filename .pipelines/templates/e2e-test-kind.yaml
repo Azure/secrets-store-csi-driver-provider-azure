@@ -11,6 +11,9 @@ jobs:
       workspace:
         clean: all
 
+      variables:
+      - group: csi-secrets-store-e2e-kind
+
       steps:
         - task: GoTool@0
           inputs:
