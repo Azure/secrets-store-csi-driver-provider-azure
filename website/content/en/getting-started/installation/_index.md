@@ -45,6 +45,8 @@ helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azu
 
 The helm charts hosted in [Azure/secrets-store-csi-driver-provider-azure](https://github.com/Azure/secrets-store-csi-driver-provider-azure/tree/master/charts/csi-secrets-store-provider-azure) repo include the Secrets Store CSI Driver helm charts as a dependency. Running the above `helm install` command will install both the Secrets Store CSI Driver and Azure Key Vault provider.
 
+> Refer to [doc](../../configurations/deploy-in-openshift) for installing the Azure Key Vault Provider for Secrets Store CSI Driver on Azure RedHat OpenShift (ARO)
+
 ##### Values
 
 For a list of customizable values that can be injected when invoking helm install, please see the [Helm chart configurations](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md#configuration).
@@ -131,6 +133,8 @@ If you deployed the Secrets Store CSI Driver and Azure Key Vault provider using 
 ```bash
 helm delete <release name>
 ```
+
+> Refer to [doc](../../configurations/deploy-in-openshift) to uninstall the Azure Key Vault Provider for Secrets Store CSI Driver on Azure RedHat OpenShift (ARO)
 
 ##### Using deployment yamls
 
