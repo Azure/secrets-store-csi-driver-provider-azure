@@ -31,7 +31,7 @@ export GOPATH GOBIN GO111MODULE DOCKER_CLI_EXPERIMENTAL
 
 # Generate all combination of all OS, ARCH, and OSVERSIONS for iteration
 ALL_OS = linux windows
-ALL_ARCH.linux = amd64
+ALL_ARCH.linux = amd64 arm64
 ALL_OS_ARCH.linux = $(foreach arch, ${ALL_ARCH.linux}, linux-$(arch))
 ALL_ARCH.windows = amd64
 ALL_OSVERSIONS.windows := 1809 1903 1909 2004
@@ -70,29 +70,38 @@ unit-test:
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure ./cmd/
+	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure ./cmd/
 
 .PHONY: build-windows
 build-windows:
-	CGO_ENABLED=0 GOOS=windows go build -a -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure.exe ./cmd/
+	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=windows go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure.exe ./cmd/
 
 .PHONY: build-darwin
 build-darwin:
-	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags ${LDFLAGS} -o _output/secrets-store-csi-driver-provider-azure.exe ./cmd/
+	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=darwin go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure ./cmd/
 
 .PHONY: container
 container: build
-	docker build --no-cache -t $(IMAGE_TAG) -f Dockerfile .
+	docker build --no-cache --build-arg ARCH=$(ARCH) -t $(IMAGE_TAG) -f Dockerfile .
 
 .PHONY: container-linux
 container-linux: docker-buildx-builder
-	docker buildx build --no-cache --output=type=$(OUTPUT_TYPE) --platform="linux/$(ARCH)" \
+	docker buildx build \
+			--no-cache \
+			--output=type=$(OUTPUT_TYPE) \
+			--platform="linux/$(ARCH)" \
+			--build-arg ARCH=$(ARCH) \
 			-t $(IMAGE_TAG)-linux-$(ARCH) -f Dockerfile .
 
 .PHONY: container-windows
 container-windows: docker-buildx-builder
-	docker buildx build --no-cache --output=type=$(OUTPUT_TYPE) --platform="windows/amd64" \
-	 		-t $(IMAGE_TAG)-windows-$(OSVERSION)-$(ARCH) --build-arg OSVERSION=$(OSVERSION) -f windows.Dockerfile .
+	docker buildx build \
+			--no-cache \
+			--output=type=$(OUTPUT_TYPE) \
+			--platform="windows/amd64" \
+			--build-arg ARCH=$(ARCH) \
+			--build-arg OSVERSION=$(OSVERSION) \
+	 		-t $(IMAGE_TAG)-windows-$(OSVERSION)-$(ARCH) -f windows.Dockerfile .
 
 .PHONY: docker-buildx-builder
 docker-buildx-builder:
@@ -101,8 +110,11 @@ docker-buildx-builder:
 	fi
 
 .PHONY: container-all
-container-all: build build-windows
-	$(MAKE) container-linux
+container-all: build-windows
+	for arch in $(ALL_ARCH.linux); do \
+		ARCH=$${arch} $(MAKE) build; \
+		ARCH=$${arch} $(MAKE) container-linux; \
+	done
 	for osversion in $(ALL_OSVERSIONS.windows); do \
 		OSVERSION=$${osversion} $(MAKE) container-windows; \
 	done

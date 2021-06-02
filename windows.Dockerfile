@@ -5,7 +5,9 @@ FROM mcr.microsoft.com/windows/nanoserver:${OSVERSION}
 LABEL maintainers="aramase"
 LABEL description="Secrets Store CSI Driver Provider Azure"
 
-COPY ./_output/secrets-store-csi-driver-provider-azure.exe /secrets-store-csi-driver-provider-azure.exe
+ARG ARCH
+
+COPY ./_output/${ARCH}/secrets-store-csi-driver-provider-azure.exe /secrets-store-csi-driver-provider-azure.exe
 COPY --from=core /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
 USER ContainerAdministrator
 
