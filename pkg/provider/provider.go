@@ -321,6 +321,12 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		if err != nil {
 			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
 		}
+		if secret.Value == nil {
+			return "", "", errors.Errorf("secret value is nil")
+		}
+		if secret.ID == nil {
+			return "", "", errors.Errorf("secret id is nil")
+		}
 		content := *secret.Value
 		version := getObjectVersion(*secret.ID)
 		// if the secret is part of a certificate, then we need to convert the certificate and key to PEM format
@@ -349,6 +355,12 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		keybundle, err := kvClient.GetKey(ctx, *vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 		if err != nil {
 			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+		if keybundle.Key == nil {
+			return "", "", errors.Errorf("key value is nil")
+		}
+		if keybundle.Key.Kid == nil {
+			return "", "", errors.Errorf("key id is nil")
 		}
 		version := getObjectVersion(*keybundle.Key.Kid)
 		// for object type "key" the public key is written to the file in PEM format
@@ -420,6 +432,12 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 		certbundle, err := kvClient.GetCertificate(ctx, *vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 		if err != nil {
 			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+		if certbundle.Cer == nil {
+			return "", "", errors.Errorf("certificate value is nil")
+		}
+		if certbundle.ID == nil {
+			return "", "", errors.Errorf("certificate id is nil")
 		}
 		version := getObjectVersion(*certbundle.ID)
 
