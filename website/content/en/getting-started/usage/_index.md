@@ -82,7 +82,7 @@ To provide identity to access key vault, refer to the following [section](#provi
 
 The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 
-1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode)
+1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
 2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode)
 3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
 4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
