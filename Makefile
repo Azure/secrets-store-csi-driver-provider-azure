@@ -8,9 +8,9 @@ REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 REGISTRY_NAME ?= upstreamk8sci
 REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
-IMAGE_VERSION ?= 0.0.15
+IMAGE_VERSION ?= 0.0.16
 IMAGE_NAME ?= provider-azure
-IMAGE_TAG ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
+IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 # build variables
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
