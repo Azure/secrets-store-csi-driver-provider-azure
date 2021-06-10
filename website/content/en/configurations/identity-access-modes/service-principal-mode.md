@@ -4,10 +4,11 @@ title: "Service Principal"
 linkTitle: "Service Principal"
 weight: 1
 description: >
-  Use a Service Principal to access Keyvault. ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
+  Use a Service Principal to access Keyvault. 
 ---
 
 > Supported with Linux and Windows
+> Currently this is the only way to connect to Azure Key Vault from a non Azure environment.
 
 <details>
 <summary>Examples</summary>
