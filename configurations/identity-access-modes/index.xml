@@ -2,6 +2,9 @@
 &lt;blockquote>
 &lt;p>Supported with Linux and Windows&lt;/p>
 &lt;/blockquote>
+&lt;blockquote>
+&lt;p>The only supported way to connect to Azure Key Vault from a non Azure environment.&lt;/p>
+&lt;/blockquote>
 &lt;details>
 &lt;summary>Examples&lt;/summary>
 &lt;ul>
