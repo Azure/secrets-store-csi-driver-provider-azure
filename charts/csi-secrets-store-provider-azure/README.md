@@ -21,6 +21,7 @@ Azure Key Vault provider for Secrets Store CSI driver allows you to get secret c
 | `0.0.17`           | `0.0.20`                         | `0.0.13`                         |
 | `0.0.18`           | `0.0.21`                         | `0.0.14`                         |
 | `0.0.19`           | `0.0.22`                         | `0.0.15`                         |
+| `0.0.20`           | `0.0.23`                         | `0.0.16`                         |
 
 ## Installation
 
@@ -117,6 +118,7 @@ The following table lists the configurable parameters of the csi-secrets-store-p
 | `secrets-store-csi-driver.enableSecretRotation`                  | Enable secret rotation feature [alpha]                                                                                                                                                                | `false`                                                                                          |
 | `secrets-store-csi-driver.rotationPollInterval`                  | Secret rotation poll interval duration                                                                                                                                                                | `2m`                                                                                             |
 | `secrets-store-csi-driver.filteredWatchSecret`                   | Enable filtered watch for NodePublishSecretRef secrets with label `secrets-store.csi.k8s.io/used=true`. Refer to [doc](https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html) for more details | `false`                                                                                          |
+| `secrets-store-csi-driver.syncSecret.enabled`                    | Enable rbac roles and bindings required for syncing to Kubernetes native secrets                                                                                                                      | `false`                                                                                          |
 | `rbac.install`                                                   | Install default service account                                                                                                                                                                       | true                                                                                             |
 | `rbac.pspEnabled`                                                | If `true`, create and use a restricted pod security policy for Secrets Store CSI Driver AKV provider pod(s)                                                                                           | false                                                                                            |
 | `constructPEMChain`                                              | Explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT                                                                                                                         | `false`                                                                                          |

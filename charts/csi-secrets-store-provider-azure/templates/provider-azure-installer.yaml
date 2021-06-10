@@ -66,6 +66,11 @@ spec:
           securityContext:
             privileged: true
           {{- end }}
+          securityContext:
+            runAsUser: 0
+            capabilities:
+              drop:
+              - ALL
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
