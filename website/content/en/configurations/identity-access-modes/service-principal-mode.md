@@ -8,7 +8,8 @@ description: >
 ---
 
 > Supported with Linux and Windows
-> Currently this is the only way to connect to Azure Key Vault from a non Azure environment.
+
+> The only supported way to connect to Azure Key Vault from a non Azure environment.
 
 <details>
 <summary>Examples</summary>
@@ -71,7 +72,7 @@ spec:
 
 ## Configure Service Principal to access Keyvault
 
-1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal) Service Principal is currently the only way to connect to Azure Key Vault from a non Azure environment.
+1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal) 
 
     A properly configured service principal will need to be passed in with the Service Principal's `appId` and `password`. Ensure this service principal has all the required permissions to access content in your Azure Key Vault instance.
 
