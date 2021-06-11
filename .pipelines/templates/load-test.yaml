@@ -54,6 +54,7 @@ jobs:
             --set image.repository=${REGISTRY}/provider-azure \
             --set image.tag=${IMAGE_VERSION} \
             --set secrets-store-csi-driver.enableSecretRotation=true \
+            --set secrets-store-csi-driver.syncSecret.enabled=true \
             --dependency-update
 
           envsubst < test/load/config-deployment-template.yaml > test/load/config.yaml
