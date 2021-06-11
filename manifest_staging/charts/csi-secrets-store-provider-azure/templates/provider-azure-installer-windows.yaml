@@ -66,7 +66,7 @@ spec:
               mountPath: "C:\\provider"
             {{- if not .Values.driverWriteSecrets }}
             - name: mountpoint-dir
-              mountPath: "C:\\var\\lib\\kubelet\\pods"
+              mountPath: {{ .Values.windows.kubeletRootDir }}\pods
               mountPropagation: HostToContainer
             {{- end }}
             {{- if .Values.windows.volumeMounts }}
@@ -85,7 +85,7 @@ spec:
         {{- if not .Values.driverWriteSecrets }}
         - name: mountpoint-dir
           hostPath:
-            path: C:\var\lib\kubelet\pods\
+            path: {{ .Values.windows.kubeletRootDir }}\pods\
         {{- end }}
         {{- if .Values.windows.volumes }}
         {{- toYaml .Values.windows.volumes | nindent 8 }}

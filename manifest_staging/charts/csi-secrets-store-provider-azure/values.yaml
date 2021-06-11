@@ -40,6 +40,7 @@ linux:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  kubeletRootDir: /var/lib/kubelet
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -80,6 +81,7 @@ windows:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  kubeletRootDir: C:\var\lib\kubelet
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
