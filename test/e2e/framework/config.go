@@ -29,7 +29,7 @@ type Config struct {
 	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
 	IsClusterUpgraded                 bool   `envconfig:"IS_CLUSTER_UPGRADED"`
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
-	DriverWriteSecrets                bool   `envconfig:"DRIVER_WRITE_SECRETS" default:"false"`
+	DriverWriteSecrets                bool   `envconfig:"DRIVER_WRITE_SECRETS" default:"true"`
 	AzureEnvironmentFilePath          string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
 }
 

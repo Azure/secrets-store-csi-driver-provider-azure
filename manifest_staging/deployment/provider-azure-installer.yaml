@@ -32,6 +32,7 @@ spec:
             - --healthz-port=8989
             - --healthz-path=/healthz
             - --healthz-timeout=5s
+            - --driver-write-secrets=true
           livenessProbe:
             httpGet:
               path: /healthz
@@ -55,9 +56,6 @@ spec:
           volumeMounts:
             - mountPath: "/provider"
               name: providervol
-            - name: mountpoint-dir
-              mountPath: /var/lib/kubelet/pods
-              mountPropagation: HostToContainer
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -71,8 +69,5 @@ spec:
         - name: providervol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
-        - name: mountpoint-dir
-          hostPath:
-            path: /var/lib/kubelet/pods
       nodeSelector:
         kubernetes.io/os: linux
