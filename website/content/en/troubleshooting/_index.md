@@ -7,6 +7,18 @@ description: >
   An overview of a list of components to assist in troubleshooting.
 ---
 
+- [Logging](#logging)
+  - [Isolate errors from logs](#isolate-errors-from-logs)
+    - [For Azure Key Vault provider versions less than 0.0.9](#for-azure-key-vault-provider-versions-less-than-009)
+    - [For Azure Key Vault provider versions equal to and greater than 0.0.9](#for-azure-key-vault-provider-versions-equal-to-and-greater-than-009)
+    - [For CSI driver logs](#for-csi-driver-logs)
+- [Common Issues](#common-issues)
+  - [driver name `secrets-store.csi.k8s.io` not found in the list of registered CSI drivers](#driver-name-secrets-storecsik8sio-not-found-in-the-list-of-registered-csi-drivers)
+  - [failed to get key vault token: nmi response failed with status code: 404](#failed-to-get-key-vault-token-nmi-response-failed-with-status-code-404)
+  - [failed to find provider binary azure, err: stat /etc/kubernetes/secrets-store-csi-providers/azure/provider-azure: no such file or directory](#failed-to-find-provider-binary-azure-err-stat-etckubernetessecrets-store-csi-providersazureprovider-azure-no-such-file-or-directory)
+  - [keyvault.BaseClient#GetSecret: Failure sending request: StatusCode=0 -- Original Error: context canceled"](#keyvaultbaseclientgetsecret-failure-sending-request-statuscode0----original-error-context-canceled)
+  - ["failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\""](#failed-to-create-kubernetes-secret-errsecrets-is-forbidden-user-systemserviceaccountdefaultsecrets-store-csi-driver-cannot-create-resource-secrets-in-api-group--in-the-namespace-default)
+
 ## Logging
 
 Below is a list of commands you can use to view relevant logs of Azure Key Vault provider and Secrets Store CSI Driver.
@@ -123,3 +135,22 @@ Past issues:
 
 - https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/292
 - https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/471
+
+### "failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\""
+
+If you received the following error message in the `secret-store` container in driver:
+
+```bash
+E0610 22:27:02.283100       1 secretproviderclasspodstatus_controller.go:325] "failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\"" spc="default/azure-linux" pod="default/busybox-linux-5f479855f7-jvfw4" secret="default/dockerconfig" spcps="default/busybox-linux-5f479855f7-jvfw4-default-azure-linux"
+```
+
+It means the RBAC clusterrole and clusterrolebinding required for the CSI driver required to sync the mounted content as Kubernetes secret is not installed. When installing/upgrading the driver and provider using helm charts from this [repo](https://github.com/Azure/secrets-store-csi-driver-provider-azure/tree/master/charts/csi-secrets-store-provider-azure), set `--secrets-store-csi-driver.syncSecret.enabled=true`. This will install the required clusterrole and clusterrolebinding.
+
+Run the following commands to verify:
+
+```bash
+# sync as Kubernetes secret clusterrole
+kubectl get clusterrole/secretprovidersyncing-role
+# sync as Kubernetes secret clusterrolebinding
+kubectl get clusterrolebinding/secretprovidersyncing-rolebinding
+```

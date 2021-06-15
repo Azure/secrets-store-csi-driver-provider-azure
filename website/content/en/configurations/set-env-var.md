@@ -11,6 +11,7 @@ description: >
 <summary>Examples</summary>
 
 - `SecretProviderClass`
+
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
@@ -41,9 +42,10 @@ spec:
           objectType: key
           objectVersion: $KEY_VERSION
     tenantId: "tid"                             # the tenant ID of the KeyVault
-``` 
+```
 
 - `Pod` yaml
+
 ```yaml
 kind: Pod
 apiVersion: v1
@@ -74,6 +76,7 @@ spec:
         volumeAttributes:
           secretProviderClass: "azure-sync"
 ```
+
 </details>
 
 ### Configure your environment variable to reference a Kubernetes Secret
@@ -95,4 +98,5 @@ spec:
           name: foosecret
           key: username
 ```
+
 Here is a sample [deployment yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/sync-as-kubernetes-secret/deployment-synck8s.yaml) that creates an ENV VAR from the synced Kubernetes secret.

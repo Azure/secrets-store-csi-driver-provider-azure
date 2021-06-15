@@ -11,6 +11,7 @@ description: >
 <summary>Examples</summary>
 
 - `SecretProviderClass`
+
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
 kind: SecretProviderClass
@@ -41,9 +42,10 @@ spec:
           objectType: key
           objectVersion: $KEY_VERSION
     tenantId: "tid"                             # the tenant ID of the KeyVault
-``` 
+```
 
 - `Pod` yaml
+
 ```yaml
 kind: Pod
 apiVersion: v1
@@ -68,6 +70,7 @@ spec:
         volumeAttributes:
           secretProviderClass: "azure-sync"
 ```
+
 </details>
 
 ### How to sync mounted content with Kubernetes secret
@@ -75,6 +78,8 @@ spec:
 In some cases, you may want to create a Kubernetes Secret to mirror the mounted content. Use the optional `secretObjects` field to define the desired state of the synced Kubernetes secret objects.
 
 > NOTE: Make sure the `objectName` in `secretObjects` matches the file name of the mounted content. If object alias used, then it should be the object alias else this would be the object name.
+
+> If the driver and provider have been installed using helm, ensure the `syncSecret.enabled=true` helm value is set as part of install/upgrade. This is required to install the RBAC clusterrole and clusterrolebinding required by the CSI driver to sync mounted content as Kubernetes secret. For a list of customizable values that can be injected when invoking helm install, please see the [Helm chart configurations](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md#configuration).
 
 {{% alert title="NOTE" color="warning" %}}
 
