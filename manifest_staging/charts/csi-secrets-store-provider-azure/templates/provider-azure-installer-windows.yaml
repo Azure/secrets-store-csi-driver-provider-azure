@@ -64,9 +64,11 @@ spec:
           volumeMounts:
             - name: provider-vol
               mountPath: "C:\\provider"
+            {{- if not .Values.driverWriteSecrets }}
             - name: mountpoint-dir
               mountPath: "C:\\var\\lib\\kubelet\\pods"
               mountPropagation: HostToContainer
+            {{- end }}
             {{- if .Values.windows.volumeMounts }}
             {{- toYaml .Values.windows.volumeMounts | nindent 12 }}
             {{- end}}
@@ -80,9 +82,11 @@ spec:
           hostPath:
             path: C:\k\secrets-store-csi-providers
             type: DirectoryOrCreate
+        {{- if not .Values.driverWriteSecrets }}
         - name: mountpoint-dir
           hostPath:
             path: C:\var\lib\kubelet\pods\
+        {{- end }}
         {{- if .Values.windows.volumes }}
         {{- toYaml .Values.windows.volumes | nindent 8 }}
         {{- end}}
