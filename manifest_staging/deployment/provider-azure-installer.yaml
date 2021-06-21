@@ -50,6 +50,7 @@ spec:
               memory: 100Mi
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             runAsUser: 0
             capabilities:
               drop:
