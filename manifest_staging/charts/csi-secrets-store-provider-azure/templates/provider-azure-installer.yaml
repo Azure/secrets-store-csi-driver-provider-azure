@@ -67,6 +67,7 @@ spec:
             privileged: true
           {{- end }}
           securityContext:
+            allowPrivilegeEscalation: false
             runAsUser: 0
             capabilities:
               drop:
