@@ -67,6 +67,8 @@ spec:
             privileged: true
           {{- end }}
           securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             runAsUser: 0
             capabilities:
               drop:
