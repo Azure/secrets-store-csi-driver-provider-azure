@@ -94,15 +94,15 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 			return nil, err
 		}
 		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("nmi response failed with status code: %d, err: %+v", resp.StatusCode, err)
-		}
-
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
 		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("nmi response failed with status code: %d, response body: %+v", resp.StatusCode, string(bodyBytes))
+		}
+
 		var nmiResp = new(NMIResponse)
 		err = json.Unmarshal(bodyBytes, &nmiResp)
 		if err != nil {
