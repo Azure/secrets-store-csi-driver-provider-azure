@@ -15,7 +15,7 @@ description: >
 
 - `syncSecret.enabled` has been set to false by default. This means the RBAC clusterrole and clusterrolebinding required for [sync mounted content as Kubernetes secret](../configurations/sync-with-k8s-secrets) will no longer be created by default as part of `helm install/upgrade`. If you're using the driver to sync mounted content as Kubernetes secret, you'll need to set `secrets-store-csi-driver.syncSecret.enabled=true` as part of `helm install/upgrade`.
 
-If the `syncSecret.enabled=true` isn't explicitly set in `helm install/upgrade` command, it'll result in failure to create Kubernetes secret and the error would be similar to:
+If the `secrets-store-csi-driver.syncSecret.enabled=true` isn't explicitly set in `helm install/upgrade` command, it'll result in failure to create Kubernetes secret and the error would be similar to:
 
 ```bash
 E0610 22:27:02.283100       1 secretproviderclasspodstatus_controller.go:325] "failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\"" spc="default/azure-linux" pod="default/busybox-linux-5f479855f7-jvfw4" secret="default/dockerconfig" spcps="default/busybox-linux-5f479855f7-jvfw4-default-azure-linux"
