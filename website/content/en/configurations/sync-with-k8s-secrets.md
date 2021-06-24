@@ -79,7 +79,7 @@ In some cases, you may want to create a Kubernetes Secret to mirror the mounted 
 
 > NOTE: Make sure the `objectName` in `secretObjects` matches the file name of the mounted content. If object alias used, then it should be the object alias else this would be the object name.
 
-> If the driver and provider have been installed using helm, ensure the `syncSecret.enabled=true` helm value is set as part of install/upgrade. This is required to install the RBAC clusterrole and clusterrolebinding required by the CSI driver to sync mounted content as Kubernetes secret. For a list of customizable values that can be injected when invoking helm install, please see the [Helm chart configurations](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md#configuration).
+> If the driver and provider have been installed using helm, ensure the `secrets-store-csi-driver.syncSecret.enabled=true` helm value is set as part of install/upgrade. This is required to install the RBAC clusterrole and clusterrolebinding required by the CSI driver to sync mounted content as Kubernetes secret. For a list of customizable values that can be injected when invoking helm install, please see the [Helm chart configurations](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md#configuration).
 
 {{% alert title="NOTE" color="warning" %}}
 
