@@ -14,7 +14,7 @@ This document describes **Azure Key Vault Provider for Secrets Store CSI Driver*
 
 
 ## Versioning
-This project strictly follows [semantic versioning](https://semver.org/spec/v2.0.0.html). All releases will be of the form _vX.Y.Z_ where X is the major version, Y is the minor version and Z is the patch version. Current releases do not have version prefix *_`v`_*. Starting 0.1.0 we will start adding version prefix, viz., _`v0.1.0`_
+This project strictly follows [semantic versioning](https://semver.org/spec/v2.0.0.html). All releases will be of the form _vX.Y.Z_ where X is the major version, Y is the minor version and Z is the patch version. Current releases do not have version prefix *_`v`_*. Starting 0.1.0 we will add the version prefix, viz., _`v0.1.0`_
 
 ### Patch releases
 - Patch releases provide users with bug fixes and security fixes. They do not contain new features.
