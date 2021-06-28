@@ -91,6 +91,8 @@ spec:
     The Kubernetes Secret containing the credentials need to be created in the same namespace as the application pod. If pods in multiple namespaces need to use the same SP to access Keyvault, this Kubernetes Secret needs to be created in each namespace.
     {{% /alert %}}
 
+    The requirement for `nodePublishSecretRef` to be in the same namespace as the pod referencing it in volume is imposed by the Kubernetes core object type. In case of CSI Volumes, the `nodePublishSecretRef` is a [LocalObjectReference](https://pkg.go.dev/k8s.io/api/core/v1?tab=doc#LocalObjectReference) which only accepts the name of the secret. The namespace is always [defaulted to the pod namespace for the secret](https://github.com/kubernetes/kubernetes/blob/release-1.18/pkg/volume/csi/csi_mounter.go#L169-L171). In case of `PersistentVolume` the `nodePublishSecretRef` is a [secretRef](https://pkg.go.dev/k8s.io/api/core/v1?tab=doc#SecretReference) which accepts both name and namespace.
+
     **If you do not have a service principal**, run the following Azure CLI command to create a new service principal.
 
     ```bash
