@@ -168,7 +168,7 @@ curl -X POST 'https://login.microsoftonline.com/<AAD_TENANT_ID>/oauth2/v2.0/toke
 - Try getting secret which is already created in AKV
 ```
 curl -X GET 'https://<KEY_VAULT_NAME>.vault.azure.net/secrets/<SECRET_NAME>?api-version=7.2' -H "Authorization: Bearer <ACCESS_TOKEN_ACQUIRED_ABOVE>"
-```
+``` 
 
 ### "failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\""
 
