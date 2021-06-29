@@ -26,6 +26,8 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		ns                   *corev1.Namespace
 		nodePublishSecretRef *corev1.Secret
 		p                    *corev1.Pod
+		syncTLSSecretName    = "sync-tls-secret"
+		syncOpaqueSecretName = "sync-opaque-secret"
 	)
 
 	BeforeEach(func() {
@@ -51,6 +53,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 				ObjectType:  provider.VaultObjectTypeSecret,
 				ObjectAlias: "SECRET_1",
 			},
+			{
+				ObjectName: "pemcert1",
+				ObjectType: provider.VaultObjectTypeSecret,
+			},
 		}
 
 		yamlArray := provider.StringArray{Array: []string{}}
@@ -74,6 +80,32 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 					"keyvaultName": config.KeyvaultName,
 					"tenantId":     config.TenantID,
 					"objects":      string(objects),
+				},
+				SecretObjects: []*v1alpha1.SecretObject{
+					{
+						SecretName: syncTLSSecretName,
+						Type:       "kubernetes.io/tls",
+						Data: []*v1alpha1.SecretObjectData{
+							{
+								ObjectName: "pemcert1",
+								Key:        "tls.crt",
+							},
+							{
+								ObjectName: "pemcert1",
+								Key:        "tls.key",
+							},
+						},
+					},
+					{
+						SecretName: syncOpaqueSecretName,
+						Type:       "Opaque",
+						Data: []*v1alpha1.SecretObjectData{
+							{
+								ObjectName: "secret1",
+								Key:        "opaque-secret",
+							},
+						},
+					},
 				},
 			},
 		})
@@ -125,5 +157,42 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
 		Expect(secret).To(Equal(config.SecretValue))
+	})
+
+	It("should sync secret as kubernetes tls secret", func() {
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		tlsSecret := secret.Get(secret.GetInput{
+			Getter:    kubeClient,
+			Name:      syncTLSSecretName,
+			Namespace: ns.Name,
+		})
+		Expect(tlsSecret).NotTo(BeNil())
+		Expect(tlsSecret.Data["tls.crt"]).NotTo(BeNil())
+		Expect(tlsSecret.Data["tls.key"]).NotTo(BeNil())
+	})
+
+	It("should sync secret as kubernetes opaque secret", func() {
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		opaqueSecret := secret.Get(secret.GetInput{
+			Getter:    kubeClient,
+			Name:      syncOpaqueSecretName,
+			Namespace: ns.Name,
+		})
+		Expect(opaqueSecret).NotTo(BeNil())
+		Expect(opaqueSecret.Data["opaque-secret"]).NotTo(BeNil())
 	})
 })
