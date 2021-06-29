@@ -136,6 +136,40 @@ Past issues:
 - https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/292
 - https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/471
 
+You can test Azure Key Vault connectivity from pod running on host network as follows:
+- Create Pod
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: curl
+spec:
+  hostNetwork: true
+  containers:
+  - args:
+    - tail
+    - -f
+    - /dev/null
+    image: curlimages/curl:7.75.0
+    name: curl
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF
+```
+- Exec into the Pod created above
+```
+kubectl exec -it curl -- sh
+```
+- Authenticate with AKV
+```
+curl -X POST 'https://login.microsoftonline.com/<AAD_TENANT_ID>/oauth2/v2.0/token' -d 'grant_type=client_credentials&client_id=<AZURE_CLIENT_ID>&client_secret=<AZURE_CLIENT_SECRET>&scope=https://vault.azure.net/.default'
+```
+- Try getting secret which is already created in AKV
+```
+curl -X GET 'https://<KEY_VAULT_NAME>.vault.azure.net/secrets/<SECRET_NAME>?api-version=7.2' -H "Authorization: Bearer <ACCESS_TOKEN_ACQUIRED_ABOVE>"
+```
+
 ### "failed to create Kubernetes secret" err="secrets is forbidden: User \"system:serviceaccount:default:secrets-store-csi-driver\" cannot create resource \"secrets\" in API group \"\" in the namespace \"default\""
 
 If you received the following error message in the `secret-store` container in driver:
