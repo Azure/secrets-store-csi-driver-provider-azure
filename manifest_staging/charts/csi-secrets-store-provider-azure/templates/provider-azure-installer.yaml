@@ -62,10 +62,6 @@ spec:
             periodSeconds: 30
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
-          {{- if .Values.linux.privileged }}
-          securityContext:
-            privileged: true
-          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -73,6 +69,9 @@ spec:
             capabilities:
               drop:
               - ALL
+          {{- if .Values.linux.privileged }}
+            privileged: true
+          {{- end }}
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
