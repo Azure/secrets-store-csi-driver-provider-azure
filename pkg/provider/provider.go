@@ -45,14 +45,15 @@ const (
 	VaultObjectTypeKey string = "key"
 	// VaultObjectTypeCertificate certificate vault object type
 	VaultObjectTypeCertificate string = "cert"
-	certTypePem                       = "application/x-pem-file"
-	certTypePfx                       = "application/x-pkcs12"
-	certificateType                   = "CERTIFICATE"
-	objectFormatPEM                   = "pem"
-	objectFormatPFX                   = "pfx"
-	objectEncodingHex                 = "hex"
-	objectEncodingBase64              = "base64"
-	objectEncodingUtf8                = "utf-8"
+
+	certTypePem          = "application/x-pem-file"
+	certTypePfx          = "application/x-pkcs12"
+	certificateType      = "CERTIFICATE"
+	objectFormatPEM      = "pem"
+	objectFormatPFX      = "pfx"
+	objectEncodingHex    = "hex"
+	objectEncodingBase64 = "base64"
+	objectEncodingUtf8   = "utf-8"
 
 	// pod identity NMI port
 	// TODO (aramase) make this configurable during the provider deployment

@@ -19,6 +19,7 @@ linters:
     - misspell
     - nakedret
     - prealloc
+    - staticcheck
     - unused
     - structcheck
     - varcheck
