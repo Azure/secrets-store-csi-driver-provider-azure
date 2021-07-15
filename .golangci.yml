@@ -8,14 +8,18 @@ linters:
   enable:
     - deadcode
     - errorlint
+    - goconst
+    - gocyclo
     - gofmt
     - goimports
-    - gosimple
-    - revive
-    - govet
     - gosec
+    - gosimple
+    - govet
     - ineffassign
     - misspell
+    - nakedret
+    - prealloc
     - unused
     - structcheck
     - varcheck
+    - revive

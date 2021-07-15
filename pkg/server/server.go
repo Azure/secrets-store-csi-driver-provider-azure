@@ -55,11 +55,12 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 		klog.ErrorS(err, "failed to process mount request")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %w", err)
 	}
-	var ov []*v1alpha1.ObjectVersion
+	ov := []*v1alpha1.ObjectVersion{}
 	for k, v := range objectVersions {
 		ov = append(ov, &v1alpha1.ObjectVersion{Id: k, Version: v})
 	}
-	var f []*v1alpha1.File
+
+	f := []*v1alpha1.File{}
 	// CSI driver v0.0.21+ will write to the filesystem if the files are in the response.
 	// No files in the response translates to "not implemented" in the CSI driver.
 	for k, v := range files {

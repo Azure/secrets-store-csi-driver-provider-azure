@@ -233,7 +233,8 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %w", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
-	var keyVaultObjects []KeyVaultObject
+
+	keyVaultObjects := []KeyVaultObject{}
 	for i, object := range objects.Array {
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
