@@ -85,6 +85,7 @@ In some cases, you may want to create a Kubernetes Secret to mirror the mounted 
 
 - The secrets will only sync once you *start a pod mounting the secrets*. Solely relying on the syncing with Kubernetes secrets feature thus does not work.
 - The Kubernetes secrets will be synced to the same namespace as the application pod and `SecretProviderClass`.
+- When all the pods consuming the secret are deleted, the Kubernetes secret is also deleted. This is done by adding the pods as owners to the created Kubernetes secret. When all the application pods consuming the Kubernetes secret are deleted, the Kubernetes secret will be garbage collected.
 {{% /alert %}}
 
 A `SecretProviderClass` custom resource should have the following components:
