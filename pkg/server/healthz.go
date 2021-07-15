@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"k8s.io/klog/v2"
@@ -23,8 +24,8 @@ type HealthZ struct {
 func (h *HealthZ) Serve() {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
-	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
-		klog.Fatalf("failed to start health check server, err: %+v", err)
+	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && errors.Is(err, http.ErrServerClosed) {
+		klog.Fatalf("failed to start health check server, err: %w", err)
 	}
 }
 

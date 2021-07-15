@@ -197,28 +197,28 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
 	}
 	if len(useVMManagedIdentityStr) == 0 {
 		useVMManagedIdentityStr = "false"
 	}
 	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %+v", cloudEnvFileName, err)
+		return nil, nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %w", cloudEnvFileName, err)
 	}
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cloudName %s is not valid, error: %v", cloudName, err)
+		return nil, nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
 	}
 
 	p.AuthConfig, err = auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create auth config, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to create auth config, error: %w", err)
 	}
 
 	objectsStrings := attrib["objects"]
@@ -230,7 +230,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %+v", err)
+		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %w", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	var keyVaultObjects []KeyVaultObject
@@ -238,7 +238,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %+v", i, err)
+			return nil, nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %w", i, err)
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
