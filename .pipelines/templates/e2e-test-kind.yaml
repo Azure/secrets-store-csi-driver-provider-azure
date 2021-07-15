@@ -45,8 +45,8 @@ jobs:
             TENANT_ID: $(TENANT_ID)
             CI_KIND_CLUSTER: true
             AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
-            ${{ if eq(driverWriteSecret, 'true') }}:
-              DRIVER_WRITE_SECRETS: true
+            ${{ if eq(driverWriteSecret, 'false') }}:
+              DRIVER_WRITE_SECRETS: false
   
         - script: |
             make e2e-kind-cleanup
