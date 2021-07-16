@@ -66,7 +66,7 @@ func NewConfig(usePodIdentity, useVMManagedIdentity bool, userAssignedIdentityID
 func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(aadEndpoint, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OAuth config: %v", err)
+		return nil, fmt.Errorf("failed to create OAuth config: %w", err)
 	}
 
 	// For usePodIdentity mode, the CSI driver makes an authorization request to fetch token for a resource from the NMI host endpoint (http://127.0.0.1:2579/host/token/).
