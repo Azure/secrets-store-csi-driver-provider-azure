@@ -32,34 +32,35 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 	err = json.Unmarshal([]byte(req.GetAttributes()), &attrib)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal attributes")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal attributes, error: %v", err)
+		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal attributes, error: %w", err)
 	}
 	err = json.Unmarshal([]byte(req.GetSecrets()), &secret)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal node publish secrets ref")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal secrets, error: %v", err)
+		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal secrets, error: %w", err)
 	}
 	err = json.Unmarshal([]byte(req.GetPermission()), &filePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal file permission")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %v", err)
+		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %w", err)
 	}
 	provider, err := provider.NewProvider()
 	if err != nil {
 		klog.ErrorS(err, "failed to initialize new provider")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to initialize new provider, error: %v", err)
+		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to initialize new provider, error: %w", err)
 	}
 
 	files, objectVersions, err := provider.MountSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), filePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to process mount request")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %v", err)
+		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %w", err)
 	}
-	var ov []*v1alpha1.ObjectVersion
+	ov := []*v1alpha1.ObjectVersion{}
 	for k, v := range objectVersions {
 		ov = append(ov, &v1alpha1.ObjectVersion{Id: k, Version: v})
 	}
-	var f []*v1alpha1.File
+
+	f := []*v1alpha1.File{}
 	// CSI driver v0.0.21+ will write to the filesystem if the files are in the response.
 	// No files in the response translates to "not implemented" in the CSI driver.
 	for k, v := range files {
