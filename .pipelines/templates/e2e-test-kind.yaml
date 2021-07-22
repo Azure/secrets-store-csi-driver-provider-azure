@@ -9,7 +9,7 @@ jobs:
     - ${{ each helmTest in parameters.helmTests }}:
       - job:
         displayName: ${{ format('e2e_test_kind/helm-test={0}/driver-write-secrets={1}', helmTest, driverWriteSecret) }}
-        timeoutInMinutes: 10
+        timeoutInMinutes: 15
         cancelTimeoutInMinutes: 5
         workspace:
           clean: all
