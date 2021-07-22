@@ -4,6 +4,7 @@ pr:
   branches:
     include:
     - master
+    - release-*
   paths:
     exclude:
       - docs/*
