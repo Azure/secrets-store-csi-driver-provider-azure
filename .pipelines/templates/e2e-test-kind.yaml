@@ -1,54 +1,59 @@
 parameters:
   - name: driverWriteSecrets
     type: object
+  - name: helmTests
+    type: object
 
 jobs:
   - ${{ each driverWriteSecret in parameters.driverWriteSecrets }}:
-    - job:
-      displayName: ${{ format('e2e_test_kind/driver-write-secrets={0}', driverWriteSecret) }}
-      timeoutInMinutes: 10
-      cancelTimeoutInMinutes: 5
-      workspace:
-        clean: all
+    - ${{ each helmTest in parameters.helmTests }}:
+      - job:
+        displayName: ${{ format('e2e_test_kind/helm-test={0}/driver-write-secrets={1}', helmTest, driverWriteSecret) }}
+        timeoutInMinutes: 10
+        cancelTimeoutInMinutes: 5
+        workspace:
+          clean: all
 
-      variables:
-      - group: csi-secrets-store-e2e-kind
+        variables:
+        - group: csi-secrets-store-e2e-kind
 
-      steps:
-        - task: GoTool@0
-          inputs:
-            version: 1.16
+        steps:
+          - task: GoTool@0
+            inputs:
+              version: 1.16
 
-        - script: |
-            export REGISTRY="e2e"
-            export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
+          - script: |
+              export REGISTRY="e2e"
+              export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
 
-            echo "Image version: ${IMAGE_VERSION}"
-            echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
-            echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
+              echo "Image version: ${IMAGE_VERSION}"
+              echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
+              echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
 
-            make e2e-bootstrap
-          displayName: "Build image"
-          env:
-            CI_KIND_CLUSTER: true
+              make e2e-bootstrap
+            displayName: "Build image"
+            env:
+              CI_KIND_CLUSTER: true
 
-        - script: |
-            make e2e-test
-          displayName: "Run e2e tests on kind cluster"
-          env:
-            AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-            AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-            KEY_NAME: $(KEY_NAME)
-            KEY_VERSION: $(KEY_VERSION)
-            KEYVAULT_NAME: $(KEYVAULT_NAME)
-            SECRET_NAME: $(SECRET_NAME)
-            TENANT_ID: $(TENANT_ID)
-            CI_KIND_CLUSTER: true
-            AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
-            ${{ if eq(driverWriteSecret, 'false') }}:
-              DRIVER_WRITE_SECRETS: false
-  
-        - script: |
-            make e2e-kind-cleanup
-          displayName: 'Delete kind cluster'
-          condition: always()
+          - script: |
+              make e2e-test
+            displayName: "Run e2e tests on kind cluster"
+            env:
+              AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+              AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+              KEY_NAME: $(KEY_NAME)
+              KEY_VERSION: $(KEY_VERSION)
+              KEYVAULT_NAME: $(KEYVAULT_NAME)
+              SECRET_NAME: $(SECRET_NAME)
+              TENANT_ID: $(TENANT_ID)
+              CI_KIND_CLUSTER: true
+              AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
+              ${{ if eq(driverWriteSecret, 'false') }}:
+                DRIVER_WRITE_SECRETS: false
+              ${{ if eq(helmTest, 'false') }}:
+                IS_HELM_TEST: false
+    
+          - script: |
+              make e2e-kind-cleanup
+            displayName: 'Delete kind cluster'
+            condition: always()

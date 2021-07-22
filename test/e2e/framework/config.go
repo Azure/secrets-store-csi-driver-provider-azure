@@ -26,6 +26,7 @@ type Config struct {
 	PodIdentityUserAssignedIdentityID string `envconfig:"POD_IDENTITY_USER_ASSIGN_IDENTITY_ID"`
 	ResourceGroup                     string `envconfig:"RESOURCE_GROUP"`
 	IsUpgradeTest                     bool   `envconfig:"IS_UPGRADE_TEST"`
+	IsHelmTest                        bool   `envconfig:"IS_HELM_TEST" default:"true"`
 	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
 	IsClusterUpgraded                 bool   `envconfig:"IS_CLUSTER_UPGRADED"`
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
