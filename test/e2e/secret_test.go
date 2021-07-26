@@ -41,6 +41,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 			Name:      "secrets-store-creds",
 			Namespace: ns.Name,
 			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
+			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
 		keyVaultObjects := []provider.KeyVaultObject{

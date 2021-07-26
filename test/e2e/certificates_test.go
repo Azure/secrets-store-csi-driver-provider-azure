@@ -42,6 +42,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 			Name:      "secrets-store-creds",
 			Namespace: ns.Name,
 			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
+			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
 		keyVaultObjects := []provider.KeyVaultObject{
