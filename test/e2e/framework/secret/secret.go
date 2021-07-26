@@ -21,6 +21,7 @@ type CreateInput struct {
 	Name      string
 	Namespace string
 	Data      map[string][]byte
+	Labels    map[string]string
 }
 
 // Create creates a Secret resource.
@@ -36,6 +37,7 @@ func Create(input CreateInput) *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      input.Name,
 			Namespace: input.Namespace,
+			Labels:    input.Labels,
 		},
 		Data: input.Data,
 	}
@@ -44,7 +46,7 @@ func Create(input CreateInput) *v1.Secret {
 	return secret
 }
 
-// DeleteInput is the input for Get.
+// GetInput is the input for Get.
 type GetInput struct {
 	Getter    framework.Getter
 	Name      string

@@ -12,7 +12,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.16
+    tag: v0.1.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -40,6 +40,7 @@ linux:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  kubeletRootDir: /var/lib/kubelet
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -53,7 +54,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: 0.0.16
+    tag: v0.1.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -80,6 +81,7 @@ windows:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
+  kubeletRootDir: C:\var\lib\kubelet
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -101,7 +103,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.23
+      tag: v0.1.0
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -111,6 +113,11 @@ secrets-store-csi-driver:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
       tag: v2.3.0
       pullPolicy: IfNotPresent
+    crds:
+      image:
+        repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
+        tag: v0.1.0
+        pullPolicy: IfNotPresent
 
   windows:
     enabled: false
@@ -118,7 +125,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v0.0.23
+      tag: v0.1.0
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -132,7 +139,7 @@ secrets-store-csi-driver:
   enableSecretRotation: false
   rotationPollInterval: 2m
   # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on actions to take before enabling this feature
-  filteredWatchSecret: false
+  filteredWatchSecret: true
   
   syncSecret:
     enabled: false
@@ -146,4 +153,4 @@ rbac:
 constructPEMChain: false
 
 # Return secrets in grpc response to the driver (supported in driver v0.0.21+) instead of writing to filesystem
-driverWriteSecrets: false
+driverWriteSecrets: true
