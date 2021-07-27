@@ -27,7 +27,7 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.16
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v0.1.0
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix:///provider/azure.sock
@@ -35,6 +35,7 @@ spec:
             - --healthz-port=8989
             - --healthz-path=/healthz
             - --healthz-timeout=5s
+            - --driver-write-secrets=true
           livenessProbe:
             httpGet:
               path: /healthz
