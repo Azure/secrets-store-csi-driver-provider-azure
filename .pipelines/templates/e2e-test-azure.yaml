@@ -14,7 +14,7 @@ jobs:
   - ${{ each clusterType in parameters.clusterTypes }}:
     - ${{ each osType in parameters.osTypes }}:
       - job:
-        displayName: ${{ format('{0}/{1}', clusterType, osType) }}
+        displayName: ${{ format('{0}/{1}/testWithGPU={2}', clusterType, osType, parameters.testWithGPU) }}
         timeoutInMinutes: 90
         cancelTimeoutInMinutes: 5
         workspace:
