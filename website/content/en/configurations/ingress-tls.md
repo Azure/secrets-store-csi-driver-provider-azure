@@ -44,7 +44,7 @@ Deploy the Azure Key Vault Provider and Secrets Store CSI Driver components:
 
 ```bash
 helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
-helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --set secrets-store-csi-driver.syncSecret.enabled=true
 ```
 
 Refer to [installation](../../getting-started/installation) for more details and validation.
