@@ -24,7 +24,7 @@ jobs:
   #     driverWriteSecrets:
   #     - "true"
   #     - "false"
-  - template: templates/e2e-test-azure.yaml
+  - template: templates/e2e-test-azure.yaml 
     parameters:
       clusterTypes:
       - "aks"
