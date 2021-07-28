@@ -18,9 +18,16 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - template: .pipelines/templates/unit-test.yaml
-  - template: .pipelines/templates/e2e-test-kind.yaml
+  # - template: .pipelines/templates/unit-test.yaml
+  # - template: .pipelines/templates/e2e-test-kind.yaml
+  #   parameters:
+  #     driverWriteSecrets:
+  #     - "true"
+  #     - "false"
+  - template: templates/e2e-test-azure.yaml
     parameters:
-      driverWriteSecrets:
-      - "true"
-      - "false"
+      clusterTypes:
+      - "aks"
+      osTypes:
+      - "linux"
+      testWithGPU: true

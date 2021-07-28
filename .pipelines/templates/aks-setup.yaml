@@ -2,6 +2,9 @@ parameters:
   - name: testClusterUpgrade
     type: boolean
     default: false
+  - name: testWithGPU
+    type: boolean
+    default: false
 
 steps:
   - script: |
@@ -31,6 +34,16 @@ steps:
       condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
   - script: |
+      echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_DS2_v2"
+
+      if [[ ${{ parameters.testWithGPU }} == "true" ]]; then
+        echo "Using GPU"
+        echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_ND6s"
+      fi
+    displayName: "Determine VM Size"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+
+  - script: |
       az group create -n ${AZURE_CLUSTER_NAME} -l $(AZURE_LOCATION)
 
       az aks create \
@@ -39,7 +52,7 @@ steps:
         --kubernetes-version $(AKS_INSTALL_VERSION) \
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
-        --node-vm-size Standard_DS2_v2 \
+        --node-vm-size $(NODE_VM_SIZE) \
         --location $(AZURE_LOCATION) \
         --service-principal $(AAD_CLIENT_ID) \
         --client-secret $(AAD_CLIENT_SECRET) \
