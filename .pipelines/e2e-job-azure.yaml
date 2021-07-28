@@ -13,18 +13,12 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  # - template: templates/e2e-test-azure.yaml
-  #   parameters:
-  #     clusterTypes:
-  #     - "aks"
-  #     - "aks-engine"
-  #     osTypes:
-  #     - "linux"
-  #     - "windows"
-  - template: templates/e2e-test-azure.yaml 
+  - template: templates/e2e-test-azure.yaml
     parameters:
       clusterTypes:
       - "aks"
+      - "aks-engine"
       osTypes:
       - "linux"
-      testWithGPU: true
+      - "windows"
+
