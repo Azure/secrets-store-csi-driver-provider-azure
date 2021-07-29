@@ -1,8 +1,6 @@
 parameters:
   - name: driverWriteSecrets
     type: object
-  - name: helmTests
-    type: object
 
 jobs:
   - ${{ each driverWriteSecret in parameters.driverWriteSecrets }}:

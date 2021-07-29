@@ -24,6 +24,3 @@ jobs:
       driverWriteSecrets:
       - "true"
       - "false"
-      helmTests:
-      - "true"
-      - "false"
