@@ -82,6 +82,8 @@ jobs:
           CI_KIND_CLUSTER: true
           AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
           IS_HELM_TEST: false
+          REGISTRY: ${REGISTRY}
+          IMAGE_VERSION: ${IMAGE_VERSION}
 
       - script: |
           make e2e-kind-cleanup
