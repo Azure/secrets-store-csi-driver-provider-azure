@@ -9,6 +9,7 @@ metadata:
   labels:
     app: csi-secrets-store-provider-azure
   name: csi-secrets-store-provider-azure
+  namespace: kube-system
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -56,8 +57,13 @@ spec:
               drop:
               - ALL
           volumeMounts:
-            - mountPath: "/provider"
-              name: providervol
+            - name: provider-vol
+              mountPath: /provider
+            - name: mountpoint-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: HostToContainer
+            - mountPath: /etc/kubernetes/custom_environment.json
+              name: cloudenvfile-vol
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -68,8 +74,15 @@ spec:
                 values:
                 - virtual-kubelet
       volumes:
-        - name: providervol
+        - name: provider-vol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
+        - name: mountpoint-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+        - hostPath:
+            path: /etc/kubernetes/custom_environment.json
+            type: File
+          name: cloudenvfile-vol
       nodeSelector:
         kubernetes.io/os: linux

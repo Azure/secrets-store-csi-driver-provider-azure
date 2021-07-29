@@ -6,14 +6,11 @@ metadata:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: csi-csi-secrets-store-provider-azure
-  namespace: kube-system
   labels:
     app: csi-secrets-store-provider-azure
+  name: csi-secrets-store-provider-azure
 spec:
   updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
     type: RollingUpdate
   selector:
     matchLabels:
@@ -45,10 +42,10 @@ spec:
             timeoutSeconds: 10
             periodSeconds: 30
           resources:
-            limits:
+            requests:
               cpu: 50m
               memory: 100Mi
-            requests:
+            limits:
               cpu: 50m
               memory: 100Mi
           securityContext:
@@ -59,13 +56,8 @@ spec:
               drop:
               - ALL
           volumeMounts:
-            - name: provider-vol
-              mountPath: /provider
-            - name: mountpoint-dir
-              mountPath: /var/lib/kubelet/pods
-              mountPropagation: HostToContainer
-            - mountPath: /etc/kubernetes/custom_environment.json
-              name: cloudenvfile-vol
+            - mountPath: "/provider"
+              name: providervol
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -76,15 +68,8 @@ spec:
                 values:
                 - virtual-kubelet
       volumes:
-        - name: provider-vol
+        - name: providervol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
-        - name: mountpoint-dir
-          hostPath:
-            path: /var/lib/kubelet/pods
-        - hostPath:
-            path: /etc/kubernetes/custom_environment.json
-            type: File
-          name: cloudenvfile-vol
       nodeSelector:
         kubernetes.io/os: linux
