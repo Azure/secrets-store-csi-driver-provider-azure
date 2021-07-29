@@ -7,7 +7,7 @@ parameters:
 jobs:
   - ${{ each driverWriteSecret in parameters.driverWriteSecrets }}:
     - job:
-      displayName: ${{ format('e2e_test_kind/driver-write-secrets={1}', driverWriteSecret) }}
+      displayName: ${{ format('e2e_test_kind/driver-write-secrets={0}', driverWriteSecret) }}
       timeoutInMinutes: 15
       cancelTimeoutInMinutes: 5
       workspace:
