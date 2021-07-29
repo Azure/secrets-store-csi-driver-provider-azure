@@ -54,7 +54,7 @@ var _ = BeforeSuite(func() {
 
 	if !config.IsHelmTest {
 		By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via kubectl from deployment manifest.")
-		deploy.InstallManifest(kubeconfigPath)
+		deploy.InstallManifest(kubeconfigPath, config)
 
 		return
 	}
