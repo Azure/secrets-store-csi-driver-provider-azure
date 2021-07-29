@@ -4,8 +4,6 @@ package deploy
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
