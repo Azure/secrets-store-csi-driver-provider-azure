@@ -71,26 +71,6 @@ var _ = BeforeSuite(func() {
 			Config: config,
 		})
 	}
-
-	// if !config.IsSoakTest {
-	// 	if config.IsHelmTest {
-	// 		if !helm.ReleaseExists() { //If helm release exists, it means either cluster upgrade test or backward compatibility test is underway.
-	// 			By(fmt.Sprintf("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm from - %s.", config.HelmChartDir))
-	// 			helm.Install(helm.InstallInput{
-	// 				Config: config,
-	// 			})
-	// 		} else if config.IsBackwardCompatibilityTest {
-	// 			//We upgrade only if we are running backward compatibility tests.
-	// 			By(fmt.Sprintf("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version from - %s.", config.HelmChartDir))
-	// 			helm.Upgrade(helm.UpgradeInput{
-	// 				Config: config,
-	// 			})
-	// 		}
-	// 	} else {
-	// 		By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via kubectl from deployment manifest.")
-	// 		deploy.InstallManifest(kubeconfigPath)
-	// 	}
-	// }
 })
 
 var _ = AfterSuite(func() {
