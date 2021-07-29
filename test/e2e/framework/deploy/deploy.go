@@ -36,7 +36,8 @@ var (
 
 func InstallManifest(kubeconfigPath string) {
 	for _, resource := range driverResources {
-		exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", driverResourcePath, resource)})
+		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", driverResourcePath, resource)})
+		Expect(err).To(BeNil())
 	}
 
 	wd, err := os.Getwd()
@@ -46,6 +47,7 @@ func InstallManifest(kubeconfigPath string) {
 	Expect(err).To(BeNil())
 
 	for _, resource := range providerResources {
-		exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource)})
+		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource)})
+		Expect(err).To(BeNil())
 	}
 }
