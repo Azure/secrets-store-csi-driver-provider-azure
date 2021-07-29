@@ -4,6 +4,8 @@ package deploy
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
@@ -12,8 +14,8 @@ import (
 )
 
 var (
-	driverResourcePath   = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy"
-	providerResourcePath = "https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment"
+	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy"
+	providerResourceDirectory = "manifest_staging/deployment"
 
 	driverResources = []string{
 		"csidriver.yaml",
@@ -32,15 +34,21 @@ var (
 	}
 )
 
-// InstallManifest install driver and provider manifests from yaml files
+// InstallManifest install driver and provider manifests from yaml files.
 func InstallManifest(kubeconfigPath string) {
 	for _, resource := range driverResources {
 		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", driverResourcePath, resource)})
 		Expect(err).To(BeNil())
 	}
 
+	wd, err := os.Getwd()
+	Expect(err).To(BeNil())
+
+	providerResourceAbsolutePath, err := filepath.Abs(fmt.Sprintf("%s/../../%s", wd, providerResourceDirectory))
+	Expect(err).To(BeNil())
+
 	for _, resource := range providerResources {
-		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourcePath, resource)})
+		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource)})
 		Expect(err).To(BeNil())
 	}
 }
