@@ -29,6 +29,13 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
+  - template: templates/e2e-test-azure.yaml 
+    parameters:
+      clusterTypes:
+      - "aks"
+      osTypes:
+      - "linux"
+      testWithGPU: true
   - template: templates/soak-test.yaml
     parameters:
       clusterConfigs:

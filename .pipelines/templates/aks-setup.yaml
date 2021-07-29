@@ -2,6 +2,9 @@ parameters:
   - name: testClusterUpgrade
     type: boolean
     default: false
+  - name: testWithGPU
+    type: boolean
+    default: false
 
 steps:
   - script: |
@@ -10,6 +13,20 @@ steps:
     displayName: "Set cluster name"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
     
+  - script: |
+      echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_DS2_v2"
+    displayName: "Determine VM Size"
+    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+
+  - ${{ if eq(parameters.testWithGPU, true) }}:
+    - script: |
+        echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_ND6s"
+
+        # GPU VM are only available in the eastus2euap region on CI sub
+        echo "##vso[task.setvariable variable=AZURE_LOCATION]eastus2euap"
+      displayName: "Determine GPU VM Size"
+      condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+
   - script: | 
       #Run test with latest on preview aks version available
       aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "max(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
@@ -39,7 +56,7 @@ steps:
         --kubernetes-version $(AKS_INSTALL_VERSION) \
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
-        --node-vm-size Standard_DS2_v2 \
+        --node-vm-size $(NODE_VM_SIZE) \
         --location $(AZURE_LOCATION) \
         --service-principal $(AAD_CLIENT_ID) \
         --client-secret $(AAD_CLIENT_SECRET) \

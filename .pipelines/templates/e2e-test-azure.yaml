@@ -6,12 +6,15 @@ parameters:
   - name: testClusterUpgrade
     type: boolean
     default: false
+  - name: testWithGPU
+    type: boolean
+    default: false
 
 jobs:
   - ${{ each clusterType in parameters.clusterTypes }}:
     - ${{ each osType in parameters.osTypes }}:
       - job:
-        displayName: ${{ format('{0}/{1}', clusterType, osType) }}
+        displayName: ${{ format('{0}/{1}/gpu={2}', clusterType, osType, parameters.testWithGPU) }}
         timeoutInMinutes: 90
         cancelTimeoutInMinutes: 5
         workspace:
@@ -42,6 +45,7 @@ jobs:
           - template: aks-setup.yaml
             parameters:
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+              testWithGPU: ${{ parameters.testWithGPU }}
 
         - ${{ if eq(clusterType, 'aks-engine') }}:
           - template: aks-engine-setup.yaml
