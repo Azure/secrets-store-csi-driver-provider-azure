@@ -9,7 +9,6 @@ metadata:
   labels:
     app: csi-secrets-store-provider-azure
   name: csi-secrets-store-provider-azure
-  namespace: kube-system
 spec:
   updateStrategy:
     type: RollingUpdate
