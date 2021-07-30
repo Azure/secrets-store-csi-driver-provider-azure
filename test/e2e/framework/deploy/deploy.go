@@ -55,9 +55,8 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		Expect(err).To(BeNil())
 
 		fileBytes, err := ioutil.ReadAll(file)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).To(BeNil())
+		fmt.Fprintf(GinkgoWriter, "%s", fileBytes)
 
 		ds := &appsv1.DaemonSet{}
 		err = yaml.Unmarshal(fileBytes, ds)
