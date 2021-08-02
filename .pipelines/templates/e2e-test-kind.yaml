@@ -48,7 +48,7 @@ jobs:
           condition: always()
   - job:
     displayName: e2e_test_kind/deployment_manifest
-    timeoutInMinutes: 15
+    timeoutInMinutes: 10
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
