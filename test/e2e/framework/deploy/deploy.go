@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-
 	"sigs.k8s.io/yaml"
 
 	. "github.com/onsi/gomega"
@@ -36,7 +35,6 @@ var (
 
 	providerResources = []string{
 		"provider-azure-installer.yaml",
-		"provider-azure-installer-windows.yaml",
 	}
 )
 
@@ -61,26 +59,31 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		Expect(err).To(BeNil())
 
 		// Extract DS yaml
-		pos := strings.LastIndex(fileContent, "---")
+		fileContent := string(fileBytes)
+		subString := "---"
+		pos := strings.LastIndex(fileContent, subString)
 		if pos == -1 {
 			return
 		}
-		adjustedPos := pos + len("---")
+		adjustedPos := pos + len(subString)
 		if adjustedPos >= len(fileContent) {
 			return
 		}
-		dsYaml := fileContent[adjustedPos:len(fileContent)]
+		dsYAML := fileContent[adjustedPos:len(fileContent)]
 
 		ds := &appsv1.DaemonSet{}
-		err = yaml.Unmarshal([]byte(dsYaml), ds)
+		err = yaml.Unmarshal([]byte(dsYAML), ds)
 		Expect(err).To(BeNil())
 
-		// If it's windows, then skip DS update
+		// If it's windows, then skip DS update as we are building linux image only for kind test
 		if ds.Spec.Template.Spec.NodeSelector["kubernetes.io/os"] == "windows" {
 			continue
 		}
 
+		// Update the image
 		ds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("%s/%s:%s", config.Registry, config.ImageName, config.ImageVersion)
+
+		// Add Volume and Volume mount required for testing
 		ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: "cloudenvfile-vol",
 			VolumeSource: corev1.VolumeSource{
