@@ -56,10 +56,8 @@ spec:
               drop:
               - ALL
           volumeMounts:
-            - name: provider-vol
-              mountPath: /provider
-            - mountPath: /etc/kubernetes/custom_environment.json
-              name: cloudenvfile-vol
+            - mountPath: "/provider"
+              name: providervol
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -70,12 +68,8 @@ spec:
                 values:
                 - virtual-kubelet
       volumes:
-        - name: provider-vol
+        - name: providervol
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
-        - hostPath:
-            path: /etc/kubernetes/custom_environment.json
-            type: File
-          name: cloudenvfile-vol
       nodeSelector:
         kubernetes.io/os: linux

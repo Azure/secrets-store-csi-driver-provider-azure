@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	"sigs.k8s.io/yaml"
 
@@ -59,7 +60,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		fileBytes, err := ioutil.ReadAll(file)
 		Expect(err).To(BeNil())
 
-		fileContent := fmt.Sprintf("%s", fileBytes)
+		// Extract DS yaml
 		pos := strings.LastIndex(fileContent, "---")
 		if pos == -1 {
 			return
@@ -74,16 +75,37 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		err = yaml.Unmarshal([]byte(dsYaml), ds)
 		Expect(err).To(BeNil())
 
-		ds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("%s/%s:%s", config.Registry, config.ImageName, config.ImageVersion)	
+		// If it's windows, then skip DS update
+		if ds.Spec.Template.Spec.NodeSelector["kubernetes.io/os"] == "windows" {
+			continue
+		}
+
+		ds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("%s/%s:%s", config.Registry, config.ImageName, config.ImageVersion)
+		ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "cloudenvfile-vol",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/etc/kubernetes/custom_environment.json",
+				},
+			},
+		})
+
+		ds.Spec.Template.Spec.Containers[0].VolumeMounts = append(ds.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "cloudenvfile-vol",
+			MountPath: "/etc/kubernetes/custom_environment.json",
+		})
+
 		updatedDS, err := yaml.Marshal(ds)
 		Expect(err).To(BeNil())
 
 		err = ioutil.WriteFile(fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource), updatedDS, 0644)
 		Expect(err).To(BeNil())
 
+		// Run original yaml to install SA
 		err = exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource)})
 		Expect(err).To(BeNil())
 
+		// Update DS with new configuration
 		err = exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource)})
 		Expect(err).To(BeNil())
 	}
