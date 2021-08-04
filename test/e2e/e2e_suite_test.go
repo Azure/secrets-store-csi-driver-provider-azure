@@ -13,11 +13,13 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	e2eframework "k8s.io/kubernetes/test/e2e/framework"
+	e2ekubectl "k8s.io/kubernetes/test/e2e/framework/kubectl"
+	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -25,8 +27,12 @@ var (
 	clusterProxy   framework.ClusterProxy
 	config         *framework.Config
 	kubeClient     client.Client
+	clientSet      *kubernetes.Clientset
 	kvClient       keyvault.Client
 	kubeconfigPath string
+	coreNamespaces = []string{
+		framework.NamespaceKubeSystem,
+	}
 )
 
 func TestE2E(t *testing.T) {
@@ -43,6 +49,7 @@ var _ = BeforeSuite(func() {
 	By("Creating a Cluster Proxy")
 	clusterProxy = framework.NewClusterProxy(initScheme())
 	kubeClient = clusterProxy.GetClient()
+	clientSet = clusterProxy.GetClientSet()
 	kubeconfigPath = clusterProxy.GetKubeconfigPath()
 
 	By("Creating a Keyvault Client")
@@ -71,6 +78,16 @@ var _ = BeforeSuite(func() {
 		helm.Upgrade(helm.UpgradeInput{
 			Config: config,
 		})
+	}
+
+	// Ensure all pods are running and ready before starting tests
+	podStartupTimeout := e2eframework.TestContext.SystemPodsStartupTimeout
+	for _, namespace := range coreNamespaces {
+		if err := e2epod.WaitForPodsRunningReady(clientSet, namespace, int32(e2eframework.TestContext.MinStartupPods), int32(e2eframework.TestContext.AllowedNotReadyNodes), podStartupTimeout, map[string]string{}); err != nil {
+			e2eframework.DumpAllNamespaceInfo(clientSet, namespace)
+			e2ekubectl.LogFailedContainers(clientSet, namespace, e2eframework.Logf)
+			e2eframework.Failf("error waiting for all pods to be running and ready: %v", err)
+		}
 	}
 })
 
