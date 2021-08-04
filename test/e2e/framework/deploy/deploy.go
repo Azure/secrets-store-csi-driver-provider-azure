@@ -4,7 +4,7 @@ package deploy
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,7 +56,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		file, err := os.Open(fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource))
 		Expect(err).To(BeNil())
 
-		fileBytes, err := ioutil.ReadAll(file)
+		fileBytes, err := io.ReadAll(file)
 		Expect(err).To(BeNil())
 
 		// Extract DS yaml
@@ -102,7 +102,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		updatedDS, err := yaml.Marshal(ds)
 		Expect(err).To(BeNil())
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource), updatedDS, 0644)
+		err = os.WriteFile(fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource), updatedDS, 0644)
 		Expect(err).To(BeNil())
 
 		// Run original yaml to install SA
