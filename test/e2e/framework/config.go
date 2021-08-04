@@ -59,6 +59,7 @@ func (c *Config) DeepCopy() *Config {
 	copy.IsBackwardCompatibilityTest = c.IsBackwardCompatibilityTest
 	copy.DriverWriteSecrets = c.DriverWriteSecrets
 	copy.AzureEnvironmentFilePath = c.AzureEnvironmentFilePath
+	copy.IsHelmTest = c.IsHelmTest
 
 	return copy
 }
