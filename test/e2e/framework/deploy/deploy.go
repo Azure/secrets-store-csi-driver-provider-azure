@@ -59,7 +59,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		fileBytes, err := io.ReadAll(file)
 		Expect(err).To(BeNil())
 
-		// Extract DS yaml
+		// resource yaml file contains both SA and DS configuration. In order to update DS, extract DS yaml
 		fileContent := string(fileBytes)
 		subString := "---"
 		pos := strings.LastIndex(fileContent, subString)
