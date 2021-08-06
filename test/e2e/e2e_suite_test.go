@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/deploy"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
@@ -41,33 +42,42 @@ var _ = BeforeSuite(func() {
 
 	By("Creating a Cluster Proxy")
 	clusterProxy = framework.NewClusterProxy(initScheme())
+	kubeClient = clusterProxy.GetClient()
+	kubeconfigPath = clusterProxy.GetKubeconfigPath()
 
 	By("Creating a Keyvault Client")
 	kvClient = keyvault.NewClient(config)
 
-	if !config.IsSoakTest {
-		if !helm.ReleaseExists() { //If helm release exists, it means either cluster upgrade test or backward compatibility test is underway.
-			By(fmt.Sprintf("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm from - %s.", config.HelmChartDir))
-			helm.Install(helm.InstallInput{
-				Config: config,
-			})
-		} else if config.IsBackwardCompatibilityTest {
-			//We upgrade only if we are running backward compatibility tests.
-			By(fmt.Sprintf("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version from - %s.", config.HelmChartDir))
-			helm.Upgrade(helm.UpgradeInput{
-				Config: config,
-			})
-		}
+	if config.IsSoakTest {
+		return
 	}
 
-	kubeClient = clusterProxy.GetClient()
-	kubeconfigPath = clusterProxy.GetKubeconfigPath()
+	if !config.IsHelmTest {
+		By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via kubectl from deployment manifest.")
+		deploy.InstallManifest(kubeconfigPath, config)
+
+		return
+	}
+
+	// if helm release exists, it means either cluster upgrade test or backward compatibility test is underway
+	if !helm.ReleaseExists() {
+		By(fmt.Sprintf("Installing Secrets Store CSI Driver and Azure Key Vault Provider via Helm from - %s.", config.HelmChartDir))
+		helm.Install(helm.InstallInput{
+			Config: config,
+		})
+	} else if config.IsBackwardCompatibilityTest {
+		// upgrade helm charts only if running backward compatibility tests
+		By(fmt.Sprintf("Upgrading Secrets Store CSI Driver and Azure Key Vault Provider via Helm to New Version from - %s.", config.HelmChartDir))
+		helm.Upgrade(helm.UpgradeInput{
+			Config: config,
+		})
+	}
 })
 
 var _ = AfterSuite(func() {
-	//Cleanup
+	// cleanup
 	defer func() {
-		//Uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test.
+		// uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test
 		if !config.IsSoakTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {
 			if helm.ReleaseExists() {
 				By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
