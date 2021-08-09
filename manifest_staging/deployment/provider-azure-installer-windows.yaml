@@ -27,7 +27,7 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
-            - --construct-pem-chain=false
+            - --construct-pem-chain=true
             - --healthz-port=8989
             - --healthz-path=/healthz
             - --healthz-timeout=5s

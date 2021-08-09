@@ -11,6 +11,8 @@ description: >
 
 > Available in AKV Provider release `0.0.12+`
 
+> This feature will be enabled by default in AKV Provider release `v0.2.0`
+
 The Azure Key Vault provider for Secrets Store CSI Driver by default fetches the chain of certificates from Keyvault and writes to the mount in the same order in which the certificate chain was uploaded. This is an experimental feature that supports reordering of the certificate chain in the following order:
 
 ```bash
