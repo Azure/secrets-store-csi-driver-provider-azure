@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	ConstructPEMChain  = flag.Bool("construct-pem-chain", false, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
+	ConstructPEMChain  = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
 	DriverWriteSecrets = flag.Bool("driver-write-secrets", true, "Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
 )
 
