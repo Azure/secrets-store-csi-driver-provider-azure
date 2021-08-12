@@ -63,7 +63,9 @@ spec:
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           securityContext:
+          {{- if not .Values.linux.privileged }}
             allowPrivilegeEscalation: false
+          {{- end }}
             readOnlyRootFilesystem: true
             runAsUser: 0
             capabilities:

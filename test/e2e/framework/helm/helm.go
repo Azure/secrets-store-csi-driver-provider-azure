@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	chartName            = "csi"
+	// setting a long chartName to test it doesn't break with dependency charts
+	// see https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/596
+	chartName            = "csi-secrets-store-provider-azure"
 	podIdentityChartName = "pi"
 )
 
