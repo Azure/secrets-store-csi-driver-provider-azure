@@ -20,11 +20,23 @@ jobs:
         workspace:
           clean: all
 
+        - script: |
+            OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1)
+            echo "Os Type - $OS_TYPE"
+            echo "##vso[task.setvariable variable=major]$OS_TYPE"
+
+            CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '-' -f2)
+            echo "Container Runtime - $CONTAINER_RUNTIME"
+            echo "##vso[task.setvariable variable=major]$CONTAINER_RUNTIME"
+          displayName: 'Determine os type and container runtime'
+
         variables:
           - name: CLUSTER_CONFIG
-            value: ${{ format('{0}', osType) }}
+            value: $(OS_TYPE)
           - name: CLUSTER_TYPE
             value: ${{ format('{0}', clusterType) }}
+          - name: CONTAINER_RUNTIME
+            value: $(CONTAINER_RUNTIME)
           - group: csi-secrets-store-e2e
 
         steps:
@@ -46,6 +58,7 @@ jobs:
             parameters:
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               testWithGPU: ${{ parameters.testWithGPU }}
+              containerRuntime: $(CONTAINER_RUNTIME)
 
         - ${{ if eq(clusterType, 'aks-engine') }}:
           - template: aks-engine-setup.yaml
@@ -68,7 +81,7 @@ jobs:
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with New Version"
-            osType: ${{ osType }}
+            osType: $(OS_TYPE)
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             isBackwardCompatibilityTest: true
             setRegistry: true
@@ -80,7 +93,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
+              osType: $(OS_TYPE)
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
@@ -89,7 +102,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
+              osType: $(OS_TYPE)
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
