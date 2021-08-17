@@ -20,29 +20,27 @@ jobs:
         workspace:
           clean: all
 
-        - script: |
-            OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1)
-            echo "Os Type - $OS_TYPE"
-            echo "##vso[task.setvariable variable=major]$OS_TYPE"
-
-            CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '-' -f2)
-            echo "Container Runtime - $CONTAINER_RUNTIME"
-            echo "##vso[task.setvariable variable=major]$CONTAINER_RUNTIME"
-          displayName: 'Determine os type and container runtime'
-
         variables:
           - name: CLUSTER_CONFIG
-            value: $(OS_TYPE)
+            value: ${{ format('{0}', osType) }}
           - name: CLUSTER_TYPE
             value: ${{ format('{0}', clusterType) }}
-          - name: CONTAINER_RUNTIME
-            value: $(CONTAINER_RUNTIME)
           - group: csi-secrets-store-e2e
 
         steps:
         - task: GoTool@0
           inputs:
             version: 1.16
+        
+        - script: |
+            OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1)
+            echo "Os Type - $OS_TYPE"
+            echo "##vso[task.setvariable variable=CLUSTER_CONFIG]$OS_TYPE"
+
+            CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '-' -f2)
+            echo "Container Runtime - $CONTAINER_RUNTIME"
+            echo "##vso[task.setvariable variable=CONTAINER_RUNTIME]$CONTAINER_RUNTIME"
+          displayName: 'Determine os type and container runtime'
 
         - script: |
             # Download kubectl
@@ -71,7 +69,7 @@ jobs:
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with Released Version"
-            osType: ${{ osType }}
+            osType: $(CLUSTER_CONFIG)
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             resetImageVersion: true
             isBackwardCompatibilityTest: true
@@ -81,7 +79,7 @@ jobs:
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with New Version"
-            osType: $(OS_TYPE)
+            osType: $(CLUSTER_CONFIG)
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             isBackwardCompatibilityTest: true
             setRegistry: true
@@ -93,7 +91,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: $(OS_TYPE)
+              osType: $(CLUSTER_CONFIG)
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
@@ -102,7 +100,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: $(OS_TYPE)
+              osType: $(CLUSTER_CONFIG)
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
