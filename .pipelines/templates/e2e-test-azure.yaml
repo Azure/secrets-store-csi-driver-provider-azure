@@ -51,19 +51,19 @@ jobs:
           
         - template: build-images.yaml
 
-        - ${{ if eq(clusterType, 'aks') }}:
-          - template: aks-setup.yaml
-            parameters:
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              testWithGPU: ${{ parameters.testWithGPU }}
-              containerRuntime: $(CONTAINER_RUNTIME)
+        # - ${{ if eq(clusterType, 'aks') }}:
+        #   - template: aks-setup.yaml
+        #     parameters:
+        #       testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #       testWithGPU: ${{ parameters.testWithGPU }}
+        #       containerRuntime: $(CONTAINER_RUNTIME)
 
-        - ${{ if eq(clusterType, 'aks-engine') }}:
-          - template: aks-engine-setup.yaml
+        # - ${{ if eq(clusterType, 'aks-engine') }}:
+        #   - template: aks-engine-setup.yaml
 
-        - template: assign-user-identity.yaml
-          parameters:
-            identitySubscriptionID: $(SUBSCRIPTION_ID)
+        # - template: assign-user-identity.yaml
+        #   parameters:
+        #     identitySubscriptionID: $(SUBSCRIPTION_ID)
 
         # Run e2e tests with Released Version
         - template: e2e-test.yaml
