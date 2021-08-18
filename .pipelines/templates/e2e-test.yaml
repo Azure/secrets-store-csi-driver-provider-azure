@@ -25,9 +25,9 @@ steps:
       echo "TEST_WINDOWS - '$TEST_WINDOWS'"
       echo "IS_UPGRADE_TEST - '$IS_UPGRADE_TEST'"
 
-      if [ "${{ parameters.osType }}" == "windows" ] ; then
-        export TEST_WINDOWS=true
-      fi
+      # if [ "${{ parameters.osType }}" == "windows" ] ; then
+      #   export TEST_WINDOWS=true
+      # fi
 
       if [ "${{ parameters.setRegistry }}" == True ] ; then
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
