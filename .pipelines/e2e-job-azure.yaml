@@ -20,5 +20,6 @@ jobs:
       - "aks-engine"
       osTypes:
       - "linux"
-      - "windows-docker"
-      - "windows-containerd"
+      - "windows"
+      # - "windows-docker"
+      # - "windows-containerd"
