@@ -6,11 +6,11 @@ steps:
         set +e
         az account set -s=$(SUBSCRIPTION_ID)
         az acr login -n $(REGISTRY_NAME)
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-linux-amd64 -y || true
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-windows-1809-amd64 -y || true
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-windows-1903-amd64 -y || true
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-windows-1909-amd64 -y || true
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-windows-2004-amd64 -y || true
+
+        for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64; do
+          az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-$suffix -y || true
+        done
+
         az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION} -y || true
       fi
     condition: always()
