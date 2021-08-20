@@ -37,6 +37,10 @@ var (
 	healthzPort    = flag.Int("healthz-port", 8989, "port for health check")
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
 	healthzTimeout = flag.Duration("healthz-timeout", 5*time.Second, "RPC timeout for health check")
+
+	// driverWriteSecrets feature is enabled by default in v0.1.0 release. All writes to the pod filesystem will now be done by the CSI driver instead of provider.
+	// this flag will be removed in the future.
+	driverWriteSecrets = flag.Bool("driver-write-secrets", true, "[DEPRECATED] Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
 )
 
 func main() {
@@ -71,14 +75,14 @@ func main() {
 	if *provider.ConstructPEMChain {
 		klog.Infof("construct pem chain feature enabled")
 	}
-	if *provider.DriverWriteSecrets {
-		klog.Infof("secrets will be written to filesystem by the CSI driver")
+	if !*driverWriteSecrets {
+		klog.Infof("driver write secrets feature can't be disabled. The --driver-write-secret flag will be removed in future releases.")
 	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
 		klog.Fatalf("failed to add user agent to adal: %+v", err)
 	}
-	// Initialize and run the GRPC server
+	// Initialize and run the gRPC server
 	proto, addr, err := utils.ParseEndpoint(*endpoint)
 	if err != nil {
 		klog.Fatalf("failed to parse endpoint, err: %+v", err)

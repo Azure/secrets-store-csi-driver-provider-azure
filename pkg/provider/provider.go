@@ -33,8 +33,7 @@ import (
 )
 
 var (
-	ConstructPEMChain  = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
-	DriverWriteSecrets = flag.Bool("driver-write-secrets", true, "Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
+	ConstructPEMChain = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
 )
 
 // Type of Azure Key Vault objects
@@ -289,18 +288,10 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		if err != nil {
 			return nil, nil, err
 		}
-		// if the feature to return secrets to CSI driver isn't enabled, the provider will continue to write
-		// the contents to the filesystem.
-		if !*DriverWriteSecrets {
-			if err := os.WriteFile(filepath.Join(targetPath, fileName), objectContent, permission); err != nil {
-				return nil, nil, errors.Wrapf(err, "failed to write file %s at %s", fileName, targetPath)
-			}
-			klog.InfoS("successfully wrote file", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
-		} else {
-			// these files will be returned to the CSI driver as part of gRPC response
-			files[fileName] = objectContent
-			klog.InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
-		}
+
+		// these files will be returned to the CSI driver as part of gRPC response
+		files[fileName] = objectContent
+		klog.InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: p.PodNamespace, Name: p.PodName})
 	}
 
 	return files, objectVersionMap, nil
