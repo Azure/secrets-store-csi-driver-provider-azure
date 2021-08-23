@@ -20,7 +20,3 @@ pool:
 jobs:
   - template: .pipelines/templates/unit-test.yaml
   - template: .pipelines/templates/e2e-test-kind.yaml
-    parameters:
-      driverWriteSecrets:
-      - "true"
-      - "false"
