@@ -104,5 +104,5 @@ jobs:
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
-        - template: teardown.yaml
+        # - template: teardown.yaml
         - template: cleanup-images.yaml
