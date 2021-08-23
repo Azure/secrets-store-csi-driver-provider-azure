@@ -77,17 +77,17 @@ steps:
         echo "##vso[task.setvariable variable=MASTERINTERNALIP]${MASTERIP}"
 
       if [[ $CLUSTER_CONFIG == "windows" ]]; then
-        if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
-          EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
-        fi
+        # if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
+        #   EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
+        # fi
 
         az aks nodepool add \
             -g ${AZURE_CLUSTER_NAME} \
             --cluster-name ${AZURE_CLUSTER_NAME} \
             --os-type Windows \
             --name win \
-            --node-count 1 \
-            ${EXTRA_ARGS:-} > /dev/null
+            --node-count 1
+            # ${EXTRA_ARGS:-} > /dev/null
       fi
 
       # store kubeconfig
