@@ -26,7 +26,7 @@ steps:
       # fi
 
       # Set TEST_WiNDOWS=true to run the test on Windows
-      OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1 | tr -d '[:space:]')
+      OS_TYPE=$(echo ${{parameters.osType}} | cut -d '-' -f1 | tr -d '[:space:]')
       if [ "$OS_TYPE" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
