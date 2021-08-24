@@ -78,7 +78,9 @@ steps:
 
       OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
       if [[ "$OS_TYPE" == "windows" ]]; then
+        echo "adding windows nodepool"
         if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
+          echo "setting container runtime to containerd"
           EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
         fi
 
