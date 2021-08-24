@@ -21,18 +21,11 @@ parameters:
 
 steps:
   - script: |
-      # if [ "${{ parameters.osType }}" == "windows" ] ; then
-      #   export TEST_WINDOWS=true
-      # fi
-
       # Set TEST_WiNDOWS=true to run the test on Windows
       OS_TYPE=$(echo ${{parameters.osType}} | cut -d '-' -f1 | tr -d '[:space:]')
       if [ "$OS_TYPE" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
-
-      echo "Os Type is - '${{parameters.osType}}'"
-      echo "TEST_WINDOWS - '$TEST_WINDOWS'"
 
       if [ "${{ parameters.setRegistry }}" == True ] ; then
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
@@ -62,5 +55,3 @@ steps:
         CONFIG_IMAGE_VERSION: ""
       ${{ if parameters.isBackwardCompatibilityTest }}:
         IS_BACKWARD_COMPATIBILITY_TEST: ${{ parameters.isBackwardCompatibilityTest }}
-      # ${{ if eq(parameters.osType, 'windows') }}:
-      #   TEST_WINDOWS: true
