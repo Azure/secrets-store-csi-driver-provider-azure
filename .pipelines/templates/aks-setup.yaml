@@ -81,6 +81,8 @@ steps:
         echo "adding windows nodepool"
         if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
           echo "setting container runtime to containerd"
+          az extension add --name aks-preview
+          az extension update --name aks-preview
           EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
         fi
 
