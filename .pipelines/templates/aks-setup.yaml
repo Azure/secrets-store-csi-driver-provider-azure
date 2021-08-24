@@ -76,7 +76,8 @@ steps:
         echo "##vso[task.setvariable variable=MASTERIP]${MASTERIP}"
         echo "##vso[task.setvariable variable=MASTERINTERNALIP]${MASTERIP}"
 
-      if [[ $CLUSTER_CONFIG == "windows" ]]; then
+      OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
+      if [[ "$OS_TYPE" == "windows" ]]; then
         if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
           EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
         fi
