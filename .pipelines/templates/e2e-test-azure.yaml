@@ -41,57 +41,57 @@ jobs:
           
         - template: build-images.yaml
 
-        - ${{ if eq(clusterType, 'aks') }}:
-          - template: aks-setup.yaml
-            parameters:
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              testWithGPU: ${{ parameters.testWithGPU }}
+        # - ${{ if eq(clusterType, 'aks') }}:
+        #   - template: aks-setup.yaml
+        #     parameters:
+        #       testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #       testWithGPU: ${{ parameters.testWithGPU }}
 
-        - ${{ if eq(clusterType, 'aks-engine') }}:
-          - template: aks-engine-setup.yaml
+        # - ${{ if eq(clusterType, 'aks-engine') }}:
+        #   - template: aks-engine-setup.yaml
 
-        - template: assign-user-identity.yaml
-          parameters:
-            identitySubscriptionID: $(SUBSCRIPTION_ID)
+        # - template: assign-user-identity.yaml
+        #   parameters:
+        #     identitySubscriptionID: $(SUBSCRIPTION_ID)
 
-        # Run e2e tests with Released Version
-        - template: e2e-test.yaml
-          parameters:
-            testName: "Run e2e test with Released Version"
-            osType: ${{ osType }}
-            testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-            resetImageVersion: true
-            isBackwardCompatibilityTest: true
-            testReleasedVersion: true
+        # # Run e2e tests with Released Version
+        # - template: e2e-test.yaml
+        #   parameters:
+        #     testName: "Run e2e test with Released Version"
+        #     osType: ${{ osType }}
+        #     testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #     resetImageVersion: true
+        #     isBackwardCompatibilityTest: true
+        #     testReleasedVersion: true
 
-        # Run e2e tests with New Version
-        - template: e2e-test.yaml
-          parameters:
-            testName: "Run e2e test with New Version"
-            osType: ${{ osType }}
-            testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-            isBackwardCompatibilityTest: true
-            setRegistry: true
+        # # Run e2e tests with New Version
+        # - template: e2e-test.yaml
+        #   parameters:
+        #     testName: "Run e2e test with New Version"
+        #     osType: ${{ osType }}
+        #     testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #     isBackwardCompatibilityTest: true
+        #     setRegistry: true
 
-        - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
-          - template: aks-upgrade.yaml
+        # - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
+        #   - template: aks-upgrade.yaml
 
-          # Run e2e tests after cluster upgrade
-          - template: e2e-test.yaml
-            parameters:
-              testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              setRegistry: true
+        #   # Run e2e tests after cluster upgrade
+        #   - template: e2e-test.yaml
+        #     parameters:
+        #       testName: "Run e2e test with New Version"
+        #       osType: ${{ osType }}
+        #       testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #       setRegistry: true
 
-          - template: aks-upgrade.yaml
+        #   - template: aks-upgrade.yaml
 
-          - template: e2e-test.yaml
-            parameters:
-              testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              setRegistry: true
+        #   - template: e2e-test.yaml
+        #     parameters:
+        #       testName: "Run e2e test with New Version"
+        #       osType: ${{ osType }}
+        #       testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+        #       setRegistry: true
 
-        - template: teardown.yaml
-        - template: cleanup-images.yaml
+        # - template: teardown.yaml
+        # - template: cleanup-images.yaml
