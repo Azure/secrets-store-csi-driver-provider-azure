@@ -1,8 +1,6 @@
 parameters:
   - name: testName
     type: string
-  # - name: osType
-  #   type: string
   - name: testReleasedVersion
     type: boolean
     default: false    
