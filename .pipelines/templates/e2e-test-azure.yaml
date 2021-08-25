@@ -69,7 +69,7 @@ jobs:
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with Released Version"
-            osType: ${{ osType }}
+            # osType: ${{ osType }}
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             resetImageVersion: true
             isBackwardCompatibilityTest: true
@@ -79,7 +79,7 @@ jobs:
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with New Version"
-            osType: ${{ osType }}
+            # osType: ${{ osType }}
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             isBackwardCompatibilityTest: true
             setRegistry: true
@@ -91,7 +91,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
+              # osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
@@ -100,7 +100,7 @@ jobs:
           - template: e2e-test.yaml
             parameters:
               testName: "Run e2e test with New Version"
-              osType: ${{ osType }}
+              # osType: ${{ osType }}
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
