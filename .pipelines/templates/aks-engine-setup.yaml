@@ -21,7 +21,6 @@ steps:
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
 
   - script: |
-      # OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
       envsubst < test/e2e/cluster_configs/$(OS_TYPE).json > cluster.json
     displayName: "Build AKS-Engine API Model"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))

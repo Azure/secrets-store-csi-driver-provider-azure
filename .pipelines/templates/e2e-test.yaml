@@ -23,7 +23,6 @@ steps:
       if [ "$(OS_TYPE)" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
-      echo "TEST_WINDOWS - '$TEST_WINDOWS'"
 
       if [ "${{ parameters.setRegistry }}" == True ] ; then
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
