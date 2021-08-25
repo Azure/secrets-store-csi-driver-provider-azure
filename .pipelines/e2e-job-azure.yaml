@@ -17,8 +17,14 @@ jobs:
     parameters:
       clusterTypes:
       - "aks"
-      - "aks-engine"
       osTypes:
       - "linux"
       - "windows-docker"
       - "windows-containerd"
+  - template: templates/e2e-test-azure.yaml
+    parameters:
+      clusterTypes:
+      - "aks-engine"
+      osTypes:
+      - "linux"
+      - "windows"
