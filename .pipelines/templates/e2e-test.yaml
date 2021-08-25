@@ -1,8 +1,6 @@
 parameters:
   - name: testName
     type: string
-  # - name: osType
-  #   type: string
   - name: testReleasedVersion
     type: boolean
     default: false    
@@ -22,7 +20,6 @@ parameters:
 steps:
   - script: |
       # Set TEST_WiNDOWS=true to run the test on Windows
-      # OS_TYPE=$(echo ${{parameters.osType}} | cut -d '-' -f1 | tr -d '[:space:]')
       if [ "$(OS_TYPE)" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
