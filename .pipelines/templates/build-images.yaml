@@ -11,8 +11,8 @@ steps:
   - script: |
       # Generate image version
       if [[ -n "${CLUSTER_CONFIG:-}" ]]; then
-        OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
-        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-$OS_TYPE"
+        # OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
+        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-$(OS_TYPE)"
       else
         IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-load"
       fi

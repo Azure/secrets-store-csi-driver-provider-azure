@@ -33,6 +33,10 @@ jobs:
             version: 1.16
         
         - script: |
+            OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1 | tr -d '[:space:]')
+            echo "OS type - $OS_TYPE"
+            echo "##vso[task.setvariable variable=OS_TYPE]$OS_TYPE"
+
             CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '-' -f2 | tr -d '[:space:]')
             echo "Container Runtime - $CONTAINER_RUNTIME"
             echo "##vso[task.setvariable variable=CONTAINER_RUNTIME]$CONTAINER_RUNTIME"

@@ -76,8 +76,8 @@ steps:
         echo "##vso[task.setvariable variable=MASTERIP]${MASTERIP}"
         echo "##vso[task.setvariable variable=MASTERINTERNALIP]${MASTERIP}"
 
-      OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
-      if [[ "$OS_TYPE" == "windows" ]]; then
+      # OS_TYPE=$(echo $(CLUSTER_CONFIG) | cut -d '-' -f1 | tr -d '[:space:]')
+      if [[ "$(OS_TYPE)" == "windows" ]]; then
         if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
           az extension add --name aks-preview
           az extension update --name aks-preview
