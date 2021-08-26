@@ -29,9 +29,7 @@ steps:
       aks-engine deploy --api-model cluster.json \
         --location $(AZURE_LOCATION) \
         --subscription-id $(SUBSCRIPTION_ID) \
-        --force-overwrite \
-        --client-id $(AAD_CLIENT_ID) \
-        --client-secret $(AAD_CLIENT_SECRET)
+        --force-overwrite 
 
       export KUBECONFIG="$(pwd)/_output/${AZURE_CLUSTER_NAME}/kubeconfig/kubeconfig.$(AZURE_LOCATION).json"
       echo "##vso[task.setvariable variable=KUBECONFIG]${KUBECONFIG}"
