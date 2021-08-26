@@ -16,7 +16,7 @@ jobs:
     parameters:
       clusterTypes:
       - "aks"
-      # - "aks-engine"
+      - "aks-engine"
       osTypes:
       - "linux"
-      # - "windows"
+      - "windows"
