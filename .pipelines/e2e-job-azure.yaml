@@ -9,8 +9,7 @@ pr:
     exclude:
       - docs/*
 
-pool:
-  vmImage: ubuntu-latest
+pool: staging-pool
 
 jobs:
   - template: templates/e2e-test-azure.yaml
