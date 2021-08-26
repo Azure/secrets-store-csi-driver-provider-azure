@@ -53,13 +53,12 @@ steps:
       az aks create \
         -g ${AZURE_CLUSTER_NAME} \
         -n ${AZURE_CLUSTER_NAME} \
+        --enable-managed-identity \
         --kubernetes-version $(AKS_INSTALL_VERSION) \
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
         --node-vm-size $(NODE_VM_SIZE) \
         --location $(AZURE_LOCATION) \
-        --service-principal $(AAD_CLIENT_ID) \
-        --client-secret $(AAD_CLIENT_SECRET) \
         --windows-admin-username azureuser \
         --windows-admin-password $(WINDOWS_ADMIN_PASSWORD) \
         --no-ssh-key \
