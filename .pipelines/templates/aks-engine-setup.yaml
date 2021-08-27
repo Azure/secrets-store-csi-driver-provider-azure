@@ -22,6 +22,7 @@ steps:
 
   - script: |
       envsubst < test/e2e/cluster_configs/$(CLUSTER_CONFIG).json > cluster.json
+      cat cluster.json
     displayName: "Build AKS-Engine API Model"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks-engine'))
 
