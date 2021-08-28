@@ -54,6 +54,8 @@ jobs:
           parameters:
             identitySubscriptionID: $(SUBSCRIPTION_ID)
 
+        - template: role-assignment.yml
+
         # Run e2e tests with Released Version
         - template: e2e-test.yaml
           parameters:
@@ -93,5 +95,6 @@ jobs:
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
 
-        # - template: teardown.yaml
+        - template: cleanup-role-assignments.yml
+        - template: teardown.yaml
         - template: cleanup-images.yaml
