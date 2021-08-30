@@ -1,12 +1,13 @@
 steps:
   - script: |
-      ASSIGNEE_OBJECT_ID="$(az identity show -g $(USER_MSI_RESOURCE_GROUP) -n ${AZURE_CLUSTER_NAME}-agentpool --query principalId -otsv)"
+      ASSIGNEE_OBJECT_ID="$(az identity show -g $(CLUSTER_RESOURCE_GROUP) -n ${AZURE_CLUSTER_NAME}-agentpool --query principalId -otsv)"
+      echo "ASSIGNEE_OBJECT_ID='${ASSIGNEE_OBJECT_ID}'"
       echo "##vso[task.setvariable variable=ASSIGNEE_OBJECT_ID]${ASSIGNEE_OBJECT_ID}"
 
       ROLE_ASSIGNMENT_IDS=""
 
-      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Virtual Machine Contributor" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/${AZURE_CLUSTER_NAME}"
-      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/${AZURE_CLUSTER_NAME}"
+      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Virtual Machine Contributor" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
+      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
 
       if [[ -n "$(USER_MSI_RESOURCE_GROUP)" ]]; then
         ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Reader" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.KeyVault/vaults/$(KEYVAULT_NAME)" --query id -otsv)"
