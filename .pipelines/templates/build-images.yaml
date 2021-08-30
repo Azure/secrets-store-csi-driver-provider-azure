@@ -7,9 +7,9 @@ steps:
   - script: |
       # Generate image version
       if [[ -n "${CLUSTER_CONFIG:-}" ]]; then
-        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-$(CLUSTER_CONFIG)"
+        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(CLUSTER_CONFIG)"
       else
-        IMAGE_VERSION="$(git describe --tags --always --dirty)-$(CLUSTER_TYPE)-load"
+        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-load"
       fi
       echo "Image version: ${IMAGE_VERSION}"
 
