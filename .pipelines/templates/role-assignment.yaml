@@ -6,17 +6,24 @@ steps:
 
       ROLE_ASSIGNMENT_IDS=""
 
-      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Virtual Machine Contributor" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
-      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
+      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --assignee-principal-type "User" --role "Virtual Machine Contributor" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
+      az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --assignee-principal-type "User" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(CLUSTER_RESOURCE_GROUP)"
 
+      # permission for Key Vault
       if [[ -n "$(USER_MSI_RESOURCE_GROUP)" ]]; then
-        ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Reader" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.KeyVault/vaults/$(KEYVAULT_NAME)" --query id -otsv)"
+        ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --assignee-principal-type "User" --role "Reader" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)/providers/Microsoft.KeyVault/vaults/$(KEYVAULT_NAME)" --query id -otsv)"
         ROLE_ASSIGNMENT_IDS+="${ID} "
         az keyvault set-policy -n $(KEYVAULT_NAME) --secret-permissions get --object-id "${ASSIGNEE_OBJECT_ID}"
       fi
 
       if [[ -n "$(USER_MSI_RESOURCE_GROUP)" ]]; then
-        ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)" --query id -otsv)"
+        ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --assignee-principal-type "User" --role "Managed Identity Operator" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourcegroups/$(USER_MSI_RESOURCE_GROUP)" --query id -otsv)"
+        ROLE_ASSIGNMENT_IDS+="${ID} "
+      fi
+
+      # permission for ACR
+      if [[ -n "$(REGISTRY_NAME)" ]]; then
+        ID="$(az role assignment create --assignee-object-id "${ASSIGNEE_OBJECT_ID}" --assignee-principal-type "User" --role "AcrPull" --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourceGroups/k8sbuildci/providers/Microsoft.ContainerRegistry/registries/$(REGISTRY_NAME)" --query id -otsv)"
         ROLE_ASSIGNMENT_IDS+="${ID} "
       fi
 
