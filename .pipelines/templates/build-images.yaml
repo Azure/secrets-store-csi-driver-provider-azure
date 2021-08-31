@@ -7,7 +7,7 @@ steps:
   - script: |
       # Generate image version
       if [[ -n "${CLUSTER_CONFIG:-}" ]]; then
-        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(CLUSTER_CONFIG)"
+        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(OS_TYPE)"
       else
         IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-load"
       fi
