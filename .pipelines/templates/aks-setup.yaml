@@ -5,6 +5,8 @@ parameters:
   - name: testWithGPU
     type: boolean
     default: false
+  - name: containerRuntime
+    type: string
 
 steps:
   - script: |
@@ -37,8 +39,8 @@ steps:
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
   - ${{ if eq(parameters.testClusterUpgrade, true) }}:
-    #Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
-    #If we are running test with cluster upgrade, start with minimum possible non preview version. 
+    # Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
+    # If we are running test with cluster upgrade, start with minimum possible non preview version. 
     - script: |
         aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "min(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
         echo "AKS Install version - $aksVersion"
@@ -74,13 +76,14 @@ steps:
         echo "##vso[task.setvariable variable=MASTERIP]${MASTERIP}"
         echo "##vso[task.setvariable variable=MASTERINTERNALIP]${MASTERIP}"
 
-      if [[ $CLUSTER_CONFIG == "windows" ]]; then
-        az aks nodepool add \
-            -g ${AZURE_CLUSTER_NAME} \
-            --cluster-name ${AZURE_CLUSTER_NAME} \
-            --os-type Windows \
-            --name win \
-            --node-count 1
+      if [[ "$(OS_TYPE)" == "windows" ]]; then
+        if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
+          az extension add --name aks-preview
+          az extension update --name aks-preview
+          EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
+        fi
+
+        az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --os-type Windows --name win --node-count 1 ${EXTRA_ARGS:-} > /dev/null
       fi
 
       # store kubeconfig
