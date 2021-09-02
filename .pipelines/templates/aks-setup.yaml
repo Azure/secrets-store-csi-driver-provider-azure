@@ -88,7 +88,7 @@ steps:
 
       # add gpu node pool
       echo "gpu params - ${{ parameters.testWithGPU }}"
-      if [[ "${{ parameters.testWithGPU }}" == true ]]; then
+      if [[ ${{ parameters.testWithGPU }} == True ]]; then
         echo "adding gpu node pool"
         az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --name gpu --node-count $(AGENT_COUNT) --node-vm-size Standard_NC6 --aks-custom-headers UseGPUDedicatedVHD=true
 
