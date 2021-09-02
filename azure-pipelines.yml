@@ -17,22 +17,22 @@ pr:
 pool: staging-pool
 
 jobs:
-  - template: .pipelines/templates/unit-test.yaml
-  - template: .pipelines/templates/e2e-test-kind.yaml
-    parameters:
-      driverWriteSecrets:
-      - "true"
-      - "false"
-  - template: .pipelines/templates/load-test.yaml
-  - template: .pipelines/templates/e2e-test-azure.yaml
-    parameters:
-      clusterTypes:
-      - "aks"
-      - "aks-engine"
-      osTypes:
-      - "linux"
-      - "windows"
-      testClusterUpgrade: true
+  # - template: .pipelines/templates/unit-test.yaml
+  # - template: .pipelines/templates/e2e-test-kind.yaml
+  #   parameters:
+  #     driverWriteSecrets:
+  #     - "true"
+  #     - "false"
+  # - template: .pipelines/templates/load-test.yaml
+  # - template: .pipelines/templates/e2e-test-azure.yaml
+  #   parameters:
+  #     clusterTypes:
+  #     - "aks"
+  #     - "aks-engine"
+  #     osTypes:
+  #     - "linux"
+  #     - "windows"
+  #     testClusterUpgrade: true
   - template: .pipelines/templates/e2e-test-azure.yaml 
     parameters:
       clusterTypes:
@@ -40,8 +40,8 @@ jobs:
       osTypes:
       - "linux"
       testWithGPU: true
-  - template: .pipelines/templates/soak-test.yaml
-    parameters:
-      clusterConfigs:
-      - "csi-secrets-store-soak-linux-aks"
-      - "csi-secrets-store-soak-win-aks"
+  # - template: .pipelines/templates/soak-test.yaml
+  #   parameters:
+  #     clusterConfigs:
+  #     - "csi-secrets-store-soak-linux-aks"
+  #     - "csi-secrets-store-soak-win-aks"
