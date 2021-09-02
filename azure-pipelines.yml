@@ -18,5 +18,31 @@ pool:
   vmImage: ubuntu-latest
 
 jobs:
-  - template: .pipelines/templates/unit-test.yaml
-  - template: .pipelines/templates/e2e-test-kind.yaml
+  - template: templates/unit-test.yaml
+  - template: templates/e2e-test-kind.yaml
+    parameters:
+      driverWriteSecrets:
+      - "true"
+      - "false"
+  - template: templates/load-test.yaml
+  - template: templates/e2e-test-azure.yaml
+    parameters:
+      clusterTypes:
+      - "aks"
+      - "aks-engine"
+      osTypes:
+      - "linux"
+      - "windows"
+      testClusterUpgrade: true
+  - template: templates/e2e-test-azure.yaml 
+    parameters:
+      clusterTypes:
+      - "aks"
+      osTypes:
+      - "linux"
+      testWithGPU: true
+  - template: templates/soak-test.yaml
+    parameters:
+      clusterConfigs:
+      - "csi-secrets-store-soak-linux-aks"
+      - "csi-secrets-store-soak-win-aks"
