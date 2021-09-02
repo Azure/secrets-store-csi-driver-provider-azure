@@ -23,7 +23,7 @@ steps:
 
   - ${{ if eq(parameters.testWithGPU, true) }}:
     - script: |
-        echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_ND6s"
+        echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_NC6"
 
         # GPU VM are only available in the eastus2euap region on CI sub
         echo "##vso[task.setvariable variable=AZURE_LOCATION]westus2"
