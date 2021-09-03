@@ -75,6 +75,7 @@ jobs:
             resetImageVersion: true
             isBackwardCompatibilityTest: true
             testReleasedVersion: true
+            testWithGPU: ${{ parameters.testWithGPU }}
 
         # Run e2e tests with New Version
         - template: e2e-test.yaml
@@ -83,6 +84,7 @@ jobs:
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
             isBackwardCompatibilityTest: true
             setRegistry: true
+            testWithGPU: ${{ parameters.testWithGPU }}
 
         - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
           - template: aks-upgrade.yaml
@@ -93,6 +95,7 @@ jobs:
               testName: "Run e2e test with New Version"
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
+              testWithGPU: ${{ parameters.testWithGPU }}
 
           - template: aks-upgrade.yaml
 
@@ -101,6 +104,7 @@ jobs:
               testName: "Run e2e test with New Version"
               testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
               setRegistry: true
+              testWithGPU: ${{ parameters.testWithGPU }}
 
         - template: cleanup-role-assignments.yaml
         - template: teardown.yaml

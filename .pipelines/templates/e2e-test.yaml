@@ -16,12 +16,20 @@ parameters:
   - name: setRegistry
     type: boolean
     default: false
+  - name: testWithGPU
+    type: boolean
+    default: false
 
 steps:
   - script: |
       # Set TEST_WiNDOWS=true to run the test on Windows
       if [ "$(OS_TYPE)" == "windows" ] ; then
         export TEST_WINDOWS=true
+      fi
+
+      # Set TEST_GPU=true to run the test on GPU nodepool
+      if [[ ${{ parameters.testWithGPU }} == True ]]; then
+        export TEST_GPU=true
       fi
 
       if [ "${{ parameters.setRegistry }}" == True ] ; then
