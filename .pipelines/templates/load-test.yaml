@@ -16,7 +16,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: 1.16
+          version: 1.17
 
       - bash: |
           # we are not pinning this since there are no tags for perf-tests
