@@ -28,10 +28,6 @@ jobs:
           - group: csi-secrets-store-e2e
 
         steps:
-        - task: GoTool@0
-          inputs:
-            version: 1.16
-        
         - script: |
             OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1 | tr -d '[:space:]')
             echo "OS type - $OS_TYPE"

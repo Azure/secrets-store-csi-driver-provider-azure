@@ -8,9 +8,6 @@ jobs:
     variables:
     - group: csi-secrets-store-e2e-kind
     steps:
-      - task: GoTool@0
-        inputs:
-          version: 1.16
       - script: |
           export REGISTRY="e2e"
           export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
@@ -49,9 +46,6 @@ jobs:
     variables:
     - group: csi-secrets-store-e2e-kind
     steps:
-      - task: GoTool@0
-        inputs:
-          version: 1.16
       - script: |
           export REGISTRY="e2e"
           export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)

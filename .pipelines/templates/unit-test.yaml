@@ -7,9 +7,6 @@ jobs:
   variables:
     - group: csi-secrets-store-e2e-kind
   steps:
-    - task: GoTool@0
-      inputs:
-        version: 1.16
     - script: make lint
       displayName: Run lint
     - script: make build build-windows

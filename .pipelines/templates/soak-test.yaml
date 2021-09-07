@@ -18,10 +18,6 @@ jobs:
         - name: IS_SOAK_TEST
           value: "true"
       steps:
-        - task: GoTool@0
-          inputs:
-            version: 1.16
-
         - script: |
             # Download kubectl
             echo "Installing kubectl..."

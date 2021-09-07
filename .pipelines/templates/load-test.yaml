@@ -14,10 +14,6 @@ jobs:
       value: $(GOPATH)/src/k8s.io/perf-tests
     - group: csi-secrets-store-load
     steps:
-      - task: GoTool@0
-        inputs:
-          version: 1.16
-
       - bash: |
           # we are not pinning this since there are no tags for perf-tests
           git clone -b $(checkout.branch) $(checkout.repo) $(perf-tests.repo.path)
