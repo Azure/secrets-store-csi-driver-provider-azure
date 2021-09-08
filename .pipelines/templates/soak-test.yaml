@@ -38,9 +38,9 @@ jobs:
 
         - ${{ if eq(clusterConfig, 'csi-secrets-store-soak-linux-aks') }}:
           - script: |
-            echo "Installing helm..."
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-          displayName: "Install helm"
+              echo "Installing helm..."
+              curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+            displayName: "Install helm"
 
         - script: |
             kubectl wait --for=condition=ready node --all
