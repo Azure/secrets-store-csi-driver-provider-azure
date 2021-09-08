@@ -21,15 +21,6 @@ steps:
     displayName: "Determine VM Size"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
-  # - ${{ if eq(parameters.testWithGPU, true) }}:
-  #   - script: |
-  #       echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_NC6"
-
-  #       # GPU VM are only available in the eastus2euap region on CI sub
-  #       echo "##vso[task.setvariable variable=AZURE_LOCATION]westus2"
-  #     displayName: "Determine GPU VM Size"
-  #     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
-
   - script: | 
       #Run test with latest on preview aks version available
       aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "max(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
