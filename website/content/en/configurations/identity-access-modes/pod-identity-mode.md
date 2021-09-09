@@ -7,8 +7,6 @@ description: >
   Use Pod Identity to access Keyvault.
 ---
 
-> Supported only on Linux
-
 <details>
 <summary>Examples</summary>
 
@@ -173,3 +171,11 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     ```
 
 **NOTE** When using the `Pod Identity` option mode, there can be some amount of delay in obtaining the objects from keyvault. During the pod creation time, in this particular mode `aad-pod-identity` will need to create the `AzureAssignedIdentity` for the pod based on the `AzureIdentity` and `AzureIdentityBinding`, retrieve token for keyvault. This process can take time to complete and it's possible for the pod volume mount to fail during this time. When the volume mount fails, kubelet will keep retrying until it succeeds. So the volume mount will eventually succeed after the whole process for retrieving the token is complete.
+
+<br>
+
+## Pros:
+1. Provides secure way to access cloud resources that depends on Azure Active Directory as identity provider.
+
+## Cons:
+1. Supported only on Linux

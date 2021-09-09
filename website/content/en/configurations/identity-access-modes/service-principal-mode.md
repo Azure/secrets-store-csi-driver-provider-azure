@@ -7,10 +7,6 @@ description: >
   Use a Service Principal to access Keyvault. 
 ---
 
-> Supported with Linux and Windows
-
-> The only supported way to connect to Azure Key Vault from a non Azure environment.
-
 <details>
 <summary>Examples</summary>
 
@@ -126,3 +122,12 @@ spec:
     nodePublishSecretRef:
       name: secrets-store-creds
     ```
+
+
+## Pros:
+1. Supported on both Windows and Linux.
+
+## Cons:
+1. Service Principal credentials(client id & client secret) need to be created as a kubernetes *Secret* which is stored as plaintext in etcd.
+
+1. The only supported way to connect to Azure Key Vault from a non Azure environment.
