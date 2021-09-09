@@ -20,6 +20,14 @@ import (
 // CSIDriverProviderServer providers a Secrets Store CSI Driver provider implementation
 type CSIDriverProviderServer struct {
 	*grpc.Server
+	Provider *provider.Provider
+}
+
+// New returns an instance of CSIDriverProviderServer
+func New() *CSIDriverProviderServer {
+	return &CSIDriverProviderServer{
+		Provider: provider.NewProvider(),
+	}
 }
 
 // Mount executes the mount operation in the provider. The provider fetches the objects from Key Vault
@@ -44,13 +52,8 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 		klog.ErrorS(err, "failed to unmarshal file permission")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %w", err)
 	}
-	provider, err := provider.NewProvider()
-	if err != nil {
-		klog.ErrorS(err, "failed to initialize new provider")
-		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to initialize new provider, error: %w", err)
-	}
 
-	files, objectVersions, err := provider.MountSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), filePermission)
+	files, objectVersions, err := s.Provider.MountSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), filePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to process mount request")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %w", err)
