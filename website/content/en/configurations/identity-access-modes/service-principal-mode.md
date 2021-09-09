@@ -126,6 +126,7 @@ spec:
 
 ## Pros:
 1. Supported on both Windows and Linux.
+1. Easiest option to connect to Azure Key Vault.
 
 ## Cons:
 1. Service Principal credentials(client id & client secret) need to be created as a kubernetes *Secret* which is stored as plaintext in etcd.
