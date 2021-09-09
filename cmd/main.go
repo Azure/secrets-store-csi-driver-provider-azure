@@ -66,10 +66,10 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	klog.Infof("Starting Azure Key Vault Provider version: %s", version.BuildVersion)
+	klog.InfoS("Starting Azure Key Vault Provider", "version", version.BuildVersion)
 
 	if *enableProfile {
-		klog.Infof("Starting profiling on port %d", *profilePort)
+		klog.InfoS("Starting profiling", "port", *profilePort)
 		go func() {
 			addr := fmt.Sprintf("%s:%d", "localhost", *profilePort)
 			klog.ErrorS(http.ListenAndServe(addr, nil), "unable to start profiling server")
@@ -120,7 +120,7 @@ func main() {
 	// Register the health service.
 	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)
 
-	klog.Infof("Listening for connections on address: %v", listener.Addr())
+	klog.InfoS("Listening for connections", "address", listener.Addr())
 	go s.Serve(listener)
 
 	healthz := &server.HealthZ{
