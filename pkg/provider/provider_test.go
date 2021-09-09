@@ -56,19 +56,17 @@ func TestGetVaultURL(t *testing.T) {
 
 	for i, tc := range cases {
 		t.Log(i, tc.desc)
-		p, err := NewProvider()
-		if err != nil {
-			t.Fatalf("expected nil err, got: %v", err)
+		mc := &mountConfig{
+			keyvaultName: tc.vaultName,
 		}
-		p.KeyvaultName = tc.vaultName
 
 		for idx := range testEnvs {
 			azCloudEnv, err := ParseAzureEnvironment(testEnvs[idx])
 			if err != nil {
 				t.Fatalf("Error parsing cloud environment %v", err)
 			}
-			p.AzureCloudEnvironment = azCloudEnv
-			vaultURL, err := p.getVaultURL(context.Background())
+			mc.azureCloudEnvironment = azCloudEnv
+			vaultURL, err := mc.getVaultURL()
 			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
 				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
 			}
@@ -652,9 +650,6 @@ fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
 }
 
 func TestInitializeKVClient(t *testing.T) {
-	p, err := NewProvider()
-	assert.NoError(t, err)
-
 	testEnvs := []azure.Environment{
 		azure.PublicCloud,
 		azure.GermanCloud,
@@ -665,16 +660,18 @@ func TestInitializeKVClient(t *testing.T) {
 		authConfig, err := auth.NewConfig(false, true, "", nil)
 		assert.NoError(t, err)
 
-		p.AzureCloudEnvironment = &testEnvs[i]
-		p.AuthConfig = authConfig
-		p.PodName = "pod"
-		p.PodNamespace = "default"
+		mc := &mountConfig{
+			azureCloudEnvironment: &testEnvs[i],
+			authConfig:            authConfig,
+			podName:               "pod",
+			podNamespace:          "default",
+		}
 
 		version.BuildVersion = "version"
 		version.BuildDate = "Now"
 		version.Vcs = "hash"
 
-		kvBaseClient, err := p.initializeKvClient()
+		kvBaseClient, err := mc.initializeKvClient()
 		assert.NoError(t, err)
 		assert.NotNil(t, kvBaseClient)
 		assert.NotNil(t, kvBaseClient.Authorizer)
@@ -827,8 +824,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			p, err := NewProvider()
-			assert.NoError(t, err)
+			p := NewProvider()
 
 			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)

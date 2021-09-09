@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
@@ -41,6 +42,9 @@ var (
 	// driverWriteSecrets feature is enabled by default in v0.1.0 release. All writes to the pod filesystem will now be done by the CSI driver instead of provider.
 	// this flag will be removed in the future.
 	driverWriteSecrets = flag.Bool("driver-write-secrets", true, "[DEPRECATED] Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
+
+	metricsBackend = flag.String("metrics-backend", "Prometheus", "Backend used for metrics")
+	prometheusPort = flag.Int("prometheus-port", 8898, "Prometheus port for metrics backend")
 )
 
 func main() {
@@ -70,6 +74,11 @@ func main() {
 			addr := fmt.Sprintf("%s:%d", "localhost", *profilePort)
 			klog.ErrorS(http.ListenAndServe(addr, nil), "unable to start profiling server")
 		}()
+	}
+	// initialize metrics exporter before creating measurements
+	err := metrics.InitMetricsExporter(*metricsBackend, *prometheusPort)
+	if err != nil {
+		klog.Fatalf("failed to initialize metrics exporter, error: %+v", err)
 	}
 
 	if *provider.ConstructPEMChain {
@@ -103,12 +112,13 @@ func main() {
 	}
 
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(utils.LogGRPC),
+		grpc.UnaryInterceptor(utils.LogInterceptor()),
 	}
 	s := grpc.NewServer(opts...)
-	k8spb.RegisterCSIDriverProviderServer(s, &server.CSIDriverProviderServer{})
+	csiDriverProviderServer := server.New()
+	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
-	grpc_health_v1.RegisterHealthServer(s, &server.CSIDriverProviderServer{})
+	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)
 
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go s.Serve(listener)
