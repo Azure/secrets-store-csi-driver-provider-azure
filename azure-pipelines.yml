@@ -19,7 +19,7 @@ pool: staging-pool
 jobs:
   - template: .pipelines/templates/unit-test.yaml
   - template: .pipelines/templates/e2e-test-kind.yaml
-  - template: templates/soak-test.yaml
+  - template: .pipelines/templates/soak-test.yaml
     parameters:
       clusterConfigs:
       - "csi-secrets-store-soak-linux-aks"
