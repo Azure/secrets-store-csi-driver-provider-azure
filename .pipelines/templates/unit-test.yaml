@@ -4,6 +4,8 @@ jobs:
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
+  variables:
+    - group: csi-secrets-store-e2e-kind
   steps:
     - script: make lint
       displayName: Run lint

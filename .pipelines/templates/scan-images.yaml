@@ -1,6 +1,3 @@
-variables:
-  - group: csi-secrets-store-e2e-kind
-
 steps:
   - script: |
       export REGISTRY="e2e"
