@@ -5,7 +5,8 @@ jobs:
   workspace:
     clean: all
   variables:
-    - group: csi-secrets-store-e2e-kind
+    - name: TRIVY_VERSION
+      value: 0.19.2
   steps:
     - script: make lint
       displayName: Run lint
