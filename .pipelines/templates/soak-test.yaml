@@ -38,8 +38,7 @@ jobs:
 
         - ${{ if eq(clusterConfig, 'csi-secrets-store-soak-linux-aks') }}:
           - script: |
-              echo "Installing helm..."
-              curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+              make install-helm
             displayName: "Install helm"
 
         - script: |
