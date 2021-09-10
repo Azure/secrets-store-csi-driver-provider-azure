@@ -154,8 +154,6 @@ func (mc *mountConfig) initializeKvClient() (*kv.BaseClient, error) {
 }
 
 func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
-	klog.V(2).Infof("vaultName: %s", mc.keyvaultName)
-
 	// Key Vault name must be a 3-24 character string
 	if len(mc.keyvaultName) < 3 || len(mc.keyvaultName) > 24 {
 		return nil, errors.Errorf("Invalid vault name: %q, must be between 3 and 24 chars", mc.keyvaultName)
@@ -262,6 +260,18 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		return nil, nil, fmt.Errorf("objects array is empty")
 	}
 
+	vaultURL, err := mc.getVaultURL()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get vault")
+	}
+	klog.V(2).InfoS("vault url", "vaultName", mc.keyvaultName, "vaultURL", *vaultURL, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+
+	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault object defined
+	kvClient, err := mc.initializeKvClient()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get keyvault client")
+	}
+
 	objectVersionMap := make(map[string]string)
 	files := make(map[string][]byte)
 	for _, keyVaultObject := range keyVaultObjects {
@@ -281,7 +291,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, keyVaultObject, mc)
+		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -305,16 +315,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVaultObject, mc *mountConfig) (content, version string, err error) {
-	vaultURL, err := mc.getVaultURL()
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to get vault")
-	}
-	kvClient, err := mc.initializeKvClient()
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to get keyvault client")
-	}
-
+func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
@@ -326,11 +327,11 @@ func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvObject KeyVau
 
 	switch kvObject.ObjectType {
 	case VaultObjectTypeSecret:
-		return getSecret(ctx, kvClient, *vaultURL, kvObject)
+		return getSecret(ctx, kvClient, vaultURL, kvObject)
 	case VaultObjectTypeKey:
-		return getKey(ctx, kvClient, *vaultURL, kvObject)
+		return getKey(ctx, kvClient, vaultURL, kvObject)
 	case VaultObjectTypeCertificate:
-		return getCertificate(ctx, kvClient, *vaultURL, kvObject)
+		return getCertificate(ctx, kvClient, vaultURL, kvObject)
 	default:
 		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
 		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
@@ -570,7 +571,7 @@ func setAzureEnvironmentFilePath(envFileName string) error {
 	if envFileName == "" {
 		return nil
 	}
-	klog.Infof("setting AZURE_ENVIRONMENT_FILEPATH to %s for custom cloud", envFileName)
+	klog.InfoS("setting AZURE_ENVIRONMENT_FILEPATH for custom cloud", "fileName", envFileName)
 	return os.Setenv(azure.EnvironmentFilepathName, envFileName)
 }
 

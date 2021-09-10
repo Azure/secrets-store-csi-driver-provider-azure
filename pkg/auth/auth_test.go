@@ -128,63 +128,6 @@ func TestGetServicePrincipalToken(t *testing.T) {
 	assert.Equal(t, token, spt)
 }
 
-func TestGetServicePrincipalTokenFromMSIWithUserAssignedID(t *testing.T) {
-	configs := []Config{
-		{
-			UseVMManagedIdentity:   true,
-			UserAssignedIdentityID: "UserAssignedIdentityID",
-		},
-		// uses managed identity when sp credentials are provided
-		{
-			UseVMManagedIdentity:   true,
-			UserAssignedIdentityID: "UserAssignedIdentityID",
-			AADClientID:            "AADClientID",
-			AADClientSecret:        "AADClientSecret",
-		},
-	}
-	env := &azure.PublicCloud
-
-	for _, config := range configs {
-		token, err := config.GetServicePrincipalToken("pod", "default", env.KeyVaultEndpoint, env.ActiveDirectoryEndpoint, "tenantID", "2579")
-		assert.NoError(t, err)
-
-		msiEndpoint, err := adal.GetMSIVMEndpoint()
-		assert.NoError(t, err)
-
-		spt, err := adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(msiEndpoint,
-			env.KeyVaultEndpoint, config.UserAssignedIdentityID)
-		assert.NoError(t, err)
-		assert.Equal(t, token, spt)
-	}
-}
-
-func TestGetServicePrincipalTokenFromMSI(t *testing.T) {
-	configs := []Config{
-		{
-			UseVMManagedIdentity: true,
-		},
-		// uses managed identity when sp credentials are provided
-		{
-			UseVMManagedIdentity: true,
-			AADClientID:          "AADClientID",
-			AADClientSecret:      "AADClientSecret",
-		},
-	}
-	env := &azure.PublicCloud
-
-	for _, config := range configs {
-		token, err := config.GetServicePrincipalToken("pod", "default", env.KeyVaultEndpoint, env.ActiveDirectoryEndpoint, "tenantID", "2579")
-		assert.NoError(t, err)
-
-		msiEndpoint, err := adal.GetMSIVMEndpoint()
-		assert.NoError(t, err)
-
-		spt, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, env.KeyVaultEndpoint)
-		assert.NoError(t, err)
-		assert.Equal(t, token, spt)
-	}
-}
-
 func TestGetServicePrincipalTokenPodIdentity(t *testing.T) {
 	config := Config{
 		UsePodIdentity: true,

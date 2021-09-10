@@ -45,7 +45,7 @@ func PrintVersion() (err error) {
 // GetUserAgent returns UserAgent string to append to the agent identifier.
 func GetUserAgent() string {
 	if *customUserAgent != "" {
-		klog.V(5).Infof("Appending custom user agent: %s", *customUserAgent)
+		klog.V(5).InfoS("Appending custom user agent", "userAgent", *customUserAgent)
 		return fmt.Sprintf("csi-secrets-store/%s (%s/%s) %s/%s %s", BuildVersion, runtime.GOOS, runtime.GOARCH, Vcs, BuildDate, *customUserAgent)
 	}
 	return fmt.Sprintf("csi-secrets-store/%s (%s/%s) %s/%s", BuildVersion, runtime.GOOS, runtime.GOARCH, Vcs, BuildDate)

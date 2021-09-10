@@ -657,7 +657,7 @@ func TestInitializeKVClient(t *testing.T) {
 		azure.USGovernmentCloud,
 	}
 	for i := range testEnvs {
-		authConfig, err := auth.NewConfig(false, true, "", nil)
+		authConfig, err := auth.NewConfig(false, false, "", map[string]string{"clientid": "id", "clientsecret": "secret"})
 		assert.NoError(t, err)
 
 		mc := &mountConfig{
