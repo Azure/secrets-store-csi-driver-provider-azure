@@ -14,8 +14,7 @@ pr:
       - docs/*
       - website/*
 
-pool:
-  vmImage: ubuntu-latest
+pool: staging-pool
 
 jobs:
   - template: .pipelines/templates/unit-test.yaml

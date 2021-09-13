@@ -1,0 +1,5 @@
+steps:
+  - bash: |
+      az role assignment delete --ids ${ROLE_ASSIGNMENT_IDS} > /dev/null
+    condition: always()
+    displayName: Cleanup role assignments

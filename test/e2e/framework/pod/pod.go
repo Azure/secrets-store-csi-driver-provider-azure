@@ -105,6 +105,11 @@ func Create(input CreateInput) *corev1.Pod {
 
 	if input.Config.IsWindowsTest {
 		pod.Spec.NodeSelector = map[string]string{"kubernetes.io/os": "windows"}
+	} else if input.Config.IsGPUTest {
+		pod.Spec.NodeSelector = map[string]string{
+			"kubernetes.io/os": "linux",
+			"accelerator":      "nvidia",
+		}
 	} else {
 		pod.Spec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
 	}

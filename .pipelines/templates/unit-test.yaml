@@ -4,10 +4,10 @@ jobs:
   cancelTimeoutInMinutes: 5
   workspace:
     clean: all
+  variables:
+    - name: TRIVY_VERSION
+      value: 0.19.2
   steps:
-    - task: GoTool@0
-      inputs:
-        version: 1.17
     - script: make lint
       displayName: Run lint
     - script: make build build-windows

@@ -18,10 +18,6 @@ jobs:
         - name: IS_SOAK_TEST
           value: "true"
       steps:
-        - task: GoTool@0
-          inputs:
-            version: 1.17
-
         - script: |
             # Download kubectl
             echo "Installing kubectl..."
@@ -32,17 +28,18 @@ jobs:
 
         - script: |
             # Download kubeconfig for soak cluster
-            az login \
-              --service-principal \
-              -u=$(AAD_CLIENT_ID) \
-              -p=$(AAD_CLIENT_SECRET) \
-              -t=$(TENANT_ID) > /dev/null
+            az login -i > /dev/null
             az account set -s=$(SUBSCRIPTION_ID)
 
             az aks get-credentials \
               --resource-group $(CLUSTER_RESOURCE_GROUP) \
               --name $(CLUSTER_CONFIG)
           displayName: "Set KUBECONFIG"
+
+        - ${{ if eq(clusterConfig, 'csi-secrets-store-soak-linux-aks') }}:
+          - script: |
+              make install-helm
+            displayName: "Install helm"
 
         - script: |
             kubectl wait --for=condition=ready node --all

@@ -18,6 +18,7 @@ type Config struct {
 	ImageVersion                      string `envconfig:"IMAGE_VERSION" default:"v0.2.0"`
 	IsSoakTest                        bool   `envconfig:"IS_SOAK_TEST" default:"false"`
 	IsWindowsTest                     bool   `envconfig:"TEST_WINDOWS" default:"false"`
+	IsGPUTest                         bool   `envconfig:"TEST_GPU" default:"false"`
 	IsKindCluster                     bool   `envconfig:"CI_KIND_CLUSTER" default:"false"`
 	SecretValue                       string `envconfig:"SECRET_VALUE" default:"test"`
 	KeyValue                          string `envconfig:"KEY_VALUE" default:"uiPCav0xdIq"`
@@ -45,6 +46,7 @@ func (c *Config) DeepCopy() *Config {
 	copy.ImageVersion = c.ImageVersion
 	copy.IsSoakTest = c.IsSoakTest
 	copy.IsWindowsTest = c.IsWindowsTest
+	copy.IsGPUTest = c.IsGPUTest
 	copy.IsKindCluster = c.IsKindCluster
 	copy.SecretValue = c.SecretValue
 	copy.KeyValue = c.KeyValue

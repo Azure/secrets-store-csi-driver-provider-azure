@@ -5,6 +5,8 @@
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "$AKSENGINE_K8S_VERSION",
             "kubernetesConfig": {
+                "useManagedIdentity": true,
+                "userAssignedID": "${AZURE_CLUSTER_NAME}-agentpool",
                 "addons": [
                     {
                         "name": "csi-secrets-store",
@@ -41,10 +43,6 @@
                     }
                 ]
             }
-        },
-        "servicePrincipalProfile": {
-            "clientId": "$CLIENT_ID",
-            "secret": "$CLIENT_SECRET"
         }
     }
 }

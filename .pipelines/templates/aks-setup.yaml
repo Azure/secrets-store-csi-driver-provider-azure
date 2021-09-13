@@ -21,15 +21,6 @@ steps:
     displayName: "Determine VM Size"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
 
-  - ${{ if eq(parameters.testWithGPU, true) }}:
-    - script: |
-        echo "##vso[task.setvariable variable=NODE_VM_SIZE]Standard_ND6s"
-
-        # GPU VM are only available in the eastus2euap region on CI sub
-        echo "##vso[task.setvariable variable=AZURE_LOCATION]eastus2euap"
-      displayName: "Determine GPU VM Size"
-      condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
-
   - script: | 
       #Run test with latest on preview aks version available
       aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query "max(orchestrators[?isPreview==null].orchestratorVersion)" -otsv)
@@ -56,13 +47,12 @@ steps:
       az aks create \
         -g ${AZURE_CLUSTER_NAME} \
         -n ${AZURE_CLUSTER_NAME} \
+        --enable-managed-identity \
         --kubernetes-version $(AKS_INSTALL_VERSION) \
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
         --node-vm-size $(NODE_VM_SIZE) \
         --location $(AZURE_LOCATION) \
-        --service-principal $(AAD_CLIENT_ID) \
-        --client-secret $(AAD_CLIENT_SECRET) \
         --windows-admin-username azureuser \
         --windows-admin-password $(WINDOWS_ADMIN_PASSWORD) \
         --no-ssh-key \
@@ -87,6 +77,15 @@ steps:
         az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --os-type Windows --name win --node-count 1 ${EXTRA_ARGS:-} > /dev/null
       fi
 
+      # add gpu node pool
+      if [[ ${{ parameters.testWithGPU }} == True ]]; then
+        echo "adding gpu node pool"
+        az extension add --name aks-preview
+        az extension update --name aks-preview
+
+        az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --name gpu --node-count $(AGENT_COUNT) --node-vm-size Standard_NC6 --aks-custom-headers UseGPUDedicatedVHD=true
+      fi
+
       # store kubeconfig
       az aks get-credentials -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME}
 
@@ -100,5 +99,6 @@ steps:
       kubectl wait pod -n kube-system --for=condition=Ready --all
       kubectl get nodes -owide
       kubectl cluster-info
+      kubectl describe nodes
     displayName: "Deploy Kubernetes cluster"
     condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
