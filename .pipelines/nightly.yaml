@@ -8,8 +8,7 @@ schedules:
       include:
         - master
 
-pool:
-  vmImage: ubuntu-latest
+pool: staging-pool
 
 jobs:
   # to get image scan results on nightly runs
