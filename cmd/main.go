@@ -62,7 +62,8 @@ func main() {
 
 	if *versionInfo {
 		if err := version.PrintVersion(); err != nil {
-			klog.Fatalf("failed to print version, err: %+v", err)
+			klog.ErrorS(err, "failed to print version")
+			os.Exit(1)
 		}
 		os.Exit(0)
 	}
@@ -78,7 +79,8 @@ func main() {
 	// initialize metrics exporter before creating measurements
 	err := metrics.InitMetricsExporter(*metricsBackend, *prometheusPort)
 	if err != nil {
-		klog.Fatalf("failed to initialize metrics exporter, error: %+v", err)
+		klog.ErrorS(err, "failed to initialize metrics exporter")
+		os.Exit(1)
 	}
 
 	if *provider.ConstructPEMChain {
@@ -89,12 +91,14 @@ func main() {
 	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
-		klog.Fatalf("failed to add user agent to adal: %+v", err)
+		klog.ErrorS(err, "failed to add user agent to adal")
+		os.Exit(1)
 	}
 	// Initialize and run the gRPC server
 	proto, addr, err := utils.ParseEndpoint(*endpoint)
 	if err != nil {
-		klog.Fatalf("failed to parse endpoint, err: %+v", err)
+		klog.ErrorS(err, "failed to parse endpoint")
+		os.Exit(1)
 	}
 
 	if proto == "unix" {
@@ -102,13 +106,15 @@ func main() {
 			addr = "/" + addr
 		}
 		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
-			klog.Fatalf("failed to remove %s, error: %s", addr, err.Error())
+			klog.ErrorS(err, "failed to remove socket", "addr", addr)
+			os.Exit(1)
 		}
 	}
 
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
-		klog.Fatalf("failed to listen: %v", err)
+		klog.ErrorS(err, "failed to listen", "proto", proto, "addr", addr)
+		os.Exit(1)
 	}
 
 	opts := []grpc.ServerOption{
