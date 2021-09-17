@@ -1,21 +1,35 @@
 jobs:
-- job: unit_test
-  timeoutInMinutes: 10
-  cancelTimeoutInMinutes: 5
-  workspace:
-    clean: all
-  variables:
-    - name: TRIVY_VERSION
-      value: 0.19.2
-  steps:
-    - script: make lint
-      displayName: Run lint
-    - script: make build build-windows
-      displayName: Build
-    - script: make unit-test
-      displayName: Run unit tests
-    - script: bash <(curl -s https://codecov.io/bash) -C $(Build.SourceVersion)
-      displayName: Upload coverage to codecov
-    - script: make helm-lint
-      displayName: Run helm lint
-    - template: scan-images.yaml
+  - job: scan_images
+    timeoutInMinutes: 10
+    workspace:
+      clean: all
+    variables:
+      - name: TRIVY_VERSION
+        value: 0.19.2
+    steps:
+      - template: scan-images.yaml
+  - job: lint
+    timeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+      - script: make lint
+        displayName: golangci-lint
+      - script: make helm-lint
+        displayName: helm lint
+  - job: build
+    timeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+      - script: make build build-windows
+        displayName: build
+  - job: unit_test
+    timeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+      - script: make unit-test
+        displayName: unit test
+      - script: bash <(curl -s https://codecov.io/bash) -C $(Build.SourceVersion)
+        displayName: Upload coverage to codecov
