@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -25,7 +26,8 @@ func (h *HealthZ) Serve() {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && errors.Is(err, http.ErrServerClosed) {
-		klog.Fatalf("failed to start health check server, err: %w", err)
+		klog.ErrorS(err, "failed to start health check server")
+		os.Exit(1)
 	}
 }
 

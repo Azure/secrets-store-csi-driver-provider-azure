@@ -11,7 +11,7 @@ const prometheusExporter = "prometheus"
 
 func InitMetricsExporter(metricsBackend string, prometheusPort int) error {
 	mb := strings.ToLower(metricsBackend)
-	klog.Infof("metrics backend: %s", mb)
+	klog.InfoS("intializing metrics backend", "backend", mb)
 	switch mb {
 	// Prometheus is the only exporter for now
 	case prometheusExporter:
