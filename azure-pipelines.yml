@@ -1,8 +1,4 @@
-trigger:
-  branches:
-    include:
-    - master
-    - release-*
+trigger: none
 
 pr:
   branches:

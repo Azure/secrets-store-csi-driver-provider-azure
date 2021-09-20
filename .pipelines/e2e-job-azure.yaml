@@ -8,6 +8,7 @@ pr:
   paths:
     exclude:
       - docs/*
+      - website/*
 
 pool: staging-pool
 
