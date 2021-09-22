@@ -7,8 +7,6 @@ description: >
   Use a System-assigned Managed Identity to access Keyvault.
 ---
 
-> Supported with Linux and Windows
-
 <details>
 <summary>Examples</summary>
 
@@ -104,3 +102,6 @@ Before this step, you need to [enable system-assigned managed identity](https://
     ```yaml
     useVMManagedIdentity: "true"
     ```
+
+## Pros:
+1. Supported on both Windows and Linux.

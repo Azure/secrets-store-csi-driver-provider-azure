@@ -7,8 +7,6 @@ description: >
   Use a User-assigned Managed Identity to access Keyvault.
 ---
 
-> Supported with Linux and Windows
-
 <details>
 <summary>Examples</summary>
 
@@ -115,3 +113,6 @@ In AKS you can use the [User-assigned Kubelet managed identity](https://docs.mic
     useVMManagedIdentity: "true"
     userAssignedIdentityID: "<client id of the managed identity>"
     ```
+
+## Pros:
+1. Supported on both Windows and Linux.
