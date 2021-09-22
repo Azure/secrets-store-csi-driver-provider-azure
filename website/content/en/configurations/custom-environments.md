@@ -29,10 +29,16 @@ linux:
     - name: cloudenvfile-vol
       hostPath:
         path: "/etc/kubernetes"
+    - name: sslcerts
+      hostPath:
+        path: "/etc/ssl/certs"
   volumeMounts:
     - name: cloudenvfile-vol
       mountPath: "/cloudEnv/myCustomEnvironmentFile.json"
       subPath: "myCustomEnvironmentFile.json"
+    - name: sslcerts
+      mountPath: "/etc/ssl/certs"
+      readOnly: true
 ```
 
 ## Update Secret Provider class
