@@ -1,79 +1,69 @@
 jobs:
   - job:
-    displayName: e2e_test_kind/helm
     timeoutInMinutes: 10
     cancelTimeoutInMinutes: 5
+    dependsOn:
+    - lint
+    - scan_images
+    - unit_test
+    - build
     workspace:
       clean: all
     variables:
     - group: csi-secrets-store-e2e-kind
-    steps:
-      - script: |
-          export REGISTRY="e2e"
-          export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
-          echo "Image version: ${IMAGE_VERSION}"
-          echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
-          echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
-          make e2e-bootstrap
-        displayName: "Build image"
-        env:
-          CI_KIND_CLUSTER: true
-      - script: |
-          make e2e-test
-        displayName: "Run e2e tests on kind cluster"
-        env:
-          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-          KEY_NAME: $(KEY_NAME)
-          KEY_VERSION: $(KEY_VERSION)
-          KEYVAULT_NAME: $(KEYVAULT_NAME)
-          SECRET_NAME: $(SECRET_NAME)
-          TENANT_ID: $(TENANT_ID)
-          CI_KIND_CLUSTER: true
-          AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
-
-      - script: |
-          make e2e-kind-cleanup
-        displayName: 'Delete kind cluster'
-        condition: always()
-  
-  - job:
-    displayName: e2e_test_kind/deployment_manifest
-    timeoutInMinutes: 10
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-    - group: csi-secrets-store-e2e-kind
-    steps:
-      - script: |
-          export REGISTRY="e2e"
-          export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
-          echo "Image version: ${IMAGE_VERSION}"
-          echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
-          echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
-          make e2e-bootstrap
-        displayName: "Build image"
-        env:
-          CI_KIND_CLUSTER: true
-      - script: |
-          make e2e-test
-        displayName: "Run e2e tests on kind cluster"
-        env:
-          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-          KEY_NAME: $(KEY_NAME)
-          KEY_VERSION: $(KEY_VERSION)
-          KEYVAULT_NAME: $(KEYVAULT_NAME)
-          SECRET_NAME: $(SECRET_NAME)
-          TENANT_ID: $(TENANT_ID)
-          CI_KIND_CLUSTER: true
-          AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
+    strategy:
+      matrix:
+        kind_v1_19_11_helm:
+          KIND_K8S_VERSION: v1.19.11
+          IS_HELM_TEST: true
+        kind_v1_20_7_helm:
+          KIND_K8S_VERSION: v1.20.7
+          IS_HELM_TEST: true
+        kind_v1_21_2_helm:
+          KIND_K8S_VERSION: v1.21.2
+          IS_HELM_TEST: true
+        kind_v1_22_0_helm:
+          KIND_K8S_VERSION: v1.22.0
+          IS_HELM_TEST: true
+        kind_v1_19_11_deployment_manifest:
+          KIND_K8S_VERSION: v1.19.11
           IS_HELM_TEST: false
-          REGISTRY: ${REGISTRY}
-          IMAGE_VERSION: ${IMAGE_VERSION}
+        kind_v1_20_7_deployment_manifest:
+          KIND_K8S_VERSION: v1.20.7
+          IS_HELM_TEST: false
+        kind_v1_21_2_deployment_manifest:
+          KIND_K8S_VERSION: v1.21.2
+          IS_HELM_TEST: false
+        kind_v1_22_0_deployment_manifest:
+          KIND_K8S_VERSION: v1.22.0
+          IS_HELM_TEST: false        
+
+    steps:
+      - script: |
+          export REGISTRY="e2e"
+          export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
+          echo "Image version: ${IMAGE_VERSION}"
+          echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
+          echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
+          make e2e-bootstrap
+        displayName: "Build image"
+        env:
+          CI_KIND_CLUSTER: true
+      - script: |
+          make e2e-test
+        displayName: Run e2e tests
+        env:
+          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+          KEY_NAME: $(KEY_NAME)
+          KEY_VERSION: $(KEY_VERSION)
+          KEYVAULT_NAME: $(KEYVAULT_NAME)
+          SECRET_NAME: $(SECRET_NAME)
+          TENANT_ID: $(TENANT_ID)
+          CI_KIND_CLUSTER: true
+          AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
 
       - script: |
           make e2e-kind-cleanup
-        displayName: 'Delete kind cluster'
+        displayName: Delete kind cluster
         condition: always()

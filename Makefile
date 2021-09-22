@@ -49,7 +49,7 @@ BUILDKIT_VERSION ?= v0.8.1
 
 # E2E test variables
 KIND_VERSION ?= 0.11.0
-KIND_K8S_VERSION ?= 1.21.2
+KIND_K8S_VERSION ?= v1.21.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -148,7 +148,7 @@ mod:
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
 ifdef CI_KIND_CLUSTER
-		curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
+		curl -LO https://storage.googleapis.com/kubernetes-release/release/${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 		make setup-kind
 endif
 	docker pull $(IMAGE_TAG) || make e2e-container
@@ -172,7 +172,7 @@ setup-kind:
 	# Check for existing kind cluster
 	if [ $$(kind get clusters) ]; then kind delete cluster; fi
 	# using kind config to create cluster for testing custom cloud environments
-	TERM=dumb kind create cluster --image kindest/node:v${KIND_K8S_VERSION} --config test/kind-config.yaml
+	TERM=dumb kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
 
 .PHONY: install-helm
 install-helm:
@@ -180,7 +180,7 @@ install-helm:
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
-	kind create cluster --image kindest/node:v${KIND_K8S_VERSION} --config test/kind-config.yaml
+	kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
 	make image
 	kind load docker-image --name kind $(IMAGE_TAG)
 
