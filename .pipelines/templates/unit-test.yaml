@@ -31,5 +31,3 @@ jobs:
     steps:
       - script: make unit-test
         displayName: unit test
-      - script: bash <(curl -s https://codecov.io/bash) -C $(Build.SourceVersion)
-        displayName: Upload coverage to codecov
