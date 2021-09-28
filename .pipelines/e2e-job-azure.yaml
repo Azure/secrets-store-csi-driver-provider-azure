@@ -13,14 +13,14 @@ pr:
 pool: staging-pool
 
 jobs:
-  - template: templates/e2e-test-azure.yaml
-    parameters:
-      clusterTypes:
-      - "aks"
-      osTypes:
-      - "linux"
-      - "windows-docker"
-      - "windows-containerd"
+  # - template: templates/e2e-test-azure.yaml
+  #   parameters:
+  #     clusterTypes:
+  #     - "aks"
+  #     osTypes:
+  #     - "linux"
+  #     - "windows-docker"
+  #     - "windows-containerd"
   - template: templates/e2e-test-azure.yaml
     parameters:
       clusterTypes:

@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -11,14 +12,18 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/node"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	e2eframework "k8s.io/kubernetes/test/e2e/framework"
 	e2ekubectl "k8s.io/kubernetes/test/e2e/framework/kubectl"
+	e2enode "k8s.io/kubernetes/test/e2e/framework/node"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -30,9 +35,6 @@ var (
 	clientSet      *kubernetes.Clientset
 	kvClient       keyvault.Client
 	kubeconfigPath string
-	coreNamespaces = []string{
-		framework.NamespaceKubeSystem,
-	}
 )
 
 func TestE2E(t *testing.T) {
@@ -80,13 +82,31 @@ var _ = BeforeSuite(func() {
 		})
 	}
 
-	// Ensure all pods are running and ready before starting tests
+	// get the number of schedulable nodes
+	// this number is used to determine the number of driver and provider pods expected to
+	// be running in the cluster
+	nodes, err := e2enode.GetReadySchedulableNodes(clientSet)
+	e2eframework.Logf("schedulable nodes: %v", nodes.Items)
+
+	e2eframework.ExpectNoError(err)
+	e2enode.Filter(nodes, func(n v1.Node) bool {
+		e2eframework.Logf("node: %s, IsMasterNode()=%v", n.Name, node.IsMasterNode(n))
+		return !node.IsMasterNode(n)
+	})
+	e2eframework.Logf("schedulable nodes after filtering: %v", nodes.Items)
+
+	podLabels := []labels.Selector{
+		labels.SelectorFromSet(labels.Set(map[string]string{"app": "secrets-store-csi-driver"})),
+		labels.SelectorFromSet(labels.Set(map[string]string{"app": "csi-secrets-store-provider-azure"})),
+	}
+	// Ensure driver and provider pods are running and ready before starting tests
 	podStartupTimeout := e2eframework.TestContext.SystemPodsStartupTimeout
-	for _, namespace := range coreNamespaces {
-		if err := e2epod.WaitForPodsRunningReady(clientSet, namespace, int32(e2eframework.TestContext.MinStartupPods), int32(e2eframework.TestContext.AllowedNotReadyNodes), podStartupTimeout, map[string]string{}); err != nil {
-			e2eframework.DumpAllNamespaceInfo(clientSet, namespace)
-			e2ekubectl.LogFailedContainers(clientSet, namespace, e2eframework.Logf)
-			e2eframework.Failf("error waiting for all pods to be running and ready: %v", err)
+	for _, label := range podLabels {
+		e2eframework.Logf("waiting for %d pods with label: %s to be running and ready", len(nodes.Items), label.String())
+		if _, err := e2epod.WaitForPodsWithLabelRunningReady(clientSet, framework.NamespaceKubeSystem, label, len(nodes.Items), podStartupTimeout); err != nil {
+			e2eframework.DumpAllNamespaceInfo(clientSet, framework.NamespaceKubeSystem)
+			e2ekubectl.LogFailedContainers(clientSet, framework.NamespaceKubeSystem, e2eframework.Logf)
+			e2eframework.Failf("error waiting pods with label: %s to be running and ready: %v", label.String(), err)
 		}
 	}
 })
