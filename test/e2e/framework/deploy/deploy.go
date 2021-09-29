@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package deploy
@@ -20,7 +21,7 @@ import (
 )
 
 var (
-	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v0.1.0/deploy"
+	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.0.0-rc.0/deploy"
 	providerResourceDirectory = "manifest_staging/deployment"
 
 	driverResources = []string{
