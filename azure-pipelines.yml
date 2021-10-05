@@ -15,4 +15,4 @@ pool: staging-pool
 jobs:
   # - template: .pipelines/templates/unit-test.yaml
   # - template: .pipelines/templates/e2e-test-kind.yaml
-  - template: .pipelines/templates/e2e-test-azure-arc.yaml
+  - template: .pipelines/templates/e2e-test-kind-arc.yaml
