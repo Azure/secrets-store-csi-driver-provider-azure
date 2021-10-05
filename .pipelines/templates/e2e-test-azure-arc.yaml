@@ -1,5 +1,5 @@
 jobs:
-  - job: Set up az cli
+  - job: setup_az_cli
     steps:
     - script: |
         az login -i > /dev/null
