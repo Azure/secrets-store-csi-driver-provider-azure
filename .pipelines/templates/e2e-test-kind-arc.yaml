@@ -69,5 +69,3 @@ jobs:
         CI_KIND_CLUSTER: true
         AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
     - template: teardown.yaml
-      env:
-        TEARDOWN_CLUSTER: true
