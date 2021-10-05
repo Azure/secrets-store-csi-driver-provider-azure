@@ -1,5 +1,7 @@
-steps:
-  - script: |
-      az login -i > /dev/null
-      az account set -s=$(SUBSCRIPTION_ID)
-    displayName: "az login"
+jobs:
+  - job: Set up az cli
+    steps:
+    - script: |
+        az login -i > /dev/null
+        az account set -s=$(SUBSCRIPTION_ID)
+        displayName: "az login"
