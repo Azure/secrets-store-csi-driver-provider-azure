@@ -1,7 +1,7 @@
 jobs:
   - job: e2e_arc_kind
     variables:
-    - group: csi-secrets-store-e2e
+    - group: csi-secrets-store-e2e-kind
     steps:
     - script: |
         az login -i > /dev/null
@@ -12,7 +12,7 @@ jobs:
         az extension add --name k8s-extension
       displayName: "add cli extensions"
     - script: |
-        make install-kubectl setup-kind
+        make install-helm install-kubectl setup-kind
       displayName: "setup KinD"
     - script: |
         clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
@@ -40,7 +40,7 @@ jobs:
       displayName: "connect KinD cluster"
       condition: succeeded()
     - script: |
-        az k8s-extension create --name ${AZURE_CLUSTER_NAME} --extension-type Microsoft.AzureKeyVaultSecretsProvider --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} --resource-group ${AZURE_CLUSTER_NAME} --cluster-type connectedClusters --release-train preview --release-namespace kube-system --configuration-settings secrets-store-csi-driver.enableSecretRotation=true secrets-store-csi-driver.rotationPollInterval=30s
+        az k8s-extension create --name csi-secrets-store-provider-azure --extension-type Microsoft.AzureKeyVaultSecretsProvider --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} --resource-group ${AZURE_CLUSTER_NAME} --cluster-type connectedClusters --release-train preview --release-namespace kube-system --configuration-settings secrets-store-csi-driver.enableSecretRotation=true secrets-store-csi-driver.rotationPollInterval=30s
 
         echo "verifying extension install status..."
         for i in $(seq 1 25); do
@@ -52,5 +52,20 @@ jobs:
             sleep 1
           fi
         done
+
+        helm ls -A
       displayName: "install AzureKeyVaultSecretsProvider extension"
+    - script: |
+        make e2e-test
+      displayName: Run e2e tests
+      env:
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+        KEY_NAME: $(KEY_NAME)
+        KEY_VERSION: $(KEY_VERSION)
+        KEYVAULT_NAME: $(KEYVAULT_NAME)
+        SECRET_NAME: $(SECRET_NAME)
+        TENANT_ID: $(TENANT_ID)
+        CI_KIND_CLUSTER: true
+        AZURE_ENVIRONMENT_FILEPATH: "/etc/kubernetes/custom_environment.json"
     - template: teardown.yaml
