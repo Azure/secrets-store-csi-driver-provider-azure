@@ -1,8 +1,10 @@
 jobs:
   - job: e2e_arc_kind
     variables:
-    - name: EXTENSION_NAME
-      value: csi-secrets-store-provider-azure
+    - name: AZURE_ENVIRONMENT_FILEPATH
+      value: /etc/kubernetes/custom_environment.json
+    - name: VOLUME_NAME
+      value: cloudenvfile-vol
     - group: csi-secrets-store-e2e-kind
     steps:
     - script: |
@@ -42,7 +44,7 @@ jobs:
       displayName: "connect KinD cluster"
       condition: succeeded()
     - script: |
-        az k8s-extension create --name ${AZURE_CLUSTER_NAME} --extension-type Microsoft.AzureKeyVaultSecretsProvider --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} --resource-group ${AZURE_CLUSTER_NAME} --cluster-type connectedClusters --release-train preview --release-namespace kube-system --configuration-settings secrets-store-csi-driver.enableSecretRotation=true secrets-store-csi-driver.rotationPollInterval=30s secrets-store-csi-driver.syncSecret.enabled=true
+        az k8s-extension create --name ${AZURE_CLUSTER_NAME} --extension-type Microsoft.AzureKeyVaultSecretsProvider --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} --resource-group ${AZURE_CLUSTER_NAME} --cluster-type connectedClusters --release-train preview --release-namespace kube-system --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' 'secrets-store-csi-driver.rotationPollInterval=30s' 'secrets-store-csi-driver.syncSecret.enabled=true' 'secrets-store-csi-driver.linux.volumes[0].name=$(VOLUME_NAME)' 'secrets-store-csi-driver.linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' 'secrets-store-csi-driver.linux.volumes[0].hostPath.type=File' 'secrets-store-csi-driver.linux.volumeMounts[0].name=$(VOLUME_NAME)' 'secrets-store-csi-driver.linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
 
         echo "verifying extension install status..."
         for i in $(seq 1 25); do
@@ -69,5 +71,6 @@ jobs:
         SECRET_NAME: $(SECRET_NAME)
         TENANT_ID: $(TENANT_ID)
         CI_KIND_CLUSTER: true
+        AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
         IS_SOAK_TEST: true # setting this env var since arc extension manages installation.
     - template: teardown.yaml
