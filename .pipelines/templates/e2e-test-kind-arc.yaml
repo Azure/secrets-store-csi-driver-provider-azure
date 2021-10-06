@@ -17,7 +17,7 @@ jobs:
       displayName: "add cli extensions"
     - script: |
         make install-helm install-kubectl setup-kind
-      displayName: "setup KinD"
+      displayName: "install dependencies and setup kind"
     - script: |
         clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
         echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]$clusterName"
@@ -29,32 +29,53 @@ jobs:
 
         az connectedk8s connect -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --no-wait
 
+        # It takes time for Arc pods to come up. Sometimes, in such cases helm might report unable to install helm release, but in fact Arc operators gets installed and able to connect the cluster. Also, az connectedk8s connect will go through different phases (Connecting, Connected etc.) of installation. So to address both, we are checking the status later without waiting.
         echo "verifying cluster connectivity..."
         for i in $(seq 1 25); do
-          isProvisioned=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].provisioningState" -otsv)
-          isConnected=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].connectivityStatus" -otsv)
-          if [ "$isProvisioned" == "Succeeded" ]  && [ "$isConnected" == "Connected" ]; then
+          provisioningState=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].provisioningState" -otsv)
+          connectivityStatus=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].connectivityStatus" -otsv)
+          if [ "$provisioningState" == "Succeeded" ]  && [ "$connectivityStatus" == "Connected" ]; then
             echo "KinD cluster is 'Connected'"
             break
           else
+            echo "Provisioning state - $provisioningState.  Connectivity status - $connectivityStatus"
             sleep 1
           fi
         done
+
+        if [ "$connectivityStatus" != "Connected" ]; then
+          echo "failed to connect cluster."
+          exit 1
+        fi
       displayName: "connect KinD cluster"
       condition: succeeded()
     - script: |
-        az k8s-extension create --name ${AZURE_CLUSTER_NAME} --extension-type Microsoft.AzureKeyVaultSecretsProvider --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} --resource-group ${AZURE_CLUSTER_NAME} --cluster-type connectedClusters --release-train preview --release-namespace kube-system --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' 'secrets-store-csi-driver.rotationPollInterval=30s' 'secrets-store-csi-driver.syncSecret.enabled=true' 'linux.volumes[0].name=$(VOLUME_NAME)' 'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' 'linux.volumes[0].hostPath.type=File' 'linux.volumeMounts[0].name=$(VOLUME_NAME)' 'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
+        az k8s-extension create \
+        --name ${AZURE_CLUSTER_NAME} \
+        --extension-type Microsoft.AzureKeyVaultSecretsProvider \
+        --scope cluster --cluster-name ${AZURE_CLUSTER_NAME} \
+        --resource-group ${AZURE_CLUSTER_NAME} \
+        --cluster-type connectedClusters --release-train preview \
+        --release-namespace kube-system \
+        --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' 'secrets-store-csi-driver.rotationPollInterval=30s' 'secrets-store-csi-driver.syncSecret.enabled=true' 'linux.volumes[0].name=$(VOLUME_NAME)' 'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' 'linux.volumes[0].hostPath.type=File' 'linux.volumeMounts[0].name=$(VOLUME_NAME)' 'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
 
+        # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
         echo "verifying extension install status..."
         for i in $(seq 1 25); do
-          isInstalled=$(az k8s-extension show -c ${AZURE_CLUSTER_NAME} -t connectedClusters -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --query "installState" -otsv)
-          if [ "$isInstalled" == "Installed" ]; then
+          installState=$(az k8s-extension show -c ${AZURE_CLUSTER_NAME} -t connectedClusters -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --query "installState" -otsv)
+          if [ "$installState" == "Installed" ]; then
             echo "AzureKeyVaultSecretsProvider extension is 'Installed'"
             break
           else
+            echo "Install state - $installState"
             sleep 1
           fi
         done
+
+        if [ "$installState" != "Installed" ]; then
+          echo "failed to install extension."
+          exit 1
+        fi
 
         helm ls -A
       displayName: "install AzureKeyVaultSecretsProvider extension"
@@ -71,5 +92,6 @@ jobs:
         TENANT_ID: $(TENANT_ID)
         CI_KIND_CLUSTER: true
         AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
-        IS_SOAK_TEST: true # setting this env var since arc extension manages installation of chart.
+        # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
+        IS_SOAK_TEST: true
     - template: teardown.yaml
