@@ -257,7 +257,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	if len(keyVaultObjects) == 0 {
-		return nil, nil, fmt.Errorf("objects array is empty")
+		return make(map[string][]byte), make(map[string]string), nil
 	}
 
 	vaultURL, err := mc.getVaultURL()

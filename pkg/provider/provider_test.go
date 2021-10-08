@@ -768,7 +768,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 				"objects": `
       array:`,
 			},
-			expectedErr: true,
+			expectedErr: false,
 		},
 		{
 			desc: "invalid object format",
