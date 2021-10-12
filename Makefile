@@ -145,11 +145,14 @@ clean:
 mod:
 	@go mod tidy
 
+.PHONY: install-kubectl
+install-kubectl:
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
+
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
 ifdef CI_KIND_CLUSTER
-		curl -LO https://storage.googleapis.com/kubernetes-release/release/${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
-		make setup-kind
+		make install-kubectl setup-kind
 endif
 	docker pull $(IMAGE_TAG) || make e2e-container
 

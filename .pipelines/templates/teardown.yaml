@@ -4,6 +4,7 @@ steps:
         rm ${LOCAL_SSH_KEY}*
       fi
       az login -i > /dev/null
+      echo "deleting '${AZURE_CLUSTER_NAME}' resource group"
       az group delete -n ${AZURE_CLUSTER_NAME} --subscription $(SUBSCRIPTION_ID) --yes --no-wait
     displayName: "Teardown cluster"
     condition: and(always(), eq(variables['TEARDOWN_CLUSTER'], 'true'))
