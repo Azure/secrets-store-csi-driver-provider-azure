@@ -18,7 +18,7 @@ require (
 	k8s.io/client-go v0.22.0
 	k8s.io/kubernetes v1.21.2
 	sigs.k8s.io/controller-runtime v0.9.0
-	sigs.k8s.io/secrets-store-csi-driver v0.3.0
+	sigs.k8s.io/secrets-store-csi-driver v1.0.0-rc.1
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -75,7 +75,7 @@ require (
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
-	google.golang.org/grpc v1.38.0 // indirect
+	google.golang.org/grpc v1.39.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
@@ -84,7 +84,7 @@ require (
 	k8s.io/apiserver v0.21.2 // indirect
 	k8s.io/component-base v0.22.0 // indirect
 	k8s.io/component-helpers v0.21.2 // indirect
-	k8s.io/klog/v2 v2.9.0 // indirect
+	k8s.io/klog/v2 v2.10.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
 	k8s.io/kubectl v0.0.0 // indirect
 	k8s.io/kubelet v0.0.0 // indirect
