@@ -17,9 +17,15 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
-{{- if .Values.linux.podAnnotations }}
+{{- if or .Values.linux.podAnnotations .Values.Azure.proxySettings.isProxyEnabled }}
       annotations:
+{{- if .Values.linux.podAnnotations}}
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
+{{- end }}
+# this will ensure pods are rolled in next helm upgrade if cert files are updated.
+{{- if .Values.Azure.proxySettings.isProxyEnabled }}
+        checksum/arc-proxy-config: {{ include (print $.Template.BasePath "/arc-proxy-secret.yaml") . | sha256sum }}
+{{- end }}
 {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
@@ -74,6 +80,11 @@ spec:
           {{- if .Values.linux.privileged }}
             privileged: true
           {{- end }}
+          {{- if .Values.Azure.proxySettings.isProxyEnabled }}
+          envFrom:
+            - secretRef:
+                name: arc-proxy-config
+          {{- end }}
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
@@ -85,6 +96,14 @@ spec:
             {{- if .Values.linux.volumeMounts }}
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
+            {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
+            - name: ssl-certs
+              mountPath: /etc/ssl/certs/
+              readOnly: false
+            - mountPath: /usr/local/share/ca-certificates/proxy-cert.crt
+              subPath: proxy-cert.crt
+              name: proxy-certstore  
+            {{- end }}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
@@ -102,6 +121,13 @@ spec:
         {{- if .Values.linux.volumes }}
         {{- toYaml .Values.linux.volumes | nindent 8 }}
         {{- end}}
+        {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
+        - name: proxy-certstore
+          secret:
+            secretName: arc-proxy-cert
+        - name: ssl-certs
+          emptyDir: {}
+        {{- end }}
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
