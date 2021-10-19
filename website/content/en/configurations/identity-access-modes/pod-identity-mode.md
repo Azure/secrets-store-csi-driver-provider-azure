@@ -13,7 +13,7 @@ description: >
 - `SecretProviderClass`
 ```yaml
 # This is a SecretProviderClass example using aad-pod-identity to access Key Vault
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
   name: azure-kvname-podid

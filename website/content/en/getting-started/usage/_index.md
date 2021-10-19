@@ -31,7 +31,7 @@ Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-
 To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
 
   ```yaml
-  apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+  apiVersion: secrets-store.csi.x-k8s.io/v1
   kind: SecretProviderClass
   metadata:
     name: azure-kvname
