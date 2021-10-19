@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
