@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
