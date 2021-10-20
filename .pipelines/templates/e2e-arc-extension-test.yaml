@@ -27,6 +27,7 @@ jobs:
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
           version="0.0.$buildNumber"
           echo "version - $version"
+          helm dependency update manifest_staging/charts/csi-secrets-store-provider-azure
           helm package manifest_staging/charts/csi-secrets-store-provider-azure --version $version
 
           echo "Authenticating..."
