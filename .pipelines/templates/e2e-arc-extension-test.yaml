@@ -35,7 +35,7 @@ jobs:
           az acr login -n upstream
 
           echo 'Pushing chart...'
-          oras push upstream.azurecr.io/oss/azure/secrets-store/provider-azure-arc:$buildNumber ./csi-secrets-store-provider-azure-$buildNumber.tgz:application/tar+gzip --debug
+          oras push upstream.azurecr.io/oss/azure/secrets-store/provider-azure-arc:$version ./csi-secrets-store-provider-azure-$version.tgz:application/tar+gzip --debug
         displayName: 'Push OCI helm chart to ACR'
       - script: |
           az extension add --name connectedk8s
