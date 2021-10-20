@@ -1,5 +1,5 @@
 jobs:
-  - job:
+  - job: e2e_arc_test
     variables:
     - name: AZURE_ENVIRONMENT_FILEPATH
       value: /etc/kubernetes/custom_environment.json
@@ -12,14 +12,14 @@ jobs:
           az account set -s=$(SUBSCRIPTION_ID)
         displayName: "az login"
       - script: |
-          IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-ext"
+          IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-e2e"
           echo "IMAGE_VERSION=$IMAGE_VERSION"
           # REGISTRY_NAME="upstream"
           # REPO_PREFIX="oss/azure/secrets-store"
           # IMAGE_NAME="provider-azure-arc"
 
           az acr login -n upstream
-          REGISTRY_NAME=upstream  REPO_PREFIX=oss/azure/secrets-store IMAGE_NAME=provider-azure-arc IMAGE_VERSION=$IMAGE_VERSION make e2e-bootstrap
+          REGISTRY_NAME=upstream  REPO_PREFIX=oss/azure/secrets-store IMAGE_NAME=provider-azure IMAGE_VERSION=$IMAGE_VERSION make e2e-bootstrap
         displayName: Build and push e2e image
       # - template: install-oras.yaml
       # - template: install-helm3.yaml
