@@ -21,19 +21,13 @@ jobs:
       #     az acr login -n upstream
       #     REGISTRY_NAME=upstream  REPO_PREFIX=oss/azure/secrets-store IMAGE_NAME=provider-azure-arc IMAGE_VERSION=$IMAGE_VERSION make e2e-bootstrap
       #   displayName: Build and push e2e image
+      - template: install-oras.yaml
+      - template: install-helm3.yaml
       - script: |
-          mkdir -p oras/
-          curl -LO https://github.com/deislabs/oras/releases/download/v0.8.1/oras_0.8.1_linux_amd64.tar.gz
-          tar xvzf oras_0.8.1_linux_amd64.tar.gz -C oras/
-          # tree $(Pipeline.Workspace)
-          echo "##vso[task.setvariable variable=PATH]${PATH}:$(Pipeline.Workspace)/oras"
-          # oras version
-        displayName: Install ORAS
-        workingDirectory: $(Pipeline.Workspace)
-      - script: |
-          buildNumber="99.99.${$(Build.BuildNumber)//.}"
-          echo "build no - $buildNumber"
-          helm package manifest_staging/charts/csi-secrets-store-provider-azure --version $buildNumber
+          buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
+          version="1.0.$buildNumber"
+          echo "version - $version"
+          helm package manifest_staging/charts/csi-secrets-store-provider-azure --version $version
 
           echo "Authenticating..."
           # az login --identity
