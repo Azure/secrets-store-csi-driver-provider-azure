@@ -6,4 +6,5 @@ then
     update-ca-certificates
 fi
 echo "starting secret store csi driver azure provider"
-secrets-store-csi-driver-provider-azure
+# start provider by passing all the args as is.
+secrets-store-csi-driver-provider-azure "$@"
