@@ -11,16 +11,16 @@ jobs:
           az login -i > /dev/null
           az account set -s=$(SUBSCRIPTION_ID)
         displayName: "az login"
-      - script: |
-          IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-ext"
-          echo "IMAGE_VERSION=$IMAGE_VERSION"
-          # REGISTRY_NAME="upstream"
-          # REPO_PREFIX="oss/azure/secrets-store"
-          # IMAGE_NAME="provider-azure-arc"
+      # - script: |
+      #     IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-ext"
+      #     echo "IMAGE_VERSION=$IMAGE_VERSION"
+      #     # REGISTRY_NAME="upstream"
+      #     # REPO_PREFIX="oss/azure/secrets-store"
+      #     # IMAGE_NAME="provider-azure-arc"
 
-          az acr login -n upstream
-          REGISTRY_NAME=upstream  REPO_PREFIX=oss/azure/secrets-store IMAGE_NAME=provider-azure-arc IMAGE_VERSION=$IMAGE_VERSION make e2e-bootstrap
-        displayName: Build and push e2e image
+      #     az acr login -n upstream
+      #     REGISTRY_NAME=upstream  REPO_PREFIX=oss/azure/secrets-store IMAGE_NAME=provider-azure-arc IMAGE_VERSION=$IMAGE_VERSION make e2e-bootstrap
+      #   displayName: Build and push e2e image
       - script: |
           mkdir -p oras/
           curl -LO https://github.com/deislabs/oras/releases/download/v${{ parameters.version }}/oras_${{ parameters.version }}_linux_amd64.tar.gz
