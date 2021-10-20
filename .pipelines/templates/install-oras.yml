@@ -1,5 +1,5 @@
 parameters:
-  version: 0.8.1
+  version: 0.12.0
 
 steps:
   - bash: |
