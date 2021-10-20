@@ -27,7 +27,7 @@ jobs:
           tar xvzf oras_0.8.1_linux_amd64.tar.gz -C oras/
           # tree $(Pipeline.Workspace)
           echo "##vso[task.setvariable variable=PATH]${PATH}:$(Pipeline.Workspace)/oras"
-          oras version
+          # oras version
         displayName: Install ORAS
         workingDirectory: $(Pipeline.Workspace)
       - script: |
