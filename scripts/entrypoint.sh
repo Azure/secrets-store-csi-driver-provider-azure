@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # ca certs needs to be updaed in case arc extension is running with proxy configuration.
 if [ -f "/usr/local/share/ca-certificates/proxy-cert.crt" ]
 then
