@@ -25,7 +25,7 @@ jobs:
       - template: install-helm3.yaml
       - script: |
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
-          version="1.0.$buildNumber"
+          version="0.0.$buildNumber"
           echo "version - $version"
           helm package manifest_staging/charts/csi-secrets-store-provider-azure --version $version
 
