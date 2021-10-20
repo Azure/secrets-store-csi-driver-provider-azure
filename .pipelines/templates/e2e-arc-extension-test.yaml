@@ -1,5 +1,11 @@
 jobs:
   - job:
+    variables:
+    - name: AZURE_ENVIRONMENT_FILEPATH
+      value: /etc/kubernetes/custom_environment.json
+    - name: VOLUME_NAME
+      value: cloudenvfile-vol
+    - group: csi-secrets-store-e2e-kind
     steps:
       - template: build-images.yaml
       - script: |
