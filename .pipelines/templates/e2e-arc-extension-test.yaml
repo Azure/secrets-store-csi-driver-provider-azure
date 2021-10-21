@@ -48,7 +48,8 @@ jobs:
           --scope cluster \
           --cluster-name ${AZURE_CLUSTER_NAME} \
           --resource-group ${AZURE_CLUSTER_NAME} \
-          --cluster-type connectedClusters --release-train dev \
+          --cluster-type connectedClusters \
+          --release-train dev \
           --version $(EXT_VERSION) \
           --release-namespace kube-system \
           --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' \
