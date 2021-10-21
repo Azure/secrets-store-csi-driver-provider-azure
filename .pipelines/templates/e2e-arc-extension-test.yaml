@@ -105,6 +105,21 @@ jobs:
         displayName: "install AzureKeyVaultSecretsProvider extension"
         condition: succeeded()
       - script: |
+          make e2e-test
+        displayName: Run e2e tests
+        env:
+          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+          KEY_NAME: $(KEY_NAME)
+          KEY_VERSION: $(KEY_VERSION)
+          KEYVAULT_NAME: $(KEYVAULT_NAME)
+          SECRET_NAME: $(SECRET_NAME)
+          TENANT_ID: $(TENANT_ID)
+          CI_KIND_CLUSTER: true
+          AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
+          # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
+        IS_SOAK_TEST: true
+      - script: |
           az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):${EXT_VERSION} -y || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
