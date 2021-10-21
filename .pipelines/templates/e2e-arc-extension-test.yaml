@@ -95,8 +95,9 @@ jobs:
           az account set -s=$(SUBSCRIPTION_ID)
           az acr login -n $(STAGING_REGISTRY_NAME)
 
-          echo "deleting - $(STAGING_REGISTRY):$(EXT_VERSION)"
-          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):$(EXT_VERSION) -y --debug || true
+          respository=${$(STAGING_REGISTRY)#*/}
+          echo "deleting - $respository:$(EXT_VERSION)"
+          az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
       - template: teardown.yaml
