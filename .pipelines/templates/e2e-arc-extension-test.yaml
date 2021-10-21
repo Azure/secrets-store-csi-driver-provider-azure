@@ -101,6 +101,12 @@ jobs:
           fi
 
           helm ls -A
+          helm get values ${AZURE_CLUSTER_NAME} -n kube-system
         displayName: "install AzureKeyVaultSecretsProvider extension"
         condition: succeeded()
+      - script: |
+          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):${EXT_VERSION} -y || true
+        displayName: "delete e2e OCI helm chart"
+        condition: always()
       - template: teardown.yaml
+      - template: cleanup-images.yaml
