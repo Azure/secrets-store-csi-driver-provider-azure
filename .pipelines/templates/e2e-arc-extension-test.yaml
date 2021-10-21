@@ -6,32 +6,27 @@ jobs:
     - name: VOLUME_NAME
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e
-    - name: CLUSTER_CONFIG
-      value: linux
-    - name: CLUSTER_TYPE
-      value: arc
-    - name: OS_TYPE
-      value: e2e
     steps:
       # - template: build-images.yaml
+      # - script: |
+      #     az login -i > /dev/null
+      #     az account set -s=$(SUBSCRIPTION_ID)
+      #   displayName: "az login"
       - script: |
-          az login -i > /dev/null
-          az account set -s=$(SUBSCRIPTION_ID)
-        displayName: "az login"
-      - script: |
-          IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(OS_TYPE)"
-          echo "Image version: ${IMAGE_VERSION}"
+          export REGISTRY="e2e"
+          echo "Registry: $REGISTRY"
+          echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
 
+          IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-e2e"
+          echo "Image version: ${IMAGE_VERSION}"
           export IMAGE_VERSION="${IMAGE_VERSION}"
           echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
 
-          # az acr login -n $(REGISTRY_NAME)
-          # make e2e-bootstrap
-
-          az acr login -n $(STAGING_REGISTRY_NAME)
-          REGISTRY_NAME=upstream REPO_PREFIX=oss/azure/secrets-store make e2e-bootstrap
+          make e2e-bootstrap
         displayName: "build and push e2e images"
         condition: succeeded()
+        env:
+          CI_KIND_CLUSTER: true
       - template: install-oras.yaml
       - template: install-helm3.yaml
       - script: |
@@ -54,10 +49,10 @@ jobs:
           az extension add --name k8s-extension
         displayName: "add cli extensions"
         condition: succeeded()
-      - script: |
-          make install-helm install-kubectl setup-kind
-        displayName: "install dependencies and setup kind"
-        condition: succeeded()
+      # - script: |
+      #     make install-helm install-kubectl setup-kind
+      #   displayName: "install dependencies and setup kind"
+      #   condition: succeeded()
       - script: |
           clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
           echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]$clusterName"
@@ -98,7 +93,7 @@ jobs:
           --cluster-type connectedClusters --release-train dev \
           --version $(EXT_VERSION) \
           --release-namespace kube-system \
-          --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' 'secrets-store-csi-driver.rotationPollInterval=30s' 'linux.image.tag=$(IMAGE_VERSION)' 'linux.image.repository=$(CI_REGISTRY)/$(CI_IMAGE_NAME)' 'secrets-store-csi-driver.syncSecret.enabled=true' 'linux.volumes[0].name=$(VOLUME_NAME)' 'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' 'linux.volumes[0].hostPath.type=File' 'linux.volumeMounts[0].name=$(VOLUME_NAME)' 'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
+          --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' 'secrets-store-csi-driver.rotationPollInterval=30s' 'linux.image.tag=$(IMAGE_VERSION)' 'linux.image.repository=$(REGISTRY)/provider-azure' 'secrets-store-csi-driver.syncSecret.enabled=true' 'linux.volumes[0].name=$(VOLUME_NAME)' 'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' 'linux.volumes[0].hostPath.type=File' 'linux.volumeMounts[0].name=$(VOLUME_NAME)' 'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
 
           # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
           echo "verifying extension install status..."
