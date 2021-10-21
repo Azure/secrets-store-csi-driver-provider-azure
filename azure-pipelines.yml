@@ -13,6 +13,7 @@ pr:
 pool: staging-pool
 
 jobs:
-  - template: .pipelines/templates/e2e-arc-extension-test.yaml
+  - template: .pipelines/templates/e2e-arc-extension-proxy-test.yaml
+  # - template: .pipelines/templates/e2e-arc-extension-test.yaml
   # - template: .pipelines/templates/unit-test.yaml
   # - template: .pipelines/templates/e2e-test-kind.yaml

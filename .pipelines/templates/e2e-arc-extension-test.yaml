@@ -27,7 +27,6 @@ jobs:
         env:
           CI_KIND_CLUSTER: true
       - template: install-oras.yaml
-      # - template: install-helm3.yaml
       - script: |
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
           version="0.0.$buildNumber"
