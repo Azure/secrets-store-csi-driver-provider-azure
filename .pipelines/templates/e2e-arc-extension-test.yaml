@@ -15,6 +15,10 @@ jobs:
     steps:
       # - template: build-images.yaml
       - script: |
+          az login -i > /dev/null
+          az account set -s=$(SUBSCRIPTION_ID)
+        displayName: "az login"
+      - script: |
           IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(OS_TYPE)"
           echo "Image version: ${IMAGE_VERSION}"
 
