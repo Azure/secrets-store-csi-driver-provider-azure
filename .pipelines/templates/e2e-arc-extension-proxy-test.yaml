@@ -2,7 +2,7 @@ jobs:
   - job: e2e_arc_proxy_test
     steps:
       - script: |
-          git clone https://dev.azure.com/msazure/One/_git/arc-proxy-simulation
+          git clone https://msazure@dev.azure.com/msazure/One/_git/arc-proxy-simulation
         displayName: "checkout arc proxy simulation repo"
         condition: succeeded()
       - script: |
