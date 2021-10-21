@@ -91,7 +91,7 @@ jobs:
               break
             else
               echo "Install state - $installState"
-              sleep 1
+              sleep 2
             fi
           done
 
@@ -120,7 +120,8 @@ jobs:
           # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
           IS_SOAK_TEST: true
       - script: |
-          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):${EXT_VERSION} -y || true
+          echo "deleting - $(STAGING_REGISTRY):$(EXT_VERSION)"
+          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):$(EXT_VERSION) -y || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
       - template: teardown.yaml
