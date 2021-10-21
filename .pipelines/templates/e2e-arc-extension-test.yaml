@@ -102,6 +102,7 @@ jobs:
 
           helm ls -A
           helm get values ${AZURE_CLUSTER_NAME} -n kube-system
+          kubectl get po -n kube-system
         displayName: "install AzureKeyVaultSecretsProvider extension"
         condition: succeeded()
       - script: |
