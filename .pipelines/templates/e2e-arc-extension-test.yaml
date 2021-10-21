@@ -118,7 +118,7 @@ jobs:
           CI_KIND_CLUSTER: true
           AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
           # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
-        IS_SOAK_TEST: true
+          IS_SOAK_TEST: true
       - script: |
           az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):${EXT_VERSION} -y || true
         displayName: "delete e2e OCI helm chart"
