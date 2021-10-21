@@ -7,48 +7,13 @@ jobs:
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e-kind
     steps:
-    - script: |
-        az login -i > /dev/null
-        az account set -s=$(SUBSCRIPTION_ID)
-      displayName: "az login"
-    - script: |
-        az extension add --name connectedk8s
-        az extension add --name k8s-extension
-      displayName: "add cli extensions"
+    - template: az-login.yaml
+    - template: arc-setup.yaml
     - script: |
         make install-helm install-kubectl setup-kind
       displayName: "install dependencies and setup kind"
-    - script: |
-        clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
-        echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]$clusterName"
-        echo "cluster name is set to - $clusterName"
-      displayName: "set cluster name"
       condition: succeeded()
-    - script: |
-        az group create -n ${AZURE_CLUSTER_NAME} -l $(AZURE_CANARY_LOCATION)
-
-        az connectedk8s connect -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --no-wait
-
-        # It takes time for Arc pods to come up. Sometimes, in such cases helm might report unable to install helm release, but in fact Arc operators gets installed and able to connect the cluster. Also, az connectedk8s connect will go through different phases (Connecting, Connected etc.) of installation. So to address both, we are checking the status later without waiting.
-        echo "verifying cluster connectivity..."
-        for i in $(seq 1 25); do
-          provisioningState=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].provisioningState" -otsv)
-          connectivityStatus=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].connectivityStatus" -otsv)
-          if [ "$provisioningState" == "Succeeded" ]  && [ "$connectivityStatus" == "Connected" ]; then
-            echo "KinD cluster is 'Connected'"
-            break
-          else
-            echo "Provisioning state - $provisioningState.  Connectivity status - $connectivityStatus"
-            sleep 1
-          fi
-        done
-
-        if [ "$connectivityStatus" != "Connected" ]; then
-          echo "failed to connect cluster."
-          exit 1
-        fi
-      displayName: "connect KinD cluster"
-      condition: succeeded()
+    - template: arc-connect.yaml
     - script: |
         az k8s-extension create \
         --name ${AZURE_CLUSTER_NAME} \
@@ -79,6 +44,7 @@ jobs:
 
         helm ls -A
       displayName: "install AzureKeyVaultSecretsProvider extension"
+      condition: succeeded()
     - script: |
         make e2e-test
       displayName: Run e2e tests
@@ -94,4 +60,5 @@ jobs:
         AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
         # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
         IS_SOAK_TEST: true
+      condition: succeeded()
     - template: teardown.yaml
