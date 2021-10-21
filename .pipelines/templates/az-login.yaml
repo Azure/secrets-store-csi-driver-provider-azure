@@ -3,3 +3,4 @@ steps:
       az login -i > /dev/null
       az account set -s=$(SUBSCRIPTION_ID)
     displayName: "az login"
+    condition: succeeded()
