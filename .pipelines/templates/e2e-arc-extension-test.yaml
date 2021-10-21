@@ -7,7 +7,6 @@ jobs:
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e
     steps:
-      # - template: build-images.yaml
       - script: |
           az login -i > /dev/null
           az account set -s=$(SUBSCRIPTION_ID)
@@ -49,10 +48,6 @@ jobs:
           az extension add --name k8s-extension
         displayName: "add cli extensions"
         condition: succeeded()
-      # - script: |
-      #     make install-helm install-kubectl setup-kind
-      #   displayName: "install dependencies and setup kind"
-      #   condition: succeeded()
       - script: |
           clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
           echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]$clusterName"
@@ -141,8 +136,7 @@ jobs:
           az acr login -n $(STAGING_REGISTRY_NAME)
 
           echo "deleting - $(STAGING_REGISTRY):$(EXT_VERSION)"
-          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):$(EXT_VERSION) -y || true
+          az acr repository delete --name $(STAGING_REGISTRY_NAME) --image $(STAGING_REGISTRY):$(EXT_VERSION) -y --debug || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
       - template: teardown.yaml
-      - template: cleanup-images.yaml
