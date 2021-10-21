@@ -8,10 +8,10 @@ jobs:
     - group: csi-secrets-store-e2e
     steps:
       # - template: build-images.yaml
-      # - script: |
-      #     az login -i > /dev/null
-      #     az account set -s=$(SUBSCRIPTION_ID)
-      #   displayName: "az login"
+      - script: |
+          az login -i > /dev/null
+          az account set -s=$(SUBSCRIPTION_ID)
+        displayName: "az login"
       - script: |
           export REGISTRY="e2e"
           echo "Registry: $REGISTRY"
