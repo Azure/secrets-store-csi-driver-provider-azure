@@ -97,12 +97,10 @@ spec:
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
             {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
-            - name: ssl-certs
-              mountPath: /etc/ssl/certs/
-              readOnly: false
-            - mountPath: /usr/local/share/ca-certificates/proxy-cert.crt
+            - mountPath: /etc/ssl/certs/proxy-cert.crt
               subPath: proxy-cert.crt
-              name: proxy-certstore  
+              readOnly: false
+              name: proxy-certstore
             {{- end }}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
@@ -125,8 +123,6 @@ spec:
         - name: proxy-certstore
           secret:
             secretName: arc-proxy-cert
-        - name: ssl-certs
-          emptyDir: {}
         {{- end }}
       nodeSelector:
         kubernetes.io/os: linux
