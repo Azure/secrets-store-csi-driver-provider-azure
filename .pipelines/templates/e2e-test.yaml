@@ -19,9 +19,21 @@ parameters:
   - name: testWithGPU
     type: boolean
     default: false
+  - name: ciKindCluster
+    type: boolean
+    default: false
+  - name: isArcTest
+    type: boolean
+    default: false
+  - name: azureEnvironmentFilepath
+    type: string
 
 steps:
   - script: |
+      echo "Azure Environment Filepath: ${{ parameters.azureEnvironmentFilepath }}"
+      if [[ ! -z ${{ parameters.azureEnvironmentFilepath }} ]]; then
+        export AZURE_ENVIRONMENT_FILEPATH={{ parameters.azureEnvironmentFilepath }}
+      fi
       # Set TEST_WiNDOWS=true to run the test on Windows
       if [ "$(OS_TYPE)" == "windows" ] ; then
         export TEST_WINDOWS=true
@@ -60,3 +72,7 @@ steps:
         CONFIG_IMAGE_VERSION: ""
       ${{ if parameters.isBackwardCompatibilityTest }}:
         IS_BACKWARD_COMPATIBILITY_TEST: ${{ parameters.isBackwardCompatibilityTest }}
+      ${{ if parameters.ciKindCluster }}:
+        CI_KIND_CLUSTER: ${{ parameters.ciKindCluster }}
+      ${{ if parameters.isArcTest }}:
+        IS_ARC_TEST: ${{ parameters.isArcTest }}

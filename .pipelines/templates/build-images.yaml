@@ -1,12 +1,29 @@
+parameters:
+  - name: registry
+    type: string
+  - name: ciKindCluster
+    type: boolean
+    default: false
+
 steps:
-  - script: |
-      az login -i > /dev/null
-      az account set -s=$(SUBSCRIPTION_ID)
-    displayName: "az login"
+  - template: az-login.yaml
 
   - script: |
+      if [[ ${{ parameters.ciKindCluster }} == True ]]; then
+        export CI_KIND_CLUSTER=true
+      fi
+
+      echo "Registry - '${{ parameters.registry }}'"
+      if [[ ! -z ${{ parameters.registry }} ]]; then
+        echo "Registry: ${{ parameters.registry }}"
+        export REGISTRY=${{ parameters.registry }}
+        echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
+      fi
+
       # Generate image version
-      if [[ -n "${CLUSTER_CONFIG:-}" ]]; then
+      if [[ ${{ parameters.ciKindCluster }} == True ]]; then
+        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-e2e"
+      elif [[ -n "${CLUSTER_CONFIG:-}" ]]; then
         IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(OS_TYPE)"
       else
         IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-load"

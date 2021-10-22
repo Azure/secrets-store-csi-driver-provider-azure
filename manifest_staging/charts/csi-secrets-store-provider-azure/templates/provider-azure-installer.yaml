@@ -99,7 +99,6 @@ spec:
             {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
             - mountPath: /etc/ssl/certs/proxy-cert.crt
               subPath: proxy-cert.crt
-              readOnly: false
               name: proxy-certstore
             {{- end }}
       affinity:

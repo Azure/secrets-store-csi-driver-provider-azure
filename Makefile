@@ -112,9 +112,6 @@ docker-buildx-builder:
 
 .PHONY: container-all
 container-all: build-windows
-	# Enable execution of multi-architecture containers
-	docker run --rm --privileged multiarch/qemu-user-static:$(QEMUVERSION) --reset -p yes
-
 	for arch in $(ALL_ARCH.linux); do \
 		ARCH=$${arch} $(MAKE) build; \
 		ARCH=$${arch} $(MAKE) container-linux; \
