@@ -3,6 +3,7 @@ parameters:
     type: string
   - name: extensionVersion
     type: string
+    default: ' '
   - name: releaseTrain
     type: string
   - name: configurationSettings
