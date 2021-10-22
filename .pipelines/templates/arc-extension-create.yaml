@@ -12,7 +12,7 @@ parameters:
 steps:
   - script: |
       echo "version - '${{ parameters.extensionVersion }}'"
-      if [[ ${{ parameters.extensionVersion }} != "" ]]; then
+      if [[ "${{ parameters.extensionVersion }}" != "" ]]; then
         EXTRA_ARGS="--version ${{ parameters.extensionVersion }}"
       fi
 
@@ -26,8 +26,7 @@ steps:
       --release-train ${{ parameters.releaseTrain }} \
       --release-namespace kube-system \
       --configuration-settings ${{ parameters.configurationSettings }} \
-      --debug \
-      ${EXTRA_ARGS:-} > /dev/null
+      ${EXTRA_ARGS:-}
 
       # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
       echo "verifying extension install status..."
