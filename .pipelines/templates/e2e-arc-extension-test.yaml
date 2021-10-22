@@ -99,8 +99,7 @@ jobs:
           TENANT_ID: $(TENANT_ID)
           CI_KIND_CLUSTER: true
           AZURE_ENVIRONMENT_FILEPATH: $(AZURE_ENVIRONMENT_FILEPATH)
-          # setting IS_SOAK_TEST env var since arc extension manages installation of chart.
-          IS_SOAK_TEST: true
+          IS_ARC_TEST: true
         condition: succeeded()
       - script: |
           az account set -s=$(SUBSCRIPTION_ID)
