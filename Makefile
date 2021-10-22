@@ -183,6 +183,8 @@ setup-kind:
 
 .PHONY: install-helm
 install-helm:
+	# workaround until install script is fixed (https://github.com/helm/helm/issues/10266)
+	export DESIRED_VERSION=v3.7.1
 	helm version --short | grep -q v3 || (curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash)
 
 .PHONY: e2e-local-bootstrap
