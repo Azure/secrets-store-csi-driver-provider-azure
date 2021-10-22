@@ -15,7 +15,7 @@ jobs:
       condition: succeeded()
       env:
         # workaround until helm install script is fixed (https://github.com/helm/helm/issues/10266)
-	      DESIRED_VERSION: v3.7.1
+        DESIRED_VERSION: v3.7.1
     - template: arc-connect.yaml
     - script: |
         az k8s-extension create \
