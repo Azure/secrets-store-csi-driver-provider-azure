@@ -12,7 +12,7 @@ parameters:
 steps:
   - script: |
       echo "version - '${{ parameters.extensionVersion }}'"
-      if [[ ! -z ${{ parameters.extensionVersion }} ]]; then
+      if [[ ${{ parameters.extensionVersion }} != "" ]]; then
         EXTRA_ARGS="--version ${{ parameters.extensionVersion }}"
       fi
 
