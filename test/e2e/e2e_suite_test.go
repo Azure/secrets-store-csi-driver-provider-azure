@@ -65,7 +65,7 @@ var _ = BeforeSuite(func() {
 	By("Creating a Keyvault Client")
 	kvClient = keyvault.NewClient(config)
 
-	if config.IsSoakTest {
+	if config.IsSoakTest || config.IsArcTest {
 		return
 	}
 
@@ -107,7 +107,7 @@ var _ = AfterSuite(func() {
 	// cleanup
 	defer func() {
 		// uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test
-		if !config.IsSoakTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {
+		if !config.IsSoakTest && !config.IsArcTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {
 			if helm.ReleaseExists() {
 				By("Uninstalling Secrets Store CSI Driver and Azure Key Vault Provider via Helm")
 				helm.Uninstall()
