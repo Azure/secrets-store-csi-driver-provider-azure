@@ -6,6 +6,7 @@ package e2e
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/deploy"
@@ -16,11 +17,14 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 	e2eframework "k8s.io/kubernetes/test/e2e/framework"
-	e2ekubectl "k8s.io/kubernetes/test/e2e/framework/kubectl"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
+	testutils "k8s.io/kubernetes/test/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,6 +38,11 @@ var (
 	coreNamespaces = []string{
 		framework.NamespaceKubeSystem,
 	}
+)
+
+const (
+	// podStartTimeout is how long to wait for the pod to be started.
+	podStartTimeout = 5 * time.Minute
 )
 
 func TestE2E(t *testing.T) {
@@ -81,14 +90,16 @@ var _ = BeforeSuite(func() {
 		})
 	}
 
-	// Ensure all pods are running and ready before starting tests
-	podStartupTimeout := e2eframework.TestContext.SystemPodsStartupTimeout
-	for _, namespace := range coreNamespaces {
-		if err := e2epod.WaitForPodsRunningReady(clientSet, namespace, int32(e2eframework.TestContext.MinStartupPods), int32(e2eframework.TestContext.AllowedNotReadyNodes), podStartupTimeout, map[string]string{}); err != nil {
-			e2eframework.DumpAllNamespaceInfo(clientSet, namespace)
-			e2ekubectl.LogFailedContainers(clientSet, namespace, e2eframework.Logf)
-			e2eframework.Failf("error waiting for all pods to be running and ready: %v", err)
-		}
+	// Ensure driver and provider pods are running and ready before starting tests
+	By("Waiting for driver and provider pods to be running and ready before starting tests.")
+	driverAndProviderLabels, err := labels.NewRequirement("app", selection.In, []string{"secrets-store-csi-driver", "csi-secrets-store-provider-azure"})
+	Expect(err).To(BeNil())
+
+	listOpts := metav1.ListOptions{
+		LabelSelector: driverAndProviderLabels.String(),
+	}
+	if err := e2epod.WaitForMatchPodsCondition(clientSet, listOpts, "Running", podStartTimeout, testutils.PodRunningReady); err != nil {
+		e2eframework.Failf("error waiting for driver and provider pods to be running and ready: %v", err)
 	}
 })
 
