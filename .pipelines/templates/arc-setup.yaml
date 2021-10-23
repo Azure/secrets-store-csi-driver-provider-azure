@@ -2,6 +2,7 @@ steps:
   - script: |
       az extension add --name connectedk8s
       az extension add --name k8s-extension
+      az version
     displayName: "add cli extensions"
     condition: succeeded()
   - script: |
