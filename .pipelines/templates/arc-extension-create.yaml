@@ -22,7 +22,7 @@ steps:
       fi
 
       az k8s-extension create \
-      --name $(AZURE_CLUSTER_NAME)\
+      --name $(AZURE_CLUSTER_NAME) \
       --extension-type Microsoft.AzureKeyVaultSecretsProvider \
       --scope cluster \
       --cluster-name $(AZURE_CLUSTER_NAME) \
