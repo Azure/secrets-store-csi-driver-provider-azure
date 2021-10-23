@@ -47,7 +47,7 @@ jobs:
       - template: arc-connect.yaml
       - template: arc-extension-create.yaml
         parameters:
-          azureClusterName: ${AZURE_CLUSTER_NAME}
+          azureClusterName: $(AZURE_CLUSTER_NAME)
           extensionVersion: $(EXT_VERSION)
           releaseTrain: dev
           configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \

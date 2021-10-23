@@ -16,7 +16,7 @@ jobs:
     - template: arc-connect.yaml
     - template: arc-extension-create.yaml
       parameters:
-        azureClusterName: "${AZURE_CLUSTER_NAME}"
+        azureClusterName: $(AZURE_CLUSTER_NAME)
         releaseTrain: preview
         configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
         'secrets-store-csi-driver.rotationPollInterval=30s' \

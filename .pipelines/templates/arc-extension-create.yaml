@@ -11,6 +11,7 @@ parameters:
 
 steps:
   - script: |
+      echo "Installing extension..."
       echo "version - '${{ parameters.extensionVersion }}'"
       if [[ "${{ parameters.extensionVersion }}" != "" ]]; then
         EXTRA_ARGS="--version ${{ parameters.extensionVersion }}"
