@@ -46,6 +46,9 @@ jobs:
         'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
         'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'
 
+        echo "Az version :- "
+        az version
+         
         # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
         echo "verifying extension install status..."
         for i in $(seq 1 30); do
@@ -91,4 +94,4 @@ jobs:
         ciKindCluster: true
         isArcTest: true
         azureEnvironmentFilepath: $(AZURE_ENVIRONMENT_FILEPATH)
-    # - template: teardown.yaml
+    - template: teardown.yaml
