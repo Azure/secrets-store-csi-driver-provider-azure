@@ -91,4 +91,4 @@ jobs:
         ciKindCluster: true
         isArcTest: true
         azureEnvironmentFilepath: $(AZURE_ENVIRONMENT_FILEPATH)
-    - template: teardown.yaml
+    # - template: teardown.yaml
