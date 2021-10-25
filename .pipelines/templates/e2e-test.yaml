@@ -31,9 +31,10 @@ parameters:
 steps:
   - script: |
       echo "Azure Environment Filepath: ${{ parameters.azureEnvironmentFilepath }}"
-      if [[ ! -z ${{ parameters.azureEnvironmentFilepath }} ]]; then
-        export AZURE_ENVIRONMENT_FILEPATH={{ parameters.azureEnvironmentFilepath }}
+      if [[ ! -z "${{ parameters.azureEnvironmentFilepath }}" ]]; then
+        export AZURE_ENVIRONMENT_FILEPATH="{{ parameters.azureEnvironmentFilepath }}"
       fi
+      
       # Set TEST_WiNDOWS=true to run the test on Windows
       if [ "$(OS_TYPE)" == "windows" ] ; then
         export TEST_WINDOWS=true
