@@ -29,6 +29,7 @@ parameters:
     type: string
   - name: osType
     type: string
+    default: ""
 
 steps:
   - script: |
