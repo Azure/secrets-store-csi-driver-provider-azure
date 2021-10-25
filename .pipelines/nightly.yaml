@@ -40,4 +40,4 @@ jobs:
       clusterConfigs:
       - "csi-secrets-store-soak-linux-aks"
       - "csi-secrets-store-soak-win-aks"
-  - template: templates/e2e-test-kind-arc.yaml
+  - template: templates/arc/arc-e2e-test-kind.yaml
