@@ -51,6 +51,5 @@ steps:
       helm ls -A
       helm get values ${{ parameters.azureClusterName }} -n kube-system
       kubectl get pods -n kube-system
-      kubectl get pods -n kube-system -l app=csi-secrets-store-provider-azure -oyaml
     displayName: "install AzureKeyVaultSecretsProvider extension"
     condition: succeeded()

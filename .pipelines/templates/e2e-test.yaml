@@ -27,16 +27,19 @@ parameters:
     default: false
   - name: azureEnvironmentFilepath
     type: string
+  - name: osType
+    type: string
 
 steps:
   - script: |
       echo "Azure Environment Filepath: ${{ parameters.azureEnvironmentFilepath }}"
       if [[ ! -z "${{ parameters.azureEnvironmentFilepath }}" ]]; then
         export AZURE_ENVIRONMENT_FILEPATH="{{ parameters.azureEnvironmentFilepath }}"
+        echo $AZURE_ENVIRONMENT_FILEPATH
       fi
-      
+
       # Set TEST_WiNDOWS=true to run the test on Windows
-      if [ "$(OS_TYPE)" == "windows" ] ; then
+      if [ "${{ parameters.osType }}" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
 
