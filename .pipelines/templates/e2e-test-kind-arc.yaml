@@ -7,25 +7,25 @@ jobs:
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e-kind
     steps:
-    - template: az-login.yaml
-    - template: arc-setup.yaml
-    - script: |
-        make install-helm install-kubectl setup-kind
-      displayName: "install dependencies and setup kind"
-      condition: succeeded()
-    - template: arc-connect.yaml
-    - template: arc-extension-create.yaml
-      parameters:
-        azureClusterName: $(AZURE_CLUSTER_NAME)
-        releaseTrain: preview
-        configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
-        'secrets-store-csi-driver.rotationPollInterval=30s' \
-        'secrets-store-csi-driver.syncSecret.enabled=true' \
-        'linux.volumes[0].name=$(VOLUME_NAME)' \
-        'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
-        'linux.volumes[0].hostPath.type=File' \
-        'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
-        'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
+    # - template: az-login.yaml
+    # - template: arc-setup.yaml
+    # - script: |
+    #     make install-helm install-kubectl setup-kind
+    #   displayName: "install dependencies and setup kind"
+    #   condition: succeeded()
+    # - template: arc-connect.yaml
+    # - template: arc-extension-create.yaml
+    #   parameters:
+    #     azureClusterName: $(AZURE_CLUSTER_NAME)
+    #     releaseTrain: preview
+    #     configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
+    #     'secrets-store-csi-driver.rotationPollInterval=30s' \
+    #     'secrets-store-csi-driver.syncSecret.enabled=true' \
+    #     'linux.volumes[0].name=$(VOLUME_NAME)' \
+    #     'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
+    #     'linux.volumes[0].hostPath.type=File' \
+    #     'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
+    #     'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
 
     # - script: |
     #     az k8s-extension create \
