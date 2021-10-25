@@ -101,7 +101,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets for custom
 		})
 	})
 
-	FIt("should read secret from pod", func() {
+	It("should read secret from pod", func() {
 		if config.AzureEnvironmentFilePath == "" {
 			Skip("skipping custom env test as AZURE_ENVIRONMENT_FILEPATH not set")
 		}
