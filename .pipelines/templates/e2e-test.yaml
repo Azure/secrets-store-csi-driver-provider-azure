@@ -35,7 +35,7 @@ steps:
   - script: |
       echo "Azure Environment Filepath: ${{ parameters.azureEnvironmentFilepath }}"
       if [[ ! -z "${{ parameters.azureEnvironmentFilepath }}" ]]; then
-        export AZURE_ENVIRONMENT_FILEPATH={{ parameters.azureEnvironmentFilepath }}
+        export AZURE_ENVIRONMENT_FILEPATH=${{ parameters.azureEnvironmentFilepath }}
         echo $AZURE_ENVIRONMENT_FILEPATH
       fi
 
