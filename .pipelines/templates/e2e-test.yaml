@@ -34,7 +34,6 @@ steps:
       # set AZURE_ENVIRONMENT_FILEPATH
       if [[ ! -z "$(AZURE_ENVIRONMENT_FILEPATH)" ]]; then
         export AZURE_ENVIRONMENT_FILEPATH=$(AZURE_ENVIRONMENT_FILEPATH)
-        echo "$(AZURE_ENVIRONMENT_FILEPATH) is set"
       fi
 
       # Set TEST_WiNDOWS=true to run the test on Windows

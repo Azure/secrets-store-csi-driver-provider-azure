@@ -43,7 +43,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 
 		// waiting for 300 seconds since 'reconcilerIntervalInSeconds' is set to this value in extension configuration
 		By("Waiting for arc extension to reconcile the arguments")
-		time.Sleep(time.Second * 360)
+		time.Sleep(time.Second * 300)
 
 		daemonSet = daemonset.Get(daemonset.GetInput{
 			Namespace: framework.NamespaceKubeSystem,
@@ -51,7 +51,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 			Getter:    kubeClient,
 		})
 		Expect(daemonSet).NotTo(BeNil())
-		fmt.Printf("%v", daemonSet.Spec.Template.Spec.Containers[1])
+		fmt.Printf("%v", daemonSet)
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
 			if arg == newRotationPollIntervalValue {
