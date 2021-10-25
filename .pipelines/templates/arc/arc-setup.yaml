@@ -2,6 +2,19 @@ parameters:
   version: 0.12.0
 
 steps:
+  - script: |
+      az extension add --name connectedk8s
+      az extension add --name k8s-extension
+      echo "az version:"
+      az version
+    displayName: "add cli extensions"
+    condition: succeeded()
+  - script: |
+      clusterName=sscd-arc-e2e-$(openssl rand -hex 6)
+      echo "##vso[task.setvariable variable=AZURE_CLUSTER_NAME]$clusterName"
+      echo "cluster name is set to - $clusterName"
+    displayName: "set cluster name"
+    condition: succeeded()
   - bash: |
       mkdir -p oras/
       curl -LO https://github.com/deislabs/oras/releases/download/v${{ parameters.version }}/oras_${{ parameters.version }}_linux_amd64.tar.gz

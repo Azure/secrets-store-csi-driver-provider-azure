@@ -29,4 +29,4 @@ jobs:
       - "linux"
       - "windows"
   # this will ensure any changes to provider works on arc extension too.
-  - template: templates/e2e-arc-extension-test.yaml
+  - template: templates/arc/e2e-arc-extension-test.yaml

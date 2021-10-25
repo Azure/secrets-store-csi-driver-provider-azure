@@ -25,8 +25,6 @@ parameters:
   - name: isArcTest
     type: boolean
     default: false
-  - name: azureEnvironmentFilepath
-    type: string
   - name: osType
     type: string
     default: ""
@@ -34,8 +32,9 @@ parameters:
 steps:
   - script: |
       # set AZURE_ENVIRONMENT_FILEPATH
-      if [[ ! -z "${{ parameters.azureEnvironmentFilepath }}" ]]; then
-        export AZURE_ENVIRONMENT_FILEPATH=${{ parameters.azureEnvironmentFilepath }}
+      if [[ ! -z "$(AZURE_ENVIRONMENT_FILEPATH)" ]]; then
+        export AZURE_ENVIRONMENT_FILEPATH=$(AZURE_ENVIRONMENT_FILEPATH)
+        echo "$(AZURE_ENVIRONMENT_FILEPATH) is set"
       fi
 
       # Set TEST_WiNDOWS=true to run the test on Windows

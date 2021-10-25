@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"time"
+	"fmt"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/daemonset"
@@ -42,7 +43,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 
 		// waiting for 300 seconds since 'reconcilerIntervalInSeconds' is set to this value in extension configuration
 		By("Waiting for arc extension to reconcile the arguments")
-		time.Sleep(time.Second * 300)
+		time.Sleep(time.Second * 360)
 
 		daemonSet = daemonset.Get(daemonset.GetInput{
 			Namespace: framework.NamespaceKubeSystem,
@@ -50,6 +51,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 			Getter:    kubeClient,
 		})
 		Expect(daemonSet).NotTo(BeNil())
+		fmt.Printf("%v", daemonSet.Spec.Template.Spec.Containers[1])
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
 			if arg == newRotationPollIntervalValue {

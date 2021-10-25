@@ -46,7 +46,6 @@ OSVERSION ?= 1809
 # Output type of docker buildx build
 OUTPUT_TYPE ?= registry
 BUILDKIT_VERSION ?= v0.8.1
-QEMUVERSION ?= 5.2.0-2
 
 # E2E test variables
 KIND_VERSION ?= 0.11.0

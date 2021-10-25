@@ -7,7 +7,7 @@ jobs:
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e-kind
     steps:
-    - template: az-login.yaml
+    - template: ../az-login.yaml
     - template: arc-setup.yaml
     - script: |
         make install-helm install-kubectl setup-kind
@@ -26,10 +26,9 @@ jobs:
         'linux.volumes[0].hostPath.type=File' \
         'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
         'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
-    - template: e2e-test.yaml
+    - template: ../e2e-test.yaml
       parameters:
         testName: "arc extension e2e test"
         ciKindCluster: true
         isArcTest: true
-        azureEnvironmentFilepath: $(AZURE_ENVIRONMENT_FILEPATH)
-    - template: teardown.yaml
+    - template: ../teardown.yaml

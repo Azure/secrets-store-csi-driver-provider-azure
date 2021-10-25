@@ -7,11 +7,11 @@ jobs:
       value: cloudenvfile-vol
     - group: csi-secrets-store-e2e
     steps:
-      - template: build-images.yaml
+      - template: ../build-images.yaml
         parameters:
           registry: e2e
           ciKindCluster: true
-      - template: install-oras.yaml
+      - template: arc-setup.yaml
       - script: |
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
           version="0.0.$buildNumber"
@@ -27,7 +27,6 @@ jobs:
           oras push $(STAGING_REGISTRY):$version ./csi-secrets-store-provider-azure-$version.tgz:application/tar+gzip --debug
         displayName: 'Push OCI helm chart to ACR'
         condition: succeeded()
-      - template: arc-setup.yaml
       - template: arc-connect.yaml
       - template: arc-extension-create.yaml
         parameters:
@@ -44,12 +43,11 @@ jobs:
           'linux.volumes[0].hostPath.type=File' \
           'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
           'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
-      - template: e2e-test.yaml
+      - template: ../e2e-test.yaml
         parameters:
           testName: "arc extension e2e test"
           ciKindCluster: true
           isArcTest: true
-          azureEnvironmentFilepath: $(AZURE_ENVIRONMENT_FILEPATH)
       - script: |
           az account set -s=$(SUBSCRIPTION_ID)
           az acr login -n $(STAGING_REGISTRY_NAME)
@@ -60,4 +58,4 @@ jobs:
           az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
-      - template: teardown.yaml
+      - template: ../teardown.yaml
