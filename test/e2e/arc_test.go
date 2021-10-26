@@ -23,7 +23,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 		secretStoreCSIDriverName     = "secrets-store-csi-driver"
 	)
 
-	It("should reconcile them to original values", func() {
+	FIt("should reconcile them to original values", func() {
 		if !config.IsArcTest {
 			Skip("test case only runs while testing arc extension")
 		}

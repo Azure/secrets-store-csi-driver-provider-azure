@@ -25,6 +25,7 @@ steps:
       --cluster-type connectedClusters \
       --release-train ${{ parameters.releaseTrain }} \
       --release-namespace kube-system \
+      --debug \
       --configuration-settings ${{ parameters.configurationSettings }} \
       $EXTRA_ARGS
 
