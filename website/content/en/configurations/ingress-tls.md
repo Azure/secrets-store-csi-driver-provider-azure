@@ -80,7 +80,7 @@ export TENANT_ID=[YOUR TENANT ID]
 
 ```yaml
 cat <<EOF | kubectl apply -n $NAMESPACE -f -
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
   name: azure-tls

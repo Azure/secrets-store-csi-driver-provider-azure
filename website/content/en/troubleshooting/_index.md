@@ -9,8 +9,7 @@ description: >
 
 - [Logging](#logging)
   - [Isolate errors from logs](#isolate-errors-from-logs)
-    - [For Azure Key Vault provider versions less than 0.0.9](#for-azure-key-vault-provider-versions-less-than-009)
-    - [For Azure Key Vault provider versions equal to and greater than 0.0.9](#for-azure-key-vault-provider-versions-equal-to-and-greater-than-009)
+    - [For Azure Key Vault provider logs](#for-azure-key-vault-provider-logs)
     - [For CSI driver logs](#for-csi-driver-logs)
 - [Common Issues](#common-issues)
   - [driver name `secrets-store.csi.k8s.io` not found in the list of registered CSI drivers](#driver-name-secrets-storecsik8sio-not-found-in-the-list-of-registered-csi-drivers)
@@ -27,19 +26,9 @@ Below is a list of commands you can use to view relevant logs of Azure Key Vault
 
 You can use `grep ^E` and `--since` flag from `kubectl` to isolate any errors occurred after a given duration.
 
-#### For Azure Key Vault provider versions less than 0.0.9
+#### For Azure Key Vault provider logs
 
-To troubleshoot issues with the csi driver and the provider, you can look at logs from the `secrets-store` container of the csi driver pod running on the same node as your application pod:
-
-```bash
-# find the secrets store csi driver pod running on the same node as your application pod
-kubectl get pods -l app=secrets-store-csi-driver -o wide
-kubectl logs <driver pod name> secrets-store --since=1h | grep ^E
-```
-
-#### For Azure Key Vault provider versions equal to and greater than 0.0.9
-
-For `0.0.9+` the provider logs are available in the provider pods. To troubleshoot issues with the provider, you can look at logs from the provider pod running on the same node as your application pod
+To troubleshoot issues with the provider, you can look at logs from the provider pod running on the same node as your application pod
 
 ```bash
 # find the csi-secrets-store-provider-azure pod running on the same node as your application pod
