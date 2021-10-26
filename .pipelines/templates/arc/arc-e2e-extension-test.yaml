@@ -15,7 +15,7 @@ jobs:
       - script: |
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
           version="0.0.$buildNumber"
-          version="0.0.99"
+          version="0.2.0"
           echo "##vso[task.setvariable variable=EXT_VERSION]$version"
 
           # helm dependency update manifest_staging/charts/csi-secrets-store-provider-azure
@@ -53,13 +53,13 @@ jobs:
           kubectl get ec -A -o yaml
         displayName: "test ec"
         condition: always()
-      - script: |
-          az account set -s=$(SUBSCRIPTION_ID)
-          az acr login -n $(STAGING_REGISTRY_NAME)
-          registry=$(STAGING_REGISTRY)
-          respository=${registry#*/}
-          echo "deleting - $respository:$(EXT_VERSION)"
-          az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
-        displayName: "delete e2e OCI helm chart"
-        condition: always()
+      # - script: |
+      #     az account set -s=$(SUBSCRIPTION_ID)
+      #     az acr login -n $(STAGING_REGISTRY_NAME)
+      #     registry=$(STAGING_REGISTRY)
+      #     respository=${registry#*/}
+      #     echo "deleting - $respository:$(EXT_VERSION)"
+      #     az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
+      #   displayName: "delete e2e OCI helm chart"
+      #   condition: always()
       - template: ../teardown.yaml
