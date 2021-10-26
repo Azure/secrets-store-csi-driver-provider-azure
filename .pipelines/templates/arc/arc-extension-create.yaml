@@ -46,6 +46,5 @@ steps:
       helm ls -A
       helm get values ${{ parameters.azureClusterName }} -n kube-system
       kubectl get pods -n kube-system
-      kubectl get ec -n kube-system ${{ parameters.azureClusterName }} -oyaml
     displayName: "install AzureKeyVaultSecretsProvider extension"
     condition: succeeded()
