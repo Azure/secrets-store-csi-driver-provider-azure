@@ -14,6 +14,9 @@ jobs:
     - script: |
         az extension add --name connectedk8s
         az extension add --name k8s-extension
+
+        echo "az version"
+        az version
       displayName: "add cli extensions"
     - script: |
         make install-helm install-kubectl setup-kind
@@ -62,17 +65,17 @@ jobs:
         # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
         echo "verifying extension install status..."
         for i in $(seq 1 25); do
-          installState=$(az k8s-extension show -c ${AZURE_CLUSTER_NAME} -t connectedClusters -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --query "installState" -otsv)
-          if [ "$installState" == "Installed" ]; then
+          provisioningState=$(az k8s-extension show -c ${AZURE_CLUSTER_NAME} -t connectedClusters -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --query "provisioningState" -otsv)
+          if [ "$provisioningState" == "Succeeded" ]; then
             echo "AzureKeyVaultSecretsProvider extension is 'Installed'"
             break
           else
-            echo "Install state - $installState"
+            echo "Install state - $provisioningState"
             sleep 1
           fi
         done
 
-        if [ "$installState" != "Installed" ]; then
+        if [ "$provisioningState" != "Succeeded" ]; then
           echo "failed to install extension."
           exit 1
         fi

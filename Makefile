@@ -48,7 +48,7 @@ OUTPUT_TYPE ?= registry
 BUILDKIT_VERSION ?= v0.8.1
 
 # E2E test variables
-KIND_VERSION ?= 0.11.0
+KIND_VERSION ?= 0.11.1
 KIND_K8S_VERSION ?= v1.21.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
