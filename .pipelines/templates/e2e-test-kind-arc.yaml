@@ -67,7 +67,7 @@ jobs:
             echo "AzureKeyVaultSecretsProvider extension is 'Installed'"
             break
           else
-            echo "Install state - $provisioningState"
+            echo "Provisioning state: $provisioningState"
             sleep 1
           fi
         done
