@@ -26,7 +26,7 @@ steps:
       --release-train ${{ parameters.releaseTrain }} \
       --release-namespace kube-system \
       --configuration-settings ${{ parameters.configurationSettings }} \
-      ${EXTRA_ARGS:-} > /dev/null
+      $EXTRA_ARGS
 
       # Arc extensions will go through different phases (Pending, Installed etc.) of installation. We want to make sure extension is 'Installed' before running e2e tests.
       echo "verifying extension install status..."
@@ -47,7 +47,5 @@ steps:
       helm ls -A
       helm get values ${{ parameters.azureClusterName }} -n kube-system
       kubectl get pods -n kube-system
-      sleep 10
-      kubectl get ec -A
     displayName: "install AzureKeyVaultSecretsProvider extension"
     condition: succeeded()
