@@ -44,7 +44,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 
 		// waiting for 300 seconds since 'reconcilerIntervalInSeconds' is set to this value in extension configuration
 		By("Waiting for arc extension to reconcile the arguments")
-		time.Sleep(time.Second * 600)
+		time.Sleep(time.Second * 300)
 
 		daemonSet = daemonset.Get(daemonset.GetInput{
 			Namespace: framework.NamespaceKubeSystem,

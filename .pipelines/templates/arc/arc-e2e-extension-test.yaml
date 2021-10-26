@@ -46,6 +46,10 @@ jobs:
           ciKindCluster: true
           isArcTest: true
       - script: |
+          kubectl get ec -A -o yaml
+        displayName: "test ec"
+        condition: always()
+      - script: |
           az account set -s=$(SUBSCRIPTION_ID)
           az acr login -n $(STAGING_REGISTRY_NAME)
           registry=$(STAGING_REGISTRY)
