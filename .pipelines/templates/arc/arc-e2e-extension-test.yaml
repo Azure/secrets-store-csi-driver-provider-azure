@@ -54,4 +54,4 @@ jobs:
           az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
         displayName: "delete e2e OCI helm chart"
         condition: always()
-      - template: ../teardown.yaml
+      # - template: ../teardown.yaml
