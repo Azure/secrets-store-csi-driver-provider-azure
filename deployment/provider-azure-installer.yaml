@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.0.0-rc.0
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.0.0
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix:///provider/azure.sock
