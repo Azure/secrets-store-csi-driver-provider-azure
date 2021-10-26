@@ -19,30 +19,39 @@ parameters:
   - name: testWithGPU
     type: boolean
     default: false
+  - name: ciKindCluster
+    type: boolean
+    default: false
+  - name: isArcTest
+    type: boolean
+    default: false
+  - name: osType
+    type: string
+    default: ""
 
 steps:
   - script: |
+      # set AZURE_ENVIRONMENT_FILEPATH
+      if [[ ! -z "$(AZURE_ENVIRONMENT_FILEPATH)" ]]; then
+        export AZURE_ENVIRONMENT_FILEPATH=$(AZURE_ENVIRONMENT_FILEPATH)
+      fi
       # Set TEST_WiNDOWS=true to run the test on Windows
-      if [ "$(OS_TYPE)" == "windows" ] ; then
+      if [ "${{ parameters.osType }}" == "windows" ] ; then
         export TEST_WINDOWS=true
       fi
-
       # Set TEST_GPU=true to run the test on GPU nodepool
       if [[ ${{ parameters.testWithGPU }} == True ]]; then
         export TEST_GPU=true
       fi
-
       if [ "${{ parameters.setRegistry }}" == True ] ; then
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
       fi
-
       if [ "${{ parameters.testReleasedVersion }}" == True ] ; then
         #This gets latest released chart(tgz) version from charts directory
         export HELM_CHART_DIR=$(ls -h charts/*.tgz | sort --version-sort --field-separator=- --key=6 | tail -n 1)
       else
         export HELM_CHART_DIR=manifest_staging/charts/csi-secrets-store-provider-azure
       fi
-
       make e2e-test
     displayName: "${{ parameters.testName }}"
     env:
@@ -60,3 +69,7 @@ steps:
         CONFIG_IMAGE_VERSION: ""
       ${{ if parameters.isBackwardCompatibilityTest }}:
         IS_BACKWARD_COMPATIBILITY_TEST: ${{ parameters.isBackwardCompatibilityTest }}
+      ${{ if parameters.ciKindCluster }}:
+        CI_KIND_CLUSTER: ${{ parameters.ciKindCluster }}
+      ${{ if parameters.isArcTest }}:
+        IS_ARC_TEST: ${{ parameters.isArcTest }}

@@ -1,6 +1,7 @@
 jobs:
   - job:
-    timeoutInMinutes: 10
+    # [nilekh] : temporarily commenting timeout to address 'kind cluster create' taking longer than expected.
+    # timeoutInMinutes: 10
     cancelTimeoutInMinutes: 5
     dependsOn:
     - lint
