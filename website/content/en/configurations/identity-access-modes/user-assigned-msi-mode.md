@@ -13,7 +13,7 @@ description: >
 - `SecretProviderClass`
 ```yaml
 # This is a SecretProviderClass example using user-assigned identity to access Key Vault
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
   name: azure-kvname-user-msi

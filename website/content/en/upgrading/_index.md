@@ -7,6 +7,12 @@ description: >
   This document highlights the required actions for upgrading to the latest release
 ---
 
+## Upgrading to `v1.0.0` release for the driver and provider
+
+> Helm chart version `1.0.0`
+
+The `v1.0.0` version of the Secrets Store CSI Driver and later uses the `v1` API version for `SecretProviderClass` and `SecretProviderClassPodStatus` `CustomResourceDefinition`s. `secrets-store.csi.x-k8s.io/v1alpha1` version of the CRDs will continue to work, but consider updating your YAMLs to use `secrets-store.csi.x-k8s.io/v1`.
+
 ## Upgrading to Helm chart version 0.0.20+
 
 {{% alert title="Warning" color="warning" %}}
@@ -30,7 +36,6 @@ E0610 22:27:02.283100       1 secretproviderclasspodstatus_controller.go:325] "f
 Prior to `v0.0.14` release of the Secrets Store CSI Driver, the driver communicated with the provider by invoking the provider binary installed on the host. However with `v0.0.14` the driver now introduces a new option to communicate with the provider using gRPC. This feature is enabled by a feature flag in the driver `--grpc-supported-providers=azure`. The `0.0.9` release of the Azure Key Vault provider implements the gRPC server changes and is no longer backward compatible with the Secrets Store CSI Driver versions < `v0.0.14`.
 
 Please carefully read this doc as you upgrade to the latest release of the Azure Key Vault Provider
-
 
 ### If the Secrets Store CSI Driver and Azure Key Vault Provider were installed using helm charts from this [repo](https://github.com/Azure/secrets-store-csi-driver-provider-azure/blob/master/charts/csi-secrets-store-provider-azure/README.md)
 

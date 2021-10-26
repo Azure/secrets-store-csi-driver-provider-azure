@@ -85,7 +85,7 @@ Create `SecretProviderClass` in your cluster that contains all the required para
 
 ```yaml
 cat <<EOF | kubectl apply -f -
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
   name: azure-kvname
