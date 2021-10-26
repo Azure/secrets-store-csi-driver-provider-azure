@@ -33,4 +33,3 @@ steps:
       make e2e-bootstrap
     displayName: "Build and push azure keyvault provider image"
     condition: succeeded()
-
