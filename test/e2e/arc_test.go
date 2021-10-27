@@ -53,7 +53,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
 			if arg == newRotationPollIntervalValue {
-				// Manually overridden value should be reverted by arc extension reconciliation.
+				// Manually overridden value should be reverted by arc extension reconciliation
 				Expect(arg).NotTo(Equal(newRotationPollIntervalValue))
 			}
 		}
