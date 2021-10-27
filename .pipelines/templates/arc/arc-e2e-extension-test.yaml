@@ -50,16 +50,12 @@ jobs:
           ciKindCluster: true
           isArcTest: true
       - script: |
-          kubectl get ec -A -o yaml
-        displayName: "test ec"
+          az account set -s=$(SUBSCRIPTION_ID)
+          az acr login -n $(STAGING_REGISTRY_NAME)
+          registry=$(STAGING_REGISTRY)
+          respository=${registry#*/}
+          echo "deleting - $respository:$(EXT_VERSION)"
+          az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
+        displayName: "delete e2e OCI helm chart"
         condition: always()
-      # - script: |
-      #     az account set -s=$(SUBSCRIPTION_ID)
-      #     az acr login -n $(STAGING_REGISTRY_NAME)
-      #     registry=$(STAGING_REGISTRY)
-      #     respository=${registry#*/}
-      #     echo "deleting - $respository:$(EXT_VERSION)"
-      #     az acr repository delete --name $(STAGING_REGISTRY_NAME) -t $respository:$(EXT_VERSION) -y || true
-      #   displayName: "delete e2e OCI helm chart"
-      #   condition: always()
       - template: ../teardown.yaml

@@ -25,7 +25,6 @@ steps:
       --cluster-type connectedClusters \
       --release-train ${{ parameters.releaseTrain }} \
       --release-namespace kube-system \
-      --debug \
       --configuration-settings ${{ parameters.configurationSettings }} \
       $EXTRA_ARGS
 
@@ -45,9 +44,17 @@ steps:
         echo "failed to install extension."
         exit 1
       fi
+
+      echo "Helm charts:"
       helm ls -A
+
+      echo "Helm values:"
       helm get values ${{ parameters.azureClusterName }} -n kube-system
+
+      echo "kube-system:"
       kubectl get pods -n kube-system
+
+      echo "azure-arc:"
       kubectl get pods -n azure-arc
     displayName: "install AzureKeyVaultSecretsProvider extension"
     condition: succeeded()

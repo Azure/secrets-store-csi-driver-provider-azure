@@ -23,7 +23,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 		secretStoreCSIDriverName     = "secrets-store-csi-driver"
 	)
 
-	FIt("should reconcile them to original values", func() {
+	It("should reconcile them to original values", func() {
 		if !config.IsArcTest {
 			Skip("test case only runs while testing arc extension")
 		}
@@ -52,7 +52,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 			Getter:    kubeClient,
 		})
 		Expect(daemonSet).NotTo(BeNil())
-		con, _ := json.MarshalIndent(daemonSet, "", "  ")
+		con, _ := json.MarshalIndent(daemonSet.Spec.Template.Spec.Containers[1], "", "  ")
 		fmt.Printf("%s\n", con)
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
