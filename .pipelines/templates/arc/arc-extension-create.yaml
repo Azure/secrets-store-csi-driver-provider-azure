@@ -36,7 +36,7 @@ steps:
           echo "AzureKeyVaultSecretsProvider extension is 'Installed'"
           break
         else
-          echo "Provisioning state - '$provisioningState'"
+          echo "Provisioning state: '$provisioningState'"
           sleep 2
         fi
       done
@@ -45,16 +45,9 @@ steps:
         exit 1
       fi
 
-      echo "Helm charts:"
       helm ls -A
-
-      echo "Helm values:"
       helm get values ${{ parameters.azureClusterName }} -n kube-system
-
-      echo "kube-system:"
       kubectl get pods -n kube-system
-
-      echo "azure-arc:"
       kubectl get pods -n azure-arc
     displayName: "install AzureKeyVaultSecretsProvider extension"
     condition: succeeded()

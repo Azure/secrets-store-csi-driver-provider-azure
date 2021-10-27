@@ -4,8 +4,6 @@
 package e2e
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
@@ -52,8 +50,6 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 			Getter:    kubeClient,
 		})
 		Expect(daemonSet).NotTo(BeNil())
-		con, _ := json.MarshalIndent(daemonSet.Spec.Template.Spec.Containers[1], "", "  ")
-		fmt.Printf("%s\n", con)
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
 			if arg == newRotationPollIntervalValue {
