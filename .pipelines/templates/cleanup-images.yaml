@@ -1,17 +1,34 @@
+parameters:
+  - name: imageVersion
+    type: string
+  - name: registryRepo
+    type: string
+  - name: subscriptionId
+    type: string
+  - name: registryName
+    type: string
+  - name: isMultiArch
+    type: boolean
+    default: true
+
 steps:
   - script: |
       # an empty tag will result in deleting the whole repo.
-      if [[ -n "${IMAGE_VERSION:-}" ]]; then
+      if [[ ! -z "${{ parameters.imageVersion }}" ]]; then
         # Allow errors in case the images do not exist
         set +e
-        az account set -s=$(SUBSCRIPTION_ID)
-        az acr login -n $(REGISTRY_NAME)
+        az account set -s=${{ parameters.subscriptionId }}
+        az acr login -n ${{ parameters.registryName }}
 
-        for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64; do
-          az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-$suffix -y || true
-        done
+        if [[ ${{ parameters.isMultiArch }} == True ]]; then
+          for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64; do
+            # az acr repository delete --name ${{ parameters.registryName }} --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-$suffix -y || true
+            az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${IMAGE_VERSION}-$suffix -y || true
+          done
+        fi
 
-        az acr repository delete --name $(REGISTRY_NAME) --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION} -y || true
+        # az acr repository delete --name ${{ parameters.registryName }} --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION} -y || true
+        az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${IMAGE_VERSION} -y || true
       fi
     condition: always()
     displayName: "Cleanup"

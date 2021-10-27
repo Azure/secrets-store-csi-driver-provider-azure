@@ -13,5 +13,6 @@ pr:
 pool: staging-pool
 
 jobs:
-  - template: .pipelines/templates/unit-test.yaml
-  - template: .pipelines/templates/e2e-test-kind.yaml
+  - template: .pipelines/templates/arc/arc-e2e-extension-test.yaml
+  # - template: .pipelines/templates/unit-test.yaml
+  # - template: .pipelines/templates/e2e-test-kind.yaml

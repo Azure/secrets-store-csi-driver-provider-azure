@@ -109,3 +109,8 @@ jobs:
         - template: cleanup-role-assignments.yaml
         - template: teardown.yaml
         - template: cleanup-images.yaml
+          parameters:
+            imageVersion: $(IMAGE_VERSION)
+            registryRepo: "k8s/csi/secrets-store/provider-azure"
+            susbcriptionId: $(SUBSCRIPTION_ID)
+            registryName: $(REGISTRY_NAME)
