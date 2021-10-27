@@ -52,7 +52,7 @@ var _ = Describe("When extension arguments are manually overridden", func() {
 			Getter:    kubeClient,
 		})
 		Expect(daemonSet).NotTo(BeNil())
-		con, _ := json.MarshalIndent(daemonSet, "", "  ")
+		con, _ := json.MarshalIndent(daemonSet.Spec.Template.Spec.Containers, "", "  ")
 		fmt.Printf("%s\n", con)
 
 		for _, arg := range daemonSet.Spec.Template.Spec.Containers[1].Args {
