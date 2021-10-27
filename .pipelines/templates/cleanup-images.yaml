@@ -23,12 +23,13 @@ steps:
         if [[ ${{ parameters.isMultiArch }} == True ]]; then
           for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64; do
             # az acr repository delete --name ${{ parameters.registryName }} --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION}-$suffix -y || true
-            az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${IMAGE_VERSION}-$suffix -y || true
+            az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${{ parameters.imageVersion }}-$suffix -y || true
           done
         fi
 
         # az acr repository delete --name ${{ parameters.registryName }} --image k8s/csi/secrets-store/provider-azure:${IMAGE_VERSION} -y || true
-        az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${IMAGE_VERSION} -y || true
+        echo "deleting image: ${{ parameters.registryRepo }}:${{ parameters.imageVersion }}"
+        az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${{ parameters.imageVersion }} -y || true
       fi
     condition: always()
     displayName: "Cleanup"

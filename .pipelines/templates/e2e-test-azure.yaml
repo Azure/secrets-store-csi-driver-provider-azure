@@ -112,5 +112,5 @@ jobs:
           parameters:
             imageVersion: $(IMAGE_VERSION)
             registryRepo: "k8s/csi/secrets-store/provider-azure"
-            susbcriptionId: $(SUBSCRIPTION_ID)
+            subscriptionId: $(SUBSCRIPTION_ID)
             registryName: $(REGISTRY_NAME)
