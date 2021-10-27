@@ -31,7 +31,7 @@ jobs:
           echo "##vso[task.setvariable variable=REGISTRY_REPO]$respository"
         displayName: 'Push OCI helm chart to ACR'
         condition: succeeded()
-      # - template: arc-connect.yaml
+      # - template: arc-connect.yaml 
       # - template: arc-extension-create.yaml
       #   parameters:
       #     azureClusterName: $(AZURE_CLUSTER_NAME)
@@ -54,9 +54,9 @@ jobs:
       #     isArcTest: true
       # - template: ../teardown.yaml
       - template: ../cleanup-images.yaml
-          parameters:
-            imageVersion: $(EXT_VERSION)
-            registryRepo: $(REGISTRY_REPO)
-            susbcriptionId: $(SUBSCRIPTION_ID)
-            registryName: $(STAGING_REGISTRY_NAME)
-            isMultiArch: false
+        parameters:
+          imageVersion: $(EXT_VERSION)
+          registryRepo: $(REGISTRY_REPO)
+          susbcriptionId: $(SUBSCRIPTION_ID)
+          registryName: $(STAGING_REGISTRY_NAME)
+          isMultiArch: false
