@@ -1,6 +1,6 @@
 jobs:
   - job:
-    timeoutInMinutes: 10
+    timeoutInMinutes: 15
     cancelTimeoutInMinutes: 5
     dependsOn:
     - lint
