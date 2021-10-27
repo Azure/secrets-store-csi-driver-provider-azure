@@ -31,28 +31,28 @@ jobs:
           echo "##vso[task.setvariable variable=REGISTRY_REPO]$respository"
         displayName: 'Push OCI helm chart to ACR'
         condition: succeeded()
-      # - template: arc-connect.yaml
-      # - template: arc-extension-create.yaml
-      #   parameters:
-      #     azureClusterName: $(AZURE_CLUSTER_NAME)
-      #     extensionVersion: $(EXT_VERSION)
-      #     releaseTrain: dev
-      #     configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
-      #     'secrets-store-csi-driver.rotationPollInterval=30s' \
-      #     'linux.image.tag=$(IMAGE_VERSION)' \
-      #     'linux.image.repository=$(REGISTRY)/provider-azure' \
-      #     'secrets-store-csi-driver.syncSecret.enabled=true' \
-      #     'linux.volumes[0].name=$(VOLUME_NAME)' \
-      #     'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
-      #     'linux.volumes[0].hostPath.type=File' \
-      #     'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
-      #     'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
-      # - template: ../e2e-test.yaml
-      #   parameters:
-      #     testName: "arc extension e2e test"
-      #     ciKindCluster: true
-      #     isArcTest: true
-      # - template: ../teardown.yaml
+      - template: arc-connect.yaml
+      - template: arc-extension-create.yaml
+        parameters:
+          azureClusterName: $(AZURE_CLUSTER_NAME)
+          extensionVersion: $(EXT_VERSION)
+          releaseTrain: dev
+          configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
+          'secrets-store-csi-driver.rotationPollInterval=30s' \
+          'linux.image.tag=$(IMAGE_VERSION)' \
+          'linux.image.repository=$(REGISTRY)/provider-azure' \
+          'secrets-store-csi-driver.syncSecret.enabled=true' \
+          'linux.volumes[0].name=$(VOLUME_NAME)' \
+          'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
+          'linux.volumes[0].hostPath.type=File' \
+          'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
+          'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
+      - template: ../e2e-test.yaml
+        parameters:
+          testName: "arc extension e2e test"
+          ciKindCluster: true
+          isArcTest: true
+      - template: ../teardown.yaml
       - template: ../cleanup-images.yaml
         parameters:
           imageVersion: $(EXT_VERSION)
