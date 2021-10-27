@@ -14,14 +14,14 @@ parameters:
 steps:
   - script: |
       # an empty tag will result in deleting the whole repo.
-      if [[ ! -z "${{ parameters.imageVersion }}" ]]; then
+      if [[ -n "${{ parameters.imageVersion }}" ]]; then
         # Allow errors in case the images do not exist
         set +e
         az account set -s=${{ parameters.subscriptionId }}
         az acr login -n ${{ parameters.registryName }}
 
         if [[ ${{ parameters.isMultiArch }} == True ]]; then
-          for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64; do
+          for suffix in linux-amd64 linux-arm64 windows-1809-amd64 windows-1903-amd64 windows-1909-amd64 windows-2004-amd64 windows-ltsc2022-amd64; do
             az acr repository delete --name ${{ parameters.registryName }} --image ${{ parameters.registryRepo }}:${{ parameters.imageVersion }}-$suffix -y || true
           done
         fi

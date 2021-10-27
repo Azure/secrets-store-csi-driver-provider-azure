@@ -8,13 +8,13 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     steps:
     - template: ../az-login.yaml
-    - template: arc-setup.yaml
+    - template: setup.yaml
     - script: |
         make install-helm install-kubectl setup-kind
       displayName: "install dependencies and setup kind"
       condition: succeeded()
-    - template: arc-connect.yaml
-    - template: arc-extension-create.yaml
+    - template: cluster-connect.yaml
+    - template: extension-create.yaml
       parameters:
         azureClusterName: $(AZURE_CLUSTER_NAME)
         releaseTrain: preview

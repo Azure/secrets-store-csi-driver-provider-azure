@@ -29,4 +29,3 @@ steps:
   - bash: oras version
     displayName: Print oras version
     condition: succeeded()
-

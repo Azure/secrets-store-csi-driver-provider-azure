@@ -13,14 +13,14 @@ steps:
         export CI_KIND_CLUSTER=true
       fi
       
-      if [[ ! -z "${{ parameters.registry }}" ]]; then
+      if [[ -n "${{ parameters.registry }}" ]]; then
         export REGISTRY=${{ parameters.registry }}
         echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
       fi
 
       # Generate image version
       if [[ ${{ parameters.ciKindCluster }} == True ]]; then
-        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-arc-e2e"
+        IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-e2e"
       elif [[ -n "${CLUSTER_CONFIG:-}" ]]; then
         IMAGE_VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-$(CLUSTER_TYPE)-$(OS_TYPE)"
       else

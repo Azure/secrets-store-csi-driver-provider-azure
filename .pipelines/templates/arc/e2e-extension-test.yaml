@@ -11,7 +11,7 @@ jobs:
         parameters:
           registry: e2e
           ciKindCluster: true
-      - template: arc-setup.yaml
+      - template: setup.yaml
       - script: |
           buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
           version="0.0.$buildNumber"
@@ -31,8 +31,8 @@ jobs:
           echo "##vso[task.setvariable variable=REGISTRY_REPO]$respository"
         displayName: 'Push OCI helm chart to ACR'
         condition: succeeded()
-      - template: arc-connect.yaml
-      - template: arc-extension-create.yaml
+      - template: cluster-connect.yaml
+      - template: extension-create.yaml
         parameters:
           azureClusterName: $(AZURE_CLUSTER_NAME)
           extensionVersion: $(EXT_VERSION)
