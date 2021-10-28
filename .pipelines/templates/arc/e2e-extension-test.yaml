@@ -13,8 +13,9 @@ jobs:
           ciKindCluster: true
       - template: setup.yaml
       - script: |
-          buildNumber="$(echo $(Build.BuildNumber) | tr -d '.')"
-          version="0.0.$buildNumber"
+          # version should always be greater than 0.0.1 as this is the minimum version configured for reconciliation.
+          patchVersion="$(date +%s)"
+          version="0.0.$patchVersion"
           echo "##vso[task.setvariable variable=EXT_VERSION]$version"
 
           helm dependency update manifest_staging/charts/csi-secrets-store-provider-azure
