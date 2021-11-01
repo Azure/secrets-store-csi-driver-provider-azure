@@ -28,3 +28,5 @@ jobs:
       osTypes:
       - "linux"
       - "windows"
+  # this will ensure any changes to provider works on arc extension too.
+  - template: templates/arc/e2e-extension-test.yaml

@@ -1,0 +1,23 @@
+steps:
+  - script: |
+      az group create -n ${AZURE_CLUSTER_NAME} -l $(AZURE_CANARY_LOCATION)
+      az connectedk8s connect -n ${AZURE_CLUSTER_NAME} -g ${AZURE_CLUSTER_NAME} --no-wait
+      # It takes time for Arc pods to come up. Sometimes, in such cases helm might report unable to install helm release, but in fact Arc operators get installed and can connect to the cluster. Also, az connectedk8s connect will go through different phases (Connecting, Connected etc.) of installation. So to address both, we are checking the status later without waiting.
+      echo "verifying cluster connectivity..."
+      for i in $(seq 1 25); do
+        provisioningState=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].provisioningState" -otsv)
+        connectivityStatus=$(az connectedk8s list --resource-group ${AZURE_CLUSTER_NAME} --query "[*].connectivityStatus" -otsv)
+        if [ "$provisioningState" == "Succeeded" ]  && [ "$connectivityStatus" == "Connected" ]; then
+          echo "KinD cluster is 'Connected'"
+          break
+        else
+          echo "Provisioning state - $provisioningState, Connectivity status - $connectivityStatus"
+          sleep 1
+        fi
+      done
+      if [ "$connectivityStatus" != "Connected" ]; then
+        echo "failed to connect to the cluster."
+        exit 1
+      fi
+    displayName: "connect KinD cluster"
+    condition: succeeded()
