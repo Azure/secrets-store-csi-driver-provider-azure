@@ -3,7 +3,7 @@ jobs:
     variables:
     - name: CLUSTER_TYPE
       value: aks
-    - group: csi-secrets-store-e2e-kind
+    - group: csi-secrets-store-e2e
     steps:
     - template: ../az-login.yaml
     - template: setup.yaml
