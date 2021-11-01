@@ -10,10 +10,10 @@ jobs:
       displayName: "override AKS localtion"
       condition: succeeded()
     - template: ../aks-setup.yaml
-    - template: assign-user-identity.yaml
+    - template: ../assign-user-identity.yaml
       parameters:
         identitySubscriptionID: $(SUBSCRIPTION_ID)
-    - template: role-assignment.yaml
+    - template: ../role-assignment.yaml
     - template: cluster-connect.yaml
     - template: extension-create.yaml
       parameters:
