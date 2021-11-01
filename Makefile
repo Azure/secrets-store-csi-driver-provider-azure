@@ -45,11 +45,11 @@ ARCH ?= amd64
 OSVERSION ?= 1809
 # Output type of docker buildx build
 OUTPUT_TYPE ?= registry
-BUILDKIT_VERSION ?= v0.8.1
+BUILDX_BUILDER_NAME ?= img-builder
 
 # E2E test variables
 KIND_VERSION ?= 0.11.0
-KIND_K8S_VERSION ?= v1.21.2
+KIND_K8S_VERSION ?= v1.22.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -82,7 +82,7 @@ build-darwin:
 
 .PHONY: container
 container: build
-	docker build --no-cache --build-arg ARCH=$(ARCH) -t $(IMAGE_TAG) -f Dockerfile .
+	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
 
 .PHONY: container-linux
 container-linux: docker-buildx-builder
@@ -90,7 +90,6 @@ container-linux: docker-buildx-builder
 			--no-cache \
 			--output=type=$(OUTPUT_TYPE) \
 			--platform="linux/$(ARCH)" \
-			--build-arg ARCH=$(ARCH) \
 			-t $(IMAGE_TAG)-linux-$(ARCH) -f Dockerfile .
 
 .PHONY: container-windows
@@ -99,14 +98,14 @@ container-windows: docker-buildx-builder
 			--no-cache \
 			--output=type=$(OUTPUT_TYPE) \
 			--platform="windows/amd64" \
-			--build-arg ARCH=$(ARCH) \
 			--build-arg OSVERSION=$(OSVERSION) \
 	 		-t $(IMAGE_TAG)-windows-$(OSVERSION)-$(ARCH) -f windows.Dockerfile .
 
 .PHONY: docker-buildx-builder
 docker-buildx-builder:
-	@if ! DOCKER_CLI_EXPERIMENTAL=enabled docker buildx ls | grep -q container-builder; then\
-		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name container-builder --use --driver-opt image=moby/buildkit:$(BUILDKIT_VERSION);\
+	@if ! docker buildx ls | grep $(BUILDX_BUILDER_NAME); then \
+		docker buildx create --name $(BUILDX_BUILDER_NAME) --use; \
+		docker buildx inspect $(BUILDX_BUILDER_NAME) --bootstrap; \
 	fi
 
 .PHONY: container-all
