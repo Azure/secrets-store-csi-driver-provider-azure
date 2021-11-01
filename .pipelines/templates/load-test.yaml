@@ -111,3 +111,8 @@ jobs:
         condition: always()
 
       - template: cleanup-images.yaml
+        parameters:
+            imageVersion: $(IMAGE_VERSION)
+            registryRepo: $(CI_PROVIDER_REPOSITORY)
+            subscriptionId: $(SUBSCRIPTION_ID)
+            registryName: $(REGISTRY_NAME)
