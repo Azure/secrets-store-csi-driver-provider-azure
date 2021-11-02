@@ -3,7 +3,7 @@ module github.com/Azure/secrets-store-csi-driver-provider-azure
 go 1.17
 
 require (
-	github.com/Azure/azure-sdk-for-go v52.4.0+incompatible
+	github.com/Azure/azure-sdk-for-go v57.3.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
@@ -16,11 +16,11 @@ require (
 	go.opentelemetry.io/otel/metric v0.20.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
-	google.golang.org/grpc v1.38.0
+	google.golang.org/grpc v1.39.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/component-base v0.22.0
-	k8s.io/klog/v2 v2.9.0
-	sigs.k8s.io/secrets-store-csi-driver v0.3.0
+	k8s.io/component-base v0.22.3
+	k8s.io/klog/v2 v2.10.0
+	sigs.k8s.io/secrets-store-csi-driver v1.0.0
 )
 
 require (
