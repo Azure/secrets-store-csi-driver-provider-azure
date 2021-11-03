@@ -19,8 +19,8 @@ logFormatJSON: false
 logVerbosity: 0
 
 # -- Custom labels to add into metadata
-customLabels: #{}
-  app: secrets-store-csi-driver-provider-azure
+customLabels: {}
+  # app: secrets-store-csi-driver-provider-azure
 
 linux:
   image:
