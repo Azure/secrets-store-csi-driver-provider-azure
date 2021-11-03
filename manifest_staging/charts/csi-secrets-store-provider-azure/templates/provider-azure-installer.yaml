@@ -4,13 +4,14 @@ kind: DaemonSet
 metadata:
   name: {{ template "sscdpa.fullname" . }}
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.labels" . | indent 2 }}
+  labels:
+    {{- include "sscdpa.labels" . | nindent 4 }}
 spec:
   updateStrategy:
 {{ toYaml .Values.linux.updateStrategy | indent 4 }}
   selector:
     matchLabels:
-      app: {{ template "sscdpa.name" . }}
+      {{- include "sscdpa.selectors" . | nindent 6 }}
   template:
     metadata:
 {{ include "sscdpa.labels" . | indent 6 }}

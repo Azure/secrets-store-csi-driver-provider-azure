@@ -10,8 +10,8 @@ home: https://github.com/Azure/secrets-store-csi-driver-provider-azure
 maintainers:
   - name: Anish Ramasekar
     email: anish.ramasekar@gmail.com
-dependencies:
-- name: secrets-store-csi-driver
-  repository: https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
-  version: 1.0.0
-  condition: secrets-store-csi-driver.install
+# dependencies:
+# - name: secrets-store-csi-driver
+#   repository: https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+#   version: 1.0.0
+#   condition: secrets-store-csi-driver.install

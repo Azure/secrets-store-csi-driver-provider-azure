@@ -21,17 +21,37 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
-Standard labels for helm resources
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "sscdpa.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Common selectors.
+*/}}
+{{- define "sscdpa.selectors" -}}
+app.kubernetes.io/name: {{ template "sscdpa.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
+Common labels.
 */}}
 {{- define "sscdpa.labels" -}}
-labels:
-  app.kubernetes.io/instance: "{{ .Release.Name }}"
-  app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-  app.kubernetes.io/name: "{{ template "sscdpa.name" . }}"
-  app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
-  app: {{ template "sscdpa.name" . }}
-  helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+{{- include "sscdpa.selectors" . }}
+app.kubernetes.io/component: secrets-store-csi-driver
+app.kubernetes.io/part-of: {{ template "sscdpa.name" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+helm.sh/chart: {{ template "sscdpa.chart" . }}
+{{- if .Values.customLabels }}
+{{ toYaml .Values.customLabels }}
+{{- end }}
 {{- end -}}
+
 
 {{- define "sscdpa.psp.fullname" -}}
 {{- printf "%s-psp" (include "sscdpa.fullname" .) -}}
