@@ -50,6 +50,7 @@ linux:
   volumes: []
   volumeMounts: []
   kubeletRootDir: /var/lib/kubelet
+  providersDir: /etc/kubernetes/secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -91,6 +92,7 @@ windows:
   volumes: []
   volumeMounts: []
   kubeletRootDir: C:\var\lib\kubelet
+  providersDir: C:\k\secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
