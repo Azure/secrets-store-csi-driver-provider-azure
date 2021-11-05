@@ -31,7 +31,6 @@ spec:
             - --healthz-port=8989
             - --healthz-path=/healthz
             - --healthz-timeout=5s
-            - --driver-write-secrets=true
           livenessProbe:
             httpGet:
               path: /healthz

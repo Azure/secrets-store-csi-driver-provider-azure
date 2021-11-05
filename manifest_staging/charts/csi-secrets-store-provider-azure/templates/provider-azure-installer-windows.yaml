@@ -48,9 +48,6 @@ spec:
             - --healthz-port={{ .Values.windows.healthzPort }}
             - --healthz-path={{ .Values.windows.healthzPath }}
             - --healthz-timeout={{ .Values.windows.healthzTimeout }}
-            {{- if .Values.driverWriteSecrets }}
-            - --driver-write-secrets={{ .Values.driverWriteSecrets }}
-            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.windows.healthzPath }}
@@ -64,11 +61,6 @@ spec:
           volumeMounts:
             - name: provider-vol
               mountPath: "C:\\provider"
-            {{- if not .Values.driverWriteSecrets }}
-            - name: mountpoint-dir
-              mountPath: {{ .Values.windows.kubeletRootDir }}\pods
-              mountPropagation: HostToContainer
-            {{- end }}
             {{- if .Values.windows.volumeMounts }}
             {{- toYaml .Values.windows.volumeMounts | nindent 12 }}
             {{- end}}
@@ -82,11 +74,6 @@ spec:
           hostPath:
             path: C:\k\secrets-store-csi-providers
             type: DirectoryOrCreate
-        {{- if not .Values.driverWriteSecrets }}
-        - name: mountpoint-dir
-          hostPath:
-            path: {{ .Values.windows.kubeletRootDir }}\pods\
-        {{- end }}
         {{- if .Values.windows.volumes }}
         {{- toYaml .Values.windows.volumes | nindent 8 }}
         {{- end}}
