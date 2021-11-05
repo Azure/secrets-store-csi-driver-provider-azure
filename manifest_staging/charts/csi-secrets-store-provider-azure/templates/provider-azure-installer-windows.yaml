@@ -72,7 +72,7 @@ spec:
       volumes:
         - name: provider-vol
           hostPath:
-            path: C:\k\secrets-store-csi-providers
+            path: {{ .Values.windows.providersDir }}
             type: DirectoryOrCreate
         {{- if .Values.windows.volumes }}
         {{- toYaml .Values.windows.volumes | nindent 8 }}

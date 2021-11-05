@@ -101,7 +101,7 @@ spec:
       volumes:
         - name: provider-vol
           hostPath:
-            path: "/etc/kubernetes/secrets-store-csi-providers"
+            path: {{ .Values.linux.providersDir }}
         {{- if .Values.linux.volumes }}
         {{- toYaml .Values.linux.volumes | nindent 8 }}
         {{- end}}
