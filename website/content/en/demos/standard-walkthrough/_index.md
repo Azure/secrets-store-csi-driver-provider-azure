@@ -45,7 +45,7 @@ Create an Azure Keyvault instance:
 Add a secret to your Keyvault:
 
 ```bash
-az keyvault secret set --vault-name ${KEYVAULT_NAME} --name secret1 --value "Hello!"
+az keyvault secret set --vault-name ${KEYVAULT_NAME} --name secret1 --value "Hello\!"
 ```
 
 ### 3. Create an identity on Azure and set access policies

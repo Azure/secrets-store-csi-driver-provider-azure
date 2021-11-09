@@ -55,9 +55,6 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
-            {{- if .Values.driverWriteSecrets }}
-            - --driver-write-secrets={{ .Values.driverWriteSecrets }}
-            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}
@@ -88,11 +85,6 @@ spec:
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
-            {{- if not .Values.driverWriteSecrets }}
-            - name: mountpoint-dir
-              mountPath: {{ .Values.linux.kubeletRootDir }}/pods
-              mountPropagation: HostToContainer
-            {{- end }}
             {{- if .Values.linux.volumeMounts }}
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
@@ -109,12 +101,7 @@ spec:
       volumes:
         - name: provider-vol
           hostPath:
-            path: "/etc/kubernetes/secrets-store-csi-providers"
-        {{- if not .Values.driverWriteSecrets }}
-        - name: mountpoint-dir
-          hostPath:
-            path: {{ .Values.linux.kubeletRootDir }}/pods
-        {{- end }}
+            path: {{ .Values.linux.providersDir }}
         {{- if .Values.linux.volumes }}
         {{- toYaml .Values.linux.volumes | nindent 8 }}
         {{- end}}

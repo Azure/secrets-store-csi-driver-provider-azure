@@ -14,10 +14,6 @@ jobs:
   # to get image scan results on nightly runs
   - template: templates/unit-test.yaml
   - template: templates/e2e-test-kind.yaml
-    parameters:
-      driverWriteSecrets:
-      - "true"
-      - "false"
   - template: templates/load-test.yaml
   - template: templates/e2e-test-azure.yaml
     parameters:
@@ -41,3 +37,4 @@ jobs:
       - "csi-secrets-store-soak-linux-aks"
       - "csi-secrets-store-soak-win-aks"
   - template: templates/arc/e2e-test-kind.yaml
+  - template: templates/arc/e2e-test-aks.yaml
