@@ -19,7 +19,7 @@ The `v1.0.0` version of the Secrets Store CSI Driver and later uses the `v1` API
 **tl;dr** - `syncSecret.enabled` is set to false by default for the CSI driver.
 {{% /alert %}}
 
-- `syncSecret.enabled` has been set to false by default. This means the RBAC clusterrole and clusterrolebinding required for [sync mounted content as Kubernetes secret](../configurations/sync-with-k8s-secrets.md) will no longer be created by default as part of `helm install/upgrade`. If you're using the driver to sync mounted content as Kubernetes secret, you'll need to set `secrets-store-csi-driver.syncSecret.enabled=true` as part of `helm install/upgrade`.
+- `syncSecret.enabled` has been set to false by default. This means the RBAC clusterrole and clusterrolebinding required for [sync mounted content as Kubernetes secret](../configurations/sync-with-k8s-secrets) will no longer be created by default as part of `helm install/upgrade`. If you're using the driver to sync mounted content as Kubernetes secret, you'll need to set `secrets-store-csi-driver.syncSecret.enabled=true` as part of `helm install/upgrade`.
 
 If the `secrets-store-csi-driver.syncSecret.enabled=true` isn't explicitly set in `helm install/upgrade` command, it'll result in failure to create Kubernetes secret and the error would be similar to:
 

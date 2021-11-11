@@ -32,17 +32,17 @@ The [VS Code Remote Container Extension](https://code.visualstudio.com/docs/remo
 1. Open up the project in VS Code.
 2. In the bottom-left corner of VS Code click on the remote window icon as shown below:
 
-    ![open a remote window icon](./images/bottom-left.png)
+    ![open a remote window icon](/docs/images/bottom-left.png)
 
 3. Select `Remote-Containers: Reopen in Container` from the drop-down list
 
-    ![Reopen in Container](./images/reopen-container.png)
+    ![Reopen in Container](/docs/images/reopen-container.png)
 
 4. The Azure Key Vault Provider should now be opened inside a Remote Container!
     - In the bottom-left you should see the tag updated to show: `Dev Container: Secrets Store CSI Driver Provider Azure`
     - Open the [integrated terminal](https://code.visualstudio.com/docs/editor/integrated-terminal) with `ctrl + `\`.
     - You can open up a bash shell in the container such as shown below:
 
-    ![remote dev container](./images/container_open.png)
+    ![remote dev container](/docs/images/container_open.png)
 
 Your Environment is now set up using the VS Code Remote Devcontainer Extension.

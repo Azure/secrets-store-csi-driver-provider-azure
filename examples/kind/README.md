@@ -12,9 +12,9 @@
 
 - Follow the [instructions](https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/service-principal-mode/) to set up Service Principal and give it access to Azure Key Vault. Keep `ClientID` and `ClientSecret` of the Service Principal handy.
 
-- Copy [v1_secretproviderclass.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml) and [pod-inline-volume-service-principal.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/pod-inline-volume-service-principal.yaml) to this directory.
+- Copy [v1alpha1_secretproviderclass.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml) and [pod-secrets-store-inline-volume-secretproviderclass.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/pod-secrets-store-inline-volume-secretproviderclass.yaml) to this directory.
 
-- Update `v1_secretproviderclass.yaml` to provide keyvault name and keyvault resources to fetch.
+- Update `v1alpha1_secretproviderclass.yaml` to provide keyvault name and keyvault resources to fetch.
 
 ```yaml
 cloudName: 'AzurePublicCloud' # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud

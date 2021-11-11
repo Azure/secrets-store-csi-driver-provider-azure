@@ -31,7 +31,7 @@ helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com
 helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
 ```
 
-Refer to [installation](../../getting-started/installation/_index.md) for more details and validation.
+Refer to [installation](../../getting-started/installation) for more details and validation.
 
 ### 2. Create Keyvault and set secrets
 
@@ -52,7 +52,7 @@ az keyvault secret set --vault-name ${KEYVAULT_NAME} --name secret1 --value "Hel
 
 Refer to [Identity Access Modes](../../configurations/identity-access-modes) to see the list of supported modes for accessing the Key Vault instance.
 
-In this walkthrough, we will be using the [Service Principal](../../configurations/identity-access-modes/service-principal-mode.md) auth mode for accessing the Key Vault instance we just created.
+In this walkthrough, we will be using the [Service Principal](../../configurations/identity-access-modes/service-principal-mode) auth mode for accessing the Key Vault instance we just created.
 
 ```bash
 # Create a service principal to access keyvault
