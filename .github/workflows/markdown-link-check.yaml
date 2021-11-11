@@ -25,3 +25,5 @@ jobs:
         use-quiet-mode: 'yes'
         # this will show detailed HTTP status for checked links
         use-verbose-mode: 'yes'
+        folder-path: 'website'
+        file-path: './README.md'
