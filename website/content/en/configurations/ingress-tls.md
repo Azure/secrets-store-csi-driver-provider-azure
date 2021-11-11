@@ -47,11 +47,11 @@ helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com
 helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --set secrets-store-csi-driver.syncSecret.enabled=true
 ```
 
-Refer to [installation](../../getting-started/installation) for more details and validation.
+Refer to [installation](../getting-started/installation/_index.md) for more details and validation.
 
 ### Optional: Deploy AAD Pod Identity
 
-If using AAD pod identity to access Azure Keyvault, make sure it is [configured properly](https://azure.github.io/aad-pod-identity/docs/demo/standard_walkthrough/) in the cluster. Refer to [doc](../identity-access-modes/pod-identity-mode) on how to use AAD Pod identity to access keyvault.
+If using AAD pod identity to access Azure Keyvault, make sure it is [configured properly](https://azure.github.io/aad-pod-identity/docs/demo/standard_walkthrough/) in the cluster. Refer to [doc](../configurations/identity-access-modes/pod-identity-mode.md) on how to use AAD Pod identity to access keyvault.
 
 ```bash
 export AAD_POD_IDENTITY_NAME=azure-kv
@@ -68,10 +68,10 @@ kubectl create ns $NAMESPACE
 
 ### Create the SecretProviderClass
 
-* To provide identity to access key vault, refer to the following [section](../identity-access-modes).
+* To provide identity to access key vault, refer to the following [section](../configurations/identity-access-modes/_index.md).
 * Set the `tenantId` and `keyvaultName`
 * If using **AAD pod identity** to access Azure Key Vault - set `usePodIdentity: "true"`
-* Use `objectType: secret` for the certificate, as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](../getting-certs-and-keys)
+* Use `objectType: secret` for the certificate, as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](../configurations/getting-certs-and-keys.md)
 * Set secret type to `kubernetes.io/tls`
 
 ```bash
@@ -162,7 +162,7 @@ controller:
 EOF
 ```
 
-If not using [service principal mode](../identity-access-modes/service-principal-mode), remove the following snippet from the script:
+If not using [service principal mode](../configurations/identity-access-modes/service-principal-mode.md), remove the following snippet from the script:
 
 ```bash
             nodePublishSecretRef:
@@ -200,7 +200,7 @@ Depending on the TLS certificate lifecycle, follow one of the following steps:
               name: secrets-store-creds
 ```
 
-If not using [service principal mode](../identity-access-modes/service-principal-mode), remove the following snippet from [deployment-app-one.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml)
+If not using [service principal mode](../configurations/identity-access-modes/service-principal-mode.md), remove the following snippet from [deployment-app-one.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-one.yaml) and [deployment-app-two.yaml](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/docs/sample/ingress-controller-tls/deployment-app-two.yaml)
 
 ```yaml
             nodePublishSecretRef:
