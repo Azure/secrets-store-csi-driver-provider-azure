@@ -14,7 +14,7 @@ Before making your first contribution, make sure to review the [Contributing Gui
 
 The Azure Key Vault Provider for Secrets Store CSI Driver docs are built using [Hugo](https://gohugo.io/) with the [Docsy](https://docsy.dev) theme, hosted using [GitHub Pages](https://pages.github.com/).
 
-The [website](./website) directory contains the hugo project, markdown files, and theme configurations.
+The [website](./) directory contains the hugo project, markdown files, and theme configurations.
 
 ## Pre-requisites
 
@@ -24,36 +24,49 @@ The [website](./website) directory contains the hugo project, markdown files, an
 ## Environment setup
 
 1. Ensure pre-requisites are installed
-2. Clone this repository
+1. Clone this repository
+
 ```sh
 git clone https://github.com/Azure/secrets-store-csi-driver-provider-azure.git
 ```
-3. Change to website directory: 
+
+1. Change to website directory
+
 ```sh
 cd website
 ```
-4. Add Docsy submodule: 
+
+1. Add Docsy submodule
+
 ```sh
 git submodule add https://github.com/google/docsy.git themes/docsy
 ```
-5. Update submodules: 
+
+1. Update submodules
+
 ```sh
 git submodule update --init --recursive
 ```
-6. Install npm packages: 
+
+1. Install npm packages
+
 ```sh
 npm install
 ```
 
 ## Run local server
+
 1. Make sure you're still in the `website` directory
-2. Run 
+1. Start the local server
+
 ```sh
 hugo server --disableFastRender
 ```
-3. Navigate to `http://localhost:1313/docs`
+
+1. Navigate to `http://localhost:1313/docs`
 
 ## Update docs
+
 1. Create new branch
 1. Commit and push changes to content
 1. Submit pull request to `master`

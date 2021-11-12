@@ -54,6 +54,7 @@ linux:
   volumes: []
   volumeMounts: []
   kubeletRootDir: /var/lib/kubelet
+  providersDir: /etc/kubernetes/secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -95,6 +96,7 @@ windows:
   volumes: []
   volumeMounts: []
   kubeletRootDir: C:\var\lib\kubelet
+  providersDir: C:\k\secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -167,6 +169,3 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
-
-# Return secrets in grpc response to the driver (supported in driver v0.0.21+) instead of writing to filesystem
-driverWriteSecrets: true

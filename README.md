@@ -6,17 +6,17 @@
 [![Go Report Card](https://goreportcard.com/badge/Azure/secrets-store-csi-driver-provider-azure)](https://goreportcard.com/report/Azure/secrets-store-csi-driver-provider-azure)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Azure/secrets-store-csi-driver-provider-azure)
 
-Azure Key Vault provider for [Secrets Store CSI driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) allows you to get secret contents stored in an [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) instance and use the Secrets Store CSI driver interface to mount them into Kubernetes pods.
+Azure Key Vault provider for [Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) allows you to get secret contents stored in an [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) instance and use the Secrets Store CSI driver interface to mount them into Kubernetes pods.
 
 ## Features
 
-- Mounts secrets/keys/certs on pod start using a CSI volume
+- Mounts secrets/keys/certs to pod using a CSI Inline volume
 - Supports mounting multiple secrets store objects as a single volume
-- Supports pod identity to restrict access with specific identities
+- Supports multiple secrets stores as providers. Multiple providers can run in the same cluster simultaneously.
 - Supports pod portability with the SecretProviderClass CRD
-- Supports windows containers (Kubernetes version v1.18+)
-- Supports sync with Kubernetes Secrets (Secrets Store CSI Driver v0.0.10+)
-- Supports multiple secrets stores providers in the same cluster.
+- Supports Linux and Windows containers
+- Supports sync with Kubernetes Secrets
+- Supports auto rotation of secrets
 
 ## Demo
 

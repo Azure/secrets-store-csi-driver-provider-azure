@@ -39,10 +39,6 @@ var (
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
 	healthzTimeout = flag.Duration("healthz-timeout", 5*time.Second, "RPC timeout for health check")
 
-	// driverWriteSecrets feature is enabled by default in v0.1.0 release. All writes to the pod filesystem will now be done by the CSI driver instead of provider.
-	// this flag will be removed in the future.
-	driverWriteSecrets = flag.Bool("driver-write-secrets", true, "[DEPRECATED] Return secrets in gRPC response to the driver (supported in driver v0.0.21+) instead of writing to filesystem")
-
 	metricsBackend = flag.String("metrics-backend", "Prometheus", "Backend used for metrics")
 	prometheusPort = flag.Int("prometheus-port", 8898, "Prometheus port for metrics backend")
 )
@@ -85,9 +81,6 @@ func main() {
 
 	if *provider.ConstructPEMChain {
 		klog.Infof("construct pem chain feature enabled")
-	}
-	if !*driverWriteSecrets {
-		klog.Infof("driver write secrets feature can't be disabled. The --driver-write-secret flag will be removed in future releases.")
 	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {

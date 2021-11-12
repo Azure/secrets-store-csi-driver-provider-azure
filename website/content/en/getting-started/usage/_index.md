@@ -60,32 +60,32 @@ To provide identity to access key vault, refer to the following [section](#provi
 
   ```
 
-  | Name                   | Required | Description                                                                                                                                                                                                     | Default Value |
-  | ---------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-  | provider               | yes      | specify name of the provider                                                                                                                                                                                    | ""            |
-  | usePodIdentity         | no       | set to true for using aad-pod-identity to access keyvault                                                                                                                                                       | "false"       |
-  | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of User-assigned managed identity                                                                                                       | "false"       |
-  | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for User-assigned Managed Identity mode                                                                                         | ""            |
-  | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                    | ""            |
-  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                              | ""            |
-  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](#other-azure-clouds).               | ""            |
-  | objects                | yes      | a string of arrays of strings                                                                                                                                                                                   | ""            |
-  | objectName             | yes      | name of a Key Vault object                                                                                                                                                                                      | ""            |
-  | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                          | ""            |
-  | objectType             | yes      | type of a Key Vault object: secret, key or cert.<br>For Key Vault certificates, refer to [doc](../../configurations/getting-certs-and-keys) for the object type to use.</br>                                 | ""            |
-  | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                                                                 | ""            |
-  | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates | "pem"         |
-  | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`               | "utf-8"       |
-  | tenantId               | yes      | tenant ID containing key vault instance                                                                                                                                                                         | ""            |
+  | Name                   | Required | Description                                                                                                                                                                                                               | Default Value |
+  | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+  | provider               | yes      | specify name of the provider                                                                                                                                                                                              | ""            |
+  | usePodIdentity         | no       | set to true for using aad-pod-identity to access keyvault                                                                                                                                                                 | "false"       |
+  | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of User-assigned managed identity                                                                                                                 | "false"       |
+  | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for User-assigned Managed Identity mode                                                                                                   | ""            |
+  | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                              | ""            |
+  | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                                        | ""            |
+  | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](../../configurations/custom-environments.md). | ""            |
+  | objects                | yes      | a string of arrays of strings                                                                                                                                                                                             | ""            |
+  | objectName             | yes      | name of a Key Vault object                                                                                                                                                                                                | ""            |
+  | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                                    | ""            |
+  | objectType             | yes      | type of a Key Vault object: secret, key or cert.<br>For Key Vault certificates, refer to [doc](../../configurations/getting-certs-and-keys.md) for the object type to use.</br>                                           | ""            |
+  | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                                                                           | ""            |
+  | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates           | "pem"         |
+  | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`                         | "utf-8"       |
+  | tenantId               | yes      | tenant ID containing key vault instance                                                                                                                                                                                   | ""            |
 
 #### Provide Identity to Access Key Vault
 
 The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
 
-1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
-2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode)
-3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
-4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
+1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode.md) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
+2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode.md)
+3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode.md)
+4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode.md)
 
 #### Update your Deployment Yaml
 
