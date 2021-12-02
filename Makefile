@@ -181,7 +181,7 @@ install-helm:
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
 	kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
-	make image
+	$(MAKE) container-all push-manifest
 	kind load docker-image --name kind $(IMAGE_TAG)
 
 .PHONY: e2e-kind-cleanup
