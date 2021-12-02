@@ -35,15 +35,6 @@ func TestMount(t *testing.T) {
 			},
 			expectedErr: true,
 		},
-		{
-			desc: "failed to mount request",
-			mountRequest: &v1alpha1.MountRequest{
-				Attributes: `{"keyvaultName":"kv","tenantId":"72f988bf-86f1-41af-91ab-2d7cd011db47","objects": "array:"}`,
-				Secrets:    `{"clientid":"foo","clientsecret":"bar"}`,
-				Permission: "420",
-			},
-			expectedErr: true,
-		},
 	}
 
 	for _, tc := range cases {
