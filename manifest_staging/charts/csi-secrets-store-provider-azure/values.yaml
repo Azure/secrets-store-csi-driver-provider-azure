@@ -1,12 +1,3 @@
-# Values populated by Azure Arc K8s RP during the installation of the extension.
-Azure:
-  proxySettings:
-    isProxyEnabled: false
-    httpProxy: ""
-    httpsProxy: ""
-    noProxy: ""
-    proxyCert: ""
-
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
@@ -49,8 +40,8 @@ linux:
   healthzTimeout: "5s"
   volumes: []
   volumeMounts: []
-  kubeletRootDir: /var/lib/kubelet
   providersDir: /etc/kubernetes/secrets-store-csi-providers
+  kubeletRootDir: /var/lib/kubelet
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -92,7 +83,6 @@ windows:
   volumes: []
   volumeMounts: []
   kubeletRootDir: C:\var\lib\kubelet
-  providersDir: C:\k\secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -114,6 +104,7 @@ secrets-store-csi-driver:
   linux:
     enabled: true
     kubeletRootDir: /var/lib/kubelet
+    providersDir: /etc/kubernetes/secrets-store-csi-providers
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
@@ -154,7 +145,7 @@ secrets-store-csi-driver:
   rotationPollInterval: 2m
   # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on actions to take before enabling this feature
   filteredWatchSecret: true
-  
+
   syncSecret:
     enabled: false
 
@@ -165,3 +156,6 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# Return secrets in grpc response to the driver (supported in driver v0.0.21+) instead of writing to filesystem
+driverWriteSecrets: true
