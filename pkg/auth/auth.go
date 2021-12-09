@@ -74,7 +74,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 	// The NMI server identifies the pod based on the `podns` and `podname` in the request header and then queries k8s (through MIC) for a matching azure identity.
 	// Then nmi makes an adal request to get a token for the resource in the request, returns the `token` and the `clientid` as a response to the CSI request.
 	if c.UsePodIdentity {
-		klog.InfoS("using pod identity to retrieve token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		klog.V(5).InfoS("using pod identity to retrieve token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		// pod name and namespace are required for the Key Vault provider to request a token
 		// on behalf of the application pod
 		if len(podName) == 0 || len(podNamespace) == 0 {
@@ -108,7 +108,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 		if err != nil {
 			return nil, err
 		}
-		klog.InfoS("successfully acquired access token", "accessToken", utils.RedactClientID(nmiResp.Token.AccessToken), "clientID", utils.RedactClientID(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		klog.V(5).InfoS("successfully acquired access token", "accessToken", utils.RedactClientID(nmiResp.Token.AccessToken), "clientID", utils.RedactClientID(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 		token, clientID := nmiResp.Token, nmiResp.ClientID
 		if token.AccessToken == "" || clientID == "" {
@@ -128,14 +128,14 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 			return nil, errors.Wrap(err, "failed to get managed identity (MSI) endpoint")
 		}
 		if c.UserAssignedIdentityID != "" {
-			klog.InfoS("using user-assigned managed identity to retrieve access token", "clientID", utils.RedactClientID(c.UserAssignedIdentityID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+			klog.V(5).InfoS("using user-assigned managed identity to retrieve access token", "clientID", utils.RedactClientID(c.UserAssignedIdentityID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 			return adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(
 				msiEndpoint,
 				resource,
 				c.UserAssignedIdentityID)
 		}
 
-		klog.InfoS("using system-assigned managed identity to retrieve access token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		klog.V(5).InfoS("using system-assigned managed identity to retrieve access token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		return adal.NewServicePrincipalTokenFromMSI(
 			msiEndpoint,
 			resource)
@@ -143,7 +143,7 @@ func (c Config) GetServicePrincipalToken(podName, podNamespace, resource, aadEnd
 
 	// for Service Principal access mode, clientID + client secret are used to retrieve token for resource
 	if len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0 {
-		klog.InfoS("using service principal to retrieve access token", "clientID", utils.RedactClientID(c.AADClientID), "secret", utils.RedactClientID(c.AADClientSecret), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		klog.V(5).InfoS("using service principal to retrieve access token", "clientID", utils.RedactClientID(c.AADClientID), "secret", utils.RedactClientID(c.AADClientSecret), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		return adal.NewServicePrincipalToken(
 			*oauthConfig,
 			c.AADClientID,
