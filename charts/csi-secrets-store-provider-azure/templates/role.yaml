@@ -4,7 +4,8 @@ kind: Role
 metadata:
   name: {{ template "sscdpa.psp.fullname" . }}
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.labels" . | indent 2 }}
+  labels:
+    {{- include "sscdpa.labels" . | nindent 4 }}
 rules:
   - apiGroups: [ 'policy' ]
     resources: [ 'podsecuritypolicies' ]

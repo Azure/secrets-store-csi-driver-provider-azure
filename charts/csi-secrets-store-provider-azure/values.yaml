@@ -9,6 +9,10 @@ logFormatJSON: false
 # log level. Uses V logs (klog)
 logVerbosity: 0
 
+# -- Custom labels to add into metadata
+customLabels: {}
+  # app: secrets-store-csi-driver-provider-azure
+
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure

@@ -4,7 +4,8 @@ kind: RoleBinding
 metadata:
   name: {{ template "sscdpa.fullname" . }}
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.labels" . | indent 2 }}
+  labels:
+    {{- include "sscdpa.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
