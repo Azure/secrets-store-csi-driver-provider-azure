@@ -49,7 +49,7 @@ BUILDX_BUILDER_NAME ?= img-builder
 
 # E2E test variables
 KIND_VERSION ?= 0.11.0
-KIND_K8S_VERSION ?= v1.22.2
+KIND_K8S_VERSION ?= v1.22.4
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -183,7 +183,7 @@ install-helm:
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
 	kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
-	make image
+	$(MAKE) container-all push-manifest
 	kind load docker-image --name kind $(IMAGE_TAG)
 
 .PHONY: e2e-kind-cleanup
