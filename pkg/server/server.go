@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
@@ -66,12 +67,25 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 	f := []*v1alpha1.File{}
 	// CSI driver v0.0.21+ will write to the filesystem if the files are in the response.
 	// No files in the response translates to "not implemented" in the CSI driver.
-	for k, v := range files {
-		f = append(f, &v1alpha1.File{
-			Path:     k,
-			Contents: v,
-			Mode:     int32(filePermission),
-		})
+	for _, file := range files {
+		secretFile := &v1alpha1.File{
+			Path:     file.Path,
+			Contents: file.Content,
+		}
+
+		if file.FileMode != "" {
+			permission, parseErr := strconv.ParseInt(file.FileMode, 8, 32)
+			if parseErr != nil {
+				klog.ErrorS(parseErr, "failed to parse file permission")
+				return &v1alpha1.MountResponse{}, fmt.Errorf("failed to parse file permission, error: %w", parseErr)
+			}
+
+			secretFile.Mode = int32(permission)
+		} else {
+			secretFile.Mode = int32(filePermission)
+		}
+
+		f = append(f, secretFile)
 	}
 
 	return &v1alpha1.MountResponse{
