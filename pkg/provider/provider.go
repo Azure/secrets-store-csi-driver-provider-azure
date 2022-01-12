@@ -98,6 +98,15 @@ type KeyVaultObject struct {
 	// The encoding of the object in KeyVault
 	// Supported encodings are Base64, Hex, Utf-8
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
+	// Permission is the file permissions
+	Permission string `json:"permission" yaml:"permission"`
+}
+
+// SecretFile holds content and metadata of a secret file
+type SecretFile struct {
+	Content  []byte `json:"content" yaml:"content"`
+	Path     string `json:"path" yaml:"path"`
+	FileMode string `json:"fileMode" yaml:"fileMode"`
 }
 
 // StringArray ...
@@ -175,7 +184,7 @@ func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServiceP
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string][]byte, map[string]string, error) {
+func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) ([]SecretFile, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -257,7 +266,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.V(5).InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	if len(keyVaultObjects) == 0 {
-		return make(map[string][]byte), make(map[string]string), nil
+		return nil, make(map[string]string), nil
 	}
 
 	vaultURL, err := mc.getVaultURL()
@@ -273,7 +282,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 
 	objectVersionMap := make(map[string]string)
-	files := make(map[string][]byte)
+	files := []SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
@@ -307,7 +316,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 
 		// these files will be returned to the CSI driver as part of gRPC response
-		files[fileName] = objectContent
+		files = append(files, SecretFile{
+			Path:     fileName,
+			Content:  objectContent,
+			FileMode: keyVaultObject.Permission,
+		})
 		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
