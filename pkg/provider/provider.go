@@ -811,7 +811,7 @@ func validateFilePermission(filePermission string, defaultFilePermission os.File
 
 	permission, err := strconv.ParseInt(filePermission, 8, 32)
 	if err != nil {
-		return 0, fmt.Errorf("file permission must be a valid octal number. - %s", err)
+		return 0, fmt.Errorf("file permission must be a valid octal number. - %w", err)
 	}
 
 	return int32(permission), nil

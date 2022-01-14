@@ -986,34 +986,34 @@ func TestGetObjectVersion(t *testing.T) {
 
 func TestValidateFilePermisssion(t *testing.T) {
 	cases := []struct {
-		desc       string
-		filePermission string
+		desc                  string
+		filePermission        string
 		defaultFilePermission os.FileMode
-		isErrorExpected bool
+		isErrorExpected       bool
 	}{
 		{
-			desc: "valid file permission",
-			filePermission: "0600",
+			desc:                  "valid file permission",
+			filePermission:        "0600",
 			defaultFilePermission: os.FileMode(0644),
-			isErrorExpected: false,
+			isErrorExpected:       false,
 		},
 		{
-			desc: "empty file permission",
-			filePermission: "",
+			desc:                  "empty file permission",
+			filePermission:        "",
 			defaultFilePermission: os.FileMode(0644),
-			isErrorExpected: false,
+			isErrorExpected:       false,
 		},
 		{
-			desc: "invalid file permission",
-			filePermission: "0900",
+			desc:                  "invalid file permission",
+			filePermission:        "0900",
 			defaultFilePermission: os.FileMode(0644),
-			isErrorExpected: true,
+			isErrorExpected:       true,
 		},
 		{
-			desc: "invalid octal number",
-			filePermission: "900",
+			desc:                  "invalid octal number",
+			filePermission:        "900",
 			defaultFilePermission: os.FileMode(0644),
-			isErrorExpected: true,
+			isErrorExpected:       true,
 		},
 	}
 
