@@ -99,14 +99,14 @@ type KeyVaultObject struct {
 	// Supported encodings are Base64, Hex, Utf-8
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
 	// Permission is the file permissions
-	Permission string `json:"permission" yaml:"permission"`
+	FilePermission string `json:"filePermission" yaml:"filePermission"`
 }
 
 // SecretFile holds content and metadata of a secret file
 type SecretFile struct {
-	Content  []byte `json:"content" yaml:"content"`
-	Path     string `json:"path" yaml:"path"`
-	FileMode string `json:"fileMode" yaml:"fileMode"`
+	Content  []byte
+	Path     string
+	FileMode int32
 }
 
 // StringArray ...
@@ -184,7 +184,7 @@ func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServiceP
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) ([]SecretFile, map[string]string, error) {
+func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -299,6 +299,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 
+		filePermission, err := validateFilePermission(keyVaultObject.FilePermission, defaultFilePermission)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
@@ -319,7 +324,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		files = append(files, SecretFile{
 			Path:     fileName,
 			Content:  objectContent,
-			FileMode: keyVaultObject.Permission,
+			FileMode: filePermission,
 		})
 		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
@@ -795,4 +800,19 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 	return pemData, nil
+}
+
+// validateFilePermission checks if the given file permission is correct octal number, returns decimal equivalent
+// and error if it's not valid.
+func validateFilePermission(filePermission string, defaultFilePermission os.FileMode) (int32, error) {
+	if filePermission == "" {
+		return int32(defaultFilePermission), nil
+	}
+
+	permission, err := strconv.ParseInt(filePermission, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("file permission must be a valid octal number. - %s", err)
+	}
+
+	return int32(permission), nil
 }

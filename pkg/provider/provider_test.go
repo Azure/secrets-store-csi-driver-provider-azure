@@ -983,3 +983,48 @@ func TestGetObjectVersion(t *testing.T) {
 	actual := getObjectVersion(id)
 	assert.Equal(t, expectedVersion, actual)
 }
+
+func TestValidateFilePermisssion(t *testing.T) {
+	cases := []struct {
+		desc       string
+		filePermission string
+		defaultFilePermission os.FileMode
+		isErrorExpected bool
+	}{
+		{
+			desc: "valid file permission",
+			filePermission: "0600",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected: false,
+		},
+		{
+			desc: "empty file permission",
+			filePermission: "",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected: false,
+		},
+		{
+			desc: "invalid file permission",
+			filePermission: "0900",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected: true,
+		},
+		{
+			desc: "invalid octal number",
+			filePermission: "900",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := validateFilePermission(tc.filePermission, tc.defaultFilePermission)
+			if tc.isErrorExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
