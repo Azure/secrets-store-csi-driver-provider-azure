@@ -98,7 +98,7 @@ type KeyVaultObject struct {
 	// The encoding of the object in KeyVault
 	// Supported encodings are Base64, Hex, Utf-8
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
-	// Permission is the file permissions
+	// FilePermission is the file permissions
 	FilePermission string `json:"filePermission" yaml:"filePermission"`
 }
 
