@@ -109,6 +109,6 @@ var _ = Describe("When user provides file permission for secrets", func() {
 		cmd := getPodExecCommand("stat -c '%a' /mnt/secrets-store/..data/secret1")
 		filePermission, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		Expect(filePermission).To(Equal(expectedFilePermission))
+		Expect(strings.Trim(filePermission, "'")).To(Equal(expectedFilePermission))
 	})
 })
