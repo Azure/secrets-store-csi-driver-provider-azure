@@ -98,6 +98,15 @@ type KeyVaultObject struct {
 	// The encoding of the object in KeyVault
 	// Supported encodings are Base64, Hex, Utf-8
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
+	// FilePermission is the file permissions
+	FilePermission string `json:"filePermission" yaml:"filePermission"`
+}
+
+// SecretFile holds content and metadata of a secret file
+type SecretFile struct {
+	Content  []byte
+	Path     string
+	FileMode int32
 }
 
 // StringArray ...
@@ -175,7 +184,7 @@ func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServiceP
 }
 
 // MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string][]byte, map[string]string, error) {
+func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, map[string]string, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -257,7 +266,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.V(5).InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	if len(keyVaultObjects) == 0 {
-		return make(map[string][]byte), make(map[string]string), nil
+		return nil, make(map[string]string), nil
 	}
 
 	vaultURL, err := mc.getVaultURL()
@@ -273,7 +282,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	}
 
 	objectVersionMap := make(map[string]string)
-	files := make(map[string][]byte)
+	files := []SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
@@ -288,6 +297,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 		if err := validateFileName(fileName); err != nil {
 			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+
+		filePermission, err := validateFilePermission(keyVaultObject.FilePermission, defaultFilePermission)
+		if err != nil {
+			return nil, nil, err
 		}
 
 		// fetch the object from Key Vault
@@ -307,7 +321,11 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		}
 
 		// these files will be returned to the CSI driver as part of gRPC response
-		files[fileName] = objectContent
+		files = append(files, SecretFile{
+			Path:     fileName,
+			Content:  objectContent,
+			FileMode: filePermission,
+		})
 		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
@@ -782,4 +800,21 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 	return pemData, nil
+}
+
+// validateFilePermission checks if the given file permission is correct octal number and returns
+// a. decimal equivalent of the default file permission (0644) if file permission is not provided Or
+// b. decimal equivalent Or
+// c. error if it's not valid
+func validateFilePermission(filePermission string, defaultFilePermission os.FileMode) (int32, error) {
+	if filePermission == "" {
+		return int32(defaultFilePermission), nil
+	}
+
+	permission, err := strconv.ParseInt(filePermission, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("file permission must be a valid octal number: %w", err)
+	}
+
+	return int32(permission), nil
 }
