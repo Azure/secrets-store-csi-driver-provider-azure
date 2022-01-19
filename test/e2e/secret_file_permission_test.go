@@ -4,6 +4,7 @@
 package e2e
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
