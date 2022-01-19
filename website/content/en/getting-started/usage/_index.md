@@ -51,7 +51,7 @@ To provide identity to access key vault, refer to the following [section](#provi
             objectAlias: SECRET_1           # [OPTIONAL available for version > 0.0.4] object alias
             objectType: secret              # object types: secret, key or cert. For Key Vault certificates, refer to https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/getting-certs-and-keys/ for the object type to use
             objectVersion: ""               # [OPTIONAL] object versions, default to latest if empty
-            permission: 0755                # [OPTIONAL] permission for secret file being mounted into the pod, default is 0644 if not specified.
+            filePermission: 0755                # [OPTIONAL] permission for secret file being mounted into the pod, default is 0644 if not specified.
           - |
             objectName: key1
             objectAlias: ""                 # If provided then it has to be referenced in [secretObjects].[objectName] to sync with Kubernetes secrets 
@@ -77,7 +77,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                                                                        | ""            |
   | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates        | "pem"         |
   | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`                      | "utf-8"       |
-  | permission         | no       | [__*available for version > v1.1.0*__] permission for secret file being mounted into the pod                      | "0644"       |
+  | filePermission         | no       | [__*available for version > v1.1.0*__] permission for secret file being mounted into the pod                      | "0644"       |
   | tenantId               | yes      | tenant ID containing key vault instance                                                                                                                                                                                | ""            |
 
 #### Provide Identity to Access Key Vault
