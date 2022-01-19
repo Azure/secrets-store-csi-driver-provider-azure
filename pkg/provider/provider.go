@@ -802,7 +802,7 @@ func fetchCertChains(data []byte) ([]byte, error) {
 	return pemData, nil
 }
 
-// validateFilePermission checks if the given file permission is correct octal number and returns 
+// validateFilePermission checks if the given file permission is correct octal number and returns
 // a. decimal equivalent of the default file permission (0644) if file permission is not provided Or
 // b. decimal equivalent Or
 // c. error if it's not valid
