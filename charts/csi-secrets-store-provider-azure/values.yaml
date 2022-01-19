@@ -1,3 +1,12 @@
+# Values populated by Azure Arc K8s RP during the installation of the extension.
+Azure:
+  proxySettings:
+    isProxyEnabled: false
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: ""
+    proxyCert: ""
+
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
 # - name: myRegistryKeySecretName
@@ -16,7 +25,7 @@ customLabels: {}
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.0.0
+    tag: v1.0.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -45,6 +54,7 @@ linux:
   volumes: []
   volumeMounts: []
   kubeletRootDir: /var/lib/kubelet
+  providersDir: /etc/kubernetes/secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -58,7 +68,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.0.0
+    tag: v1.0.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -86,6 +96,7 @@ windows:
   volumes: []
   volumeMounts: []
   kubeletRootDir: C:\var\lib\kubelet
+  providersDir: C:\k\secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -110,20 +121,20 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.0.0
+      tag: v1.0.1
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.3.0
+      tag: v2.4.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.4.0
+      tag: v2.5.0
       pullPolicy: IfNotPresent
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.0.0
+        tag: v1.0.1
         pullPolicy: IfNotPresent
 
   windows:
@@ -132,15 +143,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.0.0
+      tag: v1.0.1
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.3.0
+      tag: v2.4.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.4.0
+      tag: v2.5.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
@@ -158,6 +169,3 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
-
-# Return secrets in grpc response to the driver (supported in driver v0.0.21+) instead of writing to filesystem
-driverWriteSecrets: true
