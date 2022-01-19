@@ -802,8 +802,10 @@ func fetchCertChains(data []byte) ([]byte, error) {
 	return pemData, nil
 }
 
-// validateFilePermission checks if the given file permission is correct octal number, returns decimal equivalent
-// and error if it's not valid.
+// validateFilePermission checks if the given file permission is correct octal number and returns 
+// a. decimal equivalent of the default file permission (0644) if file permission is not provided Or
+// b. decimal equivalent Or
+// c. error if it's not valid
 func validateFilePermission(filePermission string, defaultFilePermission os.FileMode) (int32, error) {
 	if filePermission == "" {
 		return int32(defaultFilePermission), nil
@@ -811,7 +813,7 @@ func validateFilePermission(filePermission string, defaultFilePermission os.File
 
 	permission, err := strconv.ParseInt(filePermission, 8, 32)
 	if err != nil {
-		return 0, fmt.Errorf("file permission must be a valid octal number. - %w", err)
+		return 0, fmt.Errorf("file permission must be a valid octal number: %w", err)
 	}
 
 	return int32(permission), nil
