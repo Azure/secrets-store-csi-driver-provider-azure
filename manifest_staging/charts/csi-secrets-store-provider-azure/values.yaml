@@ -21,7 +21,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.0.0
+    tag: v1.0.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -64,7 +64,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.0.0
+    tag: v1.0.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
