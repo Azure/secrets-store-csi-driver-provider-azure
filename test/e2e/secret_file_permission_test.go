@@ -97,7 +97,7 @@ var _ = Describe("When user provides file permission for secrets", func() {
 		})
 	})
 
-	FIt("should mount secret file with given permission", func() {
+	It("should mount secret file with given permission", func() {
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
