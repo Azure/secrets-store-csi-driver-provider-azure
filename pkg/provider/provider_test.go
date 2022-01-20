@@ -679,7 +679,7 @@ func TestInitializeKVClient(t *testing.T) {
 	}
 }
 
-func TestMountSecretsStoreObjectContent(t *testing.T) {
+func TestGetSecretsStoreObjectContent(t *testing.T) {
 	cases := []struct {
 		desc        string
 		parameters  map[string]string
@@ -829,7 +829,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)
 
-			_, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
+			_, err = p.GetSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
 			if tc.expectedErr {
 				assert.NotNil(t, err)
 			} else {

@@ -185,8 +185,9 @@ func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServiceP
 	return mc.authConfig.GetServicePrincipalToken(mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
 }
 
-// MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, error) {
+// GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
+// to the CSI driver. The driver will write the content to the file system.
+func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -306,7 +307,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib, s
 		}
 
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
+		content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +336,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib, s
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
+func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
