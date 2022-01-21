@@ -679,7 +679,7 @@ func TestInitializeKVClient(t *testing.T) {
 	}
 }
 
-func TestMountSecretsStoreObjectContent(t *testing.T) {
+func TestGetSecretsStoreObjectContent(t *testing.T) {
 	cases := []struct {
 		desc        string
 		parameters  map[string]string
@@ -829,7 +829,7 @@ func TestMountSecretsStoreObjectContent(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)
 
-			_, _, err = p.MountSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
+			_, err = p.GetSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
 			if tc.expectedErr {
 				assert.NotNil(t, err)
 			} else {
@@ -982,4 +982,49 @@ func TestGetObjectVersion(t *testing.T) {
 	expectedVersion := "c55925c29c6743dcb9bb4bf091be03b0"
 	actual := getObjectVersion(id)
 	assert.Equal(t, expectedVersion, actual)
+}
+
+func TestValidateFilePermisssion(t *testing.T) {
+	cases := []struct {
+		desc                  string
+		filePermission        string
+		defaultFilePermission os.FileMode
+		isErrorExpected       bool
+	}{
+		{
+			desc:                  "valid file permission",
+			filePermission:        "0600",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected:       false,
+		},
+		{
+			desc:                  "empty file permission",
+			filePermission:        "",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected:       false,
+		},
+		{
+			desc:                  "invalid file permission",
+			filePermission:        "0900",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected:       true,
+		},
+		{
+			desc:                  "invalid octal number",
+			filePermission:        "900",
+			defaultFilePermission: os.FileMode(0644),
+			isErrorExpected:       true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := validateFilePermission(tc.filePermission, tc.defaultFilePermission)
+			if tc.isErrorExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
