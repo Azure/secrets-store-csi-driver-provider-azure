@@ -25,7 +25,6 @@ import (
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
@@ -59,6 +58,10 @@ const (
 	// pod identity NMI port
 	// TODO (aramase) make this configurable during the provider deployment
 	podIdentityNMIPort = "2579"
+
+	attributePodName              = "csi.storage.k8s.io/pod.name"
+	attributePodNamespace         = "csi.storage.k8s.io/pod.namespace"
+	attributeServiceAccountTokens = "csi.storage.k8s.io/serviceAccount.tokens" // nolint
 )
 
 // Provider implements the secrets-store-csi-driver provider interface
@@ -135,32 +138,19 @@ func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 	return &env, err
 }
 
-// GetKeyvaultToken retrieves a new service principal token to access keyvault
-func (mc *mountConfig) GetKeyvaultToken() (authorizer autorest.Authorizer, err error) {
-	kvEndPoint := mc.azureCloudEnvironment.KeyVaultEndpoint
-	if '/' == kvEndPoint[len(kvEndPoint)-1] {
-		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
-	}
-	servicePrincipalToken, err := mc.GetServicePrincipalToken(kvEndPoint)
-	if err != nil {
-		return nil, err
-	}
-	authorizer = autorest.NewBearerAuthorizer(servicePrincipalToken)
-	return authorizer, nil
-}
-
-func (mc *mountConfig) initializeKvClient() (*kv.BaseClient, error) {
+func (mc *mountConfig) initializeKvClient(ctx context.Context) (*kv.BaseClient, error) {
 	kvClient := kv.New()
+	kvEndpoint := strings.TrimSuffix(mc.azureCloudEnvironment.KeyVaultEndpoint, "/")
+
 	err := kvClient.AddToUserAgent(version.GetUserAgent())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to add user agent to keyvault client")
 	}
-	token, err := mc.GetKeyvaultToken()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get key vault token")
-	}
 
-	kvClient.Authorizer = token
+	kvClient.Authorizer, err = mc.GetAuthorizer(ctx, kvEndpoint)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get authorizer for keyvault client")
+	}
 	return &kvClient, nil
 }
 
@@ -180,9 +170,9 @@ func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
 	return &vaultURI, nil
 }
 
-// GetServicePrincipalToken creates a new service principal token based on the configuration
-func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServicePrincipalToken, error) {
-	return mc.authConfig.GetServicePrincipalToken(mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
+// GetAuthorizer returns an Azure authorizer based on the provided azure identity
+func (mc *mountConfig) GetAuthorizer(ctx context.Context, resource string) (autorest.Authorizer, error) {
+	return mc.authConfig.GetAuthorizer(ctx, mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
 }
 
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
@@ -195,8 +185,12 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
 	tenantID := strings.TrimSpace(attrib["tenantId"])
 	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
-	podName := strings.TrimSpace(attrib["csi.storage.k8s.io/pod.name"])
-	podNamespace := strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
+	podName := strings.TrimSpace(attrib[attributePodName])
+	podNamespace := strings.TrimSpace(attrib[attributePodNamespace])
+
+	// attributes for workload identity
+	workloadIdentityClientID := strings.TrimSpace(attrib["clientID"])
+	saTokens := strings.TrimSpace(attrib[attributeServiceAccountTokens])
 
 	if keyvaultName == "" {
 		return nil, fmt.Errorf("keyvaultName is not set")
@@ -228,7 +222,15 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		return nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
 	}
 
-	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
+	// parse bound service account tokens for workload identity only if the clientID is set
+	var workloadIdentityToken string
+	if workloadIdentityClientID != "" {
+		if workloadIdentityToken, err = auth.ParseServiceAccountToken(saTokens); err != nil {
+			return nil, fmt.Errorf("failed to parse workload identity tokens, error: %w", err)
+		}
+	}
+
+	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, workloadIdentityClientID, workloadIdentityToken, secrets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth config, error: %w", err)
 	}
@@ -279,7 +281,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	klog.V(2).InfoS("vault url", "vaultName", mc.keyvaultName, "vaultURL", *vaultURL, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault object defined
-	kvClient, err := mc.initializeKvClient()
+	kvClient, err := mc.initializeKvClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyvault client")
 	}
