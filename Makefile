@@ -10,7 +10,7 @@ REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.0.1
 IMAGE_NAME ?= provider-azure
-CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
+CONFORMANCE_IMAGE_NAME ?= akv-secrets-provider-arc-conformance
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 CONFORMANCE_IMAGE_TAG := $(REGISTRY)/$(CONFORMANCE_IMAGE_NAME):$(IMAGE_VERSION)
 

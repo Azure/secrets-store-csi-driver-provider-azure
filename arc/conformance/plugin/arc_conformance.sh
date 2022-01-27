@@ -27,20 +27,22 @@ function waitForResources {
     echo "$available"
 }
 
-# saveResults prepares the results for handoff to the Sonobuoy worker.
-# See: https://github.com/vmware-tanzu/sonobuoy/blob/main/site/content/docs/main/plugins.md#how-plugins-work
-saveResults() {
+
+cleanup() {
+  # saveResults prepares the results for handoff to the Sonobuoy worker.
   cd ${results_dir}
-
-    # Sonobuoy worker expects a tar file.
+  # Sonobuoy worker expects a tar file.
 	tar czf results.tar.gz *
-
 	# Signal the worker by writing out the name of the results file into a "done" file.
 	printf ${results_dir}/results.tar.gz > ${results_dir}/done
+
+  # clean up test resources
+  az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes
+  az group delete --name $keyvaultResourceGroup --yes
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
-trap saveResults EXIT
+trap cleanup EXIT
 
 # initial environment variables for the plugin
 setEnviornmentVariables() {
@@ -132,12 +134,12 @@ setupKeyVault() {
   az keyvault certificate import \
   --vault-name $keyVaultName \
   --name pemcert1 \
-  --file test.pfx --verbose 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
   --vault-name $keyVaultName \
   --name pkcs12cert1 \
-  --file test.pfx --verbose 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   # ECC certificates
   step certificate create test.domain.com testec.crt testec.key \
@@ -158,33 +160,33 @@ setupKeyVault() {
 }
 
 # validate enviorment variables
-if [[ -z "${TENANT_ID}" ]]; then
+if [ -z "${TENANT_ID}" ]; then
   echo "ERROR: parameter TENANT_ID is required." > ${results_dir}/error
   python3 /arc/setup_failure_handler.py
 fi
 
-if [[ -z "${SUBSCRIPTION_ID}" ]]; then
+if [ -z "${SUBSCRIPTION_ID}" ]; then
   echo "ERROR: parameter SUBSCRIPTION_ID is required." > ${results_dir}/error
   python3 /arc/setup_failure_handler.py
 fi
 
-if [[ -z "${ARC_CLUSTER_RG}" ]]; then
-  echo "ERROR: parameter ARC_CLUSTER_RG is required." > ${results_dir}/error
-  python3 /arc/setup_failure_handler.py
-fi
-
-if [[ -z "${ARC_CLUSTER_NAME}" ]]; then
-  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > ${results_dir}/error
-  python3 /arc/setup_failure_handler.py
-fi
-
-if [[ -z "${AZURE_CLIENT_ID}" ]]; then
+if [ -z "${AZURE_CLIENT_ID}" ]; then
   echo "ERROR: parameter AZURE_CLIENT_ID is required." > ${results_dir}/error
   python3 /arc/setup_failure_handler.py
 fi
 
-if [[ -z "${AZURE_CLIENT_SECRET}" ]]; then
+if [ -z "${AZURE_CLIENT_SECRET}" ]; then
   echo "ERROR: parameter AZURE_CLIENT_SECRET is required." > ${results_dir}/error
+  python3 /arc/setup_failure_handler.py
+fi
+
+if [ -z "${ARC_CLUSTER_NAME}" ]; then
+  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > ${results_dir}/error
+  python3 /arc/setup_failure_handler.py
+fi
+
+if [ -z "${ARC_CLUSTER_RG}" ]; then
+  echo "ERROR: parameter ARC_CLUSTER_RG is required." > ${results_dir}/error
   python3 /arc/setup_failure_handler.py
 fi
 
@@ -199,8 +201,6 @@ az login --service-principal \
   --tenant ${TENANT_ID} 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
 az account set --subscription ${SUBSCRIPTION_ID} 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
-
-az aks get-credentials -g arc-conformance-test -n arc-conformance-test -a 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
 # set environment variables
 setEnviornmentVariables
@@ -234,7 +234,3 @@ kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-d
 kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
 
 /arc/provider-e2e-test -ginkgo.v -ginkgo.dryRun=false
-
-# cleanup
-az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes
-az group delete --name $keyvaultResourceGroup --yes
