@@ -14,7 +14,7 @@ jobs:
       # pinning to the sha 5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f from https://github.com/actions/checkout/releases/tag/v2.3.4
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
       # pinning to the sha 331ce1d993939866bb63c32c6cbbfd48fa76fc57 from https://github.com/actions/setup-go/releases/tag/v2.1.4
-      - uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57
+      - uses: actions/setup-go@424fc82d43fa5a37540bae62709ddcc23d9520d4
         with:
           go-version: "^1.17"
       - name: Unit test
