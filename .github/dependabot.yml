@@ -1,16 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "security"
-    ignore:
-      - dependency-name: "*"
-        update-types:
-        - "version-update:semver-major"
-        - "version-update:semver-minor"
   - package-ecosystem: "npm"
     directory: "/website"
     schedule:
