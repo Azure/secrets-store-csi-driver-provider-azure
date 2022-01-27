@@ -10,7 +10,9 @@ REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.0.1
 IMAGE_NAME ?= provider-azure
+CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
+CONFORMANCE_IMAGE_TAG := $(REGISTRY)/$(CONFORMANCE_IMAGE_NAME):$(IMAGE_VERSION)
 
 # build variables
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
@@ -72,6 +74,10 @@ unit-test:
 build:
 	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure ./cmd/
 
+.PHONY: build-e2e-test
+build-e2e-test:
+	ARCH=${ARCH} make -C test/e2e/ build
+
 .PHONY: build-windows
 build-windows:
 	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=windows go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure.exe ./cmd/
@@ -83,6 +89,13 @@ build-darwin:
 .PHONY: container
 container: build
 	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
+
+.PHONY: arc-conformance-container
+arc-conformance-container: build-e2e-test
+	docker buildx build \
+	--platform="linux/$(ARCH)" \
+	--output=type=$(OUTPUT_TYPE) \
+	-t $(CONFORMANCE_IMAGE_TAG) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: container-linux
 container-linux: docker-buildx-builder

@@ -12,3 +12,7 @@ run:
 		-ginkgo.skip=$(GINKGO_SKIP) \
 		-ginkgo.failFast=$(GINKGO_FAIL_FAST) \
 		-ginkgo.dryRun=$(GINKGO_DRY_RUN)
+
+.PHONY: build
+build:
+	cd $(TEST_E2E_DIR); CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go test -c -tags=e2e -timeout=90m -v -o _output/${ARCH}/provider-e2e-test

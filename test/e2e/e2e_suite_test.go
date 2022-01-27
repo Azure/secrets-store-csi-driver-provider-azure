@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"os"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/deploy"
@@ -17,6 +18,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/reporters"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,7 +49,9 @@ const (
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "sscdproviderazure")
+	// adding JUnitReporter for arc conformance test. If JUNIT_OUTPUT_FILEPATH is empty, it will not produce xml output.
+	junitReporter := reporters.NewJUnitReporter(os.Getenv("JUNIT_OUTPUT_FILEPATH"))
+	RunSpecsWithDefaultAndCustomReporters(t, "sscdproviderazure", []Reporter{junitReporter})
 }
 
 var _ = BeforeSuite(func() {
@@ -65,7 +69,7 @@ var _ = BeforeSuite(func() {
 	By("Creating a Keyvault Client")
 	kvClient = keyvault.NewClient(config)
 
-	if config.IsSoakTest || config.IsArcTest {
+	if config.IsSoakTest || config.IsArcTest || config.IsConformanceTest {
 		return
 	}
 
