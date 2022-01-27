@@ -13,10 +13,10 @@ require (
 	go.opentelemetry.io/otel/exporters/metric/prometheus v0.20.0
 	go.opentelemetry.io/otel/metric v0.20.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63
 	google.golang.org/grpc v1.39.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/component-base v0.22.3
+	k8s.io/component-base v0.22.6
 	k8s.io/klog/v2 v2.10.0
 	sigs.k8s.io/secrets-store-csi-driver v1.0.0
 )
