@@ -10,7 +10,7 @@ REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.0.1
 IMAGE_NAME ?= provider-azure
-CONFORMANCE_IMAGE_NAME ?= akv-secrets-provider-arc-conformance
+CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 CONFORMANCE_IMAGE_TAG := $(REGISTRY)/$(CONFORMANCE_IMAGE_NAME):$(IMAGE_VERSION)
 
@@ -91,11 +91,12 @@ container: build
 	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
 
 .PHONY: arc-conformance-container
-arc-conformance-container: build-e2e-test
+arc-conformance-container: docker-buildx-builder
 	docker buildx build \
+	--no-cache \
 	--platform="linux/$(ARCH)" \
 	--output=type=$(OUTPUT_TYPE) \
-	-t $(CONFORMANCE_IMAGE_TAG) -f arc/conformance/plugin/Dockerfile .
+	-t $(CONFORMANCE_IMAGE_TAG)-linux-$(ARCH) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: container-linux
 container-linux: docker-buildx-builder
