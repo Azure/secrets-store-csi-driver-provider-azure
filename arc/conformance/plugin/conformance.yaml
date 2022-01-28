@@ -4,7 +4,7 @@ sonobuoy-config:
   result-format: junit
 spec:
   image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure-arc-conformance:v1.0.1
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   name: plugin
   resources: {}
   volumes:

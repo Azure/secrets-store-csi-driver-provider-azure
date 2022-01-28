@@ -34,7 +34,6 @@ type Config struct {
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
 	AzureEnvironmentFilePath          string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
 	IsArcTest                         bool   `envconfig:"IS_ARC_TEST" default:"false"`
-	IsConformanceTest                 bool   `envconfig:"IS_CONFORMANCE_TEST" default:"false"`
 }
 
 func (c *Config) DeepCopy() *Config {
@@ -64,7 +63,6 @@ func (c *Config) DeepCopy() *Config {
 	copy.AzureEnvironmentFilePath = c.AzureEnvironmentFilePath
 	copy.IsHelmTest = c.IsHelmTest
 	copy.IsArcTest = c.IsArcTest
-	copy.IsConformanceTest = c.IsConformanceTest
 
 	return copy
 }

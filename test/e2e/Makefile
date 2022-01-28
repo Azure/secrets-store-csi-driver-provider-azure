@@ -15,4 +15,4 @@ run:
 
 .PHONY: build
 build:
-	cd $(TEST_E2E_DIR); CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go test -c -tags=e2e -timeout=90m -v -o _output/${ARCH}/provider-e2e-test
+	cd $(TEST_E2E_DIR); CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go test -c -tags=e2e -timeout=90m -v -o _output/${ARCH}/e2e

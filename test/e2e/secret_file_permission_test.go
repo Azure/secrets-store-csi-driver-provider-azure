@@ -98,7 +98,7 @@ var _ = Describe("When user provides file permission for secrets", func() {
 	})
 
 	It("should mount secret file with given permission", func() {
-		if !config.IsKindCluster || config.IsConformanceTest {
+		if !config.IsKindCluster {
 			Skip("test case currently supported for kind cluster only")
 		}
 

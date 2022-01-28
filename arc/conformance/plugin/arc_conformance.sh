@@ -1,24 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -x
 set -e
 
 results_dir="${RESULTS_DIR:-/tmp/results}"
-keyVaultName="arc-akv-secrets-$(openssl rand -hex 2)"
-keyvaultResourceGroup="akv-conformance-test-$(openssl rand -hex 2)"
-keyvaultLocation=westus2
+keyvault_name="arc-akv-secrets-$(openssl rand -hex 2)"
+keyvault_resource_group="akv-conformance-test-$(openssl rand -hex 2)"
+keyvault_location="${KEYVAULT_LOCATION:-westus2}"
 
 function waitForResources {
     available=false
     max_retries=60
-    sleep_seconds=10
     RESOURCE=$1
     NAMESPACE=$2
     for i in $(seq 1 $max_retries)
     do
-    if [[ ! $(kubectl wait --for=condition=available ${RESOURCE} --all --namespace ${NAMESPACE}) ]]; then
-        sleep ${sleep_seconds}
-    else
+    if [[ $(kubectl wait --for=condition=available ${RESOURCE} --all --namespace ${NAMESPACE}) ]]; then
         available=true
         break
     fi
@@ -29,12 +26,12 @@ function waitForResources {
 
 
 cleanup() {
-  # saveResults prepares the results for handoff to the Sonobuoy worker.
+  # prepare the results for handoff to the Sonobuoy worker.
   cd ${results_dir}
   # Sonobuoy worker expects a tar file.
-	tar czf results.tar.gz *
-	# Signal the worker by writing out the name of the results file into a "done" file.
-	printf ${results_dir}/results.tar.gz > ${results_dir}/done
+  tar czf results.tar.gz *
+  # Signal the worker by writing out the name of the results file into a "done" file.
+  printf ${results_dir}/results.tar.gz > ${results_dir}/done
 
   # clean up test resources
   az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes
@@ -55,64 +52,65 @@ setEnviornmentVariables() {
 setupKeyVault() {
   # create resource group
   az group create \
-  --name $keyvaultResourceGroup \
-  --location $keyvaultLocation 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --name $keyvault_resource_group \
+  --location $keyvault_location 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault
   az keyvault create \
-  --name $keyVaultName \
-  --resource-group $keyvaultResourceGroup \
-  --location $keyvaultLocation \
+  --name $keyvault_name \
+  --resource-group $keyvault_resource_group \
+  --location $keyvault_location \
   --sku premium 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
-  export KEYVAULT_NAME=$keyVaultName
+  export KEYVAULT_NAME=$keyvault_name
 
   # set access policy for keyvault
   az keyvault set-policy \
-  --name $keyVaultName \
-  --resource-group $keyvaultResourceGroup \
+  --name $keyvault_name \
+  --resource-group $keyvault_resource_group \
   --spn ${AZURE_CLIENT_ID} \
   --key-permissions get create \
   --secret-permissions get set \
   --certificate-permissions get create import 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault secret
-  secretValue=$(openssl rand -hex 6)
+  secret_value=$(openssl rand -hex 6)
   az keyvault secret set \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name secret1 \
-  --value $secretValue 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --value $secret_value 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
   export SECRET_NAME=secret1
-  export SECRET_VALUE=$secretValue
+  export SECRET_VALUE=$secret_value
 
   # create keyvault key
   # RSA key
+  key_name=key1
   az keyvault key create \
-  --vault-name $keyVaultName \
-  --name key1 \
+  --vault-name $keyvault_name \
+  --name $key_name \
   --kty RSA \
   --size 2048 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   az keyvault key download \
-  --vault-name $keyVaultName \
-  --name key1 \
+  --vault-name $keyvault_name \
+  --name key_name \
   -e PEM \
   -f publicKey.pem 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
-  keyVersion=$(az keyvault key show --vault-name $keyVaultName --name key1 --query "key.kid" | tr -d '"' | sed 's#.*/##')
-  export KEY_NAME=$keyName
+  keyVersion=$(az keyvault key show --vault-name $keyvault_name --name $key_name --query "key.kid" | tr -d '"' | sed 's#.*/##')
+  export KEY_NAME=$key_name
   export KEY_VALUE=$(cat publicKey.pem)
   export KEY_VERSION=$keyVersion
 
   # RSA-HSM Key
   az keyvault key create \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name rsahsmkey1 \
   --kty RSA-HSM \
   --size 2048 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   # EC-HSM Key
   az keyvault key create \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name echsmkey1 \
   --kty EC-HSM \
   --curve P-256 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
@@ -132,12 +130,12 @@ setupKeyVault() {
   openssl pkcs12 -export -in test.crt -inkey test.key -out test.pfx -passout pass: 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name pemcert1 \
   --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name pkcs12cert1 \
   --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
@@ -154,7 +152,7 @@ setupKeyVault() {
   openssl pkcs12 -export -in testec.crt -inkey testec.key -out testec.pfx -passout pass: 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyVaultName \
+  --vault-name $keyvault_name \
   --name ecccert1 \
   --file testec.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 }
@@ -233,4 +231,4 @@ az k8s-extension create \
 kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
 kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
 
-/arc/provider-e2e-test -ginkgo.v -ginkgo.dryRun=false
+/arc/e2e -ginkgo.v -ginkgo.skip=${GINKGO_SKIP}

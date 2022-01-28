@@ -28,7 +28,7 @@ COPY --from=smallstep/step-cli:0.18.0 /usr/local/bin/step /usr/local/bin/step
 
 COPY arc/conformance/plugin/arc_conformance.sh /arc/arc_conformance.sh
 COPY arc/conformance/plugin/setup_failure_handler.py /arc/setup_failure_handler.py
-COPY test/e2e/_output/${TARGETARCH}/provider-e2e-test /arc/provider-e2e-test
+COPY test/e2e/_output/${TARGETARCH}/e2e /arc/e2e
 
 RUN ["chmod", "+x", "/arc/arc_conformance.sh"]
 ENTRYPOINT ["/arc/arc_conformance.sh"]
