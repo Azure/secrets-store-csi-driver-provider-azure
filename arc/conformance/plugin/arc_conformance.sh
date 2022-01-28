@@ -35,7 +35,7 @@ cleanup() {
 
   # clean up test resources
   az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes
-  az group delete --name $keyvaultResourceGroup --yes
+  az group delete --name $keyvault_resource_group --yes
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
@@ -44,7 +44,7 @@ trap cleanup EXIT
 # initial environment variables for the plugin
 setEnviornmentVariables() {
   export JUNIT_OUTPUT_FILEPATH=/tmp/results/junit.xml
-  export IS_CONFORMANCE_TEST=true
+  export IS_ARC_TEST=true
   export CI_KIND_CLUSTER=true
 }
 
@@ -92,7 +92,7 @@ setupKeyVault() {
 
   az keyvault key download \
   --vault-name $keyvault_name \
-  --name key_name \
+  --name $key_name \
   -e PEM \
   -f publicKey.pem 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
 
