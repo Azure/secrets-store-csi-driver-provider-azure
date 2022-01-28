@@ -14,9 +14,9 @@ steps:
 
       # scan arc conformance test image
       export REGISTRY="e2e"
-      export IMAGE_VERSION="conformance-test-linux-amd64"
+      export IMAGE_VERSION="conformance-test"
       OUTPUT_TYPE=docker  make build-e2e-test arc-conformance-container    
       # show all vulnerabilities in the logs
-      ./trivy "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}"
-      ./trivy --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}" || exit 1
+      ./trivy "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64"
+      ./trivy --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64" || exit 1
     displayName: "Scan images for vulnerability"
