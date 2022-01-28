@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 	By("Creating a Keyvault Client")
 	kvClient = keyvault.NewClient(config)
 
-	if config.IsSoakTest || config.IsArcTest || config.IsConformanceTest {
+	if config.IsSoakTest || config.IsArcTest {
 		return
 	}
 
