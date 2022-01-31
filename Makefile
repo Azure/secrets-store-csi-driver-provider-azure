@@ -49,6 +49,9 @@ OSVERSION ?= 1809
 OUTPUT_TYPE ?= registry
 BUILDX_BUILDER_NAME ?= img-builder
 
+# step cli version
+STEP_VERSION=0.18.0
+
 # E2E test variables
 KIND_VERSION ?= 0.11.0
 KIND_K8S_VERSION ?= v1.22.4
@@ -96,6 +99,7 @@ arc-conformance-container: docker-buildx-builder
 	--no-cache \
 	--platform="linux/$(ARCH)" \
 	--output=type=$(OUTPUT_TYPE) \
+	--build-arg STEP_VERSION=$(STEP_VERSION) \
 	-t $(CONFORMANCE_IMAGE_TAG)-linux-$(ARCH) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: container-linux
