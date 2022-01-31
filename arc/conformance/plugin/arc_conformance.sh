@@ -34,8 +34,8 @@ cleanup() {
   printf ${results_dir}/results.tar.gz > ${results_dir}/done
 
   # clean up test resources
-  az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes
-  az group delete --name $keyvault_resource_group --yes
+  az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes --no-wait
+  az group delete --name $keyvault_resource_group --yes --no-wait
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
