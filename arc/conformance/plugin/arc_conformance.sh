@@ -45,6 +45,7 @@ setEnviornmentVariables() {
   export JUNIT_OUTPUT_FILEPATH=/tmp/results/junit.xml
   export IS_ARC_TEST=true
   export CI_KIND_CLUSTER=true
+  export ACK_GINKGO_DEPRECATIONS=1.16.4 # remove this when we move to ginkgo 2.0
 }
 
 # initialize keyvault for conformance test
