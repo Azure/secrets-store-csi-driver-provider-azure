@@ -4,13 +4,11 @@ ARG TARGETARCH
 
 # install dependencies
 RUN apt-get update -y && apt-get upgrade -y
-RUN DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install python3-pip bash -y
+RUN DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install python3-pip bash curl apt-transport-https lsb-release gnupg -y --allow-change-held-packages
 RUN python3 -m pip install junit_xml
 
 # install azcli
-RUN apt-get update && apt-get -y --allow-change-held-packages upgrade && \
-    apt-get -f -y --allow-change-held-packages install curl apt-transport-https lsb-release gnupg python3-pip && \
-    curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
+RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     CLI_REPO=$(lsb_release -cs) && \
     echo "deb [arch=${TARGETARCH}] https://packages.microsoft.com/repos/azure-cli/ ${CLI_REPO} main" \
     > /etc/apt/sources.list.d/azure-cli.list && \
@@ -22,6 +20,14 @@ RUN apt-get update && apt-get -y --allow-change-held-packages upgrade && \
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/kubectl
+
+# to fix various CVEs
+RUN apt-get update && apt-get -y upgrade && \ 
+    apt-get install libgssapi-krb5-2 && \
+    apt-get install libk5crypto3 && \
+    apt-get install libkrb5-3 && \
+    apt-get install libkrb5support0 && \
+    apt-get install linux-libc-dev
 
 # install step cli to create self signed certificates
 COPY --from=smallstep/step-cli:0.18.0 /usr/local/bin/step /usr/local/bin/step
