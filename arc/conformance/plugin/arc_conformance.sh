@@ -24,21 +24,17 @@ function waitForResources {
 }
 
 
-cleanup() {
+saveResult() {
   # prepare the results for handoff to the Sonobuoy worker.
   cd ${results_dir}
   # Sonobuoy worker expects a tar file.
   tar czf results.tar.gz *
   # Signal the worker by writing out the name of the results file into a "done" file.
   printf ${results_dir}/results.tar.gz > ${results_dir}/done
-
-  # clean up test resources
-  az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes --no-wait
-  az group delete --name $keyvault_resource_group --yes --no-wait
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
-trap cleanup EXIT
+trap saveResult EXIT
 
 # initial environment variables for the plugin
 setEnviornmentVariables() {
@@ -232,3 +228,7 @@ kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-d
 kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
 
 /arc/e2e -ginkgo.v -ginkgo.skip=${GINKGO_SKIP}
+
+# clean up test resources
+az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes --no-wait
+az group delete --name $keyvault_resource_group --yes --no-wait
