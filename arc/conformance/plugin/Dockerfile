@@ -21,14 +21,6 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VE
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/kubectl
 
-# to fix various CVEs
-RUN apt-get update && apt-get -y upgrade && \ 
-    apt-get install libgssapi-krb5-2 && \
-    apt-get install libk5crypto3 && \
-    apt-get install libkrb5-3 && \
-    apt-get install libkrb5support0 && \
-    apt-get install linux-libc-dev
-
 # install step cli to create self signed certificates
 COPY --from=smallstep/step-cli:0.18.0 /usr/local/bin/step /usr/local/bin/step
 

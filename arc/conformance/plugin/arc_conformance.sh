@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 set -e
 
 results_dir="${RESULTS_DIR:-/tmp/results}"
