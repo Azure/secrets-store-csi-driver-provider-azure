@@ -15,18 +15,9 @@ pool: staging-pool
 jobs:
   - template: templates/e2e-test-azure.yaml
     parameters:
-      clusterTypes:
-      - "aks"
       osTypes:
       - "linux"
-      - "windows-docker"
-      - "windows-containerd"
-  - template: templates/e2e-test-azure.yaml
-    parameters:
-      clusterTypes:
-      - "aks-engine"
-      osTypes:
-      - "linux"
-      - "windows"
+      - "windows_docker"
+      - "windows_containerd"
   # this will ensure any changes to provider works on arc extension too.
   - template: templates/arc/e2e-extension-test.yaml
