@@ -5,7 +5,7 @@ CLIENT_SECRET=$2
 kind create cluster --name kind-csi-demo
 
 # install csi-secrets-store-provider-azure
-helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
 helm install csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --generate-name
 
 # create secret in k8
