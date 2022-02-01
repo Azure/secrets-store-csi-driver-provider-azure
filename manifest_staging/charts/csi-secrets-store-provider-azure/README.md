@@ -27,8 +27,22 @@ Azure Key Vault provider for Secrets Store CSI driver allows you to get secret c
 | `0.2.1`            | `0.3.0`                          | `0.2.0`                          |
 | `1.0.0-rc.0`       | `1.0.0-rc.0`                     | `1.0.0-rc.0`                     |
 | `1.0.0`            | `1.0.0`                          | `1.0.0`                          |
+| `1.0.1`            | `1.0.1`                          | `1.0.1`                          |
 
 ## Installation
+
+> Note: The helm chart repository URL has changed from `https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts` to `https://azure.github.io/secrets-store-csi-driver-provider-azure/charts`.
+<details>
+<summary>Update helm chart repository if using the old URL</summary>
+
+Run the following commands to update your Helm chart repositories if using the old URL:
+
+```bash
+helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts --force-update
+helm repo update
+```
+
+</details>
 
 Quick start instructions for the setup and configuration of secrets-store-csi-driver and azure keyvault provider using Helm.
 
@@ -41,7 +55,7 @@ Quick start instructions for the setup and configuration of secrets-store-csi-dr
 - This chart installs the [secrets-store-csi-driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) and the azure keyvault provider for the driver
 
 ```shell
-helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
 helm install csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --generate-name
 ```
 
