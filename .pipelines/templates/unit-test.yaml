@@ -17,6 +17,8 @@ jobs:
         displayName: golangci-lint
       - script: make helm-lint
         displayName: helm lint
+      - script: make shellcheck
+        displayName: shellcheck
   - job: build
     timeoutInMinutes: 5
     workspace:
