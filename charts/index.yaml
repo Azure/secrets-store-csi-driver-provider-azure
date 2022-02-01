@@ -3,7 +3,7 @@ entries:
   csi-secrets-store-provider-azure:
   - apiVersion: v2
     appVersion: 1.0.1
-    created: "2022-02-01T17:45:10.955054878Z"
+    created: "2022-02-01T20:01:54.927677475Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -11,7 +11,7 @@ entries:
       version: 1.0.1
     description: A Helm chart to install the Secrets Store CSI Driver and the Azure
       Keyvault Provider inside a Kubernetes cluster.
-    digest: ae18725d1a2bd387e9a5f0a38cebba626377ed97cb776de6408c78a6dffd6864
+    digest: 2d9c60ce5e3233c39c0788662546fc4b5fa4a63841d298c91b9f55b90666e49d
     home: https://github.com/Azure/secrets-store-csi-driver-provider-azure
     kubeVersion: '>=1.16.0-0'
     maintainers:
@@ -21,11 +21,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.1.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.1.tgz
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2022-02-01T17:45:10.952252225Z"
+    created: "2022-02-01T20:01:54.92502074Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -43,11 +43,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.0.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.0.tgz
     version: 1.0.0
   - apiVersion: v2
     appVersion: 1.0.0-rc.0
-    created: "2022-02-01T17:45:10.950301518Z"
+    created: "2022-02-01T20:01:54.922434115Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -65,11 +65,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.0-rc.0.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-1.0.0-rc.0.tgz
     version: 1.0.0-rc.0
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2022-02-01T17:45:10.948280108Z"
+    created: "2022-02-01T20:01:54.919780981Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -87,11 +87,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.2.1.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.2.1.tgz
     version: 0.2.1
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2022-02-01T17:45:10.945537458Z"
+    created: "2022-02-01T20:01:54.916047111Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -109,11 +109,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.2.0.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.2.0.tgz
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-02-01T17:45:10.943643454Z"
+    created: "2022-02-01T20:01:54.912339044Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -131,11 +131,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.1.0.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v1
     appVersion: 0.0.16
-    created: "2022-02-01T17:45:10.937282207Z"
+    created: "2022-02-01T20:01:54.90435444Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -153,11 +153,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.20.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.20.tgz
     version: 0.0.20
   - apiVersion: v1
     appVersion: 0.0.15
-    created: "2022-02-01T17:45:10.935456507Z"
+    created: "2022-02-01T20:01:54.901247649Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -175,11 +175,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.19.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.19.tgz
     version: 0.0.19
   - apiVersion: v1
     appVersion: 0.0.14
-    created: "2022-02-01T17:45:10.933658509Z"
+    created: "2022-02-01T20:01:54.896791888Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -197,11 +197,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.18.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.18.tgz
     version: 0.0.18
   - apiVersion: v1
     appVersion: 0.0.13
-    created: "2022-02-01T17:45:10.931962016Z"
+    created: "2022-02-01T20:01:54.893541679Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -219,11 +219,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.17.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.17.tgz
     version: 0.0.17
   - apiVersion: v1
     appVersion: 0.0.12
-    created: "2022-02-01T17:45:10.9298327Z"
+    created: "2022-02-01T20:01:54.891285995Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -241,11 +241,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.16.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.16.tgz
     version: 0.0.16
   - apiVersion: v1
     appVersion: 0.0.11
-    created: "2022-02-01T17:45:10.928430923Z"
+    created: "2022-02-01T20:01:54.889328949Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -263,11 +263,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.15.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.15.tgz
     version: 0.0.15
   - apiVersion: v1
     appVersion: 0.0.10
-    created: "2022-02-01T17:45:10.927011546Z"
+    created: "2022-02-01T20:01:54.887401406Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -285,11 +285,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.14.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.14.tgz
     version: 0.0.14
   - apiVersion: v1
     appVersion: 0.0.9
-    created: "2022-02-01T17:45:10.925534965Z"
+    created: "2022-02-01T20:01:54.884954298Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -307,11 +307,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.13.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.13.tgz
     version: 0.0.13
   - apiVersion: v1
     appVersion: 0.0.9
-    created: "2022-02-01T17:45:10.92415499Z"
+    created: "2022-02-01T20:01:54.882138244Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -329,11 +329,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.12.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.12.tgz
     version: 0.0.12
   - apiVersion: v1
     appVersion: 0.0.9
-    created: "2022-02-01T17:45:10.922010572Z"
+    created: "2022-02-01T20:01:54.879216576Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -351,11 +351,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.11.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.11.tgz
     version: 0.0.11
   - apiVersion: v1
     appVersion: 0.0.8
-    created: "2022-02-01T17:45:10.920761004Z"
+    created: "2022-02-01T20:01:54.877398947Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -373,11 +373,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.10.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.10.tgz
     version: 0.0.10
   - apiVersion: v1
     appVersion: 0.0.7
-    created: "2022-02-01T17:45:10.941694648Z"
+    created: "2022-02-01T20:01:54.909788923Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -395,11 +395,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.9.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.9.tgz
     version: 0.0.9
   - apiVersion: v1
     appVersion: 0.0.7
-    created: "2022-02-01T17:45:10.940891004Z"
+    created: "2022-02-01T20:01:54.908545467Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -417,11 +417,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.8.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.8.tgz
     version: 0.0.8
   - apiVersion: v1
     appVersion: 0.0.6
-    created: "2022-02-01T17:45:10.939984655Z"
+    created: "2022-02-01T20:01:54.907468831Z"
     dependencies:
     - condition: secrets-store-csi-driver.install
       name: secrets-store-csi-driver
@@ -439,11 +439,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.7.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.7.tgz
     version: 0.0.7
   - apiVersion: v1
     appVersion: 0.0.5
-    created: "2022-02-01T17:45:10.938717385Z"
+    created: "2022-02-01T20:01:54.9064275Z"
     dependencies:
     - condition: driver.install
       name: secrets-store-csi-driver
@@ -461,11 +461,11 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.6.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.6.tgz
     version: 0.0.6
   - apiVersion: v1
     appVersion: 0.0.5
-    created: "2022-02-01T17:45:10.937978345Z"
+    created: "2022-02-01T20:01:54.905396871Z"
     dependencies:
     - condition: driver.install
       name: secrets-store-csi-driver
@@ -483,6 +483,6 @@ entries:
     sources:
     - https://github.com/Azure/secrets-store-csi-driver-provider-azure
     urls:
-    - https://azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.5.tgz
+    - https://Azure.github.io/secrets-store-csi-driver-provider-azure/charts/csi-secrets-store-provider-azure-0.0.5.tgz
     version: 0.0.5
-generated: "2022-02-01T17:45:10.919446932Z"
+generated: "2022-02-01T20:01:54.875640226Z"
