@@ -1,6 +1,6 @@
-ARG STEP_VERSION=0.18.0
-ARG STEP_IMAGE=smallstep/step-cli:${STEP_VERSION}
-FROM $STEP_IMAGE as step
+ARG STEP_CLI_VERSION=0.18.0
+ARG STEP_CLI_IMAGE=smallstep/step-cli:${STEP_CLI_VERSION}
+FROM $STEP_CLI_IMAGE as step-cli
 
 FROM k8s.gcr.io/build-image/debian-base:bullseye-v1.1.0
 ARG KUBE_VERSION=v1.21.2
@@ -26,7 +26,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VE
     mv kubectl /usr/local/bin/kubectl
 
 # install step cli to create self signed certificates
-COPY --from=step /usr/local/bin/step /usr/local/bin/step
+COPY --from=step-cli /usr/local/bin/step /usr/local/bin/step
 
 COPY arc/conformance/plugin/arc_conformance.sh /arc/arc_conformance.sh
 COPY arc/conformance/plugin/setup_failure_handler.py /arc/setup_failure_handler.py

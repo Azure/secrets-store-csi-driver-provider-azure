@@ -50,7 +50,7 @@ OUTPUT_TYPE ?= registry
 BUILDX_BUILDER_NAME ?= img-builder
 
 # step cli version
-STEP_VERSION=0.18.0
+STEP_CLI_VERSION=0.18.0
 
 # E2E test variables
 KIND_VERSION ?= 0.11.0
@@ -94,12 +94,12 @@ container: build
 	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
 
 .PHONY: arc-conformance-container
-arc-conformance-container: docker-buildx-builder
+arc-conformance-container: docker-buildx-builder build-e2e-test
 	docker buildx build \
 	--no-cache \
 	--platform="linux/$(ARCH)" \
 	--output=type=$(OUTPUT_TYPE) \
-	--build-arg STEP_VERSION=$(STEP_VERSION) \
+	--build-arg STEP_CLI_VERSION=$(STEP_CLI_VERSION) \
 	-t $(CONFORMANCE_IMAGE_TAG)-linux-$(ARCH) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: container-linux
