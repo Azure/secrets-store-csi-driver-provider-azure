@@ -26,6 +26,7 @@ GO_FILES=$(shell go list ./... | grep -v /test/e2e)
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 TOOLS_MOD_DIR := ./tools
 TOOLS_DIR := $(abspath ./.tools)
+TOOLS_BIN_DIR := $(abspath $(TOOLS_DIR)/bin)
 
 GO111MODULE = on
 DOCKER_CLI_EXPERIMENTAL = enabled
@@ -55,6 +56,7 @@ STEP_CLI_VERSION=0.18.0
 # E2E test variables
 KIND_VERSION ?= 0.11.0
 KIND_K8S_VERSION ?= v1.22.4
+SHELLCHECK_VER ?= v0.7.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -64,10 +66,27 @@ $(TOOLS_DIR)/misspell: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_M
 	cd $(TOOLS_MOD_DIR) && \
 	go build -o $(TOOLS_DIR)/misspell github.com/client9/misspell/cmd/misspell
 
+SHELLCHECK := $(TOOLS_BIN_DIR)/shellcheck-$(SHELLCHECK_VER)
+$(SHELLCHECK): OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+$(SHELLCHECK): ARCH := $(shell uname -m)
+$(SHELLCHECK):
+	mkdir -p $(TOOLS_BIN_DIR)
+	rm -rf "$(SHELLCHECK)*"
+	curl -sfOL "https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VER)/shellcheck-$(SHELLCHECK_VER).$(OS).$(ARCH).tar.xz"
+	tar xf shellcheck-$(SHELLCHECK_VER).$(OS).$(ARCH).tar.xz
+	cp "shellcheck-$(SHELLCHECK_VER)/shellcheck" "$(SHELLCHECK)"
+	ln -sf "$(SHELLCHECK)" "$(TOOLS_BIN_DIR)/shellcheck"
+	chmod +x "$(TOOLS_BIN_DIR)/shellcheck" "$(SHELLCHECK)"
+	rm -rf shellcheck*
+
 .PHONY: lint
 lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
 	$(TOOLS_DIR)/golangci-lint run --timeout=5m -v
 	$(TOOLS_DIR)/misspell $(ALL_DOCS)
+
+.PHONY: shellcheck
+shellcheck: $(SHELLCHECK)
+	$(SHELLCHECK) */*.sh
 
 .PHONY: unit-test
 unit-test:
