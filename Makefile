@@ -81,7 +81,7 @@ lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK)
-	$(SHELLCHECK) */*.sh
+	find . -name '*.sh' | xargs $(SHELLCHECK)
 
 .PHONY: unit-test
 unit-test:
