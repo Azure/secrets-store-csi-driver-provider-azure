@@ -11,6 +11,8 @@ steps:
       # show all vulnerabilities in the logs
       ./trivy image "${REGISTRY}/provider-azure:${IMAGE_VERSION}"
       ./trivy image --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure:${IMAGE_VERSION}" || exit 1
+      ./trivy image "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64"
+      ./trivy image --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64" || exit 1
 
       # # scan arc conformance test image
       # export IMAGE_VERSION="conformance-test"
