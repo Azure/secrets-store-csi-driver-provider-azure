@@ -17,17 +17,12 @@ jobs:
   - template: templates/load-test.yaml
   - template: templates/e2e-test-azure.yaml
     parameters:
-      clusterTypes:
-      - "aks"
-      - "aks-engine"
       osTypes:
       - "linux"
       - "windows"
       testClusterUpgrade: true
   - template: templates/e2e-test-azure.yaml 
     parameters:
-      clusterTypes:
-      - "aks"
       osTypes:
       - "linux"
       testWithGPU: true

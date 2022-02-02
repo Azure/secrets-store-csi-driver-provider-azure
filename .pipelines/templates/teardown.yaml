@@ -1,8 +1,5 @@
 steps:
   - script: |
-      if [[ $CLUSTER_TYPE == "aks-engine" ]]; then
-        rm ${LOCAL_SSH_KEY}*
-      fi
       az login -i > /dev/null
       echo "deleting '${AZURE_CLUSTER_NAME}' resource group"
       az group delete -n ${AZURE_CLUSTER_NAME} --subscription $(SUBSCRIPTION_ID) --yes --no-wait
