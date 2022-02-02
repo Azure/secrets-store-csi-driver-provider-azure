@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-# disable globbing
-set -f 
 
 results_dir="${RESULTS_DIR:-/tmp/results}"
 keyvault_name="arc-akv-secrets-$(openssl rand -hex 2)"
@@ -31,7 +29,7 @@ saveResult() {
   # prepare the results for handoff to the Sonobuoy worker.
   cd "${results_dir}"
   # Sonobuoy worker expects a tar file.
-  tar czf results.tar.gz *
+  tar czf results.tar.gz ./*
   # Signal the worker by writing out the name of the results file into a "done" file.
   printf "%s"/results.tar.gz, "${results_dir}" > "${results_dir}"/done
 }
