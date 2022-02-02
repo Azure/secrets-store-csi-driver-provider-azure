@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
+# disable globbing
+set -f 
 
 results_dir="${RESULTS_DIR:-/tmp/results}"
 keyvault_name="arc-akv-secrets-$(openssl rand -hex 2)"
@@ -14,6 +16,7 @@ function waitForResources {
     NAMESPACE=$2
     for i in $(seq 1 $max_retries)
     do
+    echo "Waiting for $RESOURCE in $NAMESPACE to be available. Attempt# $i of $max_retries"
     if [[ $(kubectl wait --for=condition=available "${RESOURCE}" --all --namespace "${NAMESPACE}") ]]; then
         available=true
         break
@@ -30,7 +33,7 @@ saveResult() {
   # Sonobuoy worker expects a tar file.
   tar czf results.tar.gz *
   # Signal the worker by writing out the name of the results file into a "done" file.
-  printf "${results_dir}"/results.tar.gz > "${results_dir}"/done
+  printf "%s"/results.tar.gz, "${results_dir}" > "${results_dir}"/done
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
@@ -93,8 +96,9 @@ setupKeyVault() {
   -f publicKey.pem 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   keyVersion=$(az keyvault key show --vault-name "$keyvault_name" --name $key_name --query "key.kid" | tr -d '"' | sed 's#.*/##')
+  publicKeyContent=$(cat publicKey.pem)
   export KEY_NAME=$key_name
-  export KEY_VALUE=$(cat publicKey.pem)
+  export KEY_VALUE=$publicKeyContent
   export KEY_VERSION=$keyVersion
 
   # RSA-HSM Key
@@ -175,7 +179,7 @@ if [ -z "${AZURE_CLIENT_SECRET}" ]; then
 fi
 
 if [ -z "${ARC_CLUSTER_NAME}" ]; then
-  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > "${results_dir}"}/error
+  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
