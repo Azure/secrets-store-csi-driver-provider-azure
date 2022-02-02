@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
-	"github.com/pkg/errors"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
 )
 

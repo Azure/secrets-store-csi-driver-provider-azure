@@ -50,6 +50,7 @@ func Install(input InstallInput) {
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.syncSecret.enabled=true"),
+		fmt.Sprintf(`--set=secrets-store-csi-driver.tokenRequests[0].audience="api://AzureADTokenExchange"`),
 		fmt.Sprintf("--set=logVerbosity=1"),
 		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
 		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
@@ -76,7 +77,7 @@ type UpgradeInput struct {
 	Config *framework.Config
 }
 
-//Upgrade upgrades csi-secrets-store-provider-azure to chart specified in config
+// Upgrade upgrades csi-secrets-store-provider-azure to chart specified in config
 func Upgrade(input UpgradeInput) {
 	Expect(input.Config).NotTo(BeNil(), "input.Config is required for Helm upgrade")
 
@@ -109,6 +110,7 @@ func Upgrade(input UpgradeInput) {
 		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.syncSecret.enabled=true"),
+		fmt.Sprintf(`--set=secrets-store-csi-driver.tokenRequests[0].audience="api://AzureADTokenExchange"`),
 		fmt.Sprintf("--set=logVerbosity=1"),
 		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
 		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
