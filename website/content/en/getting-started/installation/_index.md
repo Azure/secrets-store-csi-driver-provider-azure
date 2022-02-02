@@ -9,6 +9,12 @@ description: >
 
 ### Install the Secrets Store CSI Driver and the Azure Keyvault Provider
 
+{{% alert title="Note" color="info" %}}
+
+The helm chart repository URL has changed to `https://azure.github.io/secrets-store-csi-driver-provider-azure/charts`
+
+{{% /alert %}}
+
 #### Prerequisites
 
 Recommended Kubernetes version:
@@ -25,7 +31,7 @@ Azure Key Vault Provider for Secrets Store CSI Driver allows users to customize 
 > Recommended to use Helm3
 
 ```bash
-helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
 helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
 ```
 
