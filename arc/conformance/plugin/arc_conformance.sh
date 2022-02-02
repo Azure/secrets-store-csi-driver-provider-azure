@@ -31,7 +31,7 @@ saveResult() {
   # Sonobuoy worker expects a tar file.
   tar czf results.tar.gz ./*
   # Signal the worker by writing out the name of the results file into a "done" file.
-  printf "%s"/results.tar.gz, "${results_dir}" > "${results_dir}"/done
+  printf "%s/results.tar.gz" "${results_dir}" > "${results_dir}"/done
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
@@ -229,7 +229,7 @@ az k8s-extension create \
 kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
 kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
 
-/arc/e2e -ginkgo.v -ginkgo.skip="${GINKGO_SKIP}"
+/arc/e2e -ginkgo.v -ginkgo.skip="${GINKGO_SKIP}" -ginkgo.focus="${GINKGO_FOCUS}"
 
 # clean up test resources
 az k8s-extension delete \
