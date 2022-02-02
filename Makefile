@@ -86,7 +86,7 @@ lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK)
-	$(SHELLCHECK) */*.sh
+	find . -name '*.sh' | xargs $(SHELLCHECK)
 
 .PHONY: unit-test
 unit-test:
@@ -248,8 +248,3 @@ promote-staging-manifest: #promote staging manifests to release dir
 	@cp -r manifest_staging/deployment .
 	@rm -rf charts/csi-secrets-store-provider-azure
 	@cp -r manifest_staging/charts/csi-secrets-store-provider-azure ./charts
-	@mkdir -p ./charts/tmp
-	@helm package ./charts/csi-secrets-store-provider-azure -d ./charts/tmp/
-	@helm repo index ./charts/tmp --url https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts --merge ./charts/index.yaml
-	@mv ./charts/tmp/* ./charts
-	@rm -rf ./charts/tmp

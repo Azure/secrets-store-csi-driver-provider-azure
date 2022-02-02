@@ -12,7 +12,7 @@ description: >
 1. Install the Azure Keyvault provider for Secrets Store CSI Driver on Azure RedHat OpenShift run:
 
     ```bash
-    helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+    helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
     helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --set linux.privileged=true
     ```
 

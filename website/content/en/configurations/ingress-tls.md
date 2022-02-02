@@ -43,7 +43,7 @@ az keyvault certificate import --vault-name $AKV_NAME -n $CERT_NAME -f $CERT_NAM
 Deploy the Azure Key Vault Provider and Secrets Store CSI Driver components:
 
 ```bash
-helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
 helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --set secrets-store-csi-driver.syncSecret.enabled=true
 ```
 
