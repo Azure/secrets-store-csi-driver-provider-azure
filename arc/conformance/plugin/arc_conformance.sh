@@ -14,7 +14,7 @@ function waitForResources {
     NAMESPACE=$2
     for i in $(seq 1 $max_retries)
     do
-    if [[ $(kubectl wait --for=condition=available ${RESOURCE} --all --namespace ${NAMESPACE}) ]]; then
+    if [[ $(kubectl wait --for=condition=available "${RESOURCE}" --all --namespace "${NAMESPACE}") ]]; then
         available=true
         break
     fi
@@ -26,11 +26,11 @@ function waitForResources {
 
 saveResult() {
   # prepare the results for handoff to the Sonobuoy worker.
-  cd ${results_dir}
+  cd "${results_dir}"
   # Sonobuoy worker expects a tar file.
   tar czf results.tar.gz *
   # Signal the worker by writing out the name of the results file into a "done" file.
-  printf ${results_dir}/results.tar.gz > ${results_dir}/done
+  printf "${results_dir}"/results.tar.gz > "${results_dir}"/done
 }
 
 # Ensure that we tell the Sonobuoy worker we are done regardless of results.
@@ -48,32 +48,32 @@ setEnviornmentVariables() {
 setupKeyVault() {
   # create resource group
   az group create \
-  --name $keyvault_resource_group \
-  --location $keyvault_location 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --name "$keyvault_resource_group" \
+  --location "$keyvault_location" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault
   az keyvault create \
-  --name $keyvault_name \
-  --resource-group $keyvault_resource_group \
-  --location $keyvault_location \
-  --sku premium 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --name "$keyvault_name" \
+  --resource-group "$keyvault_resource_group" \
+  --location "$keyvault_location" \
+  --sku premium 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
   export KEYVAULT_NAME=$keyvault_name
 
   # set access policy for keyvault
   az keyvault set-policy \
-  --name $keyvault_name \
-  --resource-group $keyvault_resource_group \
-  --spn ${AZURE_CLIENT_ID} \
+  --name "$keyvault_name" \
+  --resource-group "$keyvault_resource_group" \
+  --spn "${AZURE_CLIENT_ID}" \
   --key-permissions get create \
   --secret-permissions get set \
-  --certificate-permissions get create import 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --certificate-permissions get create import 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault secret
   secret_value=$(openssl rand -hex 6)
   az keyvault secret set \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name secret1 \
-  --value $secret_value 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --value "$secret_value" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
   export SECRET_NAME=secret1
   export SECRET_VALUE=$secret_value
 
@@ -81,35 +81,35 @@ setupKeyVault() {
   # RSA key
   key_name=key1
   az keyvault key create \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name $key_name \
   --kty RSA \
-  --size 2048 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --size 2048 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   az keyvault key download \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name $key_name \
   -e PEM \
-  -f publicKey.pem 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  -f publicKey.pem 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  keyVersion=$(az keyvault key show --vault-name $keyvault_name --name $key_name --query "key.kid" | tr -d '"' | sed 's#.*/##')
+  keyVersion=$(az keyvault key show --vault-name "$keyvault_name" --name $key_name --query "key.kid" | tr -d '"' | sed 's#.*/##')
   export KEY_NAME=$key_name
   export KEY_VALUE=$(cat publicKey.pem)
   export KEY_VERSION=$keyVersion
 
   # RSA-HSM Key
   az keyvault key create \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name rsahsmkey1 \
   --kty RSA-HSM \
-  --size 2048 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --size 2048 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # EC-HSM Key
   az keyvault key create \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name echsmkey1 \
   --kty EC-HSM \
-  --curve P-256 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --curve P-256 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
 
   # create keyvault certificate
@@ -121,19 +121,19 @@ setupKeyVault() {
   --kty RSA \
   --not-after 86400h \
   --no-password \
-  --insecure 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --insecure 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  openssl pkcs12 -export -in test.crt -inkey test.key -out test.pfx -passout pass: 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  openssl pkcs12 -export -in test.crt -inkey test.key -out test.pfx -passout pass: 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name pemcert1 \
-  --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --file test.pfx 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name pkcs12cert1 \
-  --file test.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --file test.pfx 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # ECC certificates
   step certificate create test.domain.com testec.crt testec.key \
@@ -143,44 +143,44 @@ setupKeyVault() {
   --kty EC \
   --not-after 86400h \
   --no-password \
-  --insecure 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --insecure 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
   
-  openssl pkcs12 -export -in testec.crt -inkey testec.key -out testec.pfx -passout pass: 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  openssl pkcs12 -export -in testec.crt -inkey testec.key -out testec.pfx -passout pass: 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   az keyvault certificate import \
-  --vault-name $keyvault_name \
+  --vault-name "$keyvault_name" \
   --name ecccert1 \
-  --file testec.pfx 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  --file testec.pfx 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 }
 
 # validate enviorment variables
 if [ -z "${TENANT_ID}" ]; then
-  echo "ERROR: parameter TENANT_ID is required." > ${results_dir}/error
+  echo "ERROR: parameter TENANT_ID is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
 if [ -z "${SUBSCRIPTION_ID}" ]; then
-  echo "ERROR: parameter SUBSCRIPTION_ID is required." > ${results_dir}/error
+  echo "ERROR: parameter SUBSCRIPTION_ID is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
 if [ -z "${AZURE_CLIENT_ID}" ]; then
-  echo "ERROR: parameter AZURE_CLIENT_ID is required." > ${results_dir}/error
+  echo "ERROR: parameter AZURE_CLIENT_ID is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
 if [ -z "${AZURE_CLIENT_SECRET}" ]; then
-  echo "ERROR: parameter AZURE_CLIENT_SECRET is required." > ${results_dir}/error
+  echo "ERROR: parameter AZURE_CLIENT_SECRET is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
 if [ -z "${ARC_CLUSTER_NAME}" ]; then
-  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > ${results_dir}/error
+  echo "ERROR: parameter ARC_CLUSTER_NAME is required." > "${results_dir}"}/error
   python3 /arc/setup_failure_handler.py
 fi
 
 if [ -z "${ARC_CLUSTER_RG}" ]; then
-  echo "ERROR: parameter ARC_CLUSTER_RG is required." > ${results_dir}/error
+  echo "ERROR: parameter ARC_CLUSTER_RG is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
 fi
 
@@ -190,11 +190,11 @@ az extension add --name k8s-extension
 
 # login with service principal
 az login --service-principal \
-  -u ${AZURE_CLIENT_ID} \
-  -p ${AZURE_CLIENT_SECRET} \
-  --tenant ${TENANT_ID} 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+  -u "${AZURE_CLIENT_ID}" \
+  -p "${AZURE_CLIENT_SECRET}" \
+  --tenant "${TENANT_ID}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-az account set --subscription ${SUBSCRIPTION_ID} 2> ${results_dir}/error || python3 /arc/setup_failure_handler.py
+az account set --subscription "${SUBSCRIPTION_ID}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
 # set environment variables
 setEnviornmentVariables
@@ -205,7 +205,7 @@ setupKeyVault
 # wait for resources in ARC namespace
 waitSuccessArc="$(waitForResources deployment azure-arc)"
 if [ "${waitSuccessArc}" == false ]; then
-    echo "ERROR: deployment is not avilable in namespace - azure-arc" > ${results_dir}/error
+    echo "ERROR: deployment is not avilable in namespace - azure-arc" > "${results_dir}"/error
     python3 /arc/setup_failure_handler.py
     exit 1
 fi
@@ -214,8 +214,8 @@ az k8s-extension create \
       --name arc-akv-conformance \
       --extension-type Microsoft.AzureKeyVaultSecretsProvider \
       --scope cluster \
-      --cluster-name ${ARC_CLUSTER_NAME} \
-      --resource-group ${ARC_CLUSTER_RG} \
+      --cluster-name "${ARC_CLUSTER_NAME}" \
+      --resource-group "${ARC_CLUSTER_RG}" \
       --cluster-type connectedClusters \
       --release-train preview \
       --release-namespace kube-system \
@@ -227,8 +227,19 @@ az k8s-extension create \
 kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
 kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
 
-/arc/e2e -ginkgo.v -ginkgo.skip=${GINKGO_SKIP}
+/arc/e2e -ginkgo.v -ginkgo.skip="${GINKGO_SKIP}"
 
 # clean up test resources
-az k8s-extension delete --name arc-akv-conformance --resource-group ${ARC_CLUSTER_RG} --cluster-type connectedClusters --cluster-name ${ARC_CLUSTER_NAME} --force --yes --no-wait
-az group delete --name $keyvault_resource_group --yes --no-wait
+az k8s-extension delete \
+  --name arc-akv-conformance \
+  --resource-group "${ARC_CLUSTER_RG}" \
+  --cluster-type connectedClusters \
+  --cluster-name "${ARC_CLUSTER_NAME}" \
+  --force \
+  --yes \
+  --no-wait
+
+az group delete \
+  --name "$keyvault_resource_group" \
+  --yes \
+  --no-wait

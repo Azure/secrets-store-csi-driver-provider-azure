@@ -44,6 +44,7 @@ ALL_OS_ARCH = $(foreach os, $(ALL_OS), ${ALL_OS_ARCH.${os}})
 # The current context of image building
 # The architecture of the image
 ARCH ?= amd64
+CONFORMANCE_ARCH ?= linux/amd64,linux/arm64
 # OS Version for the Windows images: 1809, 1903, 1909, 2004, ltsc2022
 OSVERSION ?= 1809
 # Output type of docker buildx build
@@ -171,6 +172,15 @@ push-manifest:
 	done
 	docker manifest push --purge $(IMAGE_TAG)
 	docker manifest inspect $(IMAGE_TAG)
+
+.PHONY: push-conformance-manifest
+push-conformance-manifest: docker-buildx-builder build-e2e-test
+	docker buildx build \
+	--no-cache \
+	--push \
+	--platform=${CONFORMANCE_ARCH} \
+	--build-arg STEP_CLI_VERSION=$(STEP_CLI_VERSION) \
+	-t $(CONFORMANCE_IMAGE_TAG) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: clean
 clean:
