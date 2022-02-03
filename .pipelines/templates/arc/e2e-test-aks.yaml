@@ -1,8 +1,6 @@
 jobs:
   - job: e2e_arc_aks
     variables:
-    - name: CLUSTER_TYPE
-      value: aks
     - name: OS_TYPE
       value: linux
     - group: csi-secrets-store-e2e
