@@ -8,8 +8,7 @@ ARG TARGETARCH
 
 # install dependencies
 RUN apt-get update -y && apt-get upgrade -y
-RUN DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install python3-pip bash curl apt-transport-https lsb-release gnupg -y --allow-change-held-packages
-RUN python3 -m pip install junit_xml
+RUN DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install python3-pip bash curl apt-transport-https lsb-release gnupg -y --allow-change-held-packages && python3 -m pip install junit_xml
 
 # install azcli
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
