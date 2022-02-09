@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/serviceaccount"
 
 	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
@@ -25,10 +26,14 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 		spc      *v1alpha1.SecretProviderClass
 		ns       *corev1.Namespace
 		p        *corev1.Pod
+		sa       *corev1.ServiceAccount
 	)
 
 	BeforeEach(func() {
-		ns = namespace.Create(namespace.CreateInput{
+		// The preconfigured federated identity credential is for namespace: workloadidentity
+		// service account name: workload-identity-sa. So creating the namespace with the
+		// fixed name here.
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
 		})
@@ -72,12 +77,19 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 			},
 		})
 
+		sa = serviceaccount.Create(serviceaccount.CreateInput{
+			Creator:   kubeClient,
+			Name:      "workload-identity-sa",
+			Namespace: ns.Name,
+		})
+
 		p = pod.Create(pod.CreateInput{
 			Creator:                 kubeClient,
 			Config:                  config,
 			Name:                    "busybox-secrets-store-inline-wi",
 			Namespace:               ns.Name,
 			SecretProviderClassName: spc.Name,
+			ServiceAccountName:      sa.Name,
 		})
 	})
 
@@ -91,8 +103,16 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 	})
 
 	It("should read secret, key from pod", func() {
-		// remove this when driver v1.1.0 is released
-		Skip("workload identity not yet supported")
+		if !config.IsKindCluster {
+			Skip("test case currently supported for kind cluster only")
+		}
+		// the audience field is configurable only with helm charts
+		if !config.IsHelmTest {
+			Skip("test case currently supported for helm test only")
+		}
+		if config.IsArcTest {
+			Skip("test case currently not supported for arc")
+		}
 
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,

@@ -36,6 +36,15 @@ var (
 	ErrServiceAccountTokensNotFound = errors.New("service account tokens not found")
 )
 
+// authResult contains the subset of results from token acquisition operation in ConfidentialClientApplication
+// For details see https://aka.ms/msal-net-authenticationresult
+type authResult struct {
+	accessToken    string
+	expiresOn      time.Time
+	grantedScopes  []string
+	declinedScopes []string
+}
+
 // NMIResponse is the response received from aad-pod-identity when requesting token
 // on behalf of the pod
 type NMIResponse struct {
@@ -127,7 +136,7 @@ func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAsser
 	scope := strings.TrimSuffix(resource, "/")
 	// .default needs to be added to the scope
 	if !strings.HasSuffix(resource, ".default") {
-		resource += "/.default"
+		scope += "/.default"
 	}
 	result, err := confidentialClientApp.AcquireTokenByCredential(ctx, []string{scope})
 	if err != nil {
@@ -143,15 +152,17 @@ func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAsser
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse expires_on: %w", err)
 	}
-	oauthConfig, err := adal.NewOAuthConfig(aadEndpoint, tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create OAuth config: %w", err)
-	}
-	spt, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, clientID, resource, token, nil)
-	if err != nil {
-		return nil, err
-	}
-	return autorest.NewBearerAuthorizer(spt), nil
+	return autorest.NewBearerAuthorizer(authResult{
+		accessToken:    result.AccessToken,
+		expiresOn:      result.ExpiresOn,
+		grantedScopes:  result.GrantedScopes,
+		declinedScopes: result.DeclinedScopes,
+	}), nil
+}
+
+// OAuthToken implements the OAuthTokenProvider interface.  It returns the current access token.
+func (ar authResult) OAuthToken() string {
+	return ar.accessToken
 }
 
 func getAuthorizerForServicePrincipal(clientID, clientSecret, resource, aadEndpoint, tenantID string) (autorest.Authorizer, error) {
@@ -286,6 +297,7 @@ func parseExpiresOn(s string) (json.Number, error) {
 // passed from driver as part of MountRequest.
 // ref: https://kubernetes-csi.github.io/docs/token-requests.html
 func ParseServiceAccountToken(saTokens string) (string, error) {
+	klog.V(5).InfoS("parsing service account token for workload identity")
 	if len(saTokens) == 0 {
 		return "", ErrServiceAccountTokensNotFound
 	}
@@ -302,6 +314,7 @@ func ParseServiceAccountToken(saTokens string) (string, error) {
 	if err := json.Unmarshal([]byte(saTokens), &tokens); err != nil {
 		return "", fmt.Errorf("failed to unmarshal service account tokens, error: %w", err)
 	}
+	klog.V(5).InfoS("successfully unmarshalled service account tokens", "tokens", len(tokens))
 	// For Azure AD Workload Identity, the audience recommended for use is
 	// "api://AzureADTokenExchange"
 	audience := "api://AzureADTokenExchange"

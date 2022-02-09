@@ -39,6 +39,16 @@ jobs:
           IS_HELM_TEST: false
 
     steps:
+      # logging in to download the sa.pub and sa.key used for creating the kind cluster
+      # with OIDC issuer enabled
+      - script: |
+          az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID --allow-no-subscriptions > /dev/null
+          az account set --subscription $AZURE_SUBSCRIPTION_ID > /dev/null
+        env:
+          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+          AZURE_TENANT_ID: $(TENANT_ID)
+          AZURE_SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
       - script: |
           export REGISTRY="e2e"
           export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
@@ -49,6 +59,8 @@ jobs:
         displayName: "Build image"
         env:
           CI_KIND_CLUSTER: true
+          SERVICE_ACCOUNT_ISSUER: $(SERVICE_ACCOUNT_ISSUER)
+          SERVICE_ACCOUNT_KEYVAULT_NAME: $(SERVICE_ACCOUNT_KEYVAULT_NAME)
       - script: |
           make e2e-test
         displayName: Run e2e tests

@@ -22,7 +22,7 @@ type CreateInput struct {
 	Name    string
 }
 
-// Create creates a namespace.
+// Create creates a namespace with the provided name as generate name.
 func Create(input CreateInput) *corev1.Namespace {
 	Expect(input.Creator).NotTo(BeNil(), "input.Creator is required for Namespace.Create")
 	Expect(input.Name).NotTo(BeEmpty(), "input.Name is required for Namespace.Create")
@@ -30,6 +30,23 @@ func Create(input CreateInput) *corev1.Namespace {
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", input.Name),
+		},
+	}
+
+	Expect(input.Creator.Create(context.TODO(), ns)).Should(Succeed())
+	By(fmt.Sprintf("Creating namespace \"%s\"", ns.Name))
+
+	return ns
+}
+
+// CreateWithName creates a namespace with the provided name as the namespace name.
+func CreateWithName(input CreateInput) *corev1.Namespace {
+	Expect(input.Creator).NotTo(BeNil(), "input.Creator is required for Namespace.CreateWithName")
+	Expect(input.Name).NotTo(BeEmpty(), "input.Name is required for Namespace.CreateWithName")
+
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: input.Name,
 		},
 	}
 
