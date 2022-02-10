@@ -110,9 +110,6 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 		if !config.IsHelmTest {
 			Skip("test case currently supported for helm test only")
 		}
-		if config.IsArcTest {
-			Skip("test case currently not supported for arc")
-		}
 
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,

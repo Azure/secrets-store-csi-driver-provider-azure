@@ -13,6 +13,9 @@ jobs:
         make install-helm install-kubectl setup-kind
       displayName: "install dependencies and setup kind"
       condition: succeeded()
+      env:
+        SERVICE_ACCOUNT_ISSUER: $(SERVICE_ACCOUNT_ISSUER)
+        SERVICE_ACCOUNT_KEYVAULT_NAME: $(SERVICE_ACCOUNT_KEYVAULT_NAME)
     - template: cluster-connect.yaml
     - template: extension-create.yaml
       parameters:
