@@ -162,7 +162,7 @@ secrets-store-csi-driver:
     enabled: false
 
   tokenRequests:
-  - api://AzureADTokenExchange
+  - audience: api://AzureADTokenExchange
 
 ## Install default service account
 rbac:

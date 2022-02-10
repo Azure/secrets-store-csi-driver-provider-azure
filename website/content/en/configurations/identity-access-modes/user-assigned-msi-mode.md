@@ -114,5 +114,6 @@ In AKS you can use the [User-assigned Kubelet managed identity](https://docs.mic
     userAssignedIdentityID: "<client id of the managed identity>"
     ```
 
-## Pros:
+## Pros
+
 1. Supported on both Windows and Linux.
