@@ -1,6 +1,4 @@
 parameters:
-  - name: clusterTypes
-    type: object
   - name: osTypes
     type: object
   - name: testClusterUpgrade
@@ -11,106 +9,99 @@ parameters:
     default: false
 
 jobs:
-  - ${{ each clusterType in parameters.clusterTypes }}:
-    - ${{ each osType in parameters.osTypes }}:
-      - job:
-        displayName: ${{ format('{0}/{1}/gpu={2}', clusterType, osType, parameters.testWithGPU) }}
-        timeoutInMinutes: 120
-        cancelTimeoutInMinutes: 5
-        workspace:
-          clean: all
+  - ${{ each osType in parameters.osTypes }}:
+    - job:
+      displayName: ${{ format('aks_{0}/gpu={1}', osType, parameters.testWithGPU) }}
+      timeoutInMinutes: 120
+      cancelTimeoutInMinutes: 5
+      workspace:
+        clean: all
 
-        variables:
-          - name: CLUSTER_CONFIG
-            value: ${{ format('{0}', osType) }}
-          - name: CLUSTER_TYPE
-            value: ${{ format('{0}', clusterType) }}
-          - group: csi-secrets-store-e2e
+      variables:
+        - name: CLUSTER_CONFIG
+          value: ${{ format('{0}', osType) }}
+        - group: csi-secrets-store-e2e
 
-        steps:
-        - script: |
-            OS_TYPE=$(echo ${{ osType }} | cut -d '-' -f1 | tr -d '[:space:]')
-            echo "OS type - $OS_TYPE"
-            echo "##vso[task.setvariable variable=OS_TYPE]$OS_TYPE"
+      steps:
+      - script: |
+          OS_TYPE=$(echo ${{ osType }} | cut -d '_' -f1 | tr -d '[:space:]')
+          echo "OS type: $OS_TYPE"
+          echo "##vso[task.setvariable variable=OS_TYPE]$OS_TYPE"
 
-            CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '-' -f2 | tr -d '[:space:]')
-            echo "Container Runtime - $CONTAINER_RUNTIME"
-            echo "##vso[task.setvariable variable=CONTAINER_RUNTIME]$CONTAINER_RUNTIME"
-          displayName: 'Determine os type and container runtime'
+          CONTAINER_RUNTIME=$(echo ${{ osType }} | cut -d '_' -f2 | tr -d '[:space:]')
+          echo "Container Runtime: $CONTAINER_RUNTIME"
+          echo "##vso[task.setvariable variable=CONTAINER_RUNTIME]$CONTAINER_RUNTIME"
+        displayName: 'Determine os type and container runtime'
 
-        - script: |
-            # Download kubectl
-            curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-          displayName: 'Install kubectl'
-          
-        - template: build-images.yaml
+      - script: |
+          # Download kubectl
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+        displayName: 'Install kubectl'
+        
+      - template: build-images.yaml
 
-        - ${{ if eq(clusterType, 'aks') }}:
-          - template: aks-setup.yaml
-            parameters:
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              testWithGPU: ${{ parameters.testWithGPU }}
-              containerRuntime: $(CONTAINER_RUNTIME)
+      - template: aks-setup.yaml
+        parameters:
+          testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+          testWithGPU: ${{ parameters.testWithGPU }}
+          containerRuntime: $(CONTAINER_RUNTIME)
 
-        - ${{ if eq(clusterType, 'aks-engine') }}:
-          - template: aks-engine-setup.yaml
+      - template: assign-user-identity.yaml
+        parameters:
+          identitySubscriptionID: $(SUBSCRIPTION_ID)
 
-        - template: assign-user-identity.yaml
-          parameters:
-            identitySubscriptionID: $(SUBSCRIPTION_ID)
+      - template: role-assignment.yaml
 
-        - template: role-assignment.yaml
+      # Run e2e tests with Released Version
+      - template: e2e-test.yaml
+        parameters:
+          testName: "Run e2e test with Released Version"
+          testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+          resetImageVersion: true
+          isBackwardCompatibilityTest: true
+          testReleasedVersion: true
+          testWithGPU: ${{ parameters.testWithGPU }}
+          osType: $(OS_TYPE)
 
-        # Run e2e tests with Released Version
-        - template: e2e-test.yaml
-          parameters:
-            testName: "Run e2e test with Released Version"
-            testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-            resetImageVersion: true
-            isBackwardCompatibilityTest: true
-            testReleasedVersion: true
-            testWithGPU: ${{ parameters.testWithGPU }}
-            osType: $(OS_TYPE)
+      # Run e2e tests with New Version
+      - template: e2e-test.yaml
+        parameters:
+          testName: "Run e2e test with New Version"
+          testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+          isBackwardCompatibilityTest: true
+          setRegistry: true
+          testWithGPU: ${{ parameters.testWithGPU }}
+          osType: $(OS_TYPE)
 
-        # Run e2e tests with New Version
+      - ${{ if eq(parameters.testClusterUpgrade, true) }}:
+        - template: aks-upgrade.yaml
+
+        # Run e2e tests after cluster upgrade
         - template: e2e-test.yaml
           parameters:
             testName: "Run e2e test with New Version"
             testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-            isBackwardCompatibilityTest: true
             setRegistry: true
             testWithGPU: ${{ parameters.testWithGPU }}
             osType: $(OS_TYPE)
 
-        - ${{ if and(parameters.testClusterUpgrade, eq(clusterType, 'aks')) }}:
-          - template: aks-upgrade.yaml
+        - template: aks-upgrade.yaml
 
-          # Run e2e tests after cluster upgrade
-          - template: e2e-test.yaml
-            parameters:
-              testName: "Run e2e test with New Version"
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              setRegistry: true
-              testWithGPU: ${{ parameters.testWithGPU }}
-              osType: $(OS_TYPE)
-
-          - template: aks-upgrade.yaml
-
-          - template: e2e-test.yaml
-            parameters:
-              testName: "Run e2e test with New Version"
-              testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
-              setRegistry: true
-              testWithGPU: ${{ parameters.testWithGPU }}
-              osType: $(OS_TYPE)
-
-        - template: cleanup-role-assignments.yaml
-        - template: teardown.yaml
-        - template: cleanup-images.yaml
+        - template: e2e-test.yaml
           parameters:
-            imageVersion: $(IMAGE_VERSION)
-            registryRepo: $(CI_PROVIDER_REPOSITORY)
-            subscriptionId: $(SUBSCRIPTION_ID)
-            registryName: $(REGISTRY_NAME)
+            testName: "Run e2e test with New Version"
+            testClusterUpgrade: ${{ parameters.testClusterUpgrade }}
+            setRegistry: true
+            testWithGPU: ${{ parameters.testWithGPU }}
+            osType: $(OS_TYPE)
+
+      - template: cleanup-role-assignments.yaml
+      - template: teardown.yaml
+      - template: cleanup-images.yaml
+        parameters:
+          imageVersion: $(IMAGE_VERSION)
+          registryRepo: $(CI_PROVIDER_REPOSITORY)
+          subscriptionId: $(SUBSCRIPTION_ID)
+          registryName: $(REGISTRY_NAME)

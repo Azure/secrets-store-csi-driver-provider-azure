@@ -10,7 +10,9 @@ REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.0.1
 IMAGE_NAME ?= provider-azure
+CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
+CONFORMANCE_IMAGE_TAG := $(REGISTRY)/$(CONFORMANCE_IMAGE_NAME):$(IMAGE_VERSION)
 
 # build variables
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
@@ -24,6 +26,7 @@ GO_FILES=$(shell go list ./... | grep -v /test/e2e)
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 TOOLS_MOD_DIR := ./tools
 TOOLS_DIR := $(abspath ./.tools)
+TOOLS_BIN_DIR := $(abspath $(TOOLS_DIR)/bin)
 
 GO111MODULE = on
 DOCKER_CLI_EXPERIMENTAL = enabled
@@ -47,9 +50,13 @@ OSVERSION ?= 1809
 OUTPUT_TYPE ?= registry
 BUILDX_BUILDER_NAME ?= img-builder
 
+# step cli version
+STEP_CLI_VERSION=0.18.0
+
 # E2E test variables
 KIND_VERSION ?= 0.11.0
 KIND_K8S_VERSION ?= v1.22.4
+SHELLCHECK_VER ?= v0.7.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -59,10 +66,27 @@ $(TOOLS_DIR)/misspell: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_M
 	cd $(TOOLS_MOD_DIR) && \
 	go build -o $(TOOLS_DIR)/misspell github.com/client9/misspell/cmd/misspell
 
+SHELLCHECK := $(TOOLS_BIN_DIR)/shellcheck-$(SHELLCHECK_VER)
+$(SHELLCHECK): OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+$(SHELLCHECK): ARCH := $(shell uname -m)
+$(SHELLCHECK):
+	mkdir -p $(TOOLS_BIN_DIR)
+	rm -rf "$(SHELLCHECK)*"
+	curl -sfOL "https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VER)/shellcheck-$(SHELLCHECK_VER).$(OS).$(ARCH).tar.xz"
+	tar xf shellcheck-$(SHELLCHECK_VER).$(OS).$(ARCH).tar.xz
+	cp "shellcheck-$(SHELLCHECK_VER)/shellcheck" "$(SHELLCHECK)"
+	ln -sf "$(SHELLCHECK)" "$(TOOLS_BIN_DIR)/shellcheck"
+	chmod +x "$(TOOLS_BIN_DIR)/shellcheck" "$(SHELLCHECK)"
+	rm -rf shellcheck*
+
 .PHONY: lint
 lint: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/misspell
 	$(TOOLS_DIR)/golangci-lint run --timeout=5m -v
 	$(TOOLS_DIR)/misspell $(ALL_DOCS)
+
+.PHONY: shellcheck
+shellcheck: $(SHELLCHECK)
+	find . -name '*.sh' | xargs $(SHELLCHECK)
 
 .PHONY: unit-test
 unit-test:
@@ -71,6 +95,10 @@ unit-test:
 .PHONY: build
 build:
 	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure ./cmd/
+
+.PHONY: build-e2e-test
+build-e2e-test:
+	ARCH=${ARCH} make -C test/e2e/ build
 
 .PHONY: build-windows
 build-windows:
@@ -83,6 +111,15 @@ build-darwin:
 .PHONY: container
 container: build
 	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
+
+.PHONY: arc-conformance-container
+arc-conformance-container: docker-buildx-builder build-e2e-test
+	docker buildx build \
+	--no-cache \
+	--platform="linux/$(ARCH)" \
+	--output=type=$(OUTPUT_TYPE) \
+	--build-arg STEP_CLI_VERSION=$(STEP_CLI_VERSION) \
+	-t $(CONFORMANCE_IMAGE_TAG)-linux-$(ARCH) -f arc/conformance/plugin/Dockerfile .
 
 .PHONY: container-linux
 container-linux: docker-buildx-builder
@@ -134,6 +171,18 @@ push-manifest:
 	done
 	docker manifest push --purge $(IMAGE_TAG)
 	docker manifest inspect $(IMAGE_TAG)
+
+.PHONY: conformance-container-all
+conformance-container-all:
+	for arch in $(ALL_ARCH.linux); do \
+		ARCH=$${arch} $(MAKE) arc-conformance-container; \
+	done
+
+.PHONY: push-conformance-manifest
+push-conformance-manifest:
+	docker manifest create --amend $(CONFORMANCE_IMAGE_TAG) $(foreach osarch, $(ALL_OS_ARCH.linux), $(CONFORMANCE_IMAGE_TAG)-${osarch})
+	docker manifest push --purge $(CONFORMANCE_IMAGE_TAG)
+	docker manifest inspect $(CONFORMANCE_IMAGE_TAG)
 
 .PHONY: clean
 clean:
@@ -211,8 +260,3 @@ promote-staging-manifest: #promote staging manifests to release dir
 	@cp -r manifest_staging/deployment .
 	@rm -rf charts/csi-secrets-store-provider-azure
 	@cp -r manifest_staging/charts/csi-secrets-store-provider-azure ./charts
-	@mkdir -p ./charts/tmp
-	@helm package ./charts/csi-secrets-store-provider-azure -d ./charts/tmp/
-	@helm repo index ./charts/tmp --url https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts --merge ./charts/index.yaml
-	@mv ./charts/tmp/* ./charts
-	@rm -rf ./charts/tmp

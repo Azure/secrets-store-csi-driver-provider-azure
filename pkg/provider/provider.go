@@ -98,6 +98,17 @@ type KeyVaultObject struct {
 	// The encoding of the object in KeyVault
 	// Supported encodings are Base64, Hex, Utf-8
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
+	// FilePermission is the file permissions
+	FilePermission string `json:"filePermission" yaml:"filePermission"`
+}
+
+// SecretFile holds content and metadata of a secret file
+type SecretFile struct {
+	Content  []byte
+	Path     string
+	FileMode int32
+	UID      string
+	Version  string
 }
 
 // StringArray ...
@@ -174,8 +185,9 @@ func (mc *mountConfig) GetServicePrincipalToken(resource string) (*adal.ServiceP
 	return mc.authConfig.GetServicePrincipalToken(mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
 }
 
-// MountSecretsStoreObjectContent mounts content of the secrets store object to target path
-func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib map[string]string, secrets map[string]string, targetPath string, permission os.FileMode) (map[string][]byte, map[string]string, error) {
+// GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
+// to the CSI driver. The driver will write the content to the file system.
+func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, error) {
 	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
 	cloudName := strings.TrimSpace(attrib["cloudName"])
 	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
@@ -187,38 +199,38 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	podNamespace := strings.TrimSpace(attrib["csi.storage.k8s.io/pod.namespace"])
 
 	if keyvaultName == "" {
-		return nil, nil, fmt.Errorf("keyvaultName is not set")
+		return nil, fmt.Errorf("keyvaultName is not set")
 	}
 	if tenantID == "" {
-		return nil, nil, fmt.Errorf("tenantId is not set")
+		return nil, fmt.Errorf("tenantId is not set")
 	}
 	if len(usePodIdentityStr) == 0 {
 		usePodIdentityStr = "false"
 	}
 	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
+		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
 	}
 	if len(useVMManagedIdentityStr) == 0 {
 		useVMManagedIdentityStr = "false"
 	}
 	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
+		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %w", cloudEnvFileName, err)
+		return nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %w", cloudEnvFileName, err)
 	}
 	azureCloudEnv, err := ParseAzureEnvironment(cloudName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
+		return nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
 	}
 
 	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, secrets)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create auth config, error: %w", err)
+		return nil, fmt.Errorf("failed to create auth config, error: %w", err)
 	}
 
 	mc := &mountConfig{
@@ -232,14 +244,14 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 
 	objectsStrings := attrib["objects"]
 	if objectsStrings == "" {
-		return nil, nil, fmt.Errorf("objects is not set")
+		return nil, fmt.Errorf("objects is not set")
 	}
 	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	var objects StringArray
 	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to yaml unmarshal objects, error: %w", err)
+		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %w", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	keyVaultObjects := []KeyVaultObject{}
@@ -247,7 +259,7 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 		var keyVaultObject KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %w", i, err)
+			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %w", i, err)
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
@@ -257,65 +269,74 @@ func (p *Provider) MountSecretsStoreObjectContent(ctx context.Context, attrib ma
 	klog.V(5).InfoS("unmarshaled key vault objects", "keyVaultObjects", keyVaultObjects, "count", len(keyVaultObjects), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	if len(keyVaultObjects) == 0 {
-		return make(map[string][]byte), make(map[string]string), nil
+		return nil, nil
 	}
 
 	vaultURL, err := mc.getVaultURL()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get vault")
+		return nil, errors.Wrap(err, "failed to get vault")
 	}
 	klog.V(2).InfoS("vault url", "vaultName", mc.keyvaultName, "vaultURL", *vaultURL, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault object defined
 	kvClient, err := mc.initializeKvClient()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get keyvault client")
+		return nil, errors.Wrap(err, "failed to get keyvault client")
 	}
 
-	objectVersionMap := make(map[string]string)
-	files := make(map[string][]byte)
+	files := []SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
-			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
-			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 		fileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
 			fileName = keyVaultObject.ObjectAlias
 		}
 		if err := validateFileName(fileName); err != nil {
-			return nil, nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+
+		filePermission, err := validateFilePermission(keyVaultObject.FilePermission, defaultFilePermission)
+		if err != nil {
+			return nil, err
 		}
 
 		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.GetKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
+		content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
+		}
+
+		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
+		if err != nil {
+			return nil, err
 		}
 
 		// objectUID is a unique identifier in the format <object type>/<object name>
 		// This is the object id the user sees in the SecretProviderClassPodStatus
 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
-		objectVersionMap[objectUID] = newObjectVersion
-
-		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
-		if err != nil {
-			return nil, nil, err
-		}
 
 		// these files will be returned to the CSI driver as part of gRPC response
-		files[fileName] = objectContent
+		files = append(files, SecretFile{
+			Path:     fileName,
+			Content:  objectContent,
+			FileMode: filePermission,
+			UID:      objectUID,
+			Version:  newObjectVersion,
+		})
 		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
-	return files, objectVersionMap, nil
+	return files, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) GetKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
+func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
@@ -782,4 +803,21 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 	return pemData, nil
+}
+
+// validateFilePermission checks if the given file permission is correct octal number and returns
+// a. decimal equivalent of the default file permission (0644) if file permission is not provided Or
+// b. decimal equivalent Or
+// c. error if it's not valid
+func validateFilePermission(filePermission string, defaultFilePermission os.FileMode) (int32, error) {
+	if filePermission == "" {
+		return int32(defaultFilePermission), nil
+	}
+
+	permission, err := strconv.ParseInt(filePermission, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("file permission must be a valid octal number: %w", err)
+	}
+
+	return int32(permission), nil
 }

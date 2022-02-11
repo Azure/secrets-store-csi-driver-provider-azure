@@ -34,7 +34,7 @@ func New() *CSIDriverProviderServer {
 // writes the contents to the pod mount and returns the object versions as part of MountResponse
 func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.MountRequest) (*v1alpha1.MountResponse, error) {
 	var attrib, secret map[string]string
-	var filePermission os.FileMode
+	var defaultFilePermission os.FileMode
 	var err error
 
 	err = json.Unmarshal([]byte(req.GetAttributes()), &attrib)
@@ -47,30 +47,31 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 		klog.ErrorS(err, "failed to unmarshal node publish secrets ref")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal secrets, error: %w", err)
 	}
-	err = json.Unmarshal([]byte(req.GetPermission()), &filePermission)
+	err = json.Unmarshal([]byte(req.GetPermission()), &defaultFilePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal file permission")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %w", err)
 	}
 
-	files, objectVersions, err := s.Provider.MountSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), filePermission)
+	files, err := s.Provider.GetSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), defaultFilePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to process mount request")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %w", err)
 	}
 	ov := []*v1alpha1.ObjectVersion{}
-	for k, v := range objectVersions {
-		ov = append(ov, &v1alpha1.ObjectVersion{Id: k, Version: v})
-	}
-
 	f := []*v1alpha1.File{}
 	// CSI driver v0.0.21+ will write to the filesystem if the files are in the response.
 	// No files in the response translates to "not implemented" in the CSI driver.
-	for k, v := range files {
+	for _, file := range files {
 		f = append(f, &v1alpha1.File{
-			Path:     k,
-			Contents: v,
-			Mode:     int32(filePermission),
+			Path:     file.Path,
+			Contents: file.Content,
+			Mode:     file.FileMode,
+		})
+
+		ov = append(ov, &v1alpha1.ObjectVersion{
+			Id:      file.UID,
+			Version: file.Version,
 		})
 	}
 

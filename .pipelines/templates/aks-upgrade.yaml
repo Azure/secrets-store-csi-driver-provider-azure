@@ -17,4 +17,4 @@ steps:
       kubectl get nodes -owide
       kubectl cluster-info
     displayName: "Upgrade kubernetes version"
-    condition: and(succeeded(), eq(variables['CLUSTER_TYPE'], 'aks'))
+    condition: succeeded()

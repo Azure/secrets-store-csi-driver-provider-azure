@@ -350,3 +350,4 @@ website/resources
 
 # cover profile
 coverage.txt
+test/e2e/_output
