@@ -156,5 +156,4 @@ clientID: "${APPLICATION_CLIENT_ID}"
 
 ## Cons
 
-1. Currently in preview.
-2. [Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) is currently only supported for Azure AD Applications. Managed identity support will be coming soon.
+1. [Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) is currently only supported for Azure AD Applications. Managed identity support will be coming soon.

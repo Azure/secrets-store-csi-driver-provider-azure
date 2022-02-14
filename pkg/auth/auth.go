@@ -29,6 +29,11 @@ const (
 	expiresOnDateFormatPM = "1/2/2006 15:04:05 PM +00:00"
 	// the format for expires_on in UTC without AM/PM
 	expiresOnDateFormat = "1/2/2006 15:04:05 +00:00"
+
+	tokenTypeBearer = "Bearer"
+	// For Azure AD Workload Identity, the audience recommended for use is
+	// "api://AzureADTokenExchange"
+	defaultTokenAudience = "api://AzureADTokenExchange" //nolint
 )
 
 var (
@@ -72,6 +77,14 @@ type Config struct {
 	// this token will be exchanged for an Azure AD Token based on the federated identity credential
 	// this service account token is associated with the workload requesting the volume mount
 	WorkloadIdentityToken string
+}
+
+// SATokens represents the service account tokens sent as part of the MountRequest
+type SATokens struct {
+	APIAzureADTokenExchange struct {
+		Token               string    `json:"token"`
+		ExpirationTimestamp time.Time `json:"expirationTimestamp"`
+	} `json:"api://AzureADTokenExchange"`
 }
 
 // NewConfig returns new auth config
@@ -133,10 +146,10 @@ func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAsser
 	if err != nil {
 		return nil, fmt.Errorf("failed to create confidential client app: %w", err)
 	}
-	scope := strings.TrimSuffix(resource, "/")
+	scope := resource
 	// .default needs to be added to the scope
-	if !strings.HasSuffix(resource, ".default") {
-		scope += "/.default"
+	if !strings.Contains(resource, ".default") {
+		scope = fmt.Sprintf("%s/.default", resource)
 	}
 	result, err := confidentialClientApp.AcquireTokenByCredential(ctx, []string{scope})
 	if err != nil {
@@ -146,7 +159,7 @@ func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAsser
 	token := adal.Token{
 		AccessToken: result.AccessToken,
 		Resource:    resource,
-		Type:        "Bearer",
+		Type:        tokenTypeBearer,
 	}
 	token.ExpiresOn, err = parseExpiresOn(result.ExpiresOn.UTC().Local().Format(expiresOnDateFormat))
 	if err != nil {
@@ -229,7 +242,7 @@ func getAuthorizerForPodIdentity(podName, podNamespace, resource, aadEndpoint, t
 	if err != nil {
 		return nil, err
 	}
-	klog.V(5).InfoS("successfully acquired access token", "accessToken", utils.RedactClientID(nmiResp.Token.AccessToken), "clientID", utils.RedactClientID(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+	klog.V(5).InfoS("successfully acquired access token", "accessToken", utils.RedactSecureString(nmiResp.Token.AccessToken), "clientID", utils.RedactSecureString(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	token, clientID := nmiResp.Token, nmiResp.ClientID
 	if token.AccessToken == "" || clientID == "" {
@@ -310,20 +323,13 @@ func ParseServiceAccountToken(saTokens string) (string, error) {
 	//  },
 	//  ...
 	// }
-	tokens := make(map[string]interface{})
+	tokens := SATokens{}
 	if err := json.Unmarshal([]byte(saTokens), &tokens); err != nil {
 		return "", fmt.Errorf("failed to unmarshal service account tokens, error: %w", err)
 	}
-	klog.V(5).InfoS("successfully unmarshalled service account tokens", "tokens", len(tokens))
-	// For Azure AD Workload Identity, the audience recommended for use is
-	// "api://AzureADTokenExchange"
-	audience := "api://AzureADTokenExchange"
-	if _, ok := tokens[audience]; !ok {
-		return "", fmt.Errorf("token for audience %s not found", audience)
+	klog.V(5).InfoS("successfully unmarshaled service account tokens")
+	if tokens.APIAzureADTokenExchange.Token == "" {
+		return "", fmt.Errorf("token for audience %s not found", defaultTokenAudience)
 	}
-	token, ok := tokens[audience].(map[string]interface{})["token"].(string)
-	if !ok {
-		return "", fmt.Errorf("token for audience %s not found", audience)
-	}
-	return token, nil
+	return tokens.APIAzureADTokenExchange.Token, nil
 }
