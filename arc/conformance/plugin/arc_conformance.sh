@@ -212,8 +212,8 @@ if [ -z "${ARC_CLUSTER_RG}" ]; then
 fi
 
 if [ -z "${OBJECT_ID}" ]; then
-  echo "ERROR: parameter OBJECT_ID is required." > ${results_dir}/error
-  python3 setup_failure_handler.py
+  echo "ERROR: parameter OBJECT_ID is required." > "${results_dir}"/error
+  python3 /arc/setup_failure_handler.py
 fi
 
 # add az cli extensions 
