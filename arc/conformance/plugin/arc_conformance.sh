@@ -210,6 +210,8 @@ if [ "${waitSuccessArc}" == false ]; then
     echo "ERROR: deployment is not avilable in namespace - azure-arc" > "${results_dir}"/error
     python3 /arc/setup_failure_handler.py
     exit 1
+else
+    echo "INFO: resources are available in namespace - azure-arc"
 fi
 
 az k8s-extension create \
@@ -223,7 +225,7 @@ az k8s-extension create \
       --release-namespace kube-system \
       --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' \
         'secrets-store-csi-driver.rotationPollInterval=30s' \
-        'secrets-store-csi-driver.syncSecret.enabled=true'
+        'secrets-store-csi-driver.syncSecret.enabled=true' 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
 # wait for secrets store csi driver and provider pods
 kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
@@ -232,6 +234,7 @@ kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-p
 /arc/e2e -ginkgo.v -ginkgo.skip="${GINKGO_SKIP}" -ginkgo.focus="${GINKGO_FOCUS}"
 
 # clean up test resources
+echo "INFO: cleaning up test resources" 
 az k8s-extension delete \
   --name arc-akv-conformance \
   --resource-group "${ARC_CLUSTER_RG}" \
