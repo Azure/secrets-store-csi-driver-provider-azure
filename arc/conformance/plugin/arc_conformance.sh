@@ -164,20 +164,20 @@ setupKubeConfig() {
   kubectl config set-cluster azure-arc-akv-test \
     --embed-certs=true \
     --server=${APISERVER} \
-    --certificate-authority=./ca.crt 2> ${results_dir}/error || python3 setup_failure_handler.py
+    --certificate-authority=./ca.crt 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  kubectl config set-credentials azure-arc-akv-test --token=${TOKEN} 2> ${results_dir}/error || python3 setup_failure_handler.py
+  kubectl config set-credentials azure-arc-akv-test --token="${TOKEN}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # Delete previous rolebinding if exists. And ignore the error if not found.
   kubectl delete clusterrolebinding clusterconnect-binding || true
-  kubectl create clusterrolebinding clusterconnect-binding --clusterrole=cluster-admin --user=${OBJECT_ID} 2> ${results_dir}/error || python3 setup_failure_handler.py
+  kubectl create clusterrolebinding clusterconnect-binding --clusterrole=cluster-admin --user="${OBJECT_ID}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   kubectl config set-context azure-arc-akv-test \
     --cluster=azure-arc-akv-test \
     --user=azure-arc-akv-test \
-    --namespace=default 2> ${results_dir}/error || python3 setup_failure_handler.py
+    --namespace=default 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  kubectl config use-context azure-arc-akv-test 2> ${results_dir}/error || python3 setup_failure_handler.py
+  kubectl config use-context azure-arc-akv-test 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 }
 
 # validate enviorment variables
