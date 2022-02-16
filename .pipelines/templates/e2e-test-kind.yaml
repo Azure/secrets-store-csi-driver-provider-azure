@@ -39,6 +39,9 @@ jobs:
           IS_HELM_TEST: false
 
     steps:
+      # logging in to download the sa.pub and sa.key used for creating the kind cluster
+      # with OIDC issuer enabled
+      - template: az-login.yaml
       - script: |
           export REGISTRY="e2e"
           export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
@@ -49,6 +52,8 @@ jobs:
         displayName: "Build image"
         env:
           CI_KIND_CLUSTER: true
+          SERVICE_ACCOUNT_ISSUER: $(SERVICE_ACCOUNT_ISSUER)
+          SERVICE_ACCOUNT_KEYVAULT_NAME: $(SERVICE_ACCOUNT_KEYVAULT_NAME)
       - script: |
           make e2e-test
         displayName: Run e2e tests

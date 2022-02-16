@@ -5,9 +5,9 @@ package e2e
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
-	"os"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/deploy"
@@ -17,8 +17,8 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
