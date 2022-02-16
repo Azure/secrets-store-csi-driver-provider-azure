@@ -178,6 +178,7 @@ setupKubeConfig() {
     --namespace=default 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   kubectl config use-context azure-arc-akv-test 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
+  echo "INFO: KubeConfig setup complete"
 }
 
 # validate enviorment variables
