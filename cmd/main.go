@@ -53,7 +53,8 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 
 	if *logFormatJSON {
-		klog.SetLogger(json.JSONLogger)
+		logger, _ := json.NewJSONLogger(nil, nil)
+		klog.SetLogger(logger)
 	}
 
 	if *versionInfo {

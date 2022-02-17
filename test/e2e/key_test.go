@@ -6,8 +6,6 @@ package e2e
 import (
 	"strings"
 
-	"github.com/ghodss/yaml"
-
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
@@ -15,11 +13,12 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secret"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/ghodss/yaml"
+	. "github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
-
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
@@ -60,7 +59,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		yamlArray := provider.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
-			Expect(err).To(BeNil())
+			gomega.Expect(err).To(gomega.BeNil())
 			yamlArray.Array = append(yamlArray.Array, string(obj))
 		}
 

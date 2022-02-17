@@ -13,11 +13,10 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 
+	"github.com/ghodss/yaml"
+	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
-
-	. "github.com/onsi/gomega"
 )
 
 var (
@@ -71,7 +70,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		if adjustedPos >= len(fileContent) {
 			return
 		}
-		dsYAML := fileContent[adjustedPos:len(fileContent)]
+		dsYAML := fileContent[adjustedPos:]
 
 		ds := &appsv1.DaemonSet{}
 		err = yaml.Unmarshal([]byte(dsYAML), ds)
