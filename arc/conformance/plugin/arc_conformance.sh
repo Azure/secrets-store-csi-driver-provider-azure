@@ -235,7 +235,7 @@ setEnviornmentVariables
 # setup keyvault
 setupKeyVault
 
-# setuo Kube config
+# setup Kubeconfig
 setupKubeConfig
 
 # wait for resources in ARC namespace
