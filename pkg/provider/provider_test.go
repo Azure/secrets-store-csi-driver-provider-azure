@@ -657,7 +657,7 @@ func TestInitializeKVClient(t *testing.T) {
 		azure.USGovernmentCloud,
 	}
 	for i := range testEnvs {
-		authConfig, err := auth.NewConfig(false, false, "", map[string]string{"clientid": "id", "clientsecret": "secret"})
+		authConfig, err := auth.NewConfig(false, false, "", "", "", map[string]string{"clientid": "id", "clientsecret": "secret"})
 		assert.NoError(t, err)
 
 		mc := &mountConfig{
@@ -671,7 +671,7 @@ func TestInitializeKVClient(t *testing.T) {
 		version.BuildDate = "Now"
 		version.Vcs = "hash"
 
-		kvBaseClient, err := mc.initializeKvClient()
+		kvBaseClient, err := mc.initializeKvClient(context.TODO())
 		assert.NoError(t, err)
 		assert.NotNil(t, kvBaseClient)
 		assert.NotNil(t, kvBaseClient.Authorizer)

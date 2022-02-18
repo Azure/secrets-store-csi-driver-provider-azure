@@ -34,3 +34,6 @@ steps:
       make e2e-bootstrap
     displayName: "Build and push azure keyvault provider image"
     condition: succeeded()
+    env:
+      SERVICE_ACCOUNT_ISSUER: $(SERVICE_ACCOUNT_ISSUER)
+      SERVICE_ACCOUNT_KEYVAULT_NAME: $(SERVICE_ACCOUNT_KEYVAULT_NAME)
