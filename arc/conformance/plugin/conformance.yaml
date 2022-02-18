@@ -1,6 +1,6 @@
 sonobuoy-config:
   driver: Job
-  plugin-name: akv-secrets-provider-arc-conformance
+  plugin-name: azure-arc-akv-secrets-provider
   result-format: junit
 spec:
   image: stardotstar/provider-azure-arc-conformance:v1.0.1-linux-amd64
