@@ -47,6 +47,7 @@ type CreateInput struct {
 	SecretProviderClassName  string
 	NodePublishSecretRefName string
 	Labels                   map[string]string
+	ServiceAccountName       string
 }
 
 // Create creates a Pod resource.
@@ -113,6 +114,10 @@ func Create(input CreateInput) *corev1.Pod {
 		}
 	} else {
 		pod.Spec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
+	}
+
+	if input.ServiceAccountName != "" {
+		pod.Spec.ServiceAccountName = input.ServiceAccountName
 	}
 
 	Expect(input.Creator.Create(context.TODO(), pod)).Should(Succeed())

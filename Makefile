@@ -220,10 +220,7 @@ e2e-test:
 .PHONY: setup-kind
 setup-kind:
 	curl -L https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64 --output kind && chmod +x kind && sudo mv kind /usr/local/bin/
-	# Check for existing kind cluster
-	if [ $$(kind get clusters) ]; then kind delete cluster; fi
-	# using kind config to create cluster for testing custom cloud environments
-	TERM=dumb kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
+	./scripts/create-kind-cluster.sh
 
 .PHONY: install-helm
 install-helm:
@@ -231,7 +228,7 @@ install-helm:
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
-	kind create cluster --image kindest/node:${KIND_K8S_VERSION} --config test/kind-config.yaml
+	./scripts/create-kind-cluster.sh
 	$(MAKE) container-all push-manifest
 	kind load docker-image --name kind $(IMAGE_TAG)
 

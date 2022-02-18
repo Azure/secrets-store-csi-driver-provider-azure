@@ -68,7 +68,7 @@ spec:
 
 ## Configure Service Principal to access Keyvault
 
-1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal) 
+1. Add your service principal credentials as a Kubernetes secrets accessible by the Secrets Store CSI driver. If using AKS you can learn about [service principals in AKS here.](https://docs.microsoft.com/azure/aks/kubernetes-service-principal)
 
     A properly configured service principal will need to be passed in with the Service Principal's `appId` and `password`. Ensure this service principal has all the required permissions to access content in your Azure Key Vault instance.
 
@@ -123,12 +123,12 @@ spec:
       name: secrets-store-creds
     ```
 
+## Pros
 
-## Pros:
 1. Supported on both Windows and Linux.
 1. Easiest option to connect to Azure Key Vault.
 
-## Cons:
-1. Service Principal credentials(client id & client secret) need to be created as a kubernetes *Secret* which is stored as plaintext in etcd.
+## Cons
 
+1. Service Principal credentials(client id & client secret) need to be created as a kubernetes *Secret* which is stored as plaintext in etcd.
 1. The only supported way to connect to Azure Key Vault from a non Azure environment.
