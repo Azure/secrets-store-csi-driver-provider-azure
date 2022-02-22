@@ -48,11 +48,13 @@ setEnviornmentVariables() {
 # initialize keyvault for conformance test
 setupKeyVault() {
   # create resource group
+  echo "INFO: Creating resource group $keyvault_resource_group"
   az group create \
   --name "$keyvault_resource_group" \
   --location "$keyvault_location" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault
+  echo "INFO: Creating KeyVault $keyvault_name"
   az keyvault create \
   --name "$keyvault_name" \
   --resource-group "$keyvault_resource_group" \
@@ -61,6 +63,7 @@ setupKeyVault() {
   export KEYVAULT_NAME=$keyvault_name
 
   # set access policy for keyvault
+  echo "INFO: Setting up access policies on KeyVault"
   az keyvault set-policy \
   --name "$keyvault_name" \
   --resource-group "$keyvault_resource_group" \
@@ -70,6 +73,7 @@ setupKeyVault() {
   --certificate-permissions get create import 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault secret
+  echo "INFO: Creating Secret in KeyVault"
   secret_value=$(openssl rand -hex 6)
   az keyvault secret set \
   --vault-name "$keyvault_name" \
@@ -79,6 +83,7 @@ setupKeyVault() {
   export SECRET_VALUE=$secret_value
 
   # create keyvault key
+  echo "INFO: Creating Keys in KeyVault"
   # RSA key
   key_name=key1
   az keyvault key create \
@@ -115,6 +120,7 @@ setupKeyVault() {
 
 
   # create keyvault certificate
+  echo "INFO: Creating Certs in KeyVault"
   # PEM and PKCS12 certificates
   step certificate create test.domain.com test.crt test.key \
   --profile self-signed \
@@ -248,6 +254,7 @@ else
     echo "INFO: resources are available in namespace - azure-arc"
 fi
 
+echo "INFO: Creating extension"
 az k8s-extension create \
       --name arc-akv-conformance \
       --extension-type Microsoft.AzureKeyVaultSecretsProvider \
