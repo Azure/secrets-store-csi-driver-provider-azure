@@ -3,12 +3,23 @@ fullnameOverride: ""
 
 # Values populated by Azure Arc K8s RP during the installation of the extension.
 Azure:
+  Cluster:
+    ResourceId: ""
+    Region: ""
+    Distribution: ""
+    Infrastructure: ""
   proxySettings:
     isProxyEnabled: false
     httpProxy: ""
     httpsProxy: ""
     noProxy: ""
     proxyCert: ""
+  Identity:
+    isEnabled: false
+    Type: ""
+  Extension:
+    Name: ""
+    ResourceId: ""
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []

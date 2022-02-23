@@ -93,6 +93,26 @@ spec:
               subPath: proxy-cert.crt
               name: proxy-certstore
             {{- end }}
+        - name: mdm
+          image: linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220111.2
+          env: 
+          - name: ROLEINSTANCE 
+            valueFrom: 
+              fieldRef: 
+                fieldPath: spec.nodeName 
+          - name: CONFIG_OVERRIDES_FILE 
+            value: /tmp/geneva_mdm/mdmconfig.json
+          - name: METRIC_ENDPOINT 
+            value: https://az-int.int.microsoftmetrics.com/
+          - name: MDM_INPUT 
+            value: statsd_udp,statsd_tcp
+          - name: MDM_LOG_LEVEL 
+            value: "Info" 
+          - name: ME_AZURE_ENV 
+            value: "test"
+          volumeMounts: 
+            - name: mdm-config 
+              mountPath: /tmp/geneva_mdm
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
