@@ -7,6 +7,7 @@ metadata:
 data: 
   mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
 {{- end }}
+---
 {{- if .Values.linux.enabled}}
 apiVersion: apps/v1
 kind: DaemonSet
@@ -123,6 +124,30 @@ spec:
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
+        - name: msi-adapter
+          image: azurearcfork8sdev.azurecr.io/arc-preview/msi-adapter:0.0.10 
+          imagePullPolicy: Always 
+          env: 
+          - name: TOKEN_NAMESPACE 
+            value: {{ .Release.Namespace }}
+          - name: EXTENSION_ARMID
+            value: {{ .Values.Azure.Extension.ResourceId }}
+          - name: EXTENSION_NAME 
+            value: {{ .Values.Azure.Extension.Name }}
+          - name: CLUSTER_TYPE 
+            value: ConnectedClusters 
+          - name: CLUSTER_IDENTITY 
+            value: "false" 
+          - name: MANAGED_IDENTITY_AUTH 
+            value: "true" 
+          - name: TEST_MODE 
+            value: "false" 
+          - name: TEST_FILE 
+            value: "/data/token.json"
+          securityContext: 
+            capabilities: 
+              add: 
+               - NET_ADMIN 
 {{- end }}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
