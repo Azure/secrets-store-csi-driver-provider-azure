@@ -6,10 +6,12 @@ package deploy
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 
@@ -17,6 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 )
 
 var (
@@ -24,7 +27,7 @@ var (
 	providerResourceDirectory = "manifest_staging/deployment"
 
 	driverResources = []string{
-		"csidriver.yaml",
+		// "csidriver.yaml" will be downloaded, modified and installed in deployDriver()
 		"rbac-secretproviderclass.yaml",
 		"rbac-secretproviderrotation.yaml",
 		"rbac-secretprovidersyncing.yaml",
@@ -42,10 +45,7 @@ var (
 
 // InstallManifest install driver and provider manifests from yaml files.
 func InstallManifest(kubeconfigPath string, config *framework.Config) {
-	for _, resource := range driverResources {
-		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", driverResourcePath, resource)})
-		Expect(err).To(BeNil())
-	}
+	deployDriver(kubeconfigPath, config)
 
 	wd, err := os.Getwd()
 	Expect(err).To(BeNil())
@@ -71,7 +71,7 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 		if adjustedPos >= len(fileContent) {
 			return
 		}
-		dsYAML := fileContent[adjustedPos:len(fileContent)]
+		dsYAML := fileContent[adjustedPos:]
 
 		ds := &appsv1.DaemonSet{}
 		err = yaml.Unmarshal([]byte(dsYAML), ds)
@@ -112,6 +112,44 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 
 		// Update DS with new configuration
 		err = exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource)})
+		Expect(err).To(BeNil())
+	}
+}
+
+func deployDriver(kubeconfigPath string, config *framework.Config) {
+	resp, err := http.Get(fmt.Sprintf("%s/%s", driverResourcePath, "csidriver.yaml"))
+	Expect(err).To(BeNil())
+
+	csiDriverYAML, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	Expect(err).To(BeNil())
+
+	csiDriver := &storagev1.CSIDriver{}
+	err = yaml.Unmarshal(csiDriverYAML, csiDriver)
+	Expect(err).To(BeNil())
+
+	// Modify the CSI driver spec to include token requests
+	// With this we can enable workload identity tests with manifests in addition to helm
+	csiDriver.Spec.TokenRequests = []storagev1.TokenRequest{
+		{
+			Audience: auth.DefaultTokenAudience,
+		},
+	}
+
+	updatedCSIDriver, err := yaml.Marshal(csiDriver)
+	Expect(err).To(BeNil())
+
+	updateCSIDriverYAMLFile := filepath.Join(os.TempDir(), driverResources[0])
+	err = os.WriteFile(updateCSIDriverYAMLFile, updatedCSIDriver, 0644)
+	Expect(err).To(BeNil())
+
+	// Install the CSIDriver
+	err = exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", updateCSIDriverYAMLFile})
+	Expect(err).To(BeNil())
+
+	// Install the remaining driver resources
+	for _, resource := range driverResources {
+		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", driverResourcePath, resource)})
 		Expect(err).To(BeNil())
 	}
 }
