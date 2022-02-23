@@ -219,7 +219,7 @@ if [ -z "${ARC_CLUSTER_RG}" ]; then
   python3 /arc/setup_failure_handler.py
 fi
 
-# OBJECT_ID is an id of the Service Principal craeted in conformance test subscription.
+# OBJECT_ID is an id of the Service Principal created in conformance test subscription.
 if [ -z "${OBJECT_ID}" ]; then
   echo "ERROR: parameter OBJECT_ID is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
