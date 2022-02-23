@@ -3,19 +3,10 @@ apiVersion: clusterconfig.azure.com/v1beta1
 kind: AzureExtensionIdentity
 metadata:
   name: {{ template "sscdpa.fullname" . }}-arc-ext-identity
-  namespace: {{ .Release.Namespace }}
+  namespace: azure-arc
 spec:
   serviceAccounts:
     - name: csi-secrets-store-provider-azure
       namespace: {{ .Release.Namespace }}
   tokenNamespace: {{ .Release.Namespace }}
----
-apiVersion: clusterconfig.azure.com/v1beta1
-kind: AzureClusterIdentityRequest
-metadata:
-  name: {{ template "sscdpa.fullname" . }}-arc-cluster-identity
-  namespace: {{ .Release.Namespace }}
-spec:
-  audience: https://monitoring.azure.com/
-  resourceId: {{ .Values.Azure.Extension.ResourceId }}
 {{- end }}
