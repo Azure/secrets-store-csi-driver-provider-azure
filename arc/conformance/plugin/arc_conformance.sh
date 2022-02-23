@@ -54,7 +54,7 @@ setupKeyVault() {
   --location "$keyvault_location" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault
-  echo "INFO: Creating KeyVault $keyvault_name"
+  echo "INFO: Creating key vault $keyvault_name"
   az keyvault create \
   --name "$keyvault_name" \
   --resource-group "$keyvault_resource_group" \
@@ -63,7 +63,7 @@ setupKeyVault() {
   export KEYVAULT_NAME=$keyvault_name
 
   # set access policy for keyvault
-  echo "INFO: Setting up access policies on KeyVault"
+  echo "INFO: Setting up key vault access policies"
   az keyvault set-policy \
   --name "$keyvault_name" \
   --resource-group "$keyvault_resource_group" \
@@ -73,7 +73,7 @@ setupKeyVault() {
   --certificate-permissions get create import 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # create keyvault secret
-  echo "INFO: Creating Secret in KeyVault"
+  echo "INFO: Creating secret in key vault"
   secret_value=$(openssl rand -hex 6)
   az keyvault secret set \
   --vault-name "$keyvault_name" \
@@ -83,7 +83,7 @@ setupKeyVault() {
   export SECRET_VALUE=$secret_value
 
   # create keyvault key
-  echo "INFO: Creating Keys in KeyVault"
+  echo "INFO: Creating keys in key vault"
   # RSA key
   key_name=key1
   az keyvault key create \
@@ -120,7 +120,7 @@ setupKeyVault() {
 
 
   # create keyvault certificate
-  echo "INFO: Creating Certs in KeyVault"
+  echo "INFO: Importing certificates in key vault"
   # PEM and PKCS12 certificates
   step certificate create test.domain.com test.crt test.key \
   --profile self-signed \
@@ -163,27 +163,28 @@ setupKeyVault() {
 
 # setup kubeconfig for conformance test
 setupKubeConfig() {
+  KUBECTL_CONTEXT=azure-arc-akv-test
   APISERVER=https://kubernetes.default.svc/
   TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
   cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt > ca.crt
 
-  kubectl config set-cluster azure-arc-akv-test \
+  kubectl config set-cluster ${KUBECTL_CONTEXT} \
     --embed-certs=true \
     --server=${APISERVER} \
     --certificate-authority=./ca.crt 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  kubectl config set-credentials azure-arc-akv-test --token="${TOKEN}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
+  kubectl config set-credentials ${KUBECTL_CONTEXT} --token="${TOKEN}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
   # Delete previous rolebinding if exists. And ignore the error if not found.
-  kubectl delete clusterrolebinding clusterconnect-binding || true
+  kubectl delete clusterrolebinding clusterconnect-binding --ignore-not-found
   kubectl create clusterrolebinding clusterconnect-binding --clusterrole=cluster-admin --user="${OBJECT_ID}" 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  kubectl config set-context azure-arc-akv-test \
-    --cluster=azure-arc-akv-test \
-    --user=azure-arc-akv-test \
+  kubectl config set-context ${KUBECTL_CONTEXT} \
+    --cluster=${KUBECTL_CONTEXT} \
+    --user=${KUBECTL_CONTEXT} \
     --namespace=default 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
-  kubectl config use-context azure-arc-akv-test 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
+  kubectl config use-context ${KUBECTL_CONTEXT} 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
   echo "INFO: KubeConfig setup complete"
 }
 
@@ -218,6 +219,7 @@ if [ -z "${ARC_CLUSTER_RG}" ]; then
   python3 /arc/setup_failure_handler.py
 fi
 
+# OBJECT_ID is an id of the Service Principal craeted in conformance test subscription.
 if [ -z "${OBJECT_ID}" ]; then
   echo "ERROR: parameter OBJECT_ID is required." > "${results_dir}"/error
   python3 /arc/setup_failure_handler.py
@@ -247,7 +249,7 @@ setupKubeConfig
 # wait for resources in ARC namespace
 waitSuccessArc="$(waitForResources deployment azure-arc)"
 if [ "${waitSuccessArc}" == false ]; then
-    echo "ERROR: deployment is not avilable in namespace - azure-arc" > "${results_dir}"/error
+    echo "ERROR: deployment is not available in namespace - azure-arc" > "${results_dir}"/error
     python3 /arc/setup_failure_handler.py
     exit 1
 else
