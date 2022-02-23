@@ -2,11 +2,11 @@
 apiVersion: clusterconfig.azure.com/v1beta1
 kind: AzureExtensionIdentity
 metadata:
-  name: {{ template "sscdpa.fullname" . }}-arc-ext-identity
+  name: {{ .Values.Azure.Extension.Name }}
   namespace: azure-arc
 spec:
   serviceAccounts:
     - name: csi-secrets-store-provider-azure
       namespace: {{ .Release.Namespace }}
-  tokenNamespace: {{ .Release.Namespace }}
+  tokenNamespace: azure-arc
 {{- end }}

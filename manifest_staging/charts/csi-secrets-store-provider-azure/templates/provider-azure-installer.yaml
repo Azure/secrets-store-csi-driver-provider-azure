@@ -129,7 +129,7 @@ spec:
           imagePullPolicy: Always 
           env: 
           - name: TOKEN_NAMESPACE 
-            value: {{ .Release.Namespace }}
+            value: azure-arc
           - name: EXTENSION_ARMID
             value: {{ .Values.Azure.Extension.ResourceId }}
           - name: EXTENSION_NAME 
