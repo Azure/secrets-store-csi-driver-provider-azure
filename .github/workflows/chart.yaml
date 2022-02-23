@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
       - name: Publish Helm chart
         # pinning to the sha f1701eb82e4d4b82016e7965501c8b6d79feaec9 from https://github.com/stefanprodan/helm-gh-pages/releases/tag/v1.4.1
-        uses: stefanprodan/helm-gh-pages@f1701eb82e4d4b82016e7965501c8b6d79feaec9
+        uses: stefanprodan/helm-gh-pages@b43a8719cc63fdb3aa943cc57359ab19118eab3f
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           charts_dir: charts
