@@ -1,3 +1,12 @@
+{{- if .Values.Azure.Identity.isEnabled }}
+apiVersion: v1 
+kind: ConfigMap 
+metadata: 
+  name: {{ template "sscdpa.fullname" . }}-mdm-config 
+  namespace: {{ .Release.Namespace }}
+data: 
+  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
+{{- end }}
 {{- if .Values.linux.enabled}}
 apiVersion: apps/v1
 kind: DaemonSet
@@ -93,6 +102,7 @@ spec:
               subPath: proxy-cert.crt
               name: proxy-certstore
             {{- end }}
+{{- if .Values.Azure.Identity.isEnabled }}
         - name: mdm
           image: linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220111.2
           env: 
@@ -113,6 +123,7 @@ spec:
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
+{{- end }}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}

@@ -18,12 +18,4 @@ metadata:
 spec:
   audience: https://monitoring.azure.com/
   resourceId: {{ .Values.Azure.Extension.ResourceId }}
----
-apiVersion: v1 
-kind: ConfigMap 
-metadata: 
-  name: {{ template "sscdpa.fullname" . }}-mdm-config 
-  namespace: {{ .Release.Namespace }}
-data: 
-  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
 {{- end }}
