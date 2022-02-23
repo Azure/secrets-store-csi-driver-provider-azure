@@ -13,15 +13,14 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 
+	"github.com/ghodss/yaml"
+	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
-
-	. "github.com/onsi/gomega"
 )
 
 var (
-	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.0.0-rc.1/deploy"
+	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.1.0/deploy"
 	providerResourceDirectory = "manifest_staging/deployment"
 
 	driverResources = []string{
@@ -29,6 +28,7 @@ var (
 		"rbac-secretproviderclass.yaml",
 		"rbac-secretproviderrotation.yaml",
 		"rbac-secretprovidersyncing.yaml",
+		"rbac-secretprovidertokenrequest.yaml",
 		"secrets-store-csi-driver-windows.yaml",
 		"secrets-store-csi-driver.yaml",
 		"secrets-store.csi.x-k8s.io_secretproviderclasses.yaml",
