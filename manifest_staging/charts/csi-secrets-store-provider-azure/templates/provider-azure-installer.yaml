@@ -2,7 +2,7 @@
 apiVersion: v1 
 kind: ConfigMap 
 metadata: 
-  name: {{ template "sscdpa.fullname" . }}-mdm-config 
+  name: {{ template "sscdpa.fullname" . }}-mdm-config
   namespace: {{ .Release.Namespace }}
 data: 
   mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
@@ -165,6 +165,11 @@ spec:
         - name: proxy-certstore
           secret:
             secretName: arc-proxy-cert
+        {{- end }}
+        {{- if .Values.Azure.Identity.isEnabled }}
+        - name: mdm-config 
+          configMap: 
+            name: {{ template "sscdpa.fullname" . }}-mdm-config
         {{- end }}
       nodeSelector:
         kubernetes.io/os: linux
