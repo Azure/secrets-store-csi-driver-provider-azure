@@ -19,7 +19,6 @@ require (
 	k8s.io/kubernetes v1.22.3
 	sigs.k8s.io/controller-runtime v0.10.2
 	sigs.k8s.io/secrets-store-csi-driver v1.0.1
-	sigs.k8s.io/yaml v1.2.0
 )
 
 require (
@@ -103,6 +102,7 @@ require (
 	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 replace (
