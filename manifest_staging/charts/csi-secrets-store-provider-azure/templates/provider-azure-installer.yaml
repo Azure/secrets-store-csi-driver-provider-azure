@@ -141,7 +141,7 @@ spec:
           - name: CLUSTER_TYPE 
             value: ConnectedClusters 
           - name: CLUSTER_IDENTITY 
-            value: "true" 
+            value: "false" 
           - name: MANAGED_IDENTITY_AUTH 
             value: "true" 
           - name: TEST_MODE 
