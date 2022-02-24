@@ -109,7 +109,7 @@ spec:
             {{- end }}
 {{- if .Values.Azure.Identity.isEnabled }}
         - name: mdm
-          image: linuxgeneva-microsoft.azurecr.io/distroless/genevamdm:master_20220111.2
+          image: linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220216.1
           env: 
           - name: ROLEINSTANCE 
             valueFrom: 
