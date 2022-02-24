@@ -8,5 +8,5 @@ spec:
   serviceAccounts:
     - name: csi-secrets-store-provider-azure
       namespace: {{ .Release.Namespace }}
-  tokenNamespace: azure-arc
+  tokenNamespace: {{ .Release.Namespace }}
 {{- end }}
