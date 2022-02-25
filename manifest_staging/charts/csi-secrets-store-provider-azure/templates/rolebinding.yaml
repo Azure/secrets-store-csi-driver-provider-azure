@@ -23,7 +23,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 {{ include "sscdpa.labels" . | indent 2 }}
 roleRef:
-  apiGroup: clusterconfig.azure.com
+  apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ template "sscdpa.arc.fullname" . }}-ext-identity-role
 subjects:
