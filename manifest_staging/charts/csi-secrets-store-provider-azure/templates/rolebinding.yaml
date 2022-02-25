@@ -14,4 +14,20 @@ subjects:
     name: csi-secrets-store-provider-azure
     namespace: {{ .Release.Namespace }}
 {{- end }}
-
+---
+{{- if .Values.Azure.Identity.isEnabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-ext-identity-role-binding
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
+roleRef:
+  apiGroup: clusterconfig.azure.com
+  kind: Role
+  name: {{ template "sscdpa.arc.fullname" . }}-ext-identity-role
+subjects:
+  - kind: ServiceAccount
+    name: csi-secrets-store-provider-azure
+    namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -40,3 +40,7 @@ labels:
 {{- define "sscdpa.psp.fullname" -}}
 {{- printf "%s-psp" (include "sscdpa.fullname" .) -}}
 {{- end }}
+
+{{- define "sscdpa.arc.fullname" -}}
+{{- printf "%s-arc" (include "sscdpa.fullname" .) -}}
+{{- end }}
