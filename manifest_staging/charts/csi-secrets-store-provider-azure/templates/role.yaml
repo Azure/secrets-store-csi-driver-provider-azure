@@ -23,5 +23,5 @@ metadata:
 rules:
   - apiGroups: [ 'clusterconfig.azure.com' ]
     resources: [ 'azureclusteridentityrequests' ]
-    verbs: [ 'get' ]
+    verbs: [ 'get', 'create' ]
 {{- end }}
