@@ -106,10 +106,6 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 		if !config.IsKindCluster {
 			Skip("test case currently supported for kind cluster only")
 		}
-		// the audience field is configurable only with helm charts
-		if !config.IsHelmTest {
-			Skip("test case currently supported for helm test only")
-		}
 
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,

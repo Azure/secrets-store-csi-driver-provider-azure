@@ -33,7 +33,7 @@ const (
 	tokenTypeBearer = "Bearer"
 	// For Azure AD Workload Identity, the audience recommended for use is
 	// "api://AzureADTokenExchange"
-	defaultTokenAudience = "api://AzureADTokenExchange" //nolint
+	DefaultTokenAudience = "api://AzureADTokenExchange" //nolint
 )
 
 var (
@@ -329,7 +329,7 @@ func ParseServiceAccountToken(saTokens string) (string, error) {
 	}
 	klog.V(5).InfoS("successfully unmarshaled service account tokens")
 	if tokens.APIAzureADTokenExchange.Token == "" {
-		return "", fmt.Errorf("token for audience %s not found", defaultTokenAudience)
+		return "", fmt.Errorf("token for audience %s not found", DefaultTokenAudience)
 	}
 	return tokens.APIAzureADTokenExchange.Token, nil
 }
