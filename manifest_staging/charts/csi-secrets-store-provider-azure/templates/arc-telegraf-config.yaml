@@ -1,0 +1,10 @@
+{{- if .Values.Azure.Identity.isEnabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+  namespace: {{ .Release.Namespace }}
+data:
+  telegraf.conf: |
+{{ (tpl ( .Files.Get "config/telegraf-conf.tmpl") .) | indent 4 }}
+{{- end }}

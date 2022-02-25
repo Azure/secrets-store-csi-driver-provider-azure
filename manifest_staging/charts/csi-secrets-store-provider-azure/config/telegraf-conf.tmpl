@@ -1,0 +1,19 @@
+[agent]
+  interval = "300s"
+  flush_interval = "10s"
+  metric_batch_size = 250
+  metric_buffer_limit = 1000
+
+[[inputs.prometheus]]
+  metric_version = 2
+
+  monitor_kubernetes_pods = true
+  kubernetes_label_selector = "app.kubernetes.io/name=csi-secrets-store-provider-azure"
+  monitor_kubernetes_pods_namespace = "kube-system"
+  bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+  insecure_skip_verify = true
+  response_timeout = "15s"
+
+[[outputs.file]]
+  files = ["stdout"]
