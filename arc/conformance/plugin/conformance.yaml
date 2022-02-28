@@ -3,7 +3,7 @@ sonobuoy-config:
   plugin-name: azure-arc-akv-secrets-provider
   result-format: junit
 spec:
-  image: stardotstar/provider-azure-arc-conformance:v1.0.1-linux-amd64
+  image: stardotstar/provider-azure-arc-conformance:v1.1.0-rc.0-linux-amd64
   imagePullPolicy: IfNotPresent
   name: plugin
   resources: {}
