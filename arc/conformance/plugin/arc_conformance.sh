@@ -7,23 +7,27 @@ keyvault_name="arc-akv-secrets-$(openssl rand -hex 2)"
 keyvault_resource_group="akv-conformance-test-$(openssl rand -hex 2)"
 keyvault_location="${KEYVAULT_LOCATION:-westus2}"
 
-function waitForResources {
-    available=false
+waitForArc() {
+    ready=false
     max_retries=60
-    RESOURCE=$1
-    NAMESPACE=$2
+    sleep_seconds=20
+
     for i in $(seq 1 $max_retries)
     do
-    echo "Waiting for $RESOURCE in $NAMESPACE to be available. Attempt# $i of $max_retries"
-    if [[ $(kubectl wait --for=condition=available "${RESOURCE}" --all --namespace "${NAMESPACE}") ]]; then
-        available=true
+    status=$(helm ls -a -A -o json | jq '.[]|select(.name=="azure-arc").status' -r)
+    if [ "$status" == "deployed" ]; then
+        echo "helm release successful"
+        ready=true
         break
+    elif [ "$status" == "failed" ]; then
+        echo "helm release failed"
+        break
+    else
+        echo "waiting for helm release to be successful. Status - ${status}. Attempt# $i of $max_retries"
+        sleep ${sleep_seconds}
     fi
     done
-    
-    echo "$available"
 }
-
 
 saveResult() {
   # prepare the results for handoff to the Sonobuoy worker.
@@ -246,14 +250,15 @@ setupKeyVault
 # setup Kubeconfig
 setupKubeConfig
 
-# wait for resources in ARC namespace
-waitSuccessArc="$(waitForResources deployment azure-arc)"
+# Wait for resources in ARC agents to come up
+echo "Waiting for ConnectedCluster to come up"
+waitSuccessArc="$(waitForArc)"
 if [ "${waitSuccessArc}" == false ]; then
-    echo "ERROR: deployment is not available in namespace - azure-arc" > "${results_dir}"/error
+    echo "helm release azure-arc failed" > "${results_dir}"/error
     python3 /arc/setup_failure_handler.py
     exit 1
 else
-    echo "INFO: resources are available in namespace - azure-arc"
+    echo "INFO: ConnectedCluster is available"
 fi
 
 echo "INFO: Creating extension"
