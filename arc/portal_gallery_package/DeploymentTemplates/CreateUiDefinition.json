@@ -1,0 +1,108 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "resourceTypes": ["Microsoft.KubernetesConfiguration/extensions"],
+        "config": {
+            "isWizard": true,
+            "basics": {
+                "subscription": {
+                    "resourceProviders": [
+                        "microsoft.kubernetes/connectedclusters"
+                    ]
+                },
+                "location": {
+                    "label": "Region",
+                    "resourceTypes": [
+                        "microsoft.kubernetes/connectedclusters"
+                    ],
+                    "visible": true
+                },
+                "resourceGroup": {
+                  "allowExisting": true
+              }
+            }
+        },
+        "basics": [ 
+            {
+                "name": "connectedCluster",
+                "type": "Microsoft.Solutions.ResourceSelector",
+                "label": "Connected cluster",
+                "resourceType": "microsoft.kubernetes/connectedclusters",
+                "options": {
+                    "filter": {
+                        "subscription": "onBasics",
+                        "location": "onBasics"
+                    }
+                }
+            },
+            {
+                "name": "extensionName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Extension name",
+                "multiLine": false,
+                "defaultValue": "akvsecretsprovider",
+                "constraints": {
+                  "required": true
+                },
+                "visible": true
+            }            
+        ],
+      "steps": [                 
+        {
+          "name": "configuration",
+          "label": "Configuration",
+          "elements": [
+            {
+              "name": "enableSecretRotation",
+              "type": "Microsoft.Common.CheckBox",
+              "label": "Enable secret rotation"
+            },
+            {
+                "name": "rotationPollInterval",
+                "type": "Microsoft.Common.Slider",
+                "min": 2,
+                "max": 60,
+                "label": "Rotation poll interval",
+                "subLabel": "m",
+                "defaultValue": 2,
+                "showStepMarkers": false,
+                "toolTip": "Pick the rotation interval in minutes",
+                "constraints": {
+                    "required": false
+                },
+                "visible": true
+            },
+            {
+              "name": "enableSyncSecret",
+              "type": "Microsoft.Common.CheckBox",
+              "label": "Enable sync secret"
+            }
+          ]
+        },
+        {
+            "name": "tagsByResource",
+            "label": "Tags",
+            "elements": [
+                {
+                    "name": "arcExtensionsTags",
+                    "type": "Microsoft.Common.TagsByResource",
+                    "resources": [
+                        "Microsoft.KubernetesConfiguration/extensions"
+                    ]
+                }
+            ]           
+        }        
+      ],
+      "outputs": {
+        "connectedClusterName": "[basics('connectedCluster').name]",
+        "extensionName": "[basics('extensionName').extensionName]",
+        "enableSecretRotation": "[steps('configuration').enableSecretRotation]",
+        "rotationPollInterval": "[concat(string(steps('configuration').rotationPollInterval), 'm')]",
+        "enableSyncSecret": "[steps('configuration').enableSyncSecret]",
+        "tagsByResource": "[steps('tagsByResource').arcExtensionsTags]"
+      }
+    }
+  }
+  
