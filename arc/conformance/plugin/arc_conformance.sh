@@ -276,8 +276,8 @@ az k8s-extension create \
         'secrets-store-csi-driver.syncSecret.enabled=true' 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
 # wait for secrets store csi driver and provider pods
-kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
-kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure
+kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver --timeout=5m
+kubectl wait pod -n kube-system --for=condition=Ready -l app=csi-secrets-store-provider-azure --timeout=5m
 
 /arc/e2e -ginkgo.v -ginkgo.skip="${GINKGO_SKIP}" -ginkgo.focus="${GINKGO_FOCUS}"
 
