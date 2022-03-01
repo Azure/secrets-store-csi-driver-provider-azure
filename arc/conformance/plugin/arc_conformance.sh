@@ -251,7 +251,7 @@ setupKeyVault
 setupKubeConfig
 
 # Wait for resources in ARC agents to come up
-echo "Waiting for ConnectedCluster to come up"
+echo "INFO: Waiting for ConnectedCluster to come up"
 waitSuccessArc="$(waitForArc)"
 if [ "${waitSuccessArc}" == false ]; then
     echo "helm release azure-arc failed" > "${results_dir}"/error
