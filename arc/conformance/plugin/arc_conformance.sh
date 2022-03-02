@@ -7,6 +7,23 @@ keyvault_name="arc-akv-secrets-$(openssl rand -hex 2)"
 keyvault_resource_group="akv-conformance-test-$(openssl rand -hex 2)"
 keyvault_location="${KEYVAULT_LOCATION:-westus2}"
 
+waitForResources() {
+    available=false
+    max_retries=60
+    RESOURCE=$1
+    NAMESPACE=$2
+    for i in $(seq 1 $max_retries)
+    do
+    echo "Waiting for $RESOURCE in $NAMESPACE to be available. Attempt# $i of $max_retries"
+    if [[ $(kubectl wait --for=condition=available "${RESOURCE}" --all --namespace "${NAMESPACE}") ]]; then
+        available=true
+        break
+    fi
+    done
+
+    echo "$available"
+}
+
 waitForArc() {
     ready=false
     max_retries=60
@@ -259,6 +276,17 @@ if [ "${waitSuccessArc}" == false ]; then
     exit 1
 else
     echo "INFO: ConnectedCluster is available"
+fi
+
+# wait for resources in ARC namespace
+echo "INFO: Waiting for resources in ARC namespace to come up"
+waitSuccessArcResources="$(waitForResources deployment azure-arc)"
+if [ "${waitSuccessArcResources}" == false ]; then
+    echo "ERROR: deployment is not available in namespace - azure-arc" > "${results_dir}"/error
+    python3 /arc/setup_failure_handler.py
+    exit 1
+else
+    echo "INFO: resources are available in namespace - azure-arc"
 fi
 
 echo "INFO: Creating extension"
