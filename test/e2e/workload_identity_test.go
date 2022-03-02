@@ -103,8 +103,11 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 	})
 
 	It("should read secret, key from pod", func() {
-		if !config.IsKindCluster {
-			Skip("test case currently supported for kind cluster only")
+		if config.IsArcTest {
+			Skip("test is not supported in Arc cluster")
+		}
+		if !(config.IsKindCluster || config.IsSoakTest) {
+			Skip("test case currently supported for kind and soak cluster only")
 		}
 
 		pod.WaitFor(pod.WaitForInput{
