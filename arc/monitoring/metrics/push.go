@@ -1,13 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/golang/protobuf/proto"
 )
 
 func main() {
@@ -43,7 +44,10 @@ func PushMetricsToGeneva(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Received %d timeseries...", len(writeRequest.Timeseries))
+	con, _ := json.MarshalIndent(writeRequest, "", "  ")
+	fmt.Printf("\n================TS===================\n%s\n", con)
+
+	fmt.Printf("Received %d timeseries...\n", len(writeRequest.Timeseries))
 	fmt.Println("Pushed metrics complete")
 	w.WriteHeader(http.StatusAccepted)
 }
