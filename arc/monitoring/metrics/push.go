@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/golang/snappy"
+	"github.com/prometheus/prometheus/prompb"
+	"github.com/golang/protobuf/proto"
 )
 
 func main() {
@@ -25,6 +29,17 @@ func PushMetricsToGeneva(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	fmt.Println(string(requestBody))
+	decodedRequest, err := snappy.Decode(nil, requestBody)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	writeRequest := prompb.WriteRequest{}
+	if err := proto.Unmarshal(decodedRequest, &writeRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Printf("Received %d timeseries...", len(writeRequest.Timeseries))
 	w.WriteHeader(http.StatusAccepted)
 }

@@ -15,10 +15,10 @@ Azure:
     noProxy: ""
     proxyCert: ""
   Identity:
-    isEnabled: false
+    isEnabled: true
     Type: ""
   Extension:
-    Name: ""
+    Name: "metrics"
     ResourceId: ""
 
 # One or more secrets to be used when pulling images

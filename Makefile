@@ -112,7 +112,7 @@ build-darwin:
 
 .PHONY: build-arc-metrics-agent
 build-arc-metrics-agent:
-	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/provider-azure-arc-metrics-agent ./arc/monitoring/metrics/
+	ARCH=${ARCH} make -C arc/monitoring/metrics build
 
 .PHONY: container
 container: build

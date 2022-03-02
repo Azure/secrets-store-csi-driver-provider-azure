@@ -1,0 +1,97 @@
+{{- if .Values.Azure.Identity.isEnabled }}
+{{- if .Values.linux.enabled}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-metrics-agent
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "sscdpa.name" . }}
+  template:
+    metadata:
+{{ include "sscdpa.labels" . | indent 6 }}
+    spec:
+      serviceAccountName: csi-secrets-store-provider-azure
+      containers:      
+        - name: metrics
+          image: stardotstar/provider-azure-arc-metrics-agent:v1.1.0-rc.0-linux-amd64
+          imagePullPolicy: IfNotPresent
+        - name: mdm
+          image: linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220216.1
+          imagePullPolicy: IfNotPresent
+          env: 
+          - name: ROLEINSTANCE 
+            valueFrom: 
+              fieldRef: 
+                fieldPath: spec.nodeName 
+          - name: CONFIG_OVERRIDES_FILE 
+            value: /tmp/geneva_mdm/mdmconfig.json
+          - name: METRIC_ENDPOINT 
+            value: https://az-int.int.microsoftmetrics.com/
+          - name: MDM_INPUT 
+            value: statsd_udp,statsd_tcp
+          - name: MDM_LOG_LEVEL 
+            value: "Info" 
+          - name: ME_AZURE_ENV 
+            value: "test"
+          volumeMounts: 
+            - name: mdm-config 
+              mountPath: /tmp/geneva_mdm
+        - name: msi-adapter
+          image: azurearcfork8sdev.azurecr.io/arc-preview/msi-adapter:0.0.10 
+          imagePullPolicy: IfNotPresent 
+          env: 
+          - name: TOKEN_NAMESPACE 
+            value: azure-arc
+          - name: EXTENSION_ARMID
+            value: {{ .Values.Azure.Extension.ResourceId }}
+          - name: EXTENSION_NAME 
+            value: {{ .Values.Azure.Extension.Name }}
+          - name: CLUSTER_TYPE 
+            value: ConnectedClusters 
+          - name: CLUSTER_IDENTITY 
+            value: "false" 
+          - name: MANAGED_IDENTITY_AUTH 
+            value: "true" 
+          - name: TEST_MODE 
+            value: "false" 
+          - name: TEST_FILE 
+            value: "/data/token.json"
+          securityContext: 
+            capabilities: 
+              add: 
+               - NET_ADMIN 
+        - name: telegraf
+          image: mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21
+          imagePullPolicy: IfNotPresent
+          volumeMounts: 
+            - name: telegraf-conf
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+      affinity:
+{{ toYaml .Values.linux.affinity | indent 8 }}
+      {{- if .Values.linux.priorityClassName }}
+      priorityClassName: {{ .Values.linux.priorityClassName | quote }}
+      {{- end }}
+      volumes:
+        - name: mdm-config 
+          configMap: 
+            name: {{ template "sscdpa.fullname" . }}-mdm-config
+        - name: telegraf-conf
+          configMap:
+            name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+      nodeSelector:
+        kubernetes.io/os: linux
+{{- if .Values.linux.nodeSelector }}
+{{- toYaml .Values.linux.nodeSelector | nindent 8 }}
+{{- end }}
+{{- with .Values.linux.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
+{{- end }}
