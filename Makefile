@@ -11,8 +11,10 @@ REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.1.0-rc.0
 IMAGE_NAME ?= provider-azure
 CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
+ARC_METRICS_IMAGE_NAME ?= provider-azure-arc-metrics-agent
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
 CONFORMANCE_IMAGE_TAG := $(REGISTRY)/$(CONFORMANCE_IMAGE_NAME):$(IMAGE_VERSION)
+ARC_METRICS_IMAGE_TAG := $(REGISTRY)/$(ARC_METRICS_IMAGE_NAME):$(IMAGE_VERSION)
 
 # build variables
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
@@ -108,9 +110,21 @@ build-windows:
 build-darwin:
 	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=darwin go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/secrets-store-csi-driver-provider-azure ./cmd/
 
+.PHONY: build-arc-metrics-agent
+build-arc-metrics-agent:
+	CGO_ENABLED=0 GOARCH=${ARCH} GOOS=linux go build -a -ldflags ${LDFLAGS} -o _output/${ARCH}/provider-azure-arc-metrics-agent ./arc/monitoring/metrics/
+
 .PHONY: container
 container: build
 	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
+
+.PHONY: arc-metrics-agent-container
+arc-metrics-agent-container: docker-buildx-builder build-arc-metrics-agent
+	docker buildx build \
+	--no-cache \
+	--platform="linux/$(ARCH)" \
+	--output=type=$(OUTPUT_TYPE) \
+	-t $(ARC_METRICS_IMAGE_TAG)-linux-$(ARCH) -f arc/monitoring/metrics/Dockerfile .
 
 .PHONY: arc-conformance-container
 arc-conformance-container: docker-buildx-builder build-e2e-test

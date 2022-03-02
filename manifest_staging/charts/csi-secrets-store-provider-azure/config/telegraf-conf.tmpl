@@ -15,5 +15,17 @@
   insecure_skip_verify = true
   response_timeout = "15s"
 
+[[outputs.http]]
+  ## URL is the address to send metrics to
+  url = "http://localhost:8090/push"
+
+  ## Data format to output.
+  data_format = "prometheusremotewrite"
+
+  [outputs.http.headers]
+    Content-Type = "application/x-protobuf"
+    Content-Encoding = "snappy"
+    X-Prometheus-Remote-Write-Version = "0.1.0"
+
 [[outputs.file]]
-  files = ["/tmp/metrics.out"]
+  files = ["stdout"]
