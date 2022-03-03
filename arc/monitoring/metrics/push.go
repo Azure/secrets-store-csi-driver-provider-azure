@@ -1,3 +1,6 @@
+// This code is modified version of https://msazure.visualstudio.com/KubernetesSharedTools/_git/prom-mdm-converter
+// and used as an intrim solution until geneva team releases native support for otel/prom metrics
+
 package main
 
 import (
