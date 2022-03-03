@@ -107,7 +107,6 @@ spec:
               subPath: proxy-cert.crt
               name: proxy-certstore
             {{- end }}
-{{/*
 {{- if .Values.Azure.Identity.isEnabled }}
         - name: metrics
           image: stardotstar/provider-azure-arc-metrics-agent:v1.1.0-rc.0-linux-amd64
@@ -165,7 +164,6 @@ spec:
               mountPath: /etc/telegraf/telegraf.conf
               subPath: telegraf.conf
 {{- end }}
-*/}}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
@@ -183,7 +181,6 @@ spec:
           secret:
             secretName: arc-proxy-cert
         {{- end }}
-        {{/*
         {{- if .Values.Azure.Identity.isEnabled }}
         - name: mdm-config 
           configMap: 
@@ -192,7 +189,6 @@ spec:
           configMap:
             name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
         {{- end }}
-        */}}
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}

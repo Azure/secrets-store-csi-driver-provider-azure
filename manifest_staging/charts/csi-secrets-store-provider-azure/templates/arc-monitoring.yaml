@@ -1,3 +1,4 @@
+{{/*
 {{- if .Values.Azure.Identity.isEnabled }}
 {{- if .Values.linux.enabled}}
 apiVersion: apps/v1
@@ -17,11 +18,9 @@ spec:
     spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
-        {{/*
         - name: metrics
           image: stardotstar/provider-azure-arc-metrics-agent:v1.1.0-rc.0-linux-amd64
           imagePullPolicy: Always
-        */}} 
         - name: mdm
           image: linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220216.1
           imagePullPolicy: IfNotPresent
@@ -97,3 +96,4 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+*/}}
