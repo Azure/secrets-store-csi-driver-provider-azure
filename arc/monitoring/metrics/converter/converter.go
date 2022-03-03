@@ -185,22 +185,34 @@ func PushMetrics(writeRequest prompb.WriteRequest) {
 	for _, ts := range writeRequest.Timeseries {
 		metadata := extractMetadata(ts)
 
-		if filterMetadata(metadata) {
+		for _, v := range ts.Samples {
+			intValue, skip := ToMdmFriendlyInt(v.Value)
 
-			for _, v := range ts.Samples {
-				intValue, skip := ToMdmFriendlyInt(v.Value)
-
-				if !skip {
-					metadataBytes := renderMetadata(metadata, &v)
-					statsdClient.Gauge(metadataBytes, intValue)
-					totalSent++
-				} else {
-					logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
-				}
+			if !skip {
+				metadataBytes := renderMetadata(metadata, &v)
+				statsdClient.Gauge(metadataBytes, intValue)
+				totalSent++
+			} else {
+				logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
 			}
-		} else {
-			logger.TraceDebugf("Sending disabled for metric: %s", metadata.Metric)
 		}
+
+		// if filterMetadata(metadata) {
+
+		// 	for _, v := range ts.Samples {
+		// 		intValue, skip := ToMdmFriendlyInt(v.Value)
+
+		// 		if !skip {
+		// 			metadataBytes := renderMetadata(metadata, &v)
+		// 			statsdClient.Gauge(metadataBytes, intValue)
+		// 			totalSent++
+		// 		} else {
+		// 			logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
+		// 		}
+		// 	}
+		// } else {
+		// 	logger.TraceDebugf("Sending disabled for metric: %s", metadata.Metric)
+		// }
 	}
 	if totalSent > 0 {
 		logger.TraceDebugf("Sent %d events", totalSent)
@@ -238,28 +250,28 @@ func ToMdmFriendlyInt(value float64) (result int64, skip bool) {
 	return intValue, false
 }
 
-// if filterMetadata returns true, samples should be sent
-// if filterMetadata returns false, samples shouldn't be sent
-// if # of dimensions >=50, samples won't be sent (statsd limitation)
-func filterMetadata(metadata *metricMetadata) bool {
-	// if !isMetricAllowed(metadata.Metric) {
-	// 	return false
-	// }
+// // if filterMetadata returns true, samples should be sent
+// // if filterMetadata returns false, samples shouldn't be sent
+// // if # of dimensions >=50, samples won't be sent (statsd limitation)
+// func filterMetadata(metadata *metricMetadata) bool {
+// 	// if !isMetricAllowed(metadata.Metric) {
+// 	// 	return false
+// 	// }
 
-	for key := range metadata.Dims {
-		if !isDimensionAllowed(metadata.Metric, key) {
-			delete(metadata.Dims, key)
-		}
-	}
+// 	for key := range metadata.Dims {
+// 		if !isDimensionAllowed(metadata.Metric, key) {
+// 			delete(metadata.Dims, key)
+// 		}
+// 	}
 
-	if len(metadata.Dims) >= 50 {
-		tooManyDimsError := fmt.Sprintf("%s has too many dimensions. Sent: %d.", metadata.Metric, len(metadata.Dims))
-		logger.TraceErrorf(tooManyDimsError)
-		return false
-	}
+// 	if len(metadata.Dims) >= 50 {
+// 		tooManyDimsError := fmt.Sprintf("%s has too many dimensions. Sent: %d.", metadata.Metric, len(metadata.Dims))
+// 		logger.TraceErrorf(tooManyDimsError)
+// 		return false
+// 	}
 
-	return true
-}
+// 	return true
+// }
 
 func getenvD(key, fallback string) string {
 	value := os.Getenv(key)

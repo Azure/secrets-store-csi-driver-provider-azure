@@ -27,8 +27,6 @@ func main() {
 // PushMetricsToGeneva is the handler for the /push endpoint which forwards the metrics to Geneva.
 func PushMetricsToGeneva(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Pushing metrics")
-	reqCon, _ := json.MarshalIndent(r, "", " ")
-	fmt.Printf("\n================Req===================\n%s\n", reqCon)
 
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -51,8 +49,8 @@ func PushMetricsToGeneva(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	con, _ := json.MarshalIndent(writeRequest, "", "  ")
-	fmt.Printf("\n================TS===================\n%s\n", con)
+	// con, _ := json.MarshalIndent(writeRequest, "", "  ")
+	// fmt.Printf("\n================TS===================\n%s\n", con)
 
 	fmt.Printf("Received %d timeseries...\n", len(writeRequest.Timeseries))
 	fmt.Println("Pushed metrics complete")
