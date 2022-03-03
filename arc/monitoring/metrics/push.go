@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/arc/monitoring/metrics/converter"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
@@ -53,4 +54,6 @@ func PushMetricsToGeneva(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Received %d timeseries...\n", len(writeRequest.Timeseries))
 	fmt.Println("Pushed metrics complete")
 	w.WriteHeader(http.StatusAccepted)
+
+	converter.PushMetrics(writeRequest)
 }
