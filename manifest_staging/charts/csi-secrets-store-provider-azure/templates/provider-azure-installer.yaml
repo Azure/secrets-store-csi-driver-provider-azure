@@ -108,11 +108,9 @@ spec:
               name: proxy-certstore
             {{- end }}
 {{- if .Values.Azure.Identity.isEnabled }}
-{{/*
         - name: metrics
           image: stardotstar/provider-azure-arc-metrics-agent:v1.1.0-rc.0-linux-amd64
           imagePullPolicy: IfNotPresent
-*/}}
         - name: telegraf
           image: mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21
           imagePullPolicy: IfNotPresent
