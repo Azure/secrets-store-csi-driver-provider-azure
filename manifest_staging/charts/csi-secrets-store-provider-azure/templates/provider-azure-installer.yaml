@@ -33,8 +33,8 @@ spec:
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
 {{- end }}
 {{- if .Values.Azure.Identity.isEnabled }}
-        prometheus.io/scrape: "true" 
-        prometheus.io/port: "8898"
+        prometheus.io/scrape: true 
+        prometheus.io/port: 8898
 {{- end }}
 # this will ensure pods are rolled in next helm upgrade if cert files are updated.
 {{- if .Values.Azure.proxySettings.isProxyEnabled }}
