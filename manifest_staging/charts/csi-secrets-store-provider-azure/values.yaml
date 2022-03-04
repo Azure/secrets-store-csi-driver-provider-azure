@@ -146,6 +146,7 @@ secrets-store-csi-driver:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
         tag: v1.1.0
         pullPolicy: IfNotPresent
+    podAnnotations: {}
 
   windows:
     enabled: false
