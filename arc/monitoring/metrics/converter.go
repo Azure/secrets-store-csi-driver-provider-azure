@@ -1,15 +1,20 @@
-package converter
+package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/arc/monitoring/metrics/log"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/arc/monitoring/metrics/statsd"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/snappy"
+	"github.com/spf13/pflag"
 
 	"github.com/prometheus/prometheus/prompb"
 )
@@ -22,7 +27,7 @@ var (
 	// underlayName      = getenv("UNDERLAY")
 	statsdHost     = getenvD("STATSD_ENDPOINT", "localhost")
 	statsdPort     = getenvD("STATSD_PORT", "8125")
-	statsdProtocol = getenvD("STATSD_PROTOCOL", "udp")
+	statsdProtocol = getenvD("STATSD_PROTOCOL", "tcp")
 	defaultMdmNs   = getenvD("GENEVA_DEFAULT_MDM_NAMESPACE", "MetricTutorial")
 	statsdEndpoint = fmt.Sprintf("%s:%s", statsdHost, statsdPort)
 	// rulesFileLocation = pflag.String("rules", "/config/rules.yaml", "rules file to filter metrics/dimensions")
@@ -34,58 +39,61 @@ const (
 )
 
 type metricMetadata struct {
+	Account   string            `json:"Account"`
 	Namespace string            `json:"Namespace"`
 	Metric    string            `json:"Metric"`
 	Dims      map[string]string `json:"Dims"`
-	Timestamp string            `json:"TS"`
+	// Timestamp string            `json:"TS"`
 }
 
 func init() {
 	logger = log.GetContextlessTraceLogger()
 }
 
-// func main() {
-// 	pflag.Parse()
-// 	if port == "" ||
-// 		region == "" ||
-// 		underlayName == "" ||
-// 		statsdHost == "" ||
-// 		statsdPort == "" ||
-// 		defaultMdmNs == "" {
-// 		// Required variables not set
-// 		logger.TraceFatalf("Required variables not set")
-// 	}
+func main() {
+	pflag.Parse()
+	// if port == "" ||
+	// 	region == "" ||
+	// 	underlayName == "" ||
+	// 	statsdHost == "" ||
+	// 	statsdPort == "" ||
+	// 	defaultMdmNs == "" {
+	// 	// Required variables not set
+	// 	logger.TraceFatalf("Required variables not set")
+	// }
 
-// 	rulesBytes, err := ioutil.ReadFile(*rulesFileLocation)
-// 	if err != nil {
-// 		logger.TraceFatalf("Could not open rules file: %s", err)
-// 	}
-// 	if err = LoadRules(rulesBytes); err != nil {
-// 		logger.TraceFatalf("Could not load rules file: %s", err)
-// 	}
+	// rulesBytes, err := ioutil.ReadFile(*rulesFileLocation)
+	// if err != nil {
+	// 	logger.TraceFatalf("Could not open rules file: %s", err)
+	// }
+	// if err = LoadRules(rulesBytes); err != nil {
+	// 	logger.TraceFatalf("Could not load rules file: %s", err)
+	// }
 
-// 	logger.TraceInfof("Default geneva metrics namespace to be used: %s", defaultMdmNs)
+	logger.TraceInfof("Default geneva metrics namespace to be used: %s", defaultMdmNs)
 
-// 	http.HandleFunc("/receive", ReadPrometheusSendMDM)
+	http.HandleFunc("/push", ReadPrometheusSendMDM)
 
-// 	logger.TraceInfof("Opening connection to statsd/mdm collector: %s, protocol: %s", statsdEndpoint, statsdProtocol)
-// 	statsdClient, err = statsd.New(statsd.Address(statsdEndpoint), statsd.Network(statsdProtocol))
-// 	if err != nil {
-// 		logger.TraceFatalf("Failed to connect to statsd/mdm collector: %s", err.Error())
-// 	}
+	var err error
+	logger.TraceInfof("Opening connection to statsd/mdm collector: %s, protocol: %s", statsdEndpoint, statsdProtocol)
+	statsdClient, err = statsd.New(statsd.Address(statsdEndpoint), statsd.Network(statsdProtocol))
+	if err != nil {
+		logger.TraceFatalf("Failed to connect to statsd/mdm collector: %s", err.Error())
+	}
 
-// 	logger.TraceInfof("Starting server at :%s", port)
+	logger.TraceInfof("Starting server at :8090", port)
 
-// 	strPort := ":" + port
+	strPort := ":8090"
 
-// 	err = http.ListenAndServe(strPort, nil)
-// 	if err != nil {
-// 		logger.TraceFatalf("ListenAndServe returned error: %s", err)
-// 	}
-// }
+	err = http.ListenAndServe(strPort, nil)
+	if err != nil {
+		logger.TraceFatalf("ListenAndServe returned error: %s", err)
+	}
+}
 
 func extractMetadata(ts *prompb.TimeSeries) *metricMetadata {
 	metricMetadata := &metricMetadata{
+		Account: "akvsecretsprovider",
 		Namespace: defaultMdmNs,
 		Dims:      make(map[string]string),
 	}
@@ -108,6 +116,8 @@ func extractMetadata(ts *prompb.TimeSeries) *metricMetadata {
 		}
 	}
 
+	metricMetadata.Dims["microsoft.resourceid"] = "/subscriptions/caa9d3d3-3e5a-4527-8c4c-eeff7e0b8116/resourceGroups/arc-ext/providers/Microsoft.Kubernetes/ConnectedClusters/metrics/providers/Microsoft.KubernetesConfiguration/extensions/metrics"
+
 	if genevaMdmMetricName != "" {
 		metricMetadata.Metric = genevaMdmMetricName
 	}
@@ -121,68 +131,43 @@ func extractMetadata(ts *prompb.TimeSeries) *metricMetadata {
 	return metricMetadata
 }
 
-// // ReadPrometheusSendMDM extracts prometheus samples from incoming request and sends them to statsd
-// func ReadPrometheusSendMDM(w http.ResponseWriter, r *http.Request) {
-// 	compressed, err := ioutil.ReadAll(r.Body)
-// 	defer func() {
-// 		if err := r.Body.Close(); err != nil {
-// 			logger.TraceError(err.Error())
-// 		}
-// 	}()
+// ReadPrometheusSendMDM extracts prometheus samples from incoming request and sends them to statsd
+func ReadPrometheusSendMDM(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Starting to process metrics")
+	compressed, err := ioutil.ReadAll(r.Body)
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			logger.TraceError(err.Error())
+		}
+	}()
 
-// 	if err != nil {
-// 		logger.TraceError(err.Error())
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	if err != nil {
+		logger.TraceError(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	reqBuf, err := snappy.Decode(nil, compressed)
-// 	if err != nil {
-// 		logger.TraceError(err.Error())
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	reqBuf, err := snappy.Decode(nil, compressed)
+	if err != nil {
+		logger.TraceError(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// 	var req prompb.WriteRequest
-// 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
-// 		logger.TraceError(err.Error())
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	var req prompb.WriteRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		logger.TraceError(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// 	logger.TraceDebugf("Received %d timeseries...", len(req.Timeseries))
-// 	w.WriteHeader(http.StatusAccepted)
+	fmt.Printf("total TS - %d\n", len(req.Timeseries))
 
-// 	totalSent := 0
-// 	for _, ts := range req.Timeseries {
-// 		metadata := extractMetadata(ts)
+	logger.TraceDebugf("Received %d timeseries...", len(req.Timeseries))
+	w.WriteHeader(http.StatusAccepted)
 
-// 		if filterMetadata(metadata) {
-
-// 			for _, v := range ts.Samples {
-// 				intValue, skip := ToMdmFriendlyInt(v.Value)
-
-// 				if !skip {
-// 					metadataBytes := renderMetadata(metadata, v)
-// 					statsdClient.Gauge(metadataBytes, intValue)
-// 					totalSent++
-// 				} else {
-// 					logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
-// 				}
-// 			}
-// 		} else {
-// 			logger.TraceDebugf("Sending disabled for metric: %s", metadata.Metric)
-// 		}
-// 	}
-// 	if totalSent > 0 {
-// 		logger.TraceDebugf("Sent %d events", totalSent)
-// 	}
-// }
-
-// PushMetrics sends a converts prometheus metric to MDM format and sends it to geneva
-func PushMetrics(writeRequest prompb.WriteRequest) {
 	totalSent := 0
-	for _, ts := range writeRequest.Timeseries {
+	for _, ts := range req.Timeseries {
 		metadata := extractMetadata(ts)
 
 		for _, v := range ts.Samples {
@@ -190,6 +175,7 @@ func PushMetrics(writeRequest prompb.WriteRequest) {
 
 			if !skip {
 				metadataBytes := renderMetadata(metadata, &v)
+				fmt.Printf("\nmetric - %s == %d\n", metadataBytes, intValue)
 				statsdClient.Gauge(metadataBytes, intValue)
 				totalSent++
 			} else {
@@ -203,7 +189,7 @@ func PushMetrics(writeRequest prompb.WriteRequest) {
 		// 		intValue, skip := ToMdmFriendlyInt(v.Value)
 
 		// 		if !skip {
-		// 			metadataBytes := renderMetadata(metadata, &v)
+		// 			metadataBytes := renderMetadata(metadata, v)
 		// 			statsdClient.Gauge(metadataBytes, intValue)
 		// 			totalSent++
 		// 		} else {
@@ -217,11 +203,53 @@ func PushMetrics(writeRequest prompb.WriteRequest) {
 	if totalSent > 0 {
 		logger.TraceDebugf("Sent %d events", totalSent)
 	}
+	fmt.Printf("total metrics sent - %d\n", totalSent)
 }
+
+// // PushMetrics sends a converts prometheus metric to MDM format and sends it to geneva
+// func PushMetrics(writeRequest prompb.WriteRequest) {
+// 	totalSent := 0
+// 	for _, ts := range writeRequest.Timeseries {
+// 		metadata := extractMetadata(ts)
+
+// 		for _, v := range ts.Samples {
+// 			intValue, skip := ToMdmFriendlyInt(v.Value)
+
+// 			if !skip {
+// 				metadataBytes := renderMetadata(metadata, &v)
+// 				statsdClient.Gauge(metadataBytes, intValue)
+// 				totalSent++
+// 			} else {
+// 				logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
+// 			}
+// 		}
+
+// 		// if filterMetadata(metadata) {
+
+// 		// 	for _, v := range ts.Samples {
+// 		// 		intValue, skip := ToMdmFriendlyInt(v.Value)
+
+// 		// 		if !skip {
+// 		// 			metadataBytes := renderMetadata(metadata, &v)
+// 		// 			statsdClient.Gauge(metadataBytes, intValue)
+// 		// 			totalSent++
+// 		// 		} else {
+// 		// 			logger.TraceDebugf("Skipped value '%v' for metric '%s'", v.Value, metadata.Metric)
+// 		// 		}
+// 		// 	}
+// 		// } else {
+// 		// 	logger.TraceDebugf("Sending disabled for metric: %s", metadata.Metric)
+// 		// }
+// 	}
+// 	if totalSent > 0 {
+// 		logger.TraceDebugf("Sent %d events", totalSent)
+// 	}
+// }
 
 func renderMetadata(metadata *metricMetadata, sample *prompb.Sample) string {
 	timestamp := time.Unix(0, sample.Timestamp*1000000) // Prometheus stores timestamps in milliseconds since epoch
-	metadata.Timestamp = timestamp.UTC().Format("2006-01-02T15:04:05.000")
+	metadata.Dims["timestamp"] = timestamp.UTC().Format("2006-01-02T15:04:05.000")
+	// metadata.Timestamp = timestamp.UTC().Format("2006-01-02T15:04:05.000")
 	metadataBytes, err := json.Marshal(metadata)
 	if err != nil {
 		logger.TraceErrorf("Failed to marshal metadata: Error=%s\n", err)

@@ -1,6 +1,9 @@
 package statsd
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // A Client represents a StatsD client.
 type Client struct {
@@ -95,9 +98,15 @@ func (c *Client) Increment(bucket string) {
 // Gauge records an absolute value for the given bucket.
 func (c *Client) Gauge(bucket string, value interface{}) {
 	if c.skip() {
+		fmt.Println()
+		fmt.Println("Skipped")
+		fmt.Println()
 		return
 	}
 	c.conn.gauge(c.prefix, bucket, value, c.tags)
+	fmt.Println()
+	fmt.Println("SentMetric")
+	fmt.Println()
 }
 
 // Timing sends a timing value to a bucket.
