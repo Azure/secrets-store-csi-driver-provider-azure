@@ -63,7 +63,7 @@
                 "name": "rotationPollInterval",
                 "type": "Microsoft.Common.Slider",
                 "min": 2,
-                "max": 60,
+                "max": 1440,
                 "label": "Rotation poll interval",
                 "subLabel": "m",
                 "defaultValue": 2,
