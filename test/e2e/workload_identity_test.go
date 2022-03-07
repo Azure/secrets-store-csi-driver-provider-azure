@@ -110,10 +110,6 @@ var _ = Describe("CSI inline volume test with workload identity", func() {
 			Skip("test case currently supported for kind and soak cluster only")
 		}
 
-		if config.IsKindCluster && config.IsArcTest {
-			Skip("test case currently not supported for arc")
-		}
-
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
