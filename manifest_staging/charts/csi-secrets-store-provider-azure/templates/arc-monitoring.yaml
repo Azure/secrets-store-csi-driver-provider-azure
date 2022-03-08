@@ -33,9 +33,9 @@ spec:
                 fieldPath: spec.nodeName
           - name: METRIC_ENDPOINT 
             value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
-          - name: MDM_ACCOUNT_NAME 
+          - name: MDM_ACCOUNT
             value: {{ .Values.arc.metrics.mdm.accountName }}
-          - name: MDM_INPUT 
+          - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
             value: "Info" 
