@@ -31,6 +31,8 @@ spec:
             valueFrom: 
               fieldRef: 
                 fieldPath: spec.nodeName
+          - name: CONFIG_OVERRIDES_FILE 
+            value: /tmp/geneva_mdm/mdmconfig.json
           - name: METRIC_ENDPOINT 
             value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
           - name: MDM_ACCOUNT
@@ -41,6 +43,9 @@ spec:
             value: "Info" 
           - name: ME_AZURE_ENV 
             value: "test"
+          volumeMounts: 
+            - name: mdm-config 
+              mountPath: /tmp/geneva_mdm
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
         - name: msi-adapter
@@ -61,8 +66,6 @@ spec:
             value: "true" 
           - name: TEST_MODE 
             value: "false"
-          - name: TEST_FILE 
-            value: "/data/token.json"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           securityContext: 
@@ -87,6 +90,9 @@ spec:
         - name: telegraf-conf
           configMap:
             name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+        - name: mdm-config 
+          configMap: 
+            name: {{ template "sscdpa.arc.fullname" . }}-mdm-config
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
