@@ -15,7 +15,7 @@ subjects:
     namespace: {{ .Release.Namespace }}
 {{- end }}
 ---
-{{- if .Values.Azure.Identity.isEnabled }}
+{{- if and .Values.Azure.Identity.isEnabled .Values.arc.isMonitoringEnabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
