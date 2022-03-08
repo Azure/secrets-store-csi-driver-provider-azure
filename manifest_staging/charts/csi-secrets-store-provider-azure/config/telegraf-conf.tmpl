@@ -1,5 +1,5 @@
 [agent]
-  interval = "60s"
+  interval = "300s"
   flush_interval = "10s"
   metric_batch_size = 250
   metric_buffer_limit = 1000
@@ -28,7 +28,7 @@
 
 [[outputs.http]]
   ## URL is the address to send metrics to
-  url = "http://localhost:8090/push"
+  url = "http://{{ .Values.arc.metrics.telegraf.prometheusRemoteWriteUrl }}:{{ .Values.arc.metrics.telegraf.prometheusRemoteWritePort }}/push"
 
   ## Data format to output.
   data_format = "prometheusremotewrite"
@@ -38,5 +38,7 @@
     Content-Encoding = "snappy"
     X-Prometheus-Remote-Write-Version = "0.1.0"
 
+{{ if .Values.arc.metrics.telegraf.debugLogging }}
 [[outputs.file]]
   files = ["stdout"]
+{{ end }}

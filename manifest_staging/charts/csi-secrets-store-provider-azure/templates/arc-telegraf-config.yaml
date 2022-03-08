@@ -1,4 +1,4 @@
-{{- if .Values.Azure.Identity.isEnabled }}
+{{- if .Values.arc.isMonitoringEnabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
