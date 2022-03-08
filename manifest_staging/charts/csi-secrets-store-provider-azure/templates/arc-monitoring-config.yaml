@@ -16,4 +16,3 @@ metadata:
 data: 
   mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"{{ .Values.arc.metrics.mdm.accountName }}\" }]}"
 {{- end }}
-{{- end }}
