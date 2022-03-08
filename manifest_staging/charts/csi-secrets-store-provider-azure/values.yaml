@@ -202,6 +202,7 @@ arc:
         pullPolicy: IfNotPresent
       metricEndpoint: https://az-int.int.microsoftmetrics.com/ 
       accountName: akvsecretsprovider
+      environment: test # test | prod
     msiAdapter:
       image:
         repository: azurearcfork8sdev.azurecr.io/arc-preview/msi-adapter

@@ -35,14 +35,12 @@ spec:
             value: /tmp/geneva_mdm/mdmconfig.json
           - name: METRIC_ENDPOINT 
             value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
-          - name: MDM_ACCOUNT
-            value: {{ .Values.arc.metrics.mdm.accountName }}
           - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
             value: "Info" 
           - name: ME_AZURE_ENV 
-            value: "test"
+            value: {{ .Values.arc.metrics.mdm.environment }}
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
