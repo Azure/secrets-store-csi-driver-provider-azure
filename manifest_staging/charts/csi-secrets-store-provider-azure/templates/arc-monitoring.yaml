@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "sscdpa.arc.fullname" . }}-metrics-agent
+  name: {{ template "sscdpa.arc.fullname" . }}-metrics-monitoring
   namespace: {{ .Release.Namespace }}
 {{ include "sscdpa.arc.labels" . | indent 2 }}
 spec:
@@ -61,6 +61,8 @@ spec:
             value: "true" 
           - name: TEST_MODE 
             value: "false"
+          - name: TEST_FILE 
+            value: "/data/token.json"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           securityContext: 
