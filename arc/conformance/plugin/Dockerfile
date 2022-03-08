@@ -11,10 +11,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install python3-pip bash curl apt-transport-https lsb-release jq gnupg -y --allow-change-held-packages && python3 -m pip install junit_xml
 
 # install helm
-RUN curl https://baltocdn.com/helm/signing.asc | apt-key add - && \
-    echo "deb https://baltocdn.com/helm/stable/debian/ all main" > /etc/apt/sources.list.d/helm-stable-debian.list && \
-    apt-get update -y && \
-    apt-get install -y --allow-change-held-packages helm
+RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 # install azcli
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
