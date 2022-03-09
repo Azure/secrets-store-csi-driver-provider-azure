@@ -268,7 +268,8 @@ az k8s-extension create \
       --release-namespace kube-system \
       --configuration-settings 'secrets-store-csi-driver.enableSecretRotation=true' \
         'secrets-store-csi-driver.rotationPollInterval=30s' \
-        'secrets-store-csi-driver.syncSecret.enabled=true' 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
+        'secrets-store-csi-driver.syncSecret.enabled=true' \
+        'arc.isMonitoringEnabled=false' 2> "${results_dir}"/error || python3 /arc/setup_failure_handler.py
 
 # wait for secrets store csi driver and provider pods
 kubectl wait pod -n kube-system --for=condition=Ready -l app=secrets-store-csi-driver
