@@ -1,0 +1,62 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "releaseTrain": {
+            "defaultValue": "preview",
+            "type": "String"
+        },
+        "releaseNamespace": {
+            "defaultValue": "kube-system",
+            "type": "String"
+        },
+        "extensionName": {
+            "defaultValue": "akvsecretsprovider",
+            "type": "String"
+        },
+        "connectedClusterName": {
+            "type": "String"
+        },
+        "enableSecretRotation": {
+            "defaultValue": "false",
+            "type": "String"
+        },
+        "rotationPollInterval": {
+            "defaultValue": "2m",
+            "type": "String"
+        },
+        "enableSyncSecret": {
+            "defaultValue": "false",
+            "type": "String"
+        },
+        "tagsByResource": {
+            "type": "object",
+            "defaultValue": {}
+        }
+    },
+    "variables": {},
+    "functions": [],
+    "resources": [
+        {
+            "type": "Microsoft.KubernetesConfiguration/extensions",
+            "apiVersion": "2021-09-01",
+            "name": "[parameters('extensionName')]",
+            "tags": "[ if(contains(parameters('tagsByResource'), 'Microsoft.KubernetesConfiguration/extensions'), parameters('tagsByResource')['Microsoft.KubernetesConfiguration/extensions'], json('{}')) ]",
+            "properties": {
+                "extensionType": "Microsoft.AzureKeyVaultSecretsProvider",
+                "releaseTrain": "[parameters('releaseTrain')]",
+                "scope": {
+                    "cluster": {
+                        "releaseNamespace": "[parameters('releaseNamespace')]"
+                    }
+                },
+                "configurationSettings": {
+                    "secrets-store-csi-driver.enableSecretRotation": "[parameters('enableSecretRotation')]",
+                    "secrets-store-csi-driver.rotationPollInterval": "[parameters('rotationPollInterval')]",
+                    "secrets-store-csi-driver.syncSecret.enabled": "[parameters('enableSyncSecret')]"
+                }
+            },
+            "scope": "[concat('Microsoft.Kubernetes/connectedClusters/', parameters('connectedClusterName'))]"
+        }
+    ]
+}
