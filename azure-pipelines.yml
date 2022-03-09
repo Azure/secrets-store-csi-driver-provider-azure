@@ -10,6 +10,7 @@ pr:
       - docs/*
       - website/*
       - README.md
+      - .github/*
 
 pool: staging-pool
 
