@@ -12,3 +12,26 @@ rules:
     resourceNames:
       - {{ template "sscdpa.psp.fullname" . }}
 {{- end }}
+---
+{{- if and .Values.Azure.Identity.isEnabled .Values.arc.isMonitoringEnabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-ext-identity-role
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
+rules:
+  - apiGroups: [ 'clusterconfig.azure.com' ]
+    resources: [ 'azureclusteridentityrequests' ]
+    verbs: [ 'get', 'create' ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-telegraf-role
+rules:
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["get", "list", "watch"]
+{{- end }}

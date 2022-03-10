@@ -3,12 +3,23 @@ fullnameOverride: ""
 
 # Values populated by Azure Arc K8s RP during the installation of the extension.
 Azure:
+  Cluster:
+    ResourceId: ""
+    Region: ""
+    Distribution: ""
+    Infrastructure: ""
   proxySettings:
     isProxyEnabled: false
     httpProxy: ""
     httpsProxy: ""
     noProxy: ""
     proxyCert: ""
+  Identity:
+    isEnabled: false
+    Type: ""
+  Extension:
+    Name: ""
+    ResourceId: ""
 
 # One or more secrets to be used when pulling images
 imagePullSecrets: []
@@ -135,6 +146,9 @@ secrets-store-csi-driver:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
         tag: v1.1.0
         pullPolicy: IfNotPresent
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
 
   windows:
     enabled: false
@@ -171,3 +185,35 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# Arc monitoring
+arc:
+  isMonitoringEnabled: true
+  metrics:
+    promMdmConverter:
+      image:
+        repository: stardotstar/provider-azure-arc-metrics-agent
+        tag: v1.1.0-rc.0-linux-amd64
+        pullPolicy: IfNotPresent
+    mdm:
+      image:
+        repository: linuxgeneva-microsoft.azurecr.io/genevamdm
+        tag: master_20220216.1
+        pullPolicy: IfNotPresent
+      metricEndpoint: https://az-int.int.microsoftmetrics.com/ 
+      accountName: akvsecretsprovider
+      environment: test # test | prod
+    msiAdapter:
+      image:
+        repository: azurearcfork8sdev.azurecr.io/arc-preview/msi-adapter
+        tag: 0.0.10
+        pullPolicy: IfNotPresent
+      arcNamespace: azure-arc
+    telegraf:
+      image:
+        repository: mcr.microsoft.com/oss/mirror/docker.io/library/telegraf
+        tag: 1.21
+        pullPolicy: IfNotPresent
+      debugLogging: false
+      prometheusRemoteWritePort: 8090
+      prometheusRemoteWriteUrl: 127.0.0.1

@@ -1,0 +1,104 @@
+{{- if .Values.arc.isMonitoringEnabled }}
+{{- if .Values.linux.enabled}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sscdpa.arc.fullname" . }}-metrics-monitoring
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.arc.labels" . | indent 2 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "sscdpa.arc.fullname" . }}
+  template:
+    metadata:
+{{ include "sscdpa.arc.labels" . | indent 6 }}
+    spec:
+      serviceAccountName: csi-secrets-store-provider-azure
+      hostNetwork: true
+      containers:
+        - name: prom-mdm-converter
+          image: "{{ .Values.arc.metrics.promMdmConverter.image.repository }}:{{ .Values.arc.metrics.promMdmConverter.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.metrics.promMdmConverter.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.linux.resources | indent 12 }}
+        - name: mdm
+          image: "{{ .Values.arc.metrics.mdm.image.repository }}:{{ .Values.arc.metrics.mdm.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.metrics.mdm.image.pullPolicy }}
+          env: 
+          - name: ROLEINSTANCE 
+            valueFrom: 
+              fieldRef: 
+                fieldPath: spec.nodeName
+          - name: CONFIG_OVERRIDES_FILE 
+            value: /tmp/geneva_mdm/mdmconfig.json
+          - name: METRIC_ENDPOINT 
+            value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
+          - name: MDM_INPUT
+            value: statsd_udp,statsd_tcp
+          - name: MDM_LOG_LEVEL 
+            value: "Info" 
+          - name: ME_AZURE_ENV 
+            value: {{ .Values.arc.metrics.mdm.environment }}
+          volumeMounts: 
+            - name: mdm-config 
+              mountPath: /tmp/geneva_mdm
+          resources:
+{{ toYaml .Values.linux.resources | indent 12 }}
+        - name: msi-adapter
+          image: "{{ .Values.arc.metrics.msiAdapter.image.repository }}:{{ .Values.arc.metrics.msiAdapter.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.metrics.msiAdapter.image.pullPolicy }}
+          env: 
+          - name: TOKEN_NAMESPACE 
+            value: {{ .Values.arc.metrics.msiAdapter.arcNamespace }}
+          - name: EXTENSION_ARMID
+            value: {{ .Values.Azure.Extension.ResourceId }}
+          - name: EXTENSION_NAME 
+            value: {{ .Values.Azure.Extension.Name }}
+          - name: CLUSTER_TYPE 
+            value: ConnectedClusters 
+          - name: CLUSTER_IDENTITY 
+            value: "false" 
+          - name: MANAGED_IDENTITY_AUTH 
+            value: "true" 
+          - name: TEST_MODE 
+            value: "false"
+          resources:
+{{ toYaml .Values.linux.resources | indent 12 }}
+          securityContext: 
+            capabilities: 
+              add: 
+               - NET_ADMIN 
+        - name: telegraf
+          image: "{{ .Values.arc.metrics.telegraf.image.repository }}:{{ .Values.arc.metrics.telegraf.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.metrics.telegraf.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.linux.resources | indent 12 }}
+          volumeMounts: 
+            - name: telegraf-conf
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+      affinity:
+{{ toYaml .Values.linux.affinity | indent 8 }}
+      {{- if .Values.linux.priorityClassName }}
+      priorityClassName: {{ .Values.linux.priorityClassName | quote }}
+      {{- end }}
+      volumes:
+        - name: telegraf-conf
+          configMap:
+            name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+        - name: mdm-config 
+          configMap: 
+            name: {{ template "sscdpa.arc.fullname" . }}-mdm-config
+      nodeSelector:
+        kubernetes.io/os: linux
+{{- if .Values.linux.nodeSelector }}
+{{- toYaml .Values.linux.nodeSelector | nindent 8 }}
+{{- end }}
+{{- with .Values.linux.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
+{{- end }}
