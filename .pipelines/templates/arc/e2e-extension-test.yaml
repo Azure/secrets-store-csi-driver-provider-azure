@@ -54,10 +54,10 @@ jobs:
           ciKindCluster: true
           isArcTest: true
       - template: ../teardown.yaml
-      - template: ../cleanup-images.yaml
-        parameters:
-          imageVersion: $(EXT_VERSION)
-          registryRepo: $(REGISTRY_REPO)
-          subscriptionId: $(SUBSCRIPTION_ID)
-          registryName: $(STAGING_REGISTRY_NAME)
-          isMultiArch: false
+      # - template: ../cleanup-images.yaml
+      #   parameters:
+      #     imageVersion: $(EXT_VERSION)
+      #     registryRepo: $(REGISTRY_REPO)
+      #     subscriptionId: $(SUBSCRIPTION_ID)
+      #     registryName: $(STAGING_REGISTRY_NAME)
+      #     isMultiArch: false
