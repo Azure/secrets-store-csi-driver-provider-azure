@@ -45,7 +45,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         # MDSD-PA
-        - name: pipelineagent
+        - name: amacoreagent
           image: pipelineagent.azurecr.io/amacoreagent:3.0
           imagePullPolicy: IfNotPresent
           env:
