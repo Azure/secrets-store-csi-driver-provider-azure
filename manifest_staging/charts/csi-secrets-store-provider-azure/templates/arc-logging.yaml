@@ -1,4 +1,3 @@
-{{/*
 {{- if .Values.arc.isMonitoringEnabled }}
 {{- if .Values.linux.enabled}}
 apiVersion: v1
@@ -94,6 +93,8 @@ spec:
             value: /tmp
           - name: DOCKER_LOGGING
             value: "true"
+          - name: IMDS_ENDPOINT
+            value: http://169.254.169.25:80
           volumeMounts:
             - name: tenants-conf-vol
               mountPath: /etc/tenants
@@ -207,4 +208,3 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}
-*/}}
