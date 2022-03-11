@@ -14,7 +14,7 @@
     "EndpointConfigurations": [
         {
             "EndpointPath": "",
-            "EndpointPort": 15000,
+            "EndpointPort": 15001,
             "EndpointOtlp": "localhost:4319"
         }
     ]
