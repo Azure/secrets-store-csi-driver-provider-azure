@@ -93,10 +93,6 @@ spec:
             value: /tmp
           - name: DOCKER_LOGGING
             value: "true"
-          - name: IMDS_ENDPOINT
-            value: http://localhost:40342
-          - name: IDENTITY_ENDPOINT
-            value: http://localhost:40342/metadata/identity/oauth2/token
           volumeMounts:
             - name: tenants-conf-vol
               mountPath: /etc/tenants
