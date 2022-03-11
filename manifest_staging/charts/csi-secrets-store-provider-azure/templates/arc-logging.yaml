@@ -88,7 +88,7 @@ spec:
           - name: MONITORING_GCS_NAMESPACE
             value: "akvlogs"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.7"
+            value: "8.0"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
