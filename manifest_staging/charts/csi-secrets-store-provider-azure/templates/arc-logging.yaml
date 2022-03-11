@@ -95,6 +95,8 @@ spec:
             value: "true"
           - name: IMDS_ENDPOINT
             value: http://169.254.169.25:80
+          - name: IDENTITY_ENDPOINT
+            value: http://169.254.169.25:80/metadata/identity/oauth2/token
           volumeMounts:
             - name: tenants-conf-vol
               mountPath: /etc/tenants
