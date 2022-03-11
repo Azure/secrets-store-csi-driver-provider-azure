@@ -1,3 +1,4 @@
+{{/*
 {{- if .Values.arc.isMonitoringEnabled }}
 {{- if .Values.linux.enabled}}
 apiVersion: v1
@@ -6,10 +7,6 @@ metadata:
   name: fluentd-conf
   namespace: {{ .Release.Namespace }}
 data:
-  {{/*
-  kubernetes.conf: {{ .Files.Get "config/kubernetes.conf" | quote }}  // these are standard fluentd conf files
-  systemd.conf: {{ .Files.Get "fluentd/systemd.conf" | quote }}
-  */}}
   fluentd.conf: |
 {{ (tpl ( .Files.Get "config/fluentd-conf.tmpl") .) | indent 4 }}
 ---
@@ -42,10 +39,6 @@ spec:
       labels:
         app.kubernetes.io/name: azure-arc-k8s
         app.kubernetes.io/component: geneva-service
-      {{/*
-      annotations:
-        checksum/proxysecret: {{ include (print $.Template.BasePath "/azure-proxy-secret.yaml") . | sha256sum }}       
-      */}}
     spec:
       hostNetwork: true
       serviceAccountName: csi-secrets-store-provider-azure
@@ -214,3 +207,4 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}
+/*}}
