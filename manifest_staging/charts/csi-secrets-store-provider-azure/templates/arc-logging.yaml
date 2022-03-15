@@ -15,7 +15,7 @@ metadata:
   name: gcstenant-conf
   namespace: {{ .Release.Namespace }}
 data:
-  gcstenant1.json: {{ .Files.Get "config/geneva.json" | quote }}
+  gcstenant.json: {{ .Files.Get "config/geneva.json" | quote }}
 ---
 apiVersion: apps/v1
 kind: Deployment
