@@ -98,9 +98,9 @@
       "outputs": {
         "connectedClusterName": "[basics('connectedCluster').name]",
         "extensionName": "[basics('extensionName').extensionName]",
-        "enableSecretRotation": "[steps('configuration').enableSecretRotation]",
+        "enableSecretRotation": "[string(steps('configuration').enableSecretRotation)]",
         "rotationPollInterval": "[concat(string(steps('configuration').rotationPollInterval), 'm')]",
-        "enableSyncSecret": "[steps('configuration').enableSyncSecret]",
+        "enableSyncSecret": "[string(steps('configuration').enableSyncSecret)]",
         "tagsByResource": "[steps('tagsByResource').arcExtensionsTags]"
       }
     }
