@@ -466,6 +466,25 @@ func TestFormatKeyVaultObject(t *testing.T) {
 				ObjectAlias:    "alias",
 			},
 		},
+		{
+			desc: "no data loss for int properties",
+			keyVaultObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectEncoding:       "base64",
+				ObjectType:           "secret",
+				ObjectAlias:          "alias",
+				ObjectVersionHistory: 12,
+			},
+			expectedKeyVaultObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectEncoding:       "base64",
+				ObjectType:           "secret",
+				ObjectAlias:          "alias",
+				ObjectVersionHistory: 12,
+			},
+		},
 	}
 
 	for _, tc := range cases {

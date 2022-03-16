@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ import (
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/context"
@@ -93,6 +95,8 @@ type KeyVaultObject struct {
 	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
 	// the version of the Azure Key Vault objects
 	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
+	// The number of versions to load for this secret starting at the latest version
+	ObjectVersionHistory int32 `json:"objectVersionHistory" yaml:"objectVersionHistory"`
 	// the type of the Azure Key Vault objects
 	ObjectType string `json:"objectType" yaml:"objectType"`
 	// the format of the Azure Key Vault objects
@@ -117,6 +121,25 @@ type SecretFile struct {
 // StringArray ...
 type StringArray struct {
 	Array []string `json:"array" yaml:"array"`
+}
+
+type KeyVaultSecret struct {
+	Version string
+	Created time.Time
+}
+
+type KeyVaultSecretList []KeyVaultSecret
+
+func (list KeyVaultSecretList) Len() int {
+	return len(list)
+}
+
+func (list KeyVaultSecretList) Less(i, j int) bool {
+	return list[i].Created.After(list[j].Created)
+}
+
+func (list KeyVaultSecretList) Swap(i, j int) {
+	list[i], list[j] = list[j], list[i]
 }
 
 // NewProvider creates a new provider
@@ -295,11 +318,11 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
-		fileName := keyVaultObject.ObjectName
+		baseFileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
-			fileName = keyVaultObject.ObjectAlias
+			baseFileName = keyVaultObject.ObjectAlias
 		}
-		if err := validateFileName(fileName); err != nil {
+		if err := validateFileName(baseFileName); err != nil {
 			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
 		}
 
@@ -308,37 +331,67 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 			return nil, err
 		}
 
-		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
-		if err != nil {
-			return nil, err
+		// if version history isn't greater than 1, maintain the current behavior
+		if keyVaultObject.ObjectVersionHistory <= 1 {
+			file, err := p.getSecretFile(ctx, kvClient, filePermission, baseFileName, keyVaultObject, keyVaultObject.ObjectVersion, *vaultURL)
+
+			if err != nil {
+				return nil, err
+			}
+
+			// these files will be returned to the CSI driver as part of gRPC response
+			files = append(files, file)
+			klog.V(5).InfoS("added file to the gRPC response", "file", baseFileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		} else {
+			// otherwise we'll generate multiple files for this object
+			secretVersions, err := p.getKeyVaultSecretVersions(ctx, kvClient, keyVaultObject, *vaultURL)
+			if err != nil {
+				return nil, err
+			}
+
+			for i, version := range secretVersions {
+				fileName := fmt.Sprintf("%s/%d", baseFileName, i)
+				file, err := p.getSecretFile(ctx, kvClient, filePermission, fileName, keyVaultObject, version, *vaultURL)
+
+				if err != nil {
+					return nil, err
+				}
+				files = append(files, file)
+				klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+			}
 		}
-
-		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
-		if err != nil {
-			return nil, err
-		}
-
-		// objectUID is a unique identifier in the format <object type>/<object name>
-		// This is the object id the user sees in the SecretProviderClassPodStatus
-		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
-
-		// these files will be returned to the CSI driver as part of gRPC response
-		files = append(files, SecretFile{
-			Path:     fileName,
-			Content:  objectContent,
-			FileMode: filePermission,
-			UID:      objectUID,
-			Version:  newObjectVersion,
-		})
-		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
 	return files, nil
 }
 
+func (p *Provider) getSecretFile(ctx context.Context, kvClient *kv.BaseClient, filePermission int32, fileName string, kvObject KeyVaultObject, objectVersion string, vaultURL string) (file SecretFile, err error) {
+	// fetch the object from Key Vault
+	content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, kvObject, objectVersion, vaultURL)
+	if err != nil {
+		return SecretFile{}, err
+	}
+
+	objectContent, err := getContentBytes(content, kvObject.ObjectType, kvObject.ObjectEncoding)
+	if err != nil {
+		return SecretFile{}, err
+	}
+
+	// objectUID is a unique identifier in the format <object type>/<object name>
+	// This is the object id the user sees in the SecretProviderClassPodStatus
+	objectUID := getObjectUID(kvObject.ObjectName, kvObject.ObjectType)
+
+	return SecretFile{
+		Path:     fileName,
+		Content:  objectContent,
+		FileMode: filePermission,
+		UID:      objectUID,
+		Version:  newObjectVersion,
+	}, nil
+}
+
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
+func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, objectVersion string, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
@@ -350,22 +403,84 @@ func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.Ba
 
 	switch kvObject.ObjectType {
 	case VaultObjectTypeSecret:
-		return getSecret(ctx, kvClient, vaultURL, kvObject)
+		return getSecret(ctx, kvClient, vaultURL, kvObject, objectVersion)
 	case VaultObjectTypeKey:
-		return getKey(ctx, kvClient, vaultURL, kvObject)
+		return getKey(ctx, kvClient, vaultURL, kvObject, objectVersion)
 	case VaultObjectTypeCertificate:
-		return getCertificate(ctx, kvClient, vaultURL, kvObject)
+		return getCertificate(ctx, kvClient, vaultURL, kvObject, objectVersion)
 	default:
 		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
-		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 	}
 }
 
-// getSecret retrieves the secret from the vault
-func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
-	secret, err := kvClient.GetSecret(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
+func (p *Provider) getKeyVaultSecretVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (versions []string, err error) {
+	start := time.Now()
+	defer func() {
+		var errMsg string
+		if err != nil {
+			errMsg = err.Error()
+		}
+		p.reporter.ReportKeyvaultRequest(ctx, time.Since(start).Seconds(), kvObject.ObjectType, kvObject.ObjectName, errMsg)
+	}()
+
+	// We have to pull all of the secret versions for a secret because we can't trust
+	// the values returned by KV to be in any reliable order
+	kvVersionsList, err := kvClient.GetSecretVersions(ctx, vaultURL, kvObject.ObjectName, nil)
 	if err != nil {
-		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+	}
+
+	secretVersions := KeyVaultSecretList{}
+
+	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
+		for _, secret := range kvVersionsList.Values() {
+			objectVersion := getObjectVersion(*secret.ID)
+			created := date.UnixEpoch()
+
+			if secret.Attributes != nil {
+				created = time.Time(*secret.Attributes.Created)
+			}
+
+			if secret.Attributes.Enabled != nil && *secret.Attributes.Enabled {
+				secretVersions = append(secretVersions, KeyVaultSecret{
+					Version: objectVersion,
+					Created: created,
+				})
+			}
+		}
+
+		err = kvVersionsList.NextWithContext(ctx)
+		if err != nil {
+			return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+	}
+
+	sort.Sort(secretVersions) // by creation date
+
+	// if we're being asked for the latest, then there's no need to skip any versions
+	var foundFirst = kvObject.ObjectVersion == "" || kvObject.ObjectVersion == "latest"
+
+	for _, secret := range secretVersions {
+		foundFirst = foundFirst || secret.Version == kvObject.ObjectVersion
+
+		if foundFirst {
+			versions = append(versions, secret.Version)
+		}
+
+		if len(versions) >= int(kvObject.ObjectVersionHistory) {
+			break
+		}
+	}
+
+	return versions, nil
+}
+
+// getSecret retrieves the secret from the vault
+func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject, objectVersion string) (string, string, error) {
+	secret, err := kvClient.GetSecret(ctx, vaultURL, kvObject.ObjectName, objectVersion)
+	if err != nil {
+		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 	}
 	if secret.Value == nil {
 		return "", "", errors.Errorf("secret value is nil")
@@ -388,22 +503,22 @@ func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kv
 			// convert to pem as that's the default object format for this provider
 			content, err := decodePKCS12(*secret.Value)
 			if err != nil {
-				return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+				return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 			}
 			return content, version, nil
 		default:
 			err := errors.Errorf("failed to get certificate. unknown content type '%s'", *secret.ContentType)
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 	}
 	return content, version, nil
 }
 
 // getKey retrieves the key from the vault
-func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
-	keybundle, err := kvClient.GetKey(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
+func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject, objectVersion string) (string, string, error) {
+	keybundle, err := kvClient.GetKey(ctx, vaultURL, kvObject.ObjectName, objectVersion)
 	if err != nil {
-		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 	}
 	if keybundle.Key == nil {
 		return "", "", errors.Errorf("key value is nil")
@@ -418,12 +533,12 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 		// decode the base64 bytes for n
 		nb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.N)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		// decode the base64 bytes for e
 		eb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.E)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		e := new(big.Int).SetBytes(eb).Int64()
 		pKey := &rsa.PublicKey{
@@ -432,7 +547,7 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 		}
 		derBytes, err := x509.MarshalPKIXPublicKey(pKey)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		pubKeyBlock := &pem.Block{
 			Type:  "PUBLIC KEY",
@@ -445,16 +560,16 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 		// decode the base64 bytes for x
 		xb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.X)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		// decode the base64 bytes for y
 		yb, err := base64.RawURLEncoding.DecodeString(*keybundle.Key.Y)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		crv, err := getCurve(keybundle.Key.Crv)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		pKey := &ecdsa.PublicKey{
 			X:     new(big.Int).SetBytes(xb),
@@ -463,7 +578,7 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 		}
 		derBytes, err := x509.MarshalPKIXPublicKey(pKey)
 		if err != nil {
-			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+			return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 		}
 		pubKeyBlock := &pem.Block{
 			Type:  "PUBLIC KEY",
@@ -474,16 +589,16 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 		return string(pemData), version, nil
 	default:
 		err := errors.Errorf("failed to get key. key type '%s' currently not supported", keybundle.Key.Kty)
-		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 	}
 }
 
 // getCertificate retrieves the certificate from the vault
-func getCertificate(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
+func getCertificate(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject, objectVersion string) (string, string, error) {
 	// for object type "cert" the certificate is written to the file in PEM format
-	certbundle, err := kvClient.GetCertificate(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
+	certbundle, err := kvClient.GetCertificate(ctx, vaultURL, kvObject.ObjectName, objectVersion)
 	if err != nil {
-		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, objectVersion)
 	}
 	if certbundle.Cer == nil {
 		return "", "", errors.Errorf("certificate value is nil")
