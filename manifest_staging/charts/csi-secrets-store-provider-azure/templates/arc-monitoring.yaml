@@ -1,6 +1,23 @@
-{{/*
 {{- if .Values.arc.isMonitoringEnabled }}
 {{- if .Values.linux.enabled}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  fluentd.conf: |
+{{ (tpl ( .Files.Get "config/fluentd-conf.tmpl") .) | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gcstenant-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  gcstenant1.json: |
+{{ (tpl ( .Files.Get "config/gcstenant-conf.tmpl") .) | indent 4 }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,6 +97,84 @@ spec:
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
               subPath: telegraf.conf
+        # MDSD-PA
+        - name: amacoreagent
+          image: pipelineagent.azurecr.io/amacoreagent:3.0
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MONITORING_GCS_AUTH_ID_TYPE
+            value: AuthMSIToken
+          - name: PA_TENANTS_DIR
+            value: /etc/tenants
+          - name: PA_GIG_BRIDGE_MODE
+            value: "1"
+          - name: PA_FLUENT_SOCKET_PORT
+            value: "15000"
+          - name: PA_TRACEFLAGS
+            value: "4"
+          - name: OTLP_DEBUG_VERBOSE
+            value: "1"
+          - name: MDSD_DEBUG_LOG_FLAGS
+            value: "-T 0x2002"
+          - name: TENANT
+            value: "westus2"
+          - name: ROLE
+            value: "akvsecretsprovider"
+          - name: ROLEINSTANCE
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MONITORING_TENANT
+            value: "westus2"
+          - name: MONITORING_ROLE
+            value: "akvsecretsprovider"
+          - name: MONITORING_ROLE_INSTANCE
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MONITORING_GCS_ENVIRONMENT
+            value: "Test"
+          - name: MONITORING_GCS_ACCOUNT
+            value: "akvsecretsprovider"
+          - name: MONITORING_GCS_REGION
+            value: "westus2"
+          - name: MONITORING_GCS_NAMESPACE
+            value: "akvlogs"
+          - name: MONITORING_CONFIG_VERSION
+            value: "8.0"
+          - name: MDSD_CONFIG_DIR
+            value: /tmp
+          - name: DOCKER_LOGGING
+            value: "true"
+          volumeMounts:
+            - name: tenants-conf-vol
+              mountPath: /etc/tenants
+            - name: var-log-vol
+              mountPath: /geneva/geneva_logs
+            - name: mdsd-run-vol
+              mountPath: /var/run/mdsd
+        # FluentD
+        - name: fluentd
+          image: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent:master_20210928.1	
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLUENTD_CONF
+              value: /etc/fluentd/fluentd.conf
+          volumeMounts:
+            - name: fluentd-conf-vol
+              mountPath: /etc/fluentd
+            - name: fluentd-buffer-vol
+              mountPath: "/var/log/td-agent"
+            - name: mdsd-run-vol
+              mountPath: "/var/run/mdsd"
+            - name: docker-log-vol
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: var-log-vol
+              mountPath: /var/log
+            - name: run-journal-vol
+              mountPath: /run/log/journal
+              readOnly: true
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
@@ -92,6 +187,25 @@ spec:
         - name: mdm-config 
           configMap: 
             name: {{ template "sscdpa.arc.fullname" . }}-mdm-config
+        - name: mdsd-run-vol
+          emptyDir: {}        
+        - name: var-log-vol
+          hostPath:
+            path: /var/log
+        - name: run-journal-vol
+          hostPath:
+            path: /run/log/journal
+        - name: fluentd-buffer-vol
+          emptyDir: {}
+        - name: docker-log-vol
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: fluentd-conf-vol
+          configMap:
+            name: fluentd-conf
+        - name: tenants-conf-vol
+          configMap:
+            name: gcstenant-conf
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
@@ -103,4 +217,4 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
-*/}}
+
