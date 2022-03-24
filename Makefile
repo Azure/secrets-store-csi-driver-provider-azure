@@ -5,7 +5,7 @@ ORG_PATH=github.com/Azure
 PROJECT_NAME := secrets-store-csi-driver-provider-azure
 REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 
-REGISTRY_NAME ?= upstreamk8sci
+REGISTRY_NAME ?= upstream
 REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
 IMAGE_VERSION ?= v1.1.0
