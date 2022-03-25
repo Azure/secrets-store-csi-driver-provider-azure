@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
-FROM golang:1.17
+FROM golang:1.18
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -104,9 +104,9 @@ RUN apt-get install -y apt-transport-https curl gnupg2 lsb-release \
 
 # Install Helm
 RUN mkdir -p /tmp/downloads/helm \
-    && curl -sL -o /tmp/downloads/helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
-    && tar -C /tmp/downloads/helm -zxvf /tmp/downloads/helm.tar.gz \
-    && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
+  && curl -sL -o /tmp/downloads/helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
+  && tar -C /tmp/downloads/helm -zxvf /tmp/downloads/helm.tar.gz \
+  && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
 
 # Install Kubectl
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl \
