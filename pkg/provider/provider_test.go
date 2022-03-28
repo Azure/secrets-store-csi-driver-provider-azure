@@ -209,7 +209,7 @@ lKn75l/9h0PwiiPaI0TGKN2O8AwvhGGwDElmFhYtXedbbaST6rbVRDUj
 			if err != nil {
 				t.Fatalf("expected nil err, got: %v", err)
 			}
-			if content != tc.expectedKey+tc.expectedCert {
+			if content != tc.expectedKey+certKeySeparator+tc.expectedCert {
 				t.Fatalf("certificate and key mismatch")
 			}
 		})
