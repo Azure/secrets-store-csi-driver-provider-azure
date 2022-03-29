@@ -30,7 +30,7 @@ Azure Key Vault provider for Secrets Store CSI driver allows you to get secret c
 | `1.0.1`            | `1.0.1`                          | `1.0.1`                          |
 | `1.1.0-rc.0`       | `1.1.0`                          | `1.1.0-rc.0`                     |
 | `1.1.0`            | `1.1.0`                          | `1.1.0`                          |
-| `1.1.1`            | `1.1.1`                          | `1.1.0`                          |
+| `1.1.0`            | `1.1.1`                          | `1.1.0`                          |
 
 ## Installation
 
