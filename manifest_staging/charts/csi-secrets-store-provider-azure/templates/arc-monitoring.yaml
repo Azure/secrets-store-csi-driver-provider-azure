@@ -8,6 +8,9 @@ metadata:
 data:
   fluentd.conf: |
 {{ (tpl ( .Files.Get "config/fluentd-conf.tmpl") .) | indent 4 }}
+  kubernetes.conf: |
+{{ (tpl ( .Files.Get "config/fluentd-kubernetes-conf.tmpl") .) | indent 4 }}
+  
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -141,7 +144,7 @@ spec:
           - name: MONITORING_GCS_NAMESPACE
             value: "akvsecretsprovider"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.0"
+            value: "1.1"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
