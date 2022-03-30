@@ -97,7 +97,7 @@ spec:
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
               subPath: telegraf.conf
-        # MDSD-PA
+        # MDSD-PA 
         - name: amacoreagent
           image: pipelineagent.azurecr.io/amacoreagent:3.0
           imagePullPolicy: IfNotPresent
