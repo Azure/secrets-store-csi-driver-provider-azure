@@ -23,7 +23,7 @@
 </match>
 
 # Retag to prefix provider container events with akvssp
-<match kubernetes.var.log.containers.**secrets-store-provider-azure**.log>
+<match kubernetes.var.log.containers.**secrets-store-provider-azure**provider-azure-installer**.log>
   @type rewrite_tag_filter
   <rule>
     key     ContainerName
