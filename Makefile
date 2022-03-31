@@ -54,9 +54,9 @@ BUILDX_BUILDER_NAME ?= img-builder
 STEP_CLI_VERSION=0.18.0
 
 # E2E test variables
-KIND_VERSION ?= 0.11.0
-KIND_K8S_VERSION ?= v1.22.4
-SHELLCHECK_VER ?= v0.7.2
+KIND_VERSION ?= 0.12.0
+KIND_K8S_VERSION ?= v1.23.5
+SHELLCHECK_VER ?= v0.8.0
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -237,9 +237,7 @@ e2e-kind-cleanup:
 	kind delete cluster --name kind
 
 .PHONY: helm-lint
-helm-lint:
-	# Download and install Helm
-	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+helm-lint: install-helm
 	# install driver dep as helm 3.4.0 requires dependencies for helm lint
 	helm dep update charts/csi-secrets-store-provider-azure
 	helm dep update manifest_staging/charts/csi-secrets-store-provider-azure
