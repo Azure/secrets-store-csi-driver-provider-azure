@@ -117,6 +117,8 @@ spec:
             value: "4"
           - name: OTLP_DEBUG_VERBOSE
             value: "1"
+          - name: FLUENTD_PORT
+            value: "8130"
           - name: MDSD_DEBUG_LOG_FLAGS
             value: "-T 0x2002"
           - name: TENANT
@@ -229,10 +231,10 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: mdm-statsd-udp
-      protocol: UDP
-      port: 8125
-      targetPort: 8125
+    - name: mds-fluentd-tcp
+      protocol: TCP
+      port: 8130
+      targetPort: 8130
   selector:
     app: {{ template "sscdpa.arc.fullname" . }}
 ---
