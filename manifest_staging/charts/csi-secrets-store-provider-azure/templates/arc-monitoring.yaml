@@ -218,6 +218,45 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
 {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geneva-services
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: geneva-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: mdm-statsd-udp
+      protocol: UDP
+      port: 8125
+      targetPort: 8125
+  selector:
+    app: {{ template "sscdpa.arc.fullname" . }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: geneva-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: geneva-read-global
+subjects:
+  - kind: ServiceAccount
+    name: csi-secrets-store-provider-azure
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: geneva-reader
+  apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}
 
