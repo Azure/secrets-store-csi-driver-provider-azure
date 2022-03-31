@@ -22,15 +22,15 @@
   </rule>
 </match>
 
-# Retag to prefix provider container events with akvssp
-<match kubernetes.var.log.containers.**secrets-store-provider-azure**provider-azure-installer**.log>
-  @type rewrite_tag_filter
-  <rule>
-    key     ContainerName
-    pattern ^(.+)$
-    tag     akvssp.$1
-  </rule>
-</match>
+# # Retag to prefix provider container events with akvssp
+# <match kubernetes.var.log.containers.**secrets-store-provider-azure**provider-azure-installer**.log>
+#   @type rewrite_tag_filter
+#   <rule>
+#     key     ContainerName
+#     pattern ^(.+)$
+#     tag     akvssp.$1
+#   </rule>
+# </match>
 
 # # Retag to prefix all other container events with k8scontainers
 # <match kubernetes.var.log.containers.**.log>
@@ -59,22 +59,22 @@
   retry_wait 10s
 </match>
 
-# Send akvssp events to MDSD
-<match akvssp.**>
-  @type mdsd
-  @log_level info
-  djsonsocket /var/run/mdsd/default_djson.socket  # Full path to mdsd dynamic json socket file
-  acktimeoutms 5000  # max time in milliseconds to wait for mdsd acknowledge response. If 0, no wait.
-  mdsd_tag_regex_patterns ["^akvssp"]  # fluentd tag patterns whose match will be used as mdsd source name
-  num_threads 1
-  buffer_chunk_limit 1000k
-  buffer_type file
-  buffer_path /var/log/td-agent/buffer/out_akvssp*.buffer
-  buffer_queue_limit 128
-  flush_interval 10s
-  retry_limit 3
-  retry_wait 10s
-</match>
+# # Send akvssp events to MDSD
+# <match akvssp.**>
+#   @type mdsd
+#   @log_level info
+#   djsonsocket /var/run/mdsd/default_djson.socket  # Full path to mdsd dynamic json socket file
+#   acktimeoutms 5000  # max time in milliseconds to wait for mdsd acknowledge response. If 0, no wait.
+#   mdsd_tag_regex_patterns ["^akvssp"]  # fluentd tag patterns whose match will be used as mdsd source name
+#   num_threads 1
+#   buffer_chunk_limit 1000k
+#   buffer_type file
+#   buffer_path /var/log/td-agent/buffer/out_akvssp*.buffer
+#   buffer_queue_limit 128
+#   flush_interval 10s
+#   retry_limit 3
+#   retry_wait 10s
+# </match>
 
 # # Send all other kubernetes container events to MDSD
 # <match k8scontainers.**>
