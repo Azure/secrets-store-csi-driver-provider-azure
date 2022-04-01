@@ -1,15 +1,3 @@
-# <source>
-#   @type sample
-#   sample {"hello":"world"}
-#   tag sample
-# </source>
-# 
-# <match sample>
-#   @type stdout
-# </match>
-
-# This file collects, filters and sends logs to Geneva. You should modify it according to your specific needs.
-
 @include kubernetes.conf
 
 # Retag to prefix driver container events with akvssd
@@ -19,26 +7,6 @@
     key     ContainerName
     pattern ^(.+)$
     tag     akvssd.$1
-  </rule>
-</match>
-
-# # Retag to prefix provider container events with akvssp
-# <match kubernetes.var.log.containers.**secrets-store-provider-azure**provider-azure-installer**.log>
-#   @type rewrite_tag_filter
-#   <rule>
-#     key     ContainerName
-#     pattern ^(.+)$
-#     tag     akvssp.$1
-#   </rule>
-# </match>
-
-# Retag to prefix all other container events with k8scontainers
-<match kubernetes.var.log.containers.**.log>
-  @type rewrite_tag_filter
-  <rule>
-    key     ContainerName
-    pattern ^(.+)$
-    tag     k8scontainers.$1
   </rule>
 </match>
 
@@ -57,47 +25,6 @@
   flush_interval 10s
   retry_limit 3
   retry_wait 10s
-</match>
-
-# # Send akvssp events to MDSD
-# <match akvssp.**>
-#   @type mdsd
-#   @log_level info
-#   djsonsocket /var/run/mdsd/default_djson.socket  # Full path to mdsd dynamic json socket file
-#   acktimeoutms 5000  # max time in milliseconds to wait for mdsd acknowledge response. If 0, no wait.
-#   mdsd_tag_regex_patterns ["^akvssp"]  # fluentd tag patterns whose match will be used as mdsd source name
-#   num_threads 1
-#   buffer_chunk_limit 1000k
-#   buffer_type file
-#   buffer_path /var/log/td-agent/buffer/out_akvssp*.buffer
-#   buffer_queue_limit 128
-#   flush_interval 10s
-#   retry_limit 3
-#   retry_wait 10s
-# </match>
-
-# Send all other kubernetes container events to MDSD
-<match k8scontainers.**>
-@type copy
-<store>
-  @type mdsd
-  @log_level debug
-  djsonsocket /var/run/mdsd/default_djson.socket  # Full path to mdsd dynamic json socket file
-  acktimeoutms 5000  # max time in milliseconds to wait for mdsd acknowledge response. If 0, no wait.
-  mdsd_tag_regex_patterns ["^k8scontainers"]  # fluentd tag patterns whose match will be used as mdsd source name
-  num_threads 1
-  buffer_chunk_limit 1000k
-  buffer_type file
-  buffer_path /var/log/td-agent/buffer/out_k8scontainers*.buffer
-  buffer_queue_limit 128
-  flush_interval 10s
-  retry_limit 3
-  retry_wait 10s
-</store>
-<store>
-  @type flowcounter_simple
-  unit second
-</store>
 </match>
 
 # Anything else goes to standard output

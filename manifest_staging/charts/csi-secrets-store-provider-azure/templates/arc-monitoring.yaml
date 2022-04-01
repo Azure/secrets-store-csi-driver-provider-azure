@@ -146,7 +146,7 @@ spec:
           - name: MONITORING_GCS_NAMESPACE
             value: "akvsecretsprovider"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.2"
+            value: "1.3"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
