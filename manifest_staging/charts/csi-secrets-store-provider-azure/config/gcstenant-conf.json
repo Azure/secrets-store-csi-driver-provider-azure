@@ -8,7 +8,7 @@
         "GcsEnvironment": "Test",
         "GcsGenevaAccount": "akvsecretsprovider",
         "GcsNamespace": "akvsecretsprovider",
-        "GenevaConfigVersion": "1.3",
+        "GenevaConfigVersion": "1.4",
         "GcsRegion": "westus2"
     },
     "EndpointConfigurations": [
