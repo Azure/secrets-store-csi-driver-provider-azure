@@ -6,11 +6,9 @@ metadata:
   name: fluentd-conf
   namespace: {{ .Release.Namespace }}
 data:
-  fluentd.conf: |
-{{ (tpl ( .Files.Get "config/fluentd-conf.tmpl") .) | indent 4 }}
-  kubernetes.conf: |
-{{ (tpl ( .Files.Get "config/fluentd-kubernetes-conf.tmpl") .) | indent 4 }}
-  
+  fluentd.conf: {{ .Files.Get "config/fluentd-conf.conf" | quote }}
+  kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes-conf.conf" | quote }}
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,8 +16,7 @@ metadata:
   name: gcstenant-conf
   namespace: {{ .Release.Namespace }}
 data:
-  gcstenant1.json: |
-{{ (tpl ( .Files.Get "config/gcstenant-conf.tmpl") .) | indent 4 }}
+  gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
 ---
 apiVersion: apps/v1
 kind: Deployment
