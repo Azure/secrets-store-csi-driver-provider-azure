@@ -69,7 +69,7 @@ spec:
           imagePullPolicy: {{ .Values.arc.metrics.msiAdapter.image.pullPolicy }}
           env: 
           - name: TOKEN_NAMESPACE 
-            value: {{ .Values.arc.metrics.msiAdapter.arcNamespace }}
+            value: {{ .Release.Namespace }}
           - name: EXTENSION_ARMID
             value: {{ .Values.Azure.Extension.ResourceId }}
           - name: EXTENSION_NAME 
