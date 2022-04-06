@@ -100,6 +100,9 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 			MountPath: "/etc/kubernetes/custom_environment.json",
 		})
 
+		// Configure higher log verbosity for debugging CI failures
+		ds.Spec.Template.Spec.Containers[0].Args = append(ds.Spec.Template.Spec.Containers[0].Args, "-v=5")
+
 		updatedDS, err := yaml.Marshal(ds)
 		Expect(err).To(BeNil())
 

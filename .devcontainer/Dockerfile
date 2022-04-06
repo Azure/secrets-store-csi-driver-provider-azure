@@ -2,18 +2,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
-FROM golang:1.15
+FROM golang:1.18
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 # JQ Version
-ENV JQ_VERSION='1.5'
+ENV JQ_VERSION='1.6'
 # Helm Version
-ARG HELM_VERSION=3.0.2
+ARG HELM_VERSION=3.7.0
 #Kind Version
-ARG KIND_VERSION=0.8.1
+ARG KIND_VERSION=0.12.0
 # Kubernetes Version for Kubectl
-ARG KUBERNETES_VERSION=1.18.2
+ARG KUBERNETES_VERSION=1.22.2
 
 # This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
 # property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
@@ -58,15 +58,7 @@ RUN apt-get update \
   github.com/go-delve/delve/cmd/dlv@latest 2>&1 \
   #
   # Install Go tools w/o module support
-  && go get -v github.com/alecthomas/gometalinter 2>&1 \
-  #
-  # Install gocode-gomod
-  && go get -x -d github.com/stamblerre/gocode 2>&1 \
-  && go build -o gocode-gomod github.com/stamblerre/gocode \
-  && mv gocode-gomod $GOPATH/bin/ \
-  #
-  # Install golangci-lint
-  && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin 2>&1 \
+  && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest 2>&1 \
   #
   # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
   && groupadd --gid $USER_GID $USERNAME \
@@ -112,9 +104,9 @@ RUN apt-get install -y apt-transport-https curl gnupg2 lsb-release \
 
 # Install Helm
 RUN mkdir -p /tmp/downloads/helm \
-    && curl -sL -o /tmp/downloads/helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
-    && tar -C /tmp/downloads/helm -zxvf /tmp/downloads/helm.tar.gz \
-    && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
+  && curl -sL -o /tmp/downloads/helm.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz \
+  && tar -C /tmp/downloads/helm -zxvf /tmp/downloads/helm.tar.gz \
+  && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
 
 # Install Kubectl
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl \

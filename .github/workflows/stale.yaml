@@ -18,6 +18,7 @@ jobs:
           days-before-close: 7
           operations-per-run: 100
           exempt-issue-labels: 'known-issue,enhancement'
+          exempt-pr-labels: 'wip,under-review'
           stale-issue-message: 'This issue is stale because it has been open 14 days with no activity. Please comment or this will be closed in 7 days.'
           close-issue-message: 'This issue was closed because it has been stalled for 21 days with no activity. Feel free to re-open if you are experiencing the issue again.'
           stale-pr-message: 'This PR is stale because it has been open 14 days with no activity. Please comment or this will be closed in 7 days.'

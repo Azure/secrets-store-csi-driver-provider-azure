@@ -23,6 +23,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"k8s.io/component-base/config"
 	json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
 	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
@@ -53,7 +54,9 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 
 	if *logFormatJSON {
-		klog.SetLogger(json.JSONLogger)
+		jsonFactory := json.Factory{}
+		logger, _ := jsonFactory.Create(config.FormatOptions{})
+		klog.SetLogger(logger)
 	}
 
 	if *versionInfo {

@@ -16,7 +16,7 @@ jobs:
       # pinning to the sha 331ce1d993939866bb63c32c6cbbfd48fa76fc57 from https://github.com/actions/setup-go/releases/tag/v2.1.4
       - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
       - name: Unit test
         run: make unit-test
       # pinning to the sha f32b3a3741e1053eb607407145bc9619351dc93b from https://github.com/codecov/codecov-action/releases/tag/v2.1.0
