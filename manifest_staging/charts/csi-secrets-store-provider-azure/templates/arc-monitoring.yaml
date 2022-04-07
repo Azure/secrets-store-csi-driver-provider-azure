@@ -42,6 +42,8 @@ spec:
           env:
           - name: SERVER_PORT
             value: "{{ .Values.arc.metrics.telegraf.prometheusRemoteWritePort }}"
+          - name: EXTENSION_RESOURCE_ID
+            value: "{{ .Values.Azure.Extension.ResourceId }}"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
         - name: mdm
