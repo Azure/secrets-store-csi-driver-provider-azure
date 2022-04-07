@@ -194,7 +194,7 @@ arc:
       image:
         repository: stardotstar/prom-mdm-converter
         tag: v1.0.0
-        pullPolicy: IfNotPresent
+        pullPolicy: Always
     mdm:
       image:
         repository: linuxgeneva-microsoft.azurecr.io/genevamdm
