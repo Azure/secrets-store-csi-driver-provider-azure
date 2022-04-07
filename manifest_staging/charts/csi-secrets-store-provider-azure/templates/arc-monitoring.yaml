@@ -102,86 +102,86 @@ spec:
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
               subPath: telegraf.conf
-        # MDSD-PA 
-        - name: amacoreagent
-          image: pipelineagent.azurecr.io/amacoreagent:3.0
-          imagePullPolicy: IfNotPresent
-          env:
-          - name: MONITORING_GCS_AUTH_ID_TYPE
-            value: AuthMSIToken
-          - name: PA_TENANTS_DIR
-            value: /etc/tenants
-          - name: PA_GIG_BRIDGE_MODE
-            value: "1"
-          - name: PA_FLUENT_SOCKET_PORT
-            value: "15000"
-          - name: PA_TRACEFLAGS
-            value: "4"
-          - name: OTLP_DEBUG_VERBOSE
-            value: "1"
-          - name: FLUENTD_PORT
-            value: "8130"
-          - name: MDSD_DEBUG_LOG_FLAGS
-            value: "-T 0x2002"
-          - name: TENANT
-            value: "westus2"
-          - name: ROLE
-            value: "akvsecretsprovider"
-          - name: ROLEINSTANCE
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: MONITORING_TENANT
-            value: "westus2"
-          - name: MONITORING_ROLE
-            value: "akvsecretsprovider"
-          - name: MONITORING_ROLE_INSTANCE
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: MONITORING_GCS_ENVIRONMENT
-            value: "Test"
-          - name: MONITORING_GCS_ACCOUNT
-            value: "akvsecretsprovider"
-          - name: MONITORING_GCS_REGION
-            value: "westus2"
-          - name: MONITORING_GCS_NAMESPACE
-            value: "akvsecretsprovider"
-          - name: MONITORING_CONFIG_VERSION
-            value: "1.4"
-          - name: MDSD_CONFIG_DIR
-            value: /tmp
-          - name: DOCKER_LOGGING
-            value: "true"
-          volumeMounts:
-            - name: tenants-conf-vol
-              mountPath: /etc/tenants
-            - name: var-log-vol
-              mountPath: /geneva/geneva_logs
-            - name: mdsd-run-vol
-              mountPath: /var/run/mdsd
-        # FluentD
-        - name: fluentd
-          image: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent:master_20210928.1	
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: FLUENTD_CONF
-              value: /etc/fluentd/fluentd.conf
-          volumeMounts:
-            - name: fluentd-conf-vol
-              mountPath: /etc/fluentd
-            - name: fluentd-buffer-vol
-              mountPath: "/var/log/td-agent"
-            - name: mdsd-run-vol
-              mountPath: "/var/run/mdsd"
-            - name: docker-log-vol
-              mountPath: /var/lib/docker/containers
-              readOnly: true
-            - name: var-log-vol
-              mountPath: /var/log
-            - name: run-journal-vol
-              mountPath: /run/log/journal
-              readOnly: true
+        # # MDSD-PA 
+        # - name: amacoreagent
+        #   image: pipelineagent.azurecr.io/amacoreagent:3.0
+        #   imagePullPolicy: IfNotPresent
+        #   env:
+        #   - name: MONITORING_GCS_AUTH_ID_TYPE
+        #     value: AuthMSIToken
+        #   - name: PA_TENANTS_DIR
+        #     value: /etc/tenants
+        #   - name: PA_GIG_BRIDGE_MODE
+        #     value: "1"
+        #   - name: PA_FLUENT_SOCKET_PORT
+        #     value: "15000"
+        #   - name: PA_TRACEFLAGS
+        #     value: "4"
+        #   - name: OTLP_DEBUG_VERBOSE
+        #     value: "1"
+        #   - name: FLUENTD_PORT
+        #     value: "8130"
+        #   - name: MDSD_DEBUG_LOG_FLAGS
+        #     value: "-T 0x2002"
+        #   - name: TENANT
+        #     value: "westus2"
+        #   - name: ROLE
+        #     value: "akvsecretsprovider"
+        #   - name: ROLEINSTANCE
+        #     valueFrom:
+        #       fieldRef:
+        #         fieldPath: spec.nodeName
+        #   - name: MONITORING_TENANT
+        #     value: "westus2"
+        #   - name: MONITORING_ROLE
+        #     value: "akvsecretsprovider"
+        #   - name: MONITORING_ROLE_INSTANCE
+        #     valueFrom:
+        #       fieldRef:
+        #         fieldPath: spec.nodeName
+        #   - name: MONITORING_GCS_ENVIRONMENT
+        #     value: "Test"
+        #   - name: MONITORING_GCS_ACCOUNT
+        #     value: "akvsecretsprovider"
+        #   - name: MONITORING_GCS_REGION
+        #     value: "westus2"
+        #   - name: MONITORING_GCS_NAMESPACE
+        #     value: "akvsecretsprovider"
+        #   - name: MONITORING_CONFIG_VERSION
+        #     value: "1.4"
+        #   - name: MDSD_CONFIG_DIR
+        #     value: /tmp
+        #   - name: DOCKER_LOGGING
+        #     value: "true"
+        #   volumeMounts:
+        #     - name: tenants-conf-vol
+        #       mountPath: /etc/tenants
+        #     - name: var-log-vol
+        #       mountPath: /geneva/geneva_logs
+        #     - name: mdsd-run-vol
+        #       mountPath: /var/run/mdsd
+        # # FluentD
+        # - name: fluentd
+        #   image: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent:master_20210928.1
+        #   imagePullPolicy: IfNotPresent
+        #   env:
+        #     - name: FLUENTD_CONF
+        #       value: /etc/fluentd/fluentd.conf
+        #   volumeMounts:
+        #     - name: fluentd-conf-vol
+        #       mountPath: /etc/fluentd
+        #     - name: fluentd-buffer-vol
+        #       mountPath: "/var/log/td-agent"
+        #     - name: mdsd-run-vol
+        #       mountPath: "/var/run/mdsd"
+        #     - name: docker-log-vol
+        #       mountPath: /var/lib/docker/containers
+        #       readOnly: true
+        #     - name: var-log-vol
+        #       mountPath: /var/log
+        #     - name: run-journal-vol
+        #       mountPath: /run/log/journal
+        #       readOnly: true
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
       {{- if .Values.linux.priorityClassName }}
@@ -223,44 +223,44 @@ spec:
 {{ toYaml . | indent 8 }}
 {{- end }}
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: geneva-services
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app: geneva-services
-spec:
-  type: ClusterIP
-  ports:
-    - name: mds-fluentd-tcp
-      protocol: TCP
-      port: 8130
-      targetPort: 8130
-  selector:
-    app: {{ template "sscdpa.arc.fullname" . }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: geneva-reader
-rules:
-- apiGroups: [""]
-  resources: ["pods", "namespaces"]
-  verbs: ["get", "watch", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: geneva-read-global
-subjects:
-  - kind: ServiceAccount
-    name: csi-secrets-store-provider-azure
-    namespace: {{ .Release.Namespace }}
-roleRef:
-  kind: ClusterRole
-  name: geneva-reader
-  apiGroup: rbac.authorization.k8s.io
-{{- end }}
-{{- end }}
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: geneva-services
+#   namespace: {{ .Release.Namespace }}
+#   labels:
+#     app: geneva-services
+# spec:
+#   type: ClusterIP
+#   ports:
+#     - name: mds-fluentd-tcp
+#       protocol: TCP
+#       port: 8130
+#       targetPort: 8130
+#   selector:
+#     app: {{ template "sscdpa.arc.fullname" . }}
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: geneva-reader
+# rules:
+# - apiGroups: [""]
+#   resources: ["pods", "namespaces"]
+#   verbs: ["get", "watch", "list"]
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: geneva-read-global
+# subjects:
+#   - kind: ServiceAccount
+#     name: csi-secrets-store-provider-azure
+#     namespace: {{ .Release.Namespace }}
+# roleRef:
+#   kind: ClusterRole
+#   name: geneva-reader
+#   apiGroup: rbac.authorization.k8s.io
+# {{- end }}
+# {{- end }}
 
