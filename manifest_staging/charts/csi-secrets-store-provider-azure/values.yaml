@@ -198,7 +198,7 @@ arc:
     mdm:
       image:
         repository: linuxgeneva-microsoft.azurecr.io/genevamdm
-        tag: master_20220216.1
+        tag: master_20220401.1
         pullPolicy: IfNotPresent
       metricEndpoint: https://az-int.int.microsoftmetrics.com/ 
       accountName: akvsecretsprovider
