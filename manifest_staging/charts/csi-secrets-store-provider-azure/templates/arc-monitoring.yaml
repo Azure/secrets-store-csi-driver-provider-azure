@@ -21,6 +21,9 @@ spec:
         - name: prom-mdm-converter
           image: "{{ .Values.arc.metrics.promMdmConverter.image.repository }}:{{ .Values.arc.metrics.promMdmConverter.image.tag }}"
           imagePullPolicy: {{ .Values.arc.metrics.promMdmConverter.image.pullPolicy }}
+          env:
+          - name: SERVER_PORT
+            value: "{{ .Values.arc.metrics.telegraf.prometheusRemoteWritePort }}"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
         - name: mdm

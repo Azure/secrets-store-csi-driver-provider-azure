@@ -192,8 +192,8 @@ arc:
   metrics:
     promMdmConverter:
       image:
-        repository: stardotstar/provider-azure-arc-metrics-agent
-        tag: v1.1.0-rc.0-linux-amd64
+        repository: stardotstar/prom-mdm-converter
+        tag: v1.0.0
         pullPolicy: IfNotPresent
     mdm:
       image:
