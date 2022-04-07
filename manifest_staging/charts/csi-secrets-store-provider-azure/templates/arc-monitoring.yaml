@@ -87,6 +87,8 @@ spec:
             value: "true" 
           - name: TEST_MODE 
             value: "false"
+          - name: LIVENESS_PROBE_ENABLED
+            value: "false"
           resources:
 {{ toYaml .Values.linux.resources | indent 12 }}
           securityContext: 
