@@ -1,23 +1,23 @@
 {{- if .Values.arc.isMonitoringEnabled }}
 {{- if .Values.linux.enabled}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fluentd-conf
-  namespace: {{ .Release.Namespace }}
-data:
-  fluentd.conf: {{ .Files.Get "config/fluentd-conf.conf" | quote }}
-  kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes-conf.conf" | quote }}
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: fluentd-conf
+#   namespace: {{ .Release.Namespace }}
+# data:
+#   fluentd.conf: {{ .Files.Get "config/fluentd-conf.conf" | quote }}
+#   kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes-conf.conf" | quote }}
 
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gcstenant-conf
-  namespace: {{ .Release.Namespace }}
-data:
-  gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
----
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: gcstenant-conf
+#   namespace: {{ .Release.Namespace }}
+# data:
+#   gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,7 +61,7 @@ spec:
           - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
-            value: "Info" 
+            value: "Debug" 
           - name: ME_AZURE_ENV 
             value: {{ .Values.arc.metrics.mdm.environment }}
           volumeMounts: 
