@@ -205,9 +205,9 @@ arc:
       environment: test # test | prod
     msiAdapter:
       image:
-        repository: mcr.microsoft.com/azurearck8s/msi-adapter
-        tag: 1.0.0
-        pullPolicy: IfNotPresent
+        repository: azurearcfork8sdev.azurecr.io/azurearck8s/msi-adapter
+        tag: 1.0.1-preview
+        pullPolicy: Always
       arcNamespace: azure-arc
     telegraf:
       image:
