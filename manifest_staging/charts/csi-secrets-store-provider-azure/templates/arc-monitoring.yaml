@@ -61,7 +61,7 @@ spec:
           - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
-            value: "Debug" 
+            value: "Info" 
           - name: ME_AZURE_ENV 
             value: {{ .Values.arc.metrics.mdm.environment }}
           volumeMounts: 
