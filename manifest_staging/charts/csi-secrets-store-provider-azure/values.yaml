@@ -192,9 +192,9 @@ arc:
   metrics:
     promMdmConverter:
       image:
-        repository: upstreamarc.azurecr.io/prom-mdm-converter
-        tag: v0.0.1
-        pullPolicy: IfNotPresent
+        repository: stardotstar/prom-mdm-converter
+        tag: v1.0.0
+        pullPolicy: Always
     mdm:
       image:
         repository: linuxgeneva-microsoft.azurecr.io/genevamdm
