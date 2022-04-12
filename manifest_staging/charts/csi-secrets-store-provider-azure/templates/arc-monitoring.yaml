@@ -56,14 +56,14 @@ spec:
                 fieldPath: spec.nodeName
           - name: CONFIG_OVERRIDES_FILE 
             value: /tmp/geneva_mdm/mdmconfig.json
-          - name: METRIC_ENDPOINT 
-            value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
+          # - name: METRIC_ENDPOINT 
+          #   value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
           - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
             value: "Info" 
-          - name: ME_AZURE_ENV 
-            value: {{ .Values.arc.metrics.mdm.environment }}
+          # - name: ME_AZURE_ENV 
+          #   value: {{ .Values.arc.metrics.mdm.environment }}
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
@@ -140,7 +140,8 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
           - name: MONITORING_GCS_ENVIRONMENT
-            value: "Test"
+            # value: "Test"
+            value: "Diagnostics PROD"
           - name: MONITORING_GCS_ACCOUNT
             value: "akvsecretsprovider"
           - name: MONITORING_GCS_REGION
@@ -148,7 +149,7 @@ spec:
           - name: MONITORING_GCS_NAMESPACE
             value: "akvsecretsprovider"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.4"
+            value: "1.0"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
