@@ -141,7 +141,7 @@ spec:
                 fieldPath: spec.nodeName
           - name: MONITORING_GCS_ENVIRONMENT
             # value: "Test"
-            value: "Diagnostics PROD"
+            value: "DiagnosticsPROD"
           - name: MONITORING_GCS_ACCOUNT
             value: "akvsecretsprovider"
           - name: MONITORING_GCS_REGION
