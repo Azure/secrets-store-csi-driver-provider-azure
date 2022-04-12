@@ -5,10 +5,10 @@
 
     "UserArguments": {
 	"GcsAuthIdType": "AuthMSIToken",
-        "GcsEnvironment": "Test",
+        "GcsEnvironment": "DiagnosticsPROD",
         "GcsGenevaAccount": "akvsecretsprovider",
         "GcsNamespace": "akvsecretsprovider",
-        "GenevaConfigVersion": "1.4",
+        "GenevaConfigVersion": "1.0",
         "GcsRegion": "westus2"
     },
     "EndpointConfigurations": [
