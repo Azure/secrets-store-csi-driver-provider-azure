@@ -53,7 +53,7 @@ linux:
   volumes: []
   volumeMounts: []
   kubeletRootDir: /var/lib/kubelet
-  providersDir: /etc/kubernetes/secrets-store-csi-providers
+  providersDir: /var/run/secrets-store-csi-providers
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -135,6 +135,7 @@ secrets-store-csi-driver:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
         tag: v1.1.2
         pullPolicy: IfNotPresent
+    providersDir: /var/run/secrets-store-csi-providers
 
   windows:
     enabled: false
