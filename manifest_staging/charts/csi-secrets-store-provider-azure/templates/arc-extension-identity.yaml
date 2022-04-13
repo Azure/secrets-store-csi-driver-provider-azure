@@ -1,3 +1,4 @@
+{{- if .Values.enableArcExtension }}
 {{- if and .Values.Azure.Identity.isEnabled .Values.arc.enableMonitoring }}
 apiVersion: clusterconfig.azure.com/v1beta1
 kind: AzureExtensionIdentity
@@ -9,4 +10,5 @@ spec:
     - name: csi-secrets-store-provider-azure
       namespace: {{ .Release.Namespace }}
   tokenNamespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}

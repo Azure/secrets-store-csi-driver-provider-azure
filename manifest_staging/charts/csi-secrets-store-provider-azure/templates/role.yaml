@@ -13,6 +13,7 @@ rules:
       - {{ template "sscdpa.psp.fullname" . }}
 {{- end }}
 ---
+{{- if .Values.enableArcExtension }}
 {{- if and .Values.Azure.Identity.isEnabled .Values.arc.enableMonitoring }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -43,4 +44,5 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "namespaces"]
   verbs: ["get", "watch", "list"]
+{{- end }}
 {{- end }}

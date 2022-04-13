@@ -12,8 +12,6 @@ logFormatJSON: false
 # log level. Uses V logs (klog)
 logVerbosity: 0
 
-enableArcExtension: false
-
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
@@ -128,6 +126,9 @@ secrets-store-csi-driver:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
         tag: v1.1.2
         pullPolicy: IfNotPresent
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
 
   windows:
     enabled: false
@@ -164,6 +165,29 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# Azure Arc Extension
+enableArcExtension: true
+
+# Values populated by Azure Arc K8s RP during the installation of the extension.
+Azure:
+  Cluster:
+    ResourceId: ""
+    Region: ""
+    Distribution: ""
+    Infrastructure: ""
+  proxySettings:
+    isProxyEnabled: false
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: ""
+    proxyCert: ""
+  Identity:
+    isEnabled: true
+    Type: ""
+  Extension:
+    Name: "test"
+    ResourceId: ""
 
 # Arc monitoring
 arc:

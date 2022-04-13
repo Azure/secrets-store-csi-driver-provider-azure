@@ -1,3 +1,4 @@
+{{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
 apiVersion: v1
 kind: Service
@@ -10,8 +11,9 @@ spec:
   ports:
     - name: mds-fluentd-tcp
       protocol: TCP
-      port: {{ .Values.arc.fluentd.port }}
-      targetPort: {{ .Values.arc.fluentd.port }}
+      port: 8130
+      targetPort: 8130
   selector:
     app: "arc-{{ template "sscdpa.fullname" . }}"
+{{- end }}
 {{- end }}

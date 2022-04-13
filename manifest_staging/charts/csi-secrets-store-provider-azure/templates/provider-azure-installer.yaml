@@ -17,17 +17,17 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
-{{- if or .Values.linux.podAnnotations .Values.Azure.proxySettings.isProxyEnabled .Values.arc.enableMonitoring}}
+{{- if or .Values.linux.podAnnotations .Values.enableArcExtension }}
       annotations:
 {{- if .Values.linux.podAnnotations}}
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
 {{- end }}
-{{- if .Values.arc.enableMonitoring }}
+{{- if and .Values.arc.enableMonitoring .Values.enableArcExtension }}
         prometheus.io/scrape: "true" 
         prometheus.io/port: "8898"
 {{- end }}
 # this will ensure pods are rolled in next helm upgrade if cert files are updated.
-{{- if .Values.Azure.proxySettings.isProxyEnabled }}
+{{- if and .Values.Azure.proxySettings.isProxyEnabled .Values.enableArcExtension }}
         checksum/arc-proxy-config: {{ include (print $.Template.BasePath "/arc-proxy-secret.yaml") . | sha256sum }}
 {{- end }}
 {{- end }}
@@ -81,10 +81,12 @@ spec:
           {{- if .Values.linux.privileged }}
             privileged: true
           {{- end }}
+          {{- if .Values.enableArcExtension }}
           {{- if .Values.Azure.proxySettings.isProxyEnabled }}
           envFrom:
             - secretRef:
                 name: arc-proxy-config
+          {{- end }}
           {{- end }}
           volumeMounts:
             - name: provider-vol
@@ -92,10 +94,12 @@ spec:
             {{- if .Values.linux.volumeMounts }}
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
+            {{- if .Values.enableArcExtension }}
             {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
             - mountPath: /etc/ssl/certs/proxy-cert.crt
               subPath: proxy-cert.crt
               name: proxy-certstore
+            {{- end }}
             {{- end }}
       affinity:
 {{ toYaml .Values.linux.affinity | indent 8 }}
@@ -109,10 +113,12 @@ spec:
         {{- if .Values.linux.volumes }}
         {{- toYaml .Values.linux.volumes | nindent 8 }}
         {{- end}}
+        {{- if .Values.enableArcExtension }}
         {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
         - name: proxy-certstore
           secret:
             secretName: arc-proxy-cert
+        {{- end }}
         {{- end }}
       nodeSelector:
         kubernetes.io/os: linux

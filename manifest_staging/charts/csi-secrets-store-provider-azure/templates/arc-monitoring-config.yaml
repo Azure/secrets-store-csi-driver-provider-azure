@@ -1,3 +1,4 @@
+{{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
 apiVersion: v1
 kind: ConfigMap
@@ -32,4 +33,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
+{{- end }}
 {{- end }}
