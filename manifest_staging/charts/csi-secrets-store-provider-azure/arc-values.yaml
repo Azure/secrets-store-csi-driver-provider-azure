@@ -7,7 +7,7 @@ imagePullSecrets: []
 
 # logging format json
 # Default is text.
-logFormatJSON: false
+logFormatJSON: true
 
 # log level. Uses V logs (klog)
 logVerbosity: 0
@@ -101,6 +101,7 @@ windows:
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
 ##
 secrets-store-csi-driver:
+  logFormatJSON: true
   install: true
   # By default helm will append the chart release name to the dependent chart names.
   # Explicitly setting the fullnameOverride will override this behavior.
@@ -183,10 +184,10 @@ Azure:
     noProxy: ""
     proxyCert: ""
   Identity:
-    isEnabled: true
+    isEnabled: false
     Type: ""
   Extension:
-    Name: "test"
+    Name: ""
     ResourceId: ""
 
 # Arc monitoring
