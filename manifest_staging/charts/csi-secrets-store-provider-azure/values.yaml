@@ -244,7 +244,7 @@ arc:
   amacoreagent:
     image:
       repository: pipelineagent.azurecr.io/amacoreagent
-      tag: 3.0
+      tag: "3.0"
       pullPolicy: IfNotPresent
     logsLocation: westus2
     logsName: akvsecretsprovider
