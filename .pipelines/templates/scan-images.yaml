@@ -1,8 +1,8 @@
 steps:
   - script: |
       # install trivy
-      wget https://github.com/aquasecurity/trivy/releases/download/v$(TRIVY_VERSION)/trivy_$(TRIVY_VERSION)_Linux-64bit.tar.gz
-      tar zxvf trivy_$(TRIVY_VERSION)_Linux-64bit.tar.gz
+      wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION:-0.24.4}/trivy_${TRIVY_VERSION:-0.24.4}_Linux-64bit.tar.gz
+      tar zxvf trivy_${TRIVY_VERSION:-0.24.4}_Linux-64bit.tar.gz
 
       # scan provider image
       export REGISTRY="e2e"
@@ -10,8 +10,8 @@ steps:
       OUTPUT_TYPE=docker make container arc-conformance-container
       # show all vulnerabilities in the logs
       ./trivy image "${REGISTRY}/provider-azure:${IMAGE_VERSION}"
-      ./trivy image --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure:${IMAGE_VERSION}" || exit 1
+      ./trivy image --vuln-type os --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure:${IMAGE_VERSION}" || exit 1
       
       ./trivy image "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64"
-      ./trivy image --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64" || exit 1
+      ./trivy image --vuln-type os --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64" || exit 1
     displayName: "Scan images for vulnerability"
