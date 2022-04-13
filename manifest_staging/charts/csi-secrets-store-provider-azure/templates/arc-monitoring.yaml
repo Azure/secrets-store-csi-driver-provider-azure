@@ -1,34 +1,16 @@
 {{- if .Values.arc.isMonitoringEnabled }}
 {{- if .Values.linux.enabled}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fluentd-conf
-  namespace: {{ .Release.Namespace }}
-data:
-  fluentd.conf: {{ .Files.Get "config/fluentd-conf.conf" | quote }}
-  kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes-conf.conf" | quote }}
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gcstenant-conf
-  namespace: {{ .Release.Namespace }}
-data:
-  gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "sscdpa.arc.fullname" . }}-metrics-monitoring
+  name: arc-{{ template "sscdpa.fullname" . }}-monitoring
   namespace: {{ .Release.Namespace }}
 {{ include "sscdpa.arc.labels" . | indent 2 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ template "sscdpa.arc.fullname" . }}
+      app: "arc-{{ template "sscdpa.fullname" . }}"
   template:
     metadata:
 {{ include "sscdpa.arc.labels" . | indent 6 }}
@@ -36,42 +18,40 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       hostNetwork: true
       containers:
+        # Prom MDM Converter
         - name: prom-mdm-converter
-          image: "{{ .Values.arc.metrics.promMdmConverter.image.repository }}:{{ .Values.arc.metrics.promMdmConverter.image.tag }}"
-          imagePullPolicy: {{ .Values.arc.metrics.promMdmConverter.image.pullPolicy }}
+          image: "{{ .Values.arc.promMdmConverter.image.repository }}:{{ .Values.arc.promMdmConverter.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.promMdmConverter.image.pullPolicy }}
           env:
           - name: SERVER_PORT
-            value: "{{ .Values.arc.metrics.telegraf.prometheusRemoteWritePort }}"
+            value: "{{ .Values.arc.telegraf.prometheusRemoteWritePort }}"
           - name: EXTENSION_RESOURCE_ID
             value: "{{ .Values.Azure.Extension.ResourceId }}"
           resources:
-{{ toYaml .Values.linux.resources | indent 12 }}
+{{ toYaml .Values.arc.promMdmConverter.resources | indent 12 }}
         - name: mdm
-          image: "{{ .Values.arc.metrics.mdm.image.repository }}:{{ .Values.arc.metrics.mdm.image.tag }}"
-          imagePullPolicy: {{ .Values.arc.metrics.mdm.image.pullPolicy }}
+          image: "{{ .Values.arc.mdm.image.repository }}:{{ .Values.arc.mdm.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.mdm.image.pullPolicy }}
           env: 
-          - name: ROLEINSTANCE 
+          - name: ROLEINSTANCE
             valueFrom: 
               fieldRef: 
                 fieldPath: spec.nodeName
           - name: CONFIG_OVERRIDES_FILE 
             value: /tmp/geneva_mdm/mdmconfig.json
-          # - name: METRIC_ENDPOINT 
-          #   value: {{ .Values.arc.metrics.mdm.metricEndpoint }}
           - name: MDM_INPUT
             value: statsd_udp,statsd_tcp
           - name: MDM_LOG_LEVEL 
-            value: "Info" 
-          # - name: ME_AZURE_ENV 
-          #   value: {{ .Values.arc.metrics.mdm.environment }}
+            value: "Info"
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
           resources:
-{{ toYaml .Values.linux.resources | indent 12 }}
+{{ toYaml .Values.arc.mdm.resources | indent 12 }}
+        # MSI Adapter
         - name: msi-adapter
-          image: "{{ .Values.arc.metrics.msiAdapter.image.repository }}:{{ .Values.arc.metrics.msiAdapter.image.tag }}"
-          imagePullPolicy: {{ .Values.arc.metrics.msiAdapter.image.pullPolicy }}
+          image: "{{ .Values.arc.msiAdapter.image.repository }}:{{ .Values.arc.msiAdapter.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.msiAdapter.image.pullPolicy }}
           env: 
           - name: TOKEN_NAMESPACE 
             value: {{ .Release.Namespace }}
@@ -88,24 +68,27 @@ spec:
           - name: TEST_MODE 
             value: "false"
           resources:
-{{ toYaml .Values.linux.resources | indent 12 }}
+{{ toYaml .Values.arc.msiAdapter.resources | indent 12 }}
           securityContext: 
             capabilities: 
               add: 
-               - NET_ADMIN 
+               - NET_ADMIN
+        # Telegraf
         - name: telegraf
-          image: "{{ .Values.arc.metrics.telegraf.image.repository }}:{{ .Values.arc.metrics.telegraf.image.tag }}"
-          imagePullPolicy: {{ .Values.arc.metrics.telegraf.image.pullPolicy }}
+          image: "{{ .Values.arc.telegraf.image.repository }}:{{ .Values.arc.telegraf.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.telegraf.image.pullPolicy }}
           resources:
-{{ toYaml .Values.linux.resources | indent 12 }}
+{{ toYaml .Values.arc.telegraf.resources | indent 12 }}
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
               subPath: telegraf.conf
-        # MDSD-PA 
+        # Pipeline agent for logging
         - name: amacoreagent
-          image: pipelineagent.azurecr.io/amacoreagent:3.0
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.arc.amacoreagent.image.repository }}:{{ .Values.arc.amacoreagent.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.amacoreagent.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.arc.amacoreagent.resources | indent 12 }}
           env:
           - name: MONITORING_GCS_AUTH_ID_TYPE
             value: AuthMSIToken
@@ -120,36 +103,35 @@ spec:
           - name: OTLP_DEBUG_VERBOSE
             value: "1"
           - name: FLUENTD_PORT
-            value: "8130"
+            value: "{{ .Values.arc.fluentd.port }}"
           - name: MDSD_DEBUG_LOG_FLAGS
             value: "-T 0x2002"
           - name: TENANT
-            value: "westus2"
+            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
           - name: ROLE
-            value: "akvsecretsprovider"
+            value: "{{ .Values.arc.amacoreagent.logsName }}"
           - name: ROLEINSTANCE
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
           - name: MONITORING_TENANT
-            value: "westus2"
+            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
           - name: MONITORING_ROLE
-            value: "akvsecretsprovider"
+            value: "{{ .Values.arc.amacoreagent.logsName }}"
           - name: MONITORING_ROLE_INSTANCE
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
           - name: MONITORING_GCS_ENVIRONMENT
-            # value: "Test"
-            value: "DiagnosticsPROD"
+            value: "{{ .Values.arc.amacoreagent.logsEnvironment }}"
           - name: MONITORING_GCS_ACCOUNT
-            value: "akvsecretsprovider"
+            value: "{{ .Values.arc.amacoreagent.logsName }}"
           - name: MONITORING_GCS_REGION
-            value: "westus2"
+            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
           - name: MONITORING_GCS_NAMESPACE
-            value: "akvsecretsprovider"
+            value: "{{ .Values.arc.amacoreagent.logsName }}"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.0"
+            value: "{{ .Values.arc.amacoreagent.logsConfigVersion }}"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
@@ -163,8 +145,10 @@ spec:
               mountPath: /var/run/mdsd
         # FluentD
         - name: fluentd
-          image: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent:master_20210928.1
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.arc.fluentd.image.repository }}:{{ .Values.arc.fluentd.image.tag }}"
+          imagePullPolicy: {{ .Values.arc.fluentd.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.arc.fluentd.resources | indent 12 }}
           env:
             - name: FLUENTD_CONF
               value: /etc/fluentd/fluentd.conf
@@ -191,10 +175,10 @@ spec:
       volumes:
         - name: telegraf-conf
           configMap:
-            name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+            name: arc-telegraf-config
         - name: mdm-config 
           configMap: 
-            name: {{ template "sscdpa.arc.fullname" . }}-mdm-config
+            name: arc-mdm-config
         - name: mdsd-run-vol
           emptyDir: {}        
         - name: var-log-vol
@@ -210,10 +194,10 @@ spec:
             path: /var/lib/docker/containers
         - name: fluentd-conf-vol
           configMap:
-            name: fluentd-conf
+            name: arc-fluentd-conf
         - name: tenants-conf-vol
           configMap:
-            name: gcstenant-conf
+            name: arc-gcstenant-conf
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
@@ -223,44 +207,5 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
 {{- end }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: geneva-services
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app: geneva-services
-spec:
-  type: ClusterIP
-  ports:
-    - name: mds-fluentd-tcp
-      protocol: TCP
-      port: 8130
-      targetPort: 8130
-  selector:
-    app: {{ template "sscdpa.arc.fullname" . }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: geneva-reader
-rules:
-- apiGroups: [""]
-  resources: ["pods", "namespaces"]
-  verbs: ["get", "watch", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: geneva-read-global
-subjects:
-  - kind: ServiceAccount
-    name: csi-secrets-store-provider-azure
-    namespace: {{ .Release.Namespace }}
-roleRef:
-  kind: ClusterRole
-  name: geneva-reader
-  apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}

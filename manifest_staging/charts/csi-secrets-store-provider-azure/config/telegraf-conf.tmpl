@@ -9,7 +9,7 @@
 
   monitor_kubernetes_pods = true
   kubernetes_label_selector = "app.kubernetes.io/name=csi-secrets-store-provider-azure"
-  monitor_kubernetes_pods_namespace = "kube-system"
+  monitor_kubernetes_pods_namespace = "{{ .Release.Namespace }}"
   bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
   insecure_skip_verify = true
@@ -20,7 +20,7 @@
 
   monitor_kubernetes_pods = true
   kubernetes_label_selector = "app.kubernetes.io/name=secrets-store-csi-driver"
-  monitor_kubernetes_pods_namespace = "kube-system"
+  monitor_kubernetes_pods_namespace = "{{ .Release.Namespace }}"
   bearer_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
   insecure_skip_verify = true
@@ -28,7 +28,7 @@
 
 [[outputs.http]]
   ## URL is the address to send metrics to
-  url = "http://{{ .Values.arc.metrics.telegraf.prometheusRemoteWriteUrl }}:{{ .Values.arc.metrics.telegraf.prometheusRemoteWritePort }}/push"
+  url = "http://{{ .Values.arc.telegraf.prometheusRemoteWriteUrl }}:{{ .Values.arc.telegraf.prometheusRemoteWritePort }}/push"
 
   ## Data format to output.
   data_format = "prometheusremotewrite"
@@ -38,7 +38,7 @@
     Content-Encoding = "snappy"
     X-Prometheus-Remote-Write-Version = "0.1.0"
 
-{{ if .Values.arc.metrics.telegraf.debugLogging }}
+{{ if .Values.arc.telegraf.debugLogging }}
 [[outputs.file]]
   files = ["stdout"]
 {{ end }}

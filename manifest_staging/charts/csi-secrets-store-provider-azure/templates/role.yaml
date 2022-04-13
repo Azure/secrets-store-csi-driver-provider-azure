@@ -17,9 +17,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ template "sscdpa.arc.fullname" . }}-ext-identity-role
+  name: arc-extension-identity-role
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.labels" . | indent 2 }}
+{{ include "sscdpa.arc.labels" . | indent 2 }}
 rules:
   - apiGroups: [ 'clusterconfig.azure.com' ]
     resources: [ 'azureclusteridentityrequests' ]
@@ -28,10 +28,19 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ template "sscdpa.arc.fullname" . }}-telegraf-role
+  name: arc-telegraf-role
 rules:
 - apiGroups: [""]
   resources:
   - pods
   verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arc-geneva-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces"]
+  verbs: ["get", "watch", "list"]
 {{- end }}

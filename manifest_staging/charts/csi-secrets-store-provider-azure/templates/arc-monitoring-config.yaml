@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "sscdpa.arc.fullname" . }}-telegraf-config
+  name: arc-telegraf-config
   namespace: {{ .Release.Namespace }}
 data:
   telegraf.conf: |
@@ -11,8 +11,25 @@ data:
 apiVersion: v1 
 kind: ConfigMap 
 metadata: 
-  name: {{ template "sscdpa.arc.fullname" . }}-mdm-config
+  name: arc-mdm-config
   namespace: {{ .Release.Namespace }}
 data: 
-  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"{{ .Values.arc.metrics.mdm.accountName }}\" }]}"
+  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"{{ .Values.arc.mdm.accountName }}\" }]}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-fluentd-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  fluentd.conf: {{ .Files.Get "config/fluentd.conf" | quote }}
+  kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes.conf" | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-gcstenant-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
 {{- end }}

@@ -189,31 +189,84 @@ constructPEMChain: true
 # Arc monitoring
 arc:
   isMonitoringEnabled: true
-  metrics:
-    promMdmConverter:
-      image:
-        repository: upstreamarc.azurecr.io/prom-mdm-converter
-        tag: v0.0.1
-        pullPolicy: Always
-    mdm:
-      image:
-        repository: linuxgeneva-microsoft.azurecr.io/genevamdm
-        tag: master_20220401.1
-        pullPolicy: IfNotPresent
-      metricEndpoint: https://az-int.int.microsoftmetrics.com/ 
-      accountName: akvsecretsprovider
-      environment: test # test | prod
-    msiAdapter:
-      image:
-        repository: mcr.microsoft.com/azurearck8s/msi-adapter
-        tag: 1.0.0
-        pullPolicy: IfNotPresent
-      arcNamespace: azure-arc
-    telegraf:
-      image:
-        repository: mcr.microsoft.com/oss/mirror/docker.io/library/telegraf
-        tag: 1.21
-        pullPolicy: IfNotPresent
-      debugLogging: false
-      prometheusRemoteWritePort: 8090
-      prometheusRemoteWriteUrl: 127.0.0.1
+  promMdmConverter:
+    image:
+      repository: upstreamarc.azurecr.io/prom-mdm-converter
+      tag: v1.0.0
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
+  mdm:
+    image:
+      repository: linuxgeneva-microsoft.azurecr.io/genevamdm
+      tag: master_20220401.1
+      pullPolicy: IfNotPresent
+    accountName: akvsecretsprovider
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
+  msiAdapter:
+    image:
+      repository: mcr.microsoft.com/azurearck8s/msi-adapter
+      tag: 1.0.0
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
+  telegraf:
+    image:
+      repository: mcr.microsoft.com/oss/mirror/docker.io/library/telegraf
+      tag: 1.21
+      pullPolicy: IfNotPresent
+    debugLogging: false
+    prometheusRemoteWritePort: 8090
+    prometheusRemoteWriteUrl: 127.0.0.1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
+  amacoreagent:
+    image:
+      repository: pipelineagent.azurecr.io/amacoreagent
+      tag: 3.0
+      pullPolicy: IfNotPresent
+    logsLocation: westus2
+    logsName: akvsecretsprovider
+    logsEnvironment: DiagnosticsPROD
+    logsConfigVersion: 1.0
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
+  fluentd:
+    image:
+      repository: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent
+      tag: master_20220403.1
+      pullPolicy: IfNotPresent
+    port: 8130
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 100Mi
