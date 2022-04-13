@@ -28,7 +28,7 @@
 
 [[outputs.http]]
   ## URL is the address to send metrics to
-  url = "http://{{ .Values.arc.telegraf.prometheusRemoteWriteUrl }}:{{ .Values.arc.telegraf.prometheusRemoteWritePort }}/push"
+  url = "http://127.0.0.1:8090/push"
 
   ## Data format to output.
   data_format = "prometheusremotewrite"

@@ -1,4 +1,4 @@
-{{- if and .Values.Azure.Identity.isEnabled .Values.arc.isMonitoringEnabled }}
+{{- if and .Values.Azure.Identity.isEnabled .Values.arc.enableMonitoring }}
 apiVersion: clusterconfig.azure.com/v1beta1
 kind: AzureExtensionIdentity
 metadata:

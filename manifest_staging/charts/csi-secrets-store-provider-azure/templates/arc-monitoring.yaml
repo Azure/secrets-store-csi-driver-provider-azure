@@ -1,4 +1,4 @@
-{{- if .Values.arc.isMonitoringEnabled }}
+{{- if .Values.arc.enableMonitoring }}
 {{- if .Values.linux.enabled}}
 apiVersion: apps/v1
 kind: Deployment
@@ -24,7 +24,7 @@ spec:
           imagePullPolicy: {{ .Values.arc.promMdmConverter.image.pullPolicy }}
           env:
           - name: SERVER_PORT
-            value: "{{ .Values.arc.telegraf.prometheusRemoteWritePort }}"
+            value: "8090"
           - name: EXTENSION_RESOURCE_ID
             value: "{{ .Values.Azure.Extension.ResourceId }}"
           resources:
@@ -103,35 +103,35 @@ spec:
           - name: OTLP_DEBUG_VERBOSE
             value: "1"
           - name: FLUENTD_PORT
-            value: "{{ .Values.arc.fluentd.port }}"
+            value: "8130"
           - name: MDSD_DEBUG_LOG_FLAGS
             value: "-T 0x2002"
           - name: TENANT
-            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
+            value: "westus2"
           - name: ROLE
-            value: "{{ .Values.arc.amacoreagent.logsName }}"
+            value: "akvsecretsprovider"
           - name: ROLEINSTANCE
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
           - name: MONITORING_TENANT
-            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
+            value: "westus2"
           - name: MONITORING_ROLE
-            value: "{{ .Values.arc.amacoreagent.logsName }}"
+            value: "akvsecretsprovider"
           - name: MONITORING_ROLE_INSTANCE
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
           - name: MONITORING_GCS_ENVIRONMENT
-            value: "{{ .Values.arc.amacoreagent.logsEnvironment }}"
+            value: "DiagnosticsPROD"
           - name: MONITORING_GCS_ACCOUNT
-            value: "{{ .Values.arc.amacoreagent.logsName }}"
+            value: "akvsecretsprovider"
           - name: MONITORING_GCS_REGION
-            value: "{{ .Values.arc.amacoreagent.logsLocation }}"
+            value: "westus2"
           - name: MONITORING_GCS_NAMESPACE
-            value: "{{ .Values.arc.amacoreagent.logsName }}"
+            value: "akvsecretsprovider"
           - name: MONITORING_CONFIG_VERSION
-            value: "{{ .Values.arc.amacoreagent.logsConfigVersion }}"
+            value: "1.0"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING

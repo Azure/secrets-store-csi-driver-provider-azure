@@ -17,12 +17,12 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
-{{- if or .Values.linux.podAnnotations .Values.Azure.proxySettings.isProxyEnabled .Values.arc.isMonitoringEnabled}}
+{{- if or .Values.linux.podAnnotations .Values.Azure.proxySettings.isProxyEnabled .Values.arc.enableMonitoring}}
       annotations:
 {{- if .Values.linux.podAnnotations}}
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
 {{- end }}
-{{- if .Values.arc.isMonitoringEnabled }}
+{{- if .Values.arc.enableMonitoring }}
         prometheus.io/scrape: "true" 
         prometheus.io/port: "8898"
 {{- end }}

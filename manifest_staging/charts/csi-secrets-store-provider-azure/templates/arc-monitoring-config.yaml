@@ -1,4 +1,4 @@
-{{- if .Values.arc.isMonitoringEnabled }}
+{{- if .Values.arc.enableMonitoring }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -14,7 +14,7 @@ metadata:
   name: arc-mdm-config
   namespace: {{ .Release.Namespace }}
 data: 
-  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"{{ .Values.arc.mdm.accountName }}\" }]}"
+  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
 ---
 apiVersion: v1
 kind: ConfigMap

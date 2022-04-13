@@ -188,7 +188,7 @@ constructPEMChain: true
 
 # Arc monitoring
 arc:
-  isMonitoringEnabled: true
+  enableMonitoring: true
   promMdmConverter:
     image:
       repository: upstreamarc.azurecr.io/prom-mdm-converter
@@ -206,7 +206,6 @@ arc:
       repository: linuxgeneva-microsoft.azurecr.io/genevamdm
       tag: master_20220401.1
       pullPolicy: IfNotPresent
-    accountName: akvsecretsprovider
     resources:
       requests:
         cpu: 50m
@@ -232,8 +231,6 @@ arc:
       tag: 1.21
       pullPolicy: IfNotPresent
     debugLogging: false
-    prometheusRemoteWritePort: 8090
-    prometheusRemoteWriteUrl: 127.0.0.1
     resources:
       requests:
         cpu: 50m
@@ -246,10 +243,6 @@ arc:
       repository: pipelineagent.azurecr.io/amacoreagent
       tag: "3.0"
       pullPolicy: IfNotPresent
-    logsLocation: westus2
-    logsName: akvsecretsprovider
-    logsEnvironment: DiagnosticsPROD
-    logsConfigVersion: 1.0
     resources:
       requests:
         cpu: 50m
@@ -262,7 +255,6 @@ arc:
       repository: linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent
       tag: master_20220403.1
       pullPolicy: IfNotPresent
-    port: 8130
     resources:
       requests:
         cpu: 50m
