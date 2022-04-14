@@ -111,6 +111,13 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - SETPCAP
+                - NET_ADMIN
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
