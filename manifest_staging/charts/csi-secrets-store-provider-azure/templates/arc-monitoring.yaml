@@ -41,7 +41,7 @@ spec:
           securityContext:
             capabilities:
               drop:
-              - ALL
+                - ALL
         - name: mdm
           image: "linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220401.1"
           imagePullPolicy: IfNotPresent
@@ -69,7 +69,7 @@ spec:
           securityContext:
             capabilities:
               drop:
-              - ALL
+                - ALL
         # MSI Adapter
         - name: msi-adapter
           image: "mcr.microsoft.com/azurearck8s/msi-adapter:1.0.0"
@@ -97,11 +97,12 @@ spec:
               cpu: 50m
               memory: 100Mi
           securityContext:
+            runAsUser: 0
             capabilities:
               drop:
-              - ALL
+                - ALL
               add: 
-              - NET_ADMIN
+                - NET_ADMIN
         # Telegraf
         - name: telegraf
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
@@ -114,11 +115,12 @@ spec:
               cpu: 50m
               memory: 100Mi
           securityContext:
+            runAsUser: 0
             capabilities:
               drop:
-              - ALL
+                - ALL
               add: 
-              - CAP_SETFCAP
+                - CAP_SETFCAP
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
@@ -137,7 +139,7 @@ spec:
           securityContext:
             capabilities:
               drop:
-              - ALL
+                - ALL
           env:
           - name: MONITORING_GCS_AUTH_ID_TYPE
             value: AuthMSIToken
@@ -206,7 +208,7 @@ spec:
           securityContext:
             capabilities:
               drop:
-              - ALL
+                - ALL
           env:
             - name: FLUENTD_CONF
               value: /etc/fluentd/fluentd.conf
