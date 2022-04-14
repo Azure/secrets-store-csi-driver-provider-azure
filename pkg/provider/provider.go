@@ -312,8 +312,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		fileName := keyVaultObject.ObjectName
 		if keyVaultObject.ObjectAlias != "" {
 			fileName = keyVaultObject.ObjectAlias
-		}
-		if keyVaultObject.ObjectKeyFile != "" && keyVaultObject.ObjectCertFile != "" {
+		} else if keyVaultObject.ObjectKeyFile != "" && keyVaultObject.ObjectCertFile != "" {
 			certKeyCase = true
 			keyFileName = keyVaultObject.ObjectKeyFile
 			certFileName = keyVaultObject.ObjectCertFile
@@ -349,21 +348,9 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 			return nil, err
 		}
 
-		var fileContents []fileContent
-		if secretCert {
-			splitObjectContent := bytes.Split(objectContent, []byte(certKeySeparator))
-			if len(splitObjectContent) != 2 {
-				return nil, fmt.Errorf("secret %s malformed", keyVaultObject.ObjectName)
-			}
-			if certKeyCase {
-				fileContents = append(fileContents, fileContent{keyFileName, splitObjectContent[0]})
-				fileContents = append(fileContents, fileContent{certFileName, splitObjectContent[1]})
-			} else {
-				objectContent = append(splitObjectContent[0], splitObjectContent[1]...)
-				fileContents = append(fileContents, fileContent{fileName, objectContent})
-			}
-		} else {
-			fileContents = append(fileContents, fileContent{fileName, objectContent})
+		fileContents, err := prepareSecretFiles(secretCert, certKeyCase, objectContent, keyVaultObject.ObjectName, fileName, keyFileName, certFileName)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, fileContent := range fileContents {
@@ -384,6 +371,26 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	}
 
 	return files, nil
+}
+
+func prepareSecretFiles(secretCert bool, certKeyCase bool, objectContent []byte, secretName string, aliasFileName string, keyFileName string, certFileName string) ([]fileContent, error) {
+	var fileContents []fileContent
+	if secretCert {
+		splitObjectContent := bytes.Split(objectContent, []byte(certKeySeparator))
+		if len(splitObjectContent) != 2 {
+			return nil, fmt.Errorf("secret %s malformed", secretName)
+		}
+		if certKeyCase {
+			fileContents = append(fileContents, fileContent{keyFileName, splitObjectContent[0]})
+			fileContents = append(fileContents, fileContent{certFileName, splitObjectContent[1]})
+		} else {
+			objectContent = append(splitObjectContent[0], splitObjectContent[1]...)
+			fileContents = append(fileContents, fileContent{aliasFileName, objectContent})
+		}
+	} else {
+		fileContents = append(fileContents, fileContent{aliasFileName, objectContent})
+	}
+	return fileContents, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object

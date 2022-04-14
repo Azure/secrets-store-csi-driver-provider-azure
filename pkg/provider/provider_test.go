@@ -216,6 +216,130 @@ lKn75l/9h0PwiiPaI0TGKN2O8AwvhGGwDElmFhYtXedbbaST6rbVRDUj
 	}
 }
 
+func TestPrepareSecretFiles(t *testing.T) {
+	secretValue := `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`
+	expectedCert := `-----BEGIN CERTIFICATE-----
+MIIBqjCCAU+gAwIBAgIRAKJNuamTAo5J4rM3VWjDK5cwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPaW50ZXJtZWRpYXRlLWNhMB4XDTIxMDgwOTE5NTkwMloXDTIxMDgx
+MDE5NTkwMlowDjEMMAoGA1UEAxMDZm9vMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcD
+QgAElqKRYGw0H9M5xPAy4ulv3PNnAkKuH5Sp++Zf/YdD8Ioj2iNExijdjvAML4Rh
+sAxJZhYWLV3nW22kk+q21UQ1I6OBgTB/MA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUE
+FjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFKG3lkIvQ5r9SCQziqJL
+a5IBvn5dMB8GA1UdIwQYMBaAFKbwdJqSgN/FVvoKJTZwFGXc/veAMA4GA1UdEQQH
+MAWCA2ZvbzAKBggqhkjOPQQDAgNJADBGAiEAnZBNyEOMen26N5eYvVU81zUebjca
+gu/37qsELmGpmlcCIQDpv/levexCmAS+cna6+hx2XZlF5CufzBnGGF4pS87oxw==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIBkDCCATegAwIBAgIRAMVDURSAQxm0HFJNnveSHbMwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHcm9vdC1jYTAeFw0yMTA4MDkxOTU0MjNaFw0zMTA4MDcxOTU0MjNa
+MBoxGDAWBgNVBAMTD2ludGVybWVkaWF0ZS1jYTBZMBMGByqGSM49AgEGCCqGSM49
+AwEHA0IABMhw2HqcudX85glAogQ1iqUL4ntYdt73HjRhgZ5/uLFByKLjDkJriIlx
+ZYSxcCiJ8BTWAVKp94M38DdC33iBBNajZjBkMA4GA1UdDwEB/wQEAwIBBjASBgNV
+HRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBSm8HSakoDfxVb6CiU2cBRl3P73gDAf
+BgNVHSMEGDAWgBST0EMXQTt8FI1eCm8X9jS6MNjeLjAKBggqhkjOPQQDAgNHADBE
+AiA3t40JojHqLDER+dVJ7XdGk4Pxoxyn0IHloTHvL//nagIgN644i0E6RsyI3IBi
+4r42rfgbnh9rz/fRcN7tANOyrPI=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIBaDCCAQ6gAwIBAgIRAKWgLws4aUKy51qL5cwuQ5QwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHcm9vdC1jYTAeFw0yMTA4MDkxOTU0MDZaFw0zMTA4MDcxOTU0MDZa
+MBIxEDAOBgNVBAMTB3Jvb3QtY2EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQJ
+6G2bvdIoY9h+R3raSTTGFQF85Bv+odMqo92t9WHEIvdDAuZ1i5Z5GKCWBEBoSRbM
+U/EXAuOVDVSro4nsBrkZo0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgw
+BgEB/wIBATAdBgNVHQ4EFgQUk9BDF0E7fBSNXgpvF/Y0ujDY3i4wCgYIKoZIzj0E
+AwIDSAAwRQIhAK9eYLEdaJ3TRozlZlyLdYbKsxNswGK2KwTMxZBT/kd3AiBwNmYh
+o4BmggmqQKVGvdcJzqJZRGYN5QZiHxJbZL77Pg==
+-----END CERTIFICATE-----
+`
+	expectedKey := `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgRFqIa1jmKUCRekh0
+mMfSMXxrxWv2gvQlvVO0g4+kF92hRANCAASWopFgbDQf0znE8DLi6W/c82cCQq4f
+lKn75l/9h0PwiiPaI0TGKN2O8AwvhGGwDElmFhYtXedbbaST6rbVRDUj
+-----END PRIVATE KEY-----
+`
+	objectContentString, _ := decodePKCS12(secretValue)
+	objectContent := []byte(objectContentString)
+
+	cases := []struct {
+		desc          string
+		secretCert    bool
+		certKeyCase   bool
+		objectContent []byte
+		secretName    string
+		aliasFileName string
+		keyFileName   string
+		certFileName  string
+	}{
+		{
+			desc:          "load pkcs12 secret as key and cert",
+			secretCert:    true,
+			certKeyCase:   true,
+			objectContent: objectContent,
+			secretName:    "secret",
+			aliasFileName: "",
+			keyFileName:   "secret-key",
+			certFileName:  "secret-cert",
+		},
+		{
+			desc:          "load pkcs12 secret as certKey",
+			secretCert:    true,
+			certKeyCase:   false,
+			objectContent: objectContent,
+			secretName:    "secret",
+			aliasFileName: "alias",
+			keyFileName:   "",
+			certFileName:  "",
+		},
+		{
+			desc:          "load generic secret as is",
+			secretCert:    false,
+			certKeyCase:   false,
+			objectContent: []byte("a secret"),
+			secretName:    "secret",
+			aliasFileName: "alias",
+			keyFileName:   "",
+			certFileName:  "",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			fileContents, err := prepareSecretFiles(tc.secretCert, tc.certKeyCase, tc.objectContent, tc.secretName, tc.aliasFileName, tc.keyFileName, tc.certFileName)
+			if err != nil {
+				t.Fatalf("expected nil err, got: %v", err)
+			}
+			if tc.secretCert && tc.certKeyCase {
+				if len(fileContents) != 2 {
+					t.Fatalf("expected 2 values, got: %v", len(fileContents))
+				}
+				keyFileContent := fileContents[0]
+				certFileContent := fileContents[1]
+				if !bytes.Equal(keyFileContent.objectContent, []byte(expectedKey)) {
+					t.Fatalf("pkcs12 key value does not match")
+				}
+				if !bytes.Equal(certFileContent.objectContent, []byte(expectedCert)) {
+					t.Fatalf("pkcs12 cert value does not match")
+				}
+			} else if tc.secretCert && !tc.certKeyCase {
+				if len(fileContents) != 1 {
+					t.Fatalf("expected 1 value, got: %v", len(fileContents))
+				}
+				certKeyFileContent := fileContents[0]
+				if !bytes.Equal(certKeyFileContent.objectContent, []byte(expectedKey+expectedCert)) {
+					t.Fatalf("pkcs12 certkey value does not match")
+				}
+			} else if !tc.secretCert && !tc.certKeyCase {
+				if len(fileContents) != 1 {
+					t.Fatalf("expected 1 value, got: %v", len(fileContents))
+				}
+				secretContent := fileContents[0]
+				if !bytes.Equal(secretContent.objectContent, []byte("a secret")) {
+					t.Fatalf("generic secret value does not match")
+				}
+			}
+		})
+	}
+}
+
 func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	azureStackCloudEnvName := "AZURESTACKCLOUD"
 	file, err := os.CreateTemp("", "ut")
