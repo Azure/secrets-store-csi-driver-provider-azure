@@ -22,7 +22,8 @@ kind: RoleBinding
 metadata:
   name: arc-extension-identity-role-binding
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -37,7 +38,8 @@ kind: RoleBinding
 metadata:
   name: arc-telegraf-role-binding
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -51,7 +53,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: arc-geneva-role-binding
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
 roleRef:
   kind: ClusterRole
   name: arc-geneva-role

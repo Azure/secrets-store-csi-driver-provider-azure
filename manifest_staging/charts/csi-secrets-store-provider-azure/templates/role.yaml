@@ -20,7 +20,8 @@ kind: Role
 metadata:
   name: arc-extension-identity-role
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
 rules:
   - apiGroups: [ 'clusterconfig.azure.com' ]
     resources: [ 'azureclusteridentityrequests' ]

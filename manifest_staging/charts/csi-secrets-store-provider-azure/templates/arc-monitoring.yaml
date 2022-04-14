@@ -6,7 +6,9 @@ kind: Deployment
 metadata:
   name: arc-monitoring
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+    app: arc-monitoring
+{{ include "sscdpa.arc.labels" . | indent 4 }}  
 spec:
   replicas: 1
   selector:
@@ -14,7 +16,9 @@ spec:
       app: "arc-monitoring"
   template:
     metadata:
-{{ include "sscdpa.arc.labels" . | indent 6 }}
+      labels:
+        app: "arc-monitoring"
+{{ include "sscdpa.arc.labels" . | indent 8 }}        
     spec:
       serviceAccountName: csi-secrets-store-provider-azure
       # hostNetwork: true

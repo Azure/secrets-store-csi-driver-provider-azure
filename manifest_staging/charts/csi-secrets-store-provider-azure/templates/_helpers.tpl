@@ -53,8 +53,6 @@ Arc specific templates
 */}}
 
 {{- define "sscdpa.arc.labels" -}}
-labels:
-{{ include "sscdpa.common.labels" . | indent 2 }}
-  app.kubernetes.io/name: "arc-{{ template "sscdpa.fullname" . }}"
-  app: "arc-{{ template "sscdpa.fullname" . }}"
+{{ include "sscdpa.common.labels" . }}
+app.kubernetes.io/name: "arc-{{ template "sscdpa.fullname" . }}"
 {{- end -}}

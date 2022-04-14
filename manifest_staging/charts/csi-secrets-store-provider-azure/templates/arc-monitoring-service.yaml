@@ -5,7 +5,8 @@ kind: Service
 metadata:
   name: arc-geneva-logging-service
   namespace: {{ .Release.Namespace }}
-{{ include "sscdpa.arc.labels" . | indent 2 }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
 spec:
   type: ClusterIP
   ports:
