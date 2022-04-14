@@ -37,8 +37,3 @@
     Content-Type = "application/x-protobuf"
     Content-Encoding = "snappy"
     X-Prometheus-Remote-Write-Version = "0.1.0"
-
-{{ if .Values.arc.telegraf.debugLogging }}
-[[outputs.file]]
-  files = ["stdout"]
-{{ end }}
