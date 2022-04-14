@@ -99,9 +99,9 @@ spec:
           securityContext:
             capabilities:
               drop:
-                - ALL
+              - ALL
               add: 
-               - NET_ADMIN
+              - NET_ADMIN
         # Telegraf
         - name: telegraf
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
@@ -117,6 +117,8 @@ spec:
             capabilities:
               drop:
               - ALL
+              add: 
+              - CAP_SETFCAP
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
