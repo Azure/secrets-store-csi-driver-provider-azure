@@ -116,8 +116,7 @@ spec:
               drop:
                 - ALL
               add:
-                - SETPCAP
-                - NET_ADMIN
+                - SETFCAP
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
