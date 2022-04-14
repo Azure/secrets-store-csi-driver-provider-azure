@@ -17,7 +17,7 @@ spec:
 {{ include "sscdpa.arc.labels" . | indent 6 }}
     spec:
       serviceAccountName: csi-secrets-store-provider-azure
-      hostNetwork: true
+      # hostNetwork: true
       containers:
         # Prom MDM Converter
         - name: prom-mdm-converter
@@ -85,8 +85,8 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
-          securityContext: 
-            capabilities: 
+          securityContext:
+            capabilities:
               add: 
                - NET_ADMIN
         # Telegraf
