@@ -97,6 +97,7 @@ spec:
               cpu: 50m
               memory: 100Mi
           securityContext:
+            capabilities:
               add: 
                 - NET_ADMIN
         # Telegraf
