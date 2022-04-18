@@ -90,10 +90,9 @@ spec:
               cpu: 50m
               memory: 100Mi
           securityContext:
-            runAsUser: 0
-          #   capabilities:
-          #     add: 
-          #       - NET_ADMIN
+            capabilities:
+              add: 
+                - NET_ADMIN
         # Telegraf
         - name: telegraf
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
