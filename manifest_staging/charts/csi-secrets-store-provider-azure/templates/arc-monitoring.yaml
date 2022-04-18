@@ -38,6 +38,7 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
+        # MDM
         - name: mdm
           image: "linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220401.1"
           imagePullPolicy: IfNotPresent
@@ -88,10 +89,10 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
-          securityContext:
-            capabilities:
-              add: 
-                - NET_ADMIN
+          # securityContext:
+          #   capabilities:
+          #     add: 
+          #       - NET_ADMIN
         # Telegraf
         - name: telegraf
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
