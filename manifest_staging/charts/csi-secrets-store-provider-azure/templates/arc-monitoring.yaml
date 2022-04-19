@@ -194,8 +194,8 @@ spec:
               mountPath: "/var/log/td-agent"
             - name: mdsd-run-vol
               mountPath: "/var/run/mdsd"
-            # - name: docker-log-vol
-            #   mountPath: /var/lib/docker/containers
+            - name: docker-log-vol
+              mountPath: /var/lib/docker/containers
               readOnly: true
             - name: var-log-vol
               mountPath: /var/log
@@ -224,9 +224,9 @@ spec:
             path: /run/log/journal
         - name: fluentd-buffer-vol
           emptyDir: {}
-        # - name: docker-log-vol
-        #   hostPath:
-        #     path: /var/lib/docker/containers
+        - name: docker-log-vol
+          hostPath:
+            path: /var/lib/docker/containers
         - name: fluentd-conf-vol
           configMap:
             name: arc-fluentd-conf
