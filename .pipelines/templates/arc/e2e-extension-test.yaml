@@ -18,6 +18,9 @@ jobs:
           version="0.0.$patchVersion"
           echo "##vso[task.setvariable variable=EXT_VERSION]$version"
 
+          # Add Arc values to values.yaml
+          cp manifest_staging/charts/csi-secrets-store-provider-azure/arc-values.yaml manifest_staging/charts/csi-secrets-store-provider-azure/values.yaml
+
           helm dependency update manifest_staging/charts/csi-secrets-store-provider-azure
           helm package manifest_staging/charts/csi-secrets-store-provider-azure --version $version
 

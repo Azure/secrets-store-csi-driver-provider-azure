@@ -25,18 +25,34 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Common labels for helm resources
+*/}}
+{{- define "sscdpa.common.labels" -}}
+app.kubernetes.io/instance: "{{ .Release.Name }}"
+app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+{{- end -}}
+
+{{/*
 Standard labels for helm resources
 */}}
 {{- define "sscdpa.labels" -}}
 labels:
-  app.kubernetes.io/instance: "{{ .Release.Name }}"
-  app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+{{ include "sscdpa.common.labels" . | indent 2 }}
   app.kubernetes.io/name: "{{ template "sscdpa.name" . }}"
-  app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
   app: {{ template "sscdpa.name" . }}
-  helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 {{- end -}}
 
 {{- define "sscdpa.psp.fullname" -}}
 {{- printf "%s-psp" (include "sscdpa.fullname" .) -}}
 {{- end }}
+
+{{/*
+Arc specific templates
+*/}}
+
+{{- define "sscdpa.arc.labels" -}}
+{{ include "sscdpa.common.labels" . }}
+app.kubernetes.io/name: "arc-{{ template "sscdpa.fullname" . }}"
+{{- end -}}

@@ -7,12 +7,10 @@ imagePullSecrets: []
 
 # logging format json
 # Default is text.
-logFormatJSON: false
+logFormatJSON: true
 
 # log level. Uses V logs (klog)
 logVerbosity: 0
-
-enableArcExtension: false
 
 linux:
   image:
@@ -103,6 +101,7 @@ windows:
 ## ref: https://github.com/kubernetes-sigs/secrets-store-csi-driver/tree/master/charts/secrets-store-csi-driver/README.md
 ##
 secrets-store-csi-driver:
+  logFormatJSON: true
   install: true
   # By default helm will append the chart release name to the dependent chart names.
   # Explicitly setting the fullnameOverride will override this behavior.
@@ -128,7 +127,9 @@ secrets-store-csi-driver:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
         tag: v1.1.2
         pullPolicy: IfNotPresent
-    providersDir: /var/run/secrets-store-csi-providers
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
 
   windows:
     enabled: false
@@ -165,3 +166,30 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# Azure Arc Extension
+enableArcExtension: true
+
+# Values populated by Azure Arc K8s RP during the installation of the extension.
+Azure:
+  Cluster:
+    ResourceId: ""
+    Region: ""
+    Distribution: ""
+    Infrastructure: ""
+  proxySettings:
+    isProxyEnabled: false
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: ""
+    proxyCert: ""
+  Identity:
+    isEnabled: false
+    Type: ""
+  Extension:
+    Name: ""
+    ResourceId: ""
+
+# Arc monitoring
+arc:
+  enableMonitoring: true
