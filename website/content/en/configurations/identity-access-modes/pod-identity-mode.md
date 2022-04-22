@@ -159,9 +159,9 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     
 7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
-    Make sure to set `usepodidentity` to `true`
+    Make sure to set `usePodIdentity` to `true`
     ```yaml
-    usepodidentity: "true"
+    usePodIdentity: "true"
     ```
     
 8. Deploy your app
