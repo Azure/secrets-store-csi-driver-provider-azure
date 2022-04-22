@@ -18,7 +18,11 @@ spec:
     metadata:
       labels:
         app: "arc-monitoring"
-{{ include "sscdpa.arc.labels" . | indent 8 }}        
+{{ include "sscdpa.arc.labels" . | indent 8 }}
+{{- if and .Values.Azure.proxySettings.isProxyEnabled }}
+      annotations:
+        checksum/arc-proxy-config: {{ include (print $.Template.BasePath "/arc-proxy-secret.yaml") . | sha256sum }}
+{{- end }}
     spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
@@ -56,6 +60,11 @@ spec:
           volumeMounts: 
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
+            {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
+            - mountPath: /etc/ssl/certs/proxy-cert.crt
+              subPath: proxy-cert.crt
+              name: proxy-certstore
+            {{- end }}
           resources:
             requests:
               cpu: 50m
@@ -63,6 +72,11 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
+          {{- if .Values.Azure.proxySettings.isProxyEnabled }}
+          envFrom:
+            - secretRef:
+                name: arc-proxy-config
+          {{- end }}
         # MSI Adapter
         - name: msi-adapter
           image: "mcr.microsoft.com/azurearck8s/msi-adapter:1.0.0"
@@ -233,6 +247,11 @@ spec:
         - name: tenants-conf-vol
           configMap:
             name: arc-gcstenant-conf
+        {{- if  and .Values.Azure.proxySettings.isProxyEnabled .Values.Azure.proxySettings.proxyCert }}
+        - name: proxy-certstore
+          secret:
+            secretName: arc-proxy-cert
+        {{- end }}
       nodeSelector:
         kubernetes.io/os: linux
 {{- if .Values.linux.nodeSelector }}
