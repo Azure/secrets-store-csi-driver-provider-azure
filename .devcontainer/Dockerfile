@@ -34,28 +34,27 @@ RUN apt-get update \
   # Install Go tools w/module support
   && mkdir -p /tmp/gotools \
   && cd /tmp/gotools \
-  && GO111MODULE=on go get -v golang.org/x/tools/gopls@latest 2>&1 \
-  && GO111MODULE=on go get -v \
-  honnef.co/go/tools/...@latest \
-  golang.org/x/tools/cmd/gorename@latest \
-  golang.org/x/tools/cmd/goimports@latest \
-  golang.org/x/tools/cmd/guru@latest \
-  golang.org/x/lint/golint@latest \
-  github.com/mdempsky/gocode@latest \
-  github.com/cweill/gotests/...@latest \
-  github.com/haya14busa/goplay/cmd/goplay@latest \
-  github.com/sqs/goreturns@latest \
-  github.com/josharian/impl@latest \
-  github.com/davidrjenni/reftools/cmd/fillstruct@latest \
-  github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest  \
-  github.com/ramya-rao-a/go-outline@latest  \
-  github.com/acroca/go-symbols@latest  \
-  github.com/godoctor/godoctor@latest  \
-  github.com/rogpeppe/godef@latest  \
-  github.com/zmb3/gogetdoc@latest \
-  github.com/fatih/gomodifytags@latest  \
-  github.com/mgechev/revive@latest  \
-  github.com/go-delve/delve/cmd/dlv@latest 2>&1 \
+  && go install -v golang.org/x/tools/gopls@latest 2>&1 \
+  && go install -v honnef.co/go/tools/...@latest \
+  && go install -v golang.org/x/tools/cmd/gorename@latest \
+  && go install -v golang.org/x/tools/cmd/goimports@latest \
+  && go install -v golang.org/x/tools/cmd/guru@latest \
+  && go install -v golang.org/x/lint/golint@latest \
+  && go install -v github.com/mdempsky/gocode@latest \
+  && go install -v github.com/cweill/gotests/...@latest \
+  && go install -v github.com/haya14busa/goplay/cmd/goplay@latest \
+  && go install -v github.com/sqs/goreturns@latest \
+  && go install -v github.com/josharian/impl@latest \
+  && go install -v github.com/davidrjenni/reftools/cmd/fillstruct@latest \
+  && go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest  \
+  && go install -v github.com/ramya-rao-a/go-outline@latest  \
+  && go install -v github.com/acroca/go-symbols@latest  \
+  && go install -v github.com/godoctor/godoctor@latest  \
+  && go install -v github.com/rogpeppe/godef@latest  \
+  && go install -v github.com/zmb3/gogetdoc@latest \
+  && go install -v github.com/fatih/gomodifytags@latest  \
+  && go install -v github.com/mgechev/revive@latest  \
+  && go install -v github.com/go-delve/delve/cmd/dlv@latest 2>&1 \
   #
   # Install Go tools w/o module support
   && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest 2>&1 \
