@@ -45,7 +45,7 @@ spec:
         # MDM
         - name: mdm
           # image: "linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220401.1"
-          image: "genevaarctest.azurecr.io/genevatest/genevamdm-proxy:v0.1.0"
+          image: "genevaarctest.azurecr.io/genevatest/genevamdm-proxy:v0.1.1"
           imagePullPolicy: IfNotPresent
           env: 
           - name: ROLEINSTANCE
