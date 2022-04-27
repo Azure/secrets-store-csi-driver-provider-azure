@@ -19,7 +19,8 @@ metadata:
   labels:
 {{ include "sscdpa.arc.labels" . | indent 4 }}
 data: 
-  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
+  # mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
+  mdmconfig.json: "{\"proxyDefinitionMode\":1,\"imdsInfo\":[{\"account\":\"akvsecretsprovider\"}]}"
 ---
 apiVersion: v1
 kind: ConfigMap
