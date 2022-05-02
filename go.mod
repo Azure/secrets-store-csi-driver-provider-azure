@@ -3,8 +3,8 @@ module github.com/Azure/secrets-store-csi-driver-provider-azure
 go 1.18
 
 require (
-	github.com/Azure/azure-sdk-for-go v62.3.0+incompatible
-	github.com/Azure/go-autorest/autorest v0.11.24
+	github.com/Azure/azure-sdk-for-go v63.3.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.11.27
 	github.com/Azure/go-autorest/autorest/adal v0.9.18
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0
 	github.com/google/go-cmp v0.5.5
@@ -19,7 +19,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/component-base v0.23.0
 	k8s.io/klog/v2 v2.30.0
-	sigs.k8s.io/secrets-store-csi-driver v1.1.1
+	sigs.k8s.io/secrets-store-csi-driver v1.1.2
 )
 
 require (
