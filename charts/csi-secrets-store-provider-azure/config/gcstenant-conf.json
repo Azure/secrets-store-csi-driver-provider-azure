@@ -1,0 +1,21 @@
+{
+    "ServiceArguments": {
+        "Version": "1.0"
+    },
+
+    "UserArguments": {
+	"GcsAuthIdType": "AuthMSIToken",
+        "GcsEnvironment": "DiagnosticsPROD",
+        "GcsGenevaAccount": "akvsecretsprovider",
+        "GcsNamespace": "akvsecretsprovider",
+        "GenevaConfigVersion": "1.0",
+        "GcsRegion": "westus2"
+    },
+    "EndpointConfigurations": [
+        {
+            "EndpointPath": "",
+            "EndpointPort": 15000,
+            "EndpointOtlp": "localhost:4319"
+        }
+    ]
+}

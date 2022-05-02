@@ -1,0 +1,45 @@
+{{- if .Values.enableArcExtension }}
+{{- if .Values.arc.enableMonitoring }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-telegraf-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
+data:
+  telegraf.conf: |
+{{ (tpl ( .Files.Get "config/telegraf-conf.tmpl") .) | indent 4 }}
+---
+apiVersion: v1 
+kind: ConfigMap 
+metadata: 
+  name: arc-mdm-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
+data: 
+  mdmconfig.json: "{\"imdsInfo\":[{ \"account\": \"akvsecretsprovider\" }]}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-fluentd-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
+data:
+  fluentd.conf: {{ .Files.Get "config/fluentd.conf" | quote }}
+  kubernetes.conf: {{ .Files.Get "config/fluentd-kubernetes.conf" | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-gcstenant-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
+data:
+  gcstenant1.json: {{ .Files.Get "config/gcstenant-conf.json" | quote }}
+{{- end }}
+{{- end }}
