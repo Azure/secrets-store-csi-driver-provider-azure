@@ -1,5 +1,5 @@
 [agent]
-  interval = "60s"
+  interval = "300s"
   flush_interval = "10s"
   metric_batch_size = 250
   metric_buffer_limit = 1000
@@ -37,6 +37,3 @@
     Content-Type = "application/x-protobuf"
     Content-Encoding = "snappy"
     X-Prometheus-Remote-Write-Version = "0.1.0"
-
-[[outputs.file]]
-  files = ["stdout"]

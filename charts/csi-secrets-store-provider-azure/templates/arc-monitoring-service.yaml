@@ -1,0 +1,20 @@
+{{- if .Values.enableArcExtension }}
+{{- if .Values.arc.enableMonitoring }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: arc-geneva-logging-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "sscdpa.arc.labels" . | indent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: mds-fluentd-tcp
+      protocol: TCP
+      port: 8130
+      targetPort: 8130
+  selector:
+    app: "arc-monitoring"
+{{- end }}
+{{- end }}
