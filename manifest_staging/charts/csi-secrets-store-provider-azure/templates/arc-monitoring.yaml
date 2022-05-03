@@ -28,7 +28,8 @@ spec:
       containers:
         # Prom MDM Converter
         - name: prom-mdm-converter
-          image: "upstreamarc.azurecr.io/prom-mdm-converter:v1.0.0"
+          # image: "upstreamarc.azurecr.io/prom-mdm-converter:v1.0.0"
+          image: "stardotstar/prom-mdm-converter:v1.0.0"
           imagePullPolicy: IfNotPresent
           env:
           - name: SERVER_PORT
