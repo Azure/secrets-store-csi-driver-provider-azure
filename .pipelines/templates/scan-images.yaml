@@ -10,7 +10,8 @@ steps:
       ./trivy image --vuln-type os,library "${REGISTRY}/provider-azure:${IMAGE_VERSION}"
       ./trivy image --vuln-type os,library --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure:${IMAGE_VERSION}" || exit 1
 
-      ./trivy image "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64"
+      # only enabling os vuln type for conformance image as we have external dependencies (helm, step-cli)
+      ./trivy image --vuln-type os "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64"
       ./trivy image --vuln-type os --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL "${REGISTRY}/provider-azure-arc-conformance:${IMAGE_VERSION}-linux-amd64" || exit 1
     displayName: "Scan images for vulnerability"
     env:
