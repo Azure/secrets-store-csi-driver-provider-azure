@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -421,6 +422,264 @@ func TestGetContentBytes(t *testing.T) {
 				if !bytes.Equal(tc.expectedValue, actualValue) {
 					t.Fatalf("Expected and actual byte values do not match.  Expected: %v  Actual: %v", string(tc.expectedValue), string(actualValue))
 				}
+			}
+		})
+	}
+}
+
+func TestGetLatestNKeyVaultObjects(t *testing.T) {
+	now := time.Now()
+
+	cases := []struct {
+		desc            string
+		kvObject        KeyVaultObject
+		versions        KeyVaultObjectVersionList
+		expectedObjects []KeyVaultObject
+	}{
+		{
+			desc: "filename is name/index when no alias provided",
+			kvObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectVersionHistory: 5,
+			},
+			versions: KeyVaultObjectVersionList{
+				KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+				KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+			},
+			expectedObjects: []KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/0",
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/1",
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/2",
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/3",
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/4",
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+		{
+			desc: "sorts versions by descending created date",
+			kvObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectVersionHistory: 5,
+			},
+			versions: KeyVaultObjectVersionList{
+				KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+				KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+			},
+			expectedObjects: []KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/0",
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/1",
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/2",
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/3",
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/4",
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+		{
+			desc: "starts with latest version when no version specified",
+			kvObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersionHistory: 2,
+			},
+			versions: KeyVaultObjectVersionList{
+				KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+			},
+			expectedObjects: []KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/0",
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 2,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/1",
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 2,
+				},
+			},
+		},
+		{
+			desc: "fewer than ObjectVersionHistory results returns all versions",
+			kvObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersionHistory: 200,
+			},
+			versions: KeyVaultObjectVersionList{
+				KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+			},
+			expectedObjects: []KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/0",
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 200,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/1",
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 200,
+				},
+			},
+		},
+		{
+			desc: "starts at ObjectVersion when specified",
+			kvObject: KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "c",
+				ObjectVersionHistory: 5,
+			},
+			versions: KeyVaultObjectVersionList{
+				KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+				KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+			},
+			expectedObjects: []KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/0",
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/1",
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          "secret1/2",
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			actualObjects := getLatestNKeyVaultObjects(tc.kvObject, tc.versions)
+
+			if !reflect.DeepEqual(actualObjects, tc.expectedObjects) {
+				t.Fatalf("expected: %+v, but got: %+v", tc.expectedObjects, actualObjects)
 			}
 		})
 	}
