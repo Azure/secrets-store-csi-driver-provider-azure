@@ -3,9 +3,6 @@ jobs:
     timeoutInMinutes: 10
     workspace:
       clean: all
-    variables:
-      - name: TRIVY_VERSION
-        value: 0.19.2
     steps:
       - template: scan-images.yaml
   - job: lint
