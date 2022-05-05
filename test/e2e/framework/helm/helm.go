@@ -66,6 +66,12 @@ func Install(input InstallInput) {
 			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
 	}
 
+	if !input.Config.IsKindCluster && !input.Config.IsArcTest {
+		args = append(args,
+			fmt.Sprintf("--set=useRegionalAADEndpoint=true"),
+		)
+	}
+
 	args = append(args, generateValueArgs(input.Config)...)
 
 	err = helm(args)
@@ -125,6 +131,12 @@ func Upgrade(input UpgradeInput) {
 			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
 	}
 
+	if !input.Config.IsKindCluster && !input.Config.IsArcTest {
+		args = append(args,
+			fmt.Sprintf("--set=useRegionalAADEndpoint=true"),
+		)
+	}
+
 	args = append(args, generateValueArgs(input.Config)...)
 
 	err = helm(args)
@@ -175,6 +187,15 @@ func generateValueArgs(config *framework.Config) []string {
 			fmt.Sprintf("--set=linux.volumeMounts[0].name=cloudenvfile-vol,linux.volumeMounts[0].mountPath=%s", config.AzureEnvironmentFilePath),
 		)
 	}
+
+	// test regional AAD endpoint with workload identity
+	// TODO(aramase) enable this for soak tests after v1.2.0 release
+	if !config.IsKindCluster && !config.IsArcTest && !config.IsSoakTest {
+		args = append(args,
+			fmt.Sprintf("--set=useRegionalAADEndpoint=true"),
+		)
+	}
+
 	return args
 }
 

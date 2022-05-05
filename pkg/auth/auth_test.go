@@ -78,7 +78,7 @@ func TestNewConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			config, err := NewConfig(tc.usePodIdentity, tc.useVMManagedIdentity, tc.userAssignedIdentityID, tc.workloadIdentityClientID, tc.workloadIdentityToken, tc.secrets)
+			config, err := NewConfig(tc.usePodIdentity, tc.useVMManagedIdentity, false, tc.userAssignedIdentityID, tc.workloadIdentityClientID, tc.workloadIdentityToken, tc.secrets)
 			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
 				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
 			}

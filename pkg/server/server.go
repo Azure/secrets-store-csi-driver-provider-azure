@@ -24,9 +24,9 @@ type CSIDriverProviderServer struct {
 }
 
 // New returns an instance of CSIDriverProviderServer
-func New() *CSIDriverProviderServer {
+func New(useRegionalAADEndpoint bool) *CSIDriverProviderServer {
 	return &CSIDriverProviderServer{
-		Provider: provider.NewProvider(),
+		Provider: provider.NewProvider(useRegionalAADEndpoint),
 	}
 }
 

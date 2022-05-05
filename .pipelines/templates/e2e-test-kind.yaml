@@ -44,7 +44,7 @@ jobs:
       - template: az-login.yaml
       - script: |
           export REGISTRY="e2e"
-          export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)
+          export IMAGE_VERSION="$(git describe --tags --exclude 'conformance-*' $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)-e2e"
           echo "Image version: ${IMAGE_VERSION}"
           echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
           echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"

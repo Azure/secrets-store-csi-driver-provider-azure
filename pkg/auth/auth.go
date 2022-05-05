@@ -77,6 +77,10 @@ type Config struct {
 	// this token will be exchanged for an Azure AD Token based on the federated identity credential
 	// this service account token is associated with the workload requesting the volume mount
 	WorkloadIdentityToken string
+	// UseRegionalAADEndpoint is set to true if regional AAD endpoint (ESTS-R) is to be used
+	// with workload identity. The regional endpoint is only supported for workloads running in
+	// Azure VM. If set to true in non-Azure VM workloads, the token request will fail.
+	UseRegionalAADEndpoint bool
 }
 
 // SATokens represents the service account tokens sent as part of the MountRequest
@@ -90,7 +94,7 @@ type SATokens struct {
 // NewConfig returns new auth config
 func NewConfig(
 	usePodIdentity,
-	useVMManagedIdentity bool,
+	useVMManagedIdentity, useRegionalAADEndpoint bool,
 	userAssignedIdentityID,
 	workloadIdentityClientID,
 	workloadIdentityToken string,
@@ -130,19 +134,25 @@ func (c Config) GetAuthorizer(ctx context.Context, podName, podNamespace, resour
 		return getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, resource, aadEndpoint, tenantID)
 	}
 	if len(c.WorkloadIdentityToken) > 0 && len(c.WorkloadIdentityClientID) > 0 {
-		return getAuthorizerForWorkloadIdentity(ctx, c.WorkloadIdentityClientID, c.WorkloadIdentityToken, resource, aadEndpoint, tenantID)
+		return getAuthorizerForWorkloadIdentity(ctx, c.WorkloadIdentityClientID, c.WorkloadIdentityToken, resource, aadEndpoint, tenantID, c.UseRegionalAADEndpoint)
 	}
 
 	return nil, fmt.Errorf("no valid identity access mode specified")
 }
 
-func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string) (autorest.Authorizer, error) {
+func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string, useRegionalAADEndpoint bool) (autorest.Authorizer, error) {
 	cred, err := confidential.NewCredFromAssertion(signedAssertion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create confidential creds: %w", err)
 	}
-	confidentialClientApp, err := confidential.New(clientID, cred,
-		confidential.WithAuthority(fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, tenantID)))
+
+	clientOptions := []confidential.Option{
+		confidential.WithAuthority(fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, tenantID)),
+	}
+	if useRegionalAADEndpoint {
+		clientOptions = append(clientOptions, confidential.WithAzureRegion(confidential.AutoDetectRegion()))
+	}
+	confidentialClientApp, err := confidential.New(clientID, cred, clientOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create confidential client app: %w", err)
 	}

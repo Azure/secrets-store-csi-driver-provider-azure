@@ -40,7 +40,8 @@ var (
 
 // Provider implements the secrets-store-csi-driver provider interface
 type Provider struct {
-	reporter metrics.StatsReporter
+	reporter               metrics.StatsReporter
+	useRegionalAADEndpoint bool
 }
 
 // mountConfig holds the information for the mount event
@@ -60,9 +61,10 @@ type mountConfig struct {
 }
 
 // NewProvider creates a new provider
-func NewProvider() *Provider {
+func NewProvider(useRegionalAADEndpoint bool) *Provider {
 	return &Provider{
-		reporter: metrics.NewStatsReporter(),
+		reporter:               metrics.NewStatsReporter(),
+		useRegionalAADEndpoint: useRegionalAADEndpoint,
 	}
 }
 
@@ -163,7 +165,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		}
 	}
 
-	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, workloadIdentityClientID, workloadIdentityToken, secrets)
+	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, p.useRegionalAADEndpoint, userAssignedIdentityID, workloadIdentityClientID, workloadIdentityToken, secrets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth config, error: %w", err)
 	}

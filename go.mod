@@ -6,7 +6,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v63.3.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.27
 	github.com/Azure/go-autorest/autorest/adal v0.9.18
-	github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0
+	github.com/AzureAD/microsoft-authentication-library-for-go v0.5.1
 	github.com/google/go-cmp v0.5.5
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0

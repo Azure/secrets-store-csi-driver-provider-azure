@@ -42,6 +42,8 @@ var (
 
 	metricsBackend = flag.String("metrics-backend", "Prometheus", "Backend used for metrics")
 	prometheusPort = flag.Int("prometheus-port", 8898, "Prometheus port for metrics backend")
+
+	useRegionalAADEndpoint = flag.Bool("use-regional-aad-endpoint", false, "Use regional AAD endpoint. Set to true only if running in Azure.")
 )
 
 func main() {
@@ -117,7 +119,7 @@ func main() {
 		grpc.UnaryInterceptor(utils.LogInterceptor()),
 	}
 	s := grpc.NewServer(opts...)
-	csiDriverProviderServer := server.New()
+	csiDriverProviderServer := server.New(*useRegionalAADEndpoint)
 	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
 	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)

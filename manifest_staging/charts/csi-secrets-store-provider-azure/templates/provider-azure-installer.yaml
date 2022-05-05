@@ -59,6 +59,9 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+            {{- if and .Values.useRegionalAADEndpoint (semverCompare ">= v1.1.0-0" .Values.linux.image.tag) }}
+            - --use-regional-aad-endpoint={{ .Values.useRegionalAADEndpoint }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}

@@ -165,3 +165,8 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# UseRegionalAADEndpoint is set to true if regional AAD endpoint (ESTS-R) is to be used
+# with workload identity. The regional endpoint is only supported for workloads running in
+# Azure VM. If set to true in non-Azure VM workloads, the token request will fail.
+useRegionalAADEndpoint: false
