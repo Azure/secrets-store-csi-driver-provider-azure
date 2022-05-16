@@ -25,8 +25,8 @@ jobs:
         azureClusterName: $(AZURE_CLUSTER_NAME)
         releaseTrain: preview
         configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
-        'secrets-store-csi-driver.rotationPollInterval=30s' \
-        'secrets-store-csi-driver.syncSecret.enabled=true'"
+          'secrets-store-csi-driver.rotationPollInterval=30s' \
+          'secrets-store-csi-driver.syncSecret.enabled=true'"
     - template: ../e2e-test.yaml
       parameters:
         testName: "arc extension e2e test on AKS"

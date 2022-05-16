@@ -22,13 +22,13 @@ jobs:
         azureClusterName: $(AZURE_CLUSTER_NAME)
         releaseTrain: preview
         configurationSettings: "'secrets-store-csi-driver.enableSecretRotation=true' \
-        'secrets-store-csi-driver.rotationPollInterval=30s' \
-        'secrets-store-csi-driver.syncSecret.enabled=true' \
-        'linux.volumes[0].name=$(VOLUME_NAME)' \
-        'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
-        'linux.volumes[0].hostPath.type=File' \
-        'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
-        'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
+          'secrets-store-csi-driver.rotationPollInterval=30s' \
+          'secrets-store-csi-driver.syncSecret.enabled=true' \
+          'linux.volumes[0].name=$(VOLUME_NAME)' \
+          'linux.volumes[0].hostPath.path=$(AZURE_ENVIRONMENT_FILEPATH)' \
+          'linux.volumes[0].hostPath.type=File' \
+          'linux.volumeMounts[0].name=$(VOLUME_NAME)' \
+          'linux.volumeMounts[0].mountPath=$(AZURE_ENVIRONMENT_FILEPATH)'"
     - template: ../e2e-test.yaml
       parameters:
         testName: "arc extension e2e test"
