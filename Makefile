@@ -236,6 +236,15 @@ e2e-local-bootstrap: build
 e2e-kind-cleanup:
 	kind delete cluster --name kind
 
+.PHONY: mcr-check
+mcr-check:
+	helm template manifest_staging/charts/csi-secrets-store-provider-azure \
+	| yq e '..|.image? | select(.)' - \
+	| sort \
+	| uniq \
+	| awk '!/---/' \
+	| xargs -I % -n 1 -P 4 bash -c "if [[ % != mcr* ]]; then echo 'image - % is not hosted in MCR'; exit 1; fi"
+
 .PHONY: helm-lint
 helm-lint: install-helm
 	# install driver dep as helm 3.4.0 requires dependencies for helm lint

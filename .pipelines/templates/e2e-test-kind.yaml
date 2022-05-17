@@ -48,7 +48,7 @@ jobs:
           echo "Image version: ${IMAGE_VERSION}"
           echo "##vso[task.setvariable variable=IMAGE_VERSION]${IMAGE_VERSION}"
           echo "##vso[task.setvariable variable=REGISTRY]${REGISTRY}"
-          make e2e-bootstrap
+          make e2e-bootstrap mcr-check
         displayName: "Build image"
         env:
           CI_KIND_CLUSTER: true
