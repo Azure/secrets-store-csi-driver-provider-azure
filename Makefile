@@ -57,6 +57,7 @@ STEP_CLI_VERSION=0.18.0
 KIND_VERSION ?= 0.13.0
 KIND_K8S_VERSION ?= v1.23.5
 SHELLCHECK_VER ?= v0.8.0
+YQ_VERSION ?= v4.11.2
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
 	cd $(TOOLS_MOD_DIR) && \
@@ -226,6 +227,10 @@ setup-kind:
 install-helm:
 	helm version --short | grep -q v3 || (curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash)
 
+.PHONY: install-yq
+install-yq:
+	curl -LO https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_linux_amd64 && chmod +x ./yq_linux_amd64 && mv yq_linux_amd64 /usr/local/bin/yq
+
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
 	./scripts/create-kind-cluster.sh
@@ -235,6 +240,15 @@ e2e-local-bootstrap: build
 .PHONY: e2e-kind-cleanup
 e2e-kind-cleanup:
 	kind delete cluster --name kind
+
+.PHONY: mcr-check
+mcr-check: install-yq
+	helm template manifest_staging/charts/csi-secrets-store-provider-azure \
+	| yq e '..|.image? | select(.)' - \
+	| sort \
+	| uniq \
+	| awk '!/---/' \
+	| xargs -I % -n 1 -P 4 bash -c "if [[ % != mcr* ]]; then echo 'image - % is not hosted in MCR'; exit 1; fi"
 
 .PHONY: helm-lint
 helm-lint: install-helm
