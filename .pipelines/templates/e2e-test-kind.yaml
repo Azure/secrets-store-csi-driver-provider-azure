@@ -2,11 +2,11 @@ jobs:
   - job:
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
-    # dependsOn:
-    # - lint
-    # - scan_images
-    # - unit_test
-    # - build
+    dependsOn:
+    - lint
+    - scan_images
+    - unit_test
+    - build
     workspace:
       clean: all
     variables:
@@ -16,27 +16,27 @@ jobs:
         kind_v1_21_10_helm:
           KIND_K8S_VERSION: v1.21.10
           IS_HELM_TEST: true
-        # kind_v1_22_7_helm:
-        #   KIND_K8S_VERSION: v1.22.7
-        #   IS_HELM_TEST: true
-        # kind_v1_23_5_helm:
-        #   KIND_K8S_VERSION: v1.23.5
-        #   IS_HELM_TEST: true
-        # kind_v1_24_0_helm:
-        #   KIND_K8S_VERSION: v1.24.0
-        #   IS_HELM_TEST: true
-        # kind_v1_21_10_deployment_manifest:
-        #   KIND_K8S_VERSION: v1.21.10
-        #   IS_HELM_TEST: false
-        # kind_v1_22_7_deployment_manifest:
-        #   KIND_K8S_VERSION: v1.22.7
-        #   IS_HELM_TEST: false 
-        # kind_v1_23_5_deployment_manifest:
-        #   KIND_K8S_VERSION: v1.23.5
-        #   IS_HELM_TEST: false
-        # kind_v1_24_0_deployment_manifest:
-        #   KIND_K8S_VERSION: v1.24.0
-        #   IS_HELM_TEST: false
+        kind_v1_22_7_helm:
+          KIND_K8S_VERSION: v1.22.7
+          IS_HELM_TEST: true
+        kind_v1_23_5_helm:
+          KIND_K8S_VERSION: v1.23.5
+          IS_HELM_TEST: true
+        kind_v1_24_0_helm:
+          KIND_K8S_VERSION: v1.24.0
+          IS_HELM_TEST: true
+        kind_v1_21_10_deployment_manifest:
+          KIND_K8S_VERSION: v1.21.10
+          IS_HELM_TEST: false
+        kind_v1_22_7_deployment_manifest:
+          KIND_K8S_VERSION: v1.22.7
+          IS_HELM_TEST: false 
+        kind_v1_23_5_deployment_manifest:
+          KIND_K8S_VERSION: v1.23.5
+          IS_HELM_TEST: false
+        kind_v1_24_0_deployment_manifest:
+          KIND_K8S_VERSION: v1.24.0
+          IS_HELM_TEST: false
 
     steps:
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
