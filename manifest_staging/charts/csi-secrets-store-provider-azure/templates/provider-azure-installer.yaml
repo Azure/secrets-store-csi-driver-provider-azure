@@ -22,13 +22,17 @@ spec:
 {{- if .Values.linux.podAnnotations}}
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
 {{- end }}
-{{- if and .Values.arc.enableMonitoring .Values.enableArcExtension }}
+{{- if .Values.enableArcExtension }}
+{{- if .Values.arc.enableMonitoring }}
         prometheus.io/scrape: "true" 
         prometheus.io/port: "8898"
 {{- end }}
+{{- end }}
 # this will ensure pods are rolled in next helm upgrade if cert files are updated.
-{{- if and .Values.Azure.proxySettings.isProxyEnabled .Values.enableArcExtension }}
+{{- if .Values.enableArcExtension }}
+{{- if .Values.Azure.proxySettings.isProxyEnabled }}
         checksum/arc-proxy-config: {{ include (print $.Template.BasePath "/arc-proxy-secret.yaml") . | sha256sum }}
+{{- end }}
 {{- end }}
 {{- end }}
     spec:
