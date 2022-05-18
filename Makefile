@@ -229,7 +229,7 @@ install-helm:
 
 .PHONY: install-yq
 install-yq:
-	curl -LO https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_linux_amd64 && chmod +x ./yq_linux_amd64 && mv yq_linux_amd64 /usr/local/bin/yq
+	curl -LO https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_linux_amd64 && chmod +x ./yq_linux_amd64 && mv ./yq_linux_amd64 ./yq
 
 .PHONY: e2e-local-bootstrap
 e2e-local-bootstrap: build
@@ -244,7 +244,7 @@ e2e-kind-cleanup:
 .PHONY: mcr-check
 mcr-check: install-yq
 	helm template manifest_staging/charts/csi-secrets-store-provider-azure \
-	| yq e '..|.image? | select(.)' - \
+	| ./yq e '..|.image? | select(.)' - \
 	| sort \
 	| uniq \
 	| awk '!/---/' \
