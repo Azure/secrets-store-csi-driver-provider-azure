@@ -16,7 +16,7 @@ enableArcExtension: false
 
 linux:
   image:
-    repository: notmcr.microsoft.com/oss/azure/secrets-store/provider-azure
+    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
     tag: v1.1.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
