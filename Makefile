@@ -243,6 +243,7 @@ e2e-kind-cleanup:
 
 .PHONY: mcr-check
 mcr-check: install-yq
+	helm dependency update manifest_staging/charts/csi-secrets-store-provider-azure/
 	helm template manifest_staging/charts/csi-secrets-store-provider-azure \
 	| ./yq e '..|.image? | select(.)' - \
 	| sort \
