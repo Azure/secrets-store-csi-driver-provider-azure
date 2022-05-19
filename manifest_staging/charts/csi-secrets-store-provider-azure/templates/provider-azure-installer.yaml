@@ -26,9 +26,11 @@ spec:
         prometheus.io/scrape: "true" 
         prometheus.io/port: "8898"
 {{- end }}
+{{- end }}
 # this will ensure pods are rolled in next helm upgrade if cert files are updated.
 {{- if and .Values.enableArcExtension .Values.Azure.proxySettings.isProxyEnabled }}
         checksum/arc-proxy-config: {{ include (print $.Template.BasePath "/arc-proxy-secret.yaml") . | sha256sum }}
+{{- end }}
 {{- end }}
 {{- end }}
     spec:
