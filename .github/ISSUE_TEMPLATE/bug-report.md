@@ -8,7 +8,7 @@ assignees: ''
 
 **Have you**
 
-- [ ] Read [Troubleshooting Guide](https://azure.github.io/secrets-store-csi-driver-provider-azure/troubleshooting/)
+- [ ] Read [Troubleshooting Guide](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/troubleshooting/)
 - [ ] Searched on [GitHub issues](https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues) and [Discussions](https://github.com/Azure/secrets-store-csi-driver-provider-azure/discussions)
 
 **What steps did you take and what happened:**
