@@ -6,20 +6,18 @@ package e2e
 import (
 	"strings"
 
-	"github.com/ghodss/yaml"
-
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secret"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
 
+	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
-
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
@@ -45,19 +43,19 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "key1",
-				ObjectType: provider.VaultObjectTypeKey,
+				ObjectType: types.VaultObjectTypeKey,
 			},
 			{
 				ObjectName:  "key1",
-				ObjectType:  provider.VaultObjectTypeKey,
+				ObjectType:  types.VaultObjectTypeKey,
 				ObjectAlias: "KEY_1",
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -75,9 +73,9 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 			Spec: v1alpha1.SecretProviderClassSpec{
 				Provider: "azure",
 				Parameters: map[string]string{
-					"keyvaultName": config.KeyvaultName,
-					"tenantId":     config.TenantID,
-					"objects":      string(objects),
+					types.KeyVaultNameParameter: config.KeyvaultName,
+					types.TenantIDParameter:     config.TenantID,
+					types.ObjectsParameter:      string(objects),
 				},
 			},
 		})
@@ -146,14 +144,14 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		}
 
 		// update the secretproviderclass to reference rsa-hsm keys
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "rsahsmkey1",
-				ObjectType: provider.VaultObjectTypeKey,
+				ObjectType: types.VaultObjectTypeKey,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -163,7 +161,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		objects, err := yaml.Marshal(yamlArray)
 		Expect(err).To(BeNil())
 
-		spc.Spec.Parameters["objects"] = string(objects)
+		spc.Spec.Parameters[types.ObjectsParameter] = string(objects)
 		spc = secretproviderclass.Update(secretproviderclass.UpdateInput{
 			Updater:             kubeClient,
 			SecretProviderClass: spc,
@@ -200,14 +198,14 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		}
 
 		// update the secretproviderclass to reference rsa-hsm keys
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "echsmkey1",
-				ObjectType: provider.VaultObjectTypeKey,
+				ObjectType: types.VaultObjectTypeKey,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -217,7 +215,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		objects, err := yaml.Marshal(yamlArray)
 		Expect(err).To(BeNil())
 
-		spc.Spec.Parameters["objects"] = string(objects)
+		spc.Spec.Parameters[types.ObjectsParameter] = string(objects)
 		spc = secretproviderclass.Update(secretproviderclass.UpdateInput{
 			Updater:             kubeClient,
 			SecretProviderClass: spc,

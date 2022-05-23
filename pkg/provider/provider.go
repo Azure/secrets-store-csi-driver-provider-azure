@@ -21,6 +21,7 @@ import (
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
@@ -35,33 +36,6 @@ import (
 
 var (
 	ConstructPEMChain = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
-)
-
-// Type of Azure Key Vault objects
-const (
-	// VaultObjectTypeSecret secret vault object type
-	VaultObjectTypeSecret string = "secret"
-	// VaultObjectTypeKey key vault object type
-	VaultObjectTypeKey string = "key"
-	// VaultObjectTypeCertificate certificate vault object type
-	VaultObjectTypeCertificate string = "cert"
-
-	certTypePem          = "application/x-pem-file"
-	certTypePfx          = "application/x-pkcs12"
-	certificateType      = "CERTIFICATE"
-	objectFormatPEM      = "pem"
-	objectFormatPFX      = "pfx"
-	objectEncodingHex    = "hex"
-	objectEncodingBase64 = "base64"
-	objectEncodingUtf8   = "utf-8"
-
-	// pod identity NMI port
-	// TODO (aramase) make this configurable during the provider deployment
-	podIdentityNMIPort = "2579"
-
-	attributePodName              = "csi.storage.k8s.io/pod.name"
-	attributePodNamespace         = "csi.storage.k8s.io/pod.namespace"
-	attributeServiceAccountTokens = "csi.storage.k8s.io/serviceAccount.tokens" // nolint
 )
 
 // Provider implements the secrets-store-csi-driver provider interface
@@ -83,40 +57,6 @@ type mountConfig struct {
 	podName string
 	// podNamespace is the pod namespace
 	podNamespace string
-}
-
-// KeyVaultObject holds keyvault object related config
-type KeyVaultObject struct {
-	// the name of the Azure Key Vault objects
-	ObjectName string `json:"objectName" yaml:"objectName"`
-	// the filename the object will be written to
-	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
-	// the version of the Azure Key Vault objects
-	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
-	// the type of the Azure Key Vault objects
-	ObjectType string `json:"objectType" yaml:"objectType"`
-	// the format of the Azure Key Vault objects
-	// supported formats are PEM, PFX
-	ObjectFormat string `json:"objectFormat" yaml:"objectFormat"`
-	// The encoding of the object in KeyVault
-	// Supported encodings are Base64, Hex, Utf-8
-	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
-	// FilePermission is the file permissions
-	FilePermission string `json:"filePermission" yaml:"filePermission"`
-}
-
-// SecretFile holds content and metadata of a secret file
-type SecretFile struct {
-	Content  []byte
-	Path     string
-	FileMode int32
-	UID      string
-	Version  string
-}
-
-// StringArray ...
-type StringArray struct {
-	Array []string `json:"array" yaml:"array"`
 }
 
 // NewProvider creates a new provider
@@ -172,45 +112,38 @@ func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
 
 // GetAuthorizer returns an Azure authorizer based on the provided azure identity
 func (mc *mountConfig) GetAuthorizer(ctx context.Context, resource string) (autorest.Authorizer, error) {
-	return mc.authConfig.GetAuthorizer(ctx, mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, podIdentityNMIPort)
+	return mc.authConfig.GetAuthorizer(ctx, mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, types.PodIdentityNMIPort)
 }
 
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
 // to the CSI driver. The driver will write the content to the file system.
-func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]SecretFile, error) {
-	keyvaultName := strings.TrimSpace(attrib["keyvaultName"])
-	cloudName := strings.TrimSpace(attrib["cloudName"])
-	usePodIdentityStr := strings.TrimSpace(attrib["usePodIdentity"])
-	useVMManagedIdentityStr := strings.TrimSpace(attrib["useVMManagedIdentity"])
-	userAssignedIdentityID := strings.TrimSpace(attrib["userAssignedIdentityID"])
-	tenantID := strings.TrimSpace(attrib["tenantId"])
-	cloudEnvFileName := strings.TrimSpace(attrib["cloudEnvFileName"])
-	podName := strings.TrimSpace(attrib[attributePodName])
-	podNamespace := strings.TrimSpace(attrib[attributePodNamespace])
+func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
+	keyvaultName := types.GetKeyVaultName(attrib)
+	cloudName := types.GetCloudName(attrib)
+	userAssignedIdentityID := types.GetUserAssignedIdentityID(attrib)
+	tenantID := types.GetTenantID(attrib)
+	cloudEnvFileName := types.GetCloudEnvFileName(attrib)
+	podName := types.GetPodName(attrib)
+	podNamespace := types.GetPodNamespace(attrib)
+
+	usePodIdentity, err := types.GetUsePodIdentity(attrib)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
+	}
+	useVMManagedIdentity, err := types.GetUseVMManagedIdentity(attrib)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
+	}
 
 	// attributes for workload identity
-	workloadIdentityClientID := strings.TrimSpace(attrib["clientID"])
-	saTokens := strings.TrimSpace(attrib[attributeServiceAccountTokens])
+	workloadIdentityClientID := types.GetClientID(attrib)
+	saTokens := types.GetServiceAccountTokens(attrib)
 
 	if keyvaultName == "" {
 		return nil, fmt.Errorf("keyvaultName is not set")
 	}
 	if tenantID == "" {
 		return nil, fmt.Errorf("tenantId is not set")
-	}
-	if len(usePodIdentityStr) == 0 {
-		usePodIdentityStr = "false"
-	}
-	usePodIdentity, err := strconv.ParseBool(usePodIdentityStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
-	}
-	if len(useVMManagedIdentityStr) == 0 {
-		useVMManagedIdentityStr = "false"
-	}
-	useVMManagedIdentity, err := strconv.ParseBool(useVMManagedIdentityStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
@@ -244,21 +177,21 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		podNamespace:          podNamespace,
 	}
 
-	objectsStrings := attrib["objects"]
+	objectsStrings := types.GetObjects(attrib)
 	if objectsStrings == "" {
 		return nil, fmt.Errorf("objects is not set")
 	}
 	klog.V(2).InfoS("objects string defined in secret provider class", "objects", objectsStrings, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
-	var objects StringArray
-	err = yaml.Unmarshal([]byte(objectsStrings), &objects)
+	objects, err := types.GetObjectsArray(objectsStrings)
 	if err != nil {
 		return nil, fmt.Errorf("failed to yaml unmarshal objects, error: %w", err)
 	}
 	klog.V(2).InfoS("unmarshaled objects yaml array", "objectsArray", objects.Array, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
-	keyVaultObjects := []KeyVaultObject{}
+
+	keyVaultObjects := []types.KeyVaultObject{}
 	for i, object := range objects.Array {
-		var keyVaultObject KeyVaultObject
+		var keyVaultObject types.KeyVaultObject
 		err = yaml.Unmarshal([]byte(object), &keyVaultObject)
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal failed for keyVaultObjects at index %d, error: %w", i, err)
@@ -286,7 +219,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		return nil, errors.Wrap(err, "failed to get keyvault client")
 	}
 
-	files := []SecretFile{}
+	files := []types.SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
@@ -324,7 +257,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
 
 		// these files will be returned to the CSI driver as part of gRPC response
-		files = append(files, SecretFile{
+		files = append(files, types.SecretFile{
 			Path:     fileName,
 			Content:  objectContent,
 			FileMode: filePermission,
@@ -338,7 +271,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject KeyVaultObject, vaultURL string) (content, version string, err error) {
+func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
@@ -349,11 +282,11 @@ func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.Ba
 	}()
 
 	switch kvObject.ObjectType {
-	case VaultObjectTypeSecret:
+	case types.VaultObjectTypeSecret:
 		return getSecret(ctx, kvClient, vaultURL, kvObject)
-	case VaultObjectTypeKey:
+	case types.VaultObjectTypeKey:
 		return getKey(ctx, kvClient, vaultURL, kvObject)
-	case VaultObjectTypeCertificate:
+	case types.VaultObjectTypeCertificate:
 		return getCertificate(ctx, kvClient, vaultURL, kvObject)
 	default:
 		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
@@ -362,7 +295,7 @@ func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.Ba
 }
 
 // getSecret retrieves the secret from the vault
-func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
+func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) (string, string, error) {
 	secret, err := kvClient.GetSecret(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 	if err != nil {
 		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
@@ -378,11 +311,11 @@ func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kv
 	// if the secret is part of a certificate, then we need to convert the certificate and key to PEM format
 	if secret.Kid != nil && len(*secret.Kid) > 0 {
 		switch *secret.ContentType {
-		case certTypePem:
+		case types.CertTypePem:
 			return content, version, nil
-		case certTypePfx:
+		case types.CertTypePfx:
 			// object format requested is pfx, then return the content as is
-			if strings.EqualFold(kvObject.ObjectFormat, objectFormatPFX) {
+			if strings.EqualFold(kvObject.ObjectFormat, types.ObjectFormatPFX) {
 				return content, version, err
 			}
 			// convert to pem as that's the default object format for this provider
@@ -400,7 +333,7 @@ func getSecret(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kv
 }
 
 // getKey retrieves the key from the vault
-func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
+func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) (string, string, error) {
 	keybundle, err := kvClient.GetKey(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 	if err != nil {
 		return "", "", wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
@@ -479,7 +412,7 @@ func getKey(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObj
 }
 
 // getCertificate retrieves the certificate from the vault
-func getCertificate(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject KeyVaultObject) (string, string, error) {
+func getCertificate(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) (string, string, error) {
 	// for object type "cert" the certificate is written to the file in PEM format
 	certbundle, err := kvClient.GetCertificate(ctx, vaultURL, kvObject.ObjectName, kvObject.ObjectVersion)
 	if err != nil {
@@ -528,7 +461,7 @@ func decodePKCS12(value string) (content string, err error) {
 		//    -----END Type-----
 		// Setting headers to nil to ensure no headers included in the encoded block
 		block.Headers = make(map[string]string)
-		if block.Type == certificateType {
+		if block.Type == types.CertificateType {
 			pemCertData = append(pemCertData, pem.EncodeToMemory(block)...)
 		} else {
 			key, err := parsePrivateKey(block.Bytes)
@@ -604,12 +537,12 @@ func validateObjectFormat(objectFormat, objectType string) error {
 	if len(objectFormat) == 0 {
 		return nil
 	}
-	if !strings.EqualFold(objectFormat, objectFormatPEM) && !strings.EqualFold(objectFormat, objectFormatPFX) {
+	if !strings.EqualFold(objectFormat, types.ObjectFormatPEM) && !strings.EqualFold(objectFormat, types.ObjectFormatPFX) {
 		return fmt.Errorf("invalid objectFormat: %v, should be PEM or PFX", objectFormat)
 	}
 	// Azure Key Vault returns the base64 encoded binary content only for type secret
 	// for types cert/key, the content is always in pem format
-	if objectFormat == objectFormatPFX && objectType != VaultObjectTypeSecret {
+	if objectFormat == types.ObjectFormatPFX && objectType != types.VaultObjectTypeSecret {
 		return fmt.Errorf("PFX format only supported for objectType: secret")
 	}
 	return nil
@@ -639,11 +572,11 @@ func validateObjectEncoding(objectEncoding, objectType string) error {
 	}
 
 	// ObjectEncoding is supported only for secret types
-	if objectType != VaultObjectTypeSecret {
+	if objectType != types.VaultObjectTypeSecret {
 		return fmt.Errorf("objectEncoding only supported for objectType: secret")
 	}
 
-	if !strings.EqualFold(objectEncoding, objectEncodingHex) && !strings.EqualFold(objectEncoding, objectEncodingBase64) && !strings.EqualFold(objectEncoding, objectEncodingUtf8) {
+	if !strings.EqualFold(objectEncoding, types.ObjectEncodingHex) && !strings.EqualFold(objectEncoding, types.ObjectEncodingBase64) && !strings.EqualFold(objectEncoding, types.ObjectEncodingUtf8) {
 		return fmt.Errorf("invalid objectEncoding: %v, should be hex, base64 or utf-8", objectEncoding)
 	}
 
@@ -653,15 +586,15 @@ func validateObjectEncoding(objectEncoding, objectType string) error {
 // getContentBytes takes the given content string and returns the bytes to write to disk
 // If an encoding is specified it will decode the string first
 func getContentBytes(content, objectType, objectEncoding string) ([]byte, error) {
-	if !strings.EqualFold(objectType, VaultObjectTypeSecret) || len(objectEncoding) == 0 || strings.EqualFold(objectEncoding, objectEncodingUtf8) {
+	if !strings.EqualFold(objectType, types.VaultObjectTypeSecret) || len(objectEncoding) == 0 || strings.EqualFold(objectEncoding, types.ObjectEncodingUtf8) {
 		return []byte(content), nil
 	}
 
-	if strings.EqualFold(objectEncoding, objectEncodingBase64) {
+	if strings.EqualFold(objectEncoding, types.ObjectEncodingBase64) {
 		return base64.StdEncoding.DecodeString(content)
 	}
 
-	if strings.EqualFold(objectEncoding, objectEncodingHex) {
+	if strings.EqualFold(objectEncoding, types.ObjectEncodingHex) {
 		return hex.DecodeString(content)
 	}
 
@@ -669,7 +602,7 @@ func getContentBytes(content, objectType, objectEncoding string) ([]byte, error)
 }
 
 // formatKeyVaultObject formats the fields in KeyVaultObject
-func formatKeyVaultObject(object *KeyVaultObject) {
+func formatKeyVaultObject(object *types.KeyVaultObject) {
 	if object == nil {
 		return
 	}
@@ -799,7 +732,7 @@ func fetchCertChains(data []byte) ([]byte, error) {
 
 	for _, cert := range newCertChain {
 		b := &pem.Block{
-			Type:  certificateType,
+			Type:  types.CertificateType,
 			Bytes: cert.Raw,
 		}
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
