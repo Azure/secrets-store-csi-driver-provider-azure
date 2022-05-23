@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
       # pinning to the sha 79d4afbba1b4eff8b9a98e3d2e58c4dbaf094e2b from https://github.com/goreleaser/goreleaser-action/releases/tag/v2.8.1
       - name: Goreleaser
-        uses: goreleaser/goreleaser-action@b953231f81b8dfd023c58e0854a721e35037f28b
+        uses: goreleaser/goreleaser-action@68acf3b1adf004ac9c2f0a4259e85c5f66e99bef
         with:
           version: latest
           args: release --rm-dist --timeout 60m --debug
