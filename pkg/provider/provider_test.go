@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 )
 
@@ -429,19 +430,19 @@ func TestGetContentBytes(t *testing.T) {
 func TestFormatKeyVaultObject(t *testing.T) {
 	cases := []struct {
 		desc                   string
-		keyVaultObject         KeyVaultObject
-		expectedKeyVaultObject KeyVaultObject
+		keyVaultObject         types.KeyVaultObject
+		expectedKeyVaultObject types.KeyVaultObject
 	}{
 		{
 			desc: "leading and trailing whitespace trimmed from all fields",
-			keyVaultObject: KeyVaultObject{
+			keyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1     ",
 				ObjectVersion:  "",
 				ObjectEncoding: "base64   ",
 				ObjectType:     "  secret",
 				ObjectAlias:    "",
 			},
-			expectedKeyVaultObject: KeyVaultObject{
+			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "",
 				ObjectEncoding: "base64",
@@ -451,14 +452,14 @@ func TestFormatKeyVaultObject(t *testing.T) {
 		},
 		{
 			desc: "no data loss for already sanitized object",
-			keyVaultObject: KeyVaultObject{
+			keyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "version1",
 				ObjectEncoding: "base64",
 				ObjectType:     "secret",
 				ObjectAlias:    "alias",
 			},
-			expectedKeyVaultObject: KeyVaultObject{
+			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "version1",
 				ObjectEncoding: "base64",

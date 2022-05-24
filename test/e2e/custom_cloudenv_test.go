@@ -6,7 +6,7 @@ package e2e
 import (
 	"strings"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
@@ -43,19 +43,19 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets for custom
 			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "secret1",
-				ObjectType: provider.VaultObjectTypeSecret,
+				ObjectType: types.VaultObjectTypeSecret,
 			},
 			{
 				ObjectName:  "secret1",
-				ObjectType:  provider.VaultObjectTypeSecret,
+				ObjectType:  types.VaultObjectTypeSecret,
 				ObjectAlias: "SECRET_1",
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -73,11 +73,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets for custom
 			Spec: v1alpha1.SecretProviderClassSpec{
 				Provider: "azure",
 				Parameters: map[string]string{
-					"keyvaultName":     config.KeyvaultName,
-					"tenantId":         config.TenantID,
-					"cloudName":        "AzureStackCloud",
-					"cloudEnvFileName": config.AzureEnvironmentFilePath,
-					"objects":          string(objects),
+					types.KeyVaultNameParameter:     config.KeyvaultName,
+					types.TenantIDParameter:         config.TenantID,
+					types.CloudNameParameter:        "AzureStackCloud",
+					types.CloudEnvFileNameParameter: config.AzureEnvironmentFilePath,
+					types.ObjectsParameter:          string(objects),
 				},
 			},
 		})

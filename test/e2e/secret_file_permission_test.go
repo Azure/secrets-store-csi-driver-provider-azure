@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
@@ -45,15 +45,15 @@ var _ = Describe("When user provides file permission for secrets", func() {
 			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName:     "secret1",
-				ObjectType:     provider.VaultObjectTypeSecret,
+				ObjectType:     types.VaultObjectTypeSecret,
 				FilePermission: fmt.Sprintf("0%s", expectedFilePermission),
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -71,9 +71,9 @@ var _ = Describe("When user provides file permission for secrets", func() {
 			Spec: v1alpha1.SecretProviderClassSpec{
 				Provider: "azure",
 				Parameters: map[string]string{
-					"keyvaultName": config.KeyvaultName,
-					"tenantId":     config.TenantID,
-					"objects":      string(objects),
+					types.KeyVaultNameParameter: config.KeyvaultName,
+					types.TenantIDParameter:     config.TenantID,
+					types.ObjectsParameter:      string(objects),
 				},
 			},
 		})
