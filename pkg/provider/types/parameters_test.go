@@ -14,14 +14,21 @@ func TestGetKeyVaultName(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"keyvaultName": "",
+				KeyVaultNameParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"keyvaultName": "test",
+				KeyVaultNameParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				KeyVaultNameParameter: " test ",
 			},
 			expected: "test",
 		},
@@ -46,14 +53,21 @@ func TestGetCloudName(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"cloudName": "",
+				CloudNameParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"cloudName": "test",
+				CloudNameParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CloudNameParameter: " test ",
 			},
 			expected: "test",
 		},
@@ -78,37 +92,44 @@ func TestGetUsePodIdentity(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"usePodIdentity": "",
+				UsePodIdentityParameter: "",
 			},
 			expected: false,
 		},
 		{
 			name: "set to true",
 			parameters: map[string]string{
-				"usePodIdentity": "true",
+				UsePodIdentityParameter: "true",
 			},
 			expected: true,
 		},
 		{
 			name: "set to false",
 			parameters: map[string]string{
-				"usePodIdentity": "false",
+				UsePodIdentityParameter: "false",
 			},
 			expected: false,
 		},
 		{
 			name: "set to True",
 			parameters: map[string]string{
-				"usePodIdentity": "True",
+				UsePodIdentityParameter: "True",
 			},
 			expected: true,
 		},
 		{
 			name: "set to False",
 			parameters: map[string]string{
-				"usePodIdentity": "False",
+				UsePodIdentityParameter: "False",
 			},
 			expected: false,
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				UsePodIdentityParameter: " true ",
+			},
+			expected: true,
 		},
 	}
 
@@ -127,7 +148,7 @@ func TestGetUsePodIdentity(t *testing.T) {
 
 func TestGetUsePodIdentityError(t *testing.T) {
 	parameters := map[string]string{
-		"usePodIdentity": "test",
+		UsePodIdentityParameter: "test",
 	}
 	if _, err := GetUsePodIdentity(parameters); err == nil {
 		t.Errorf("GetUsePodIdentity() error = nil, expected error")
@@ -143,37 +164,44 @@ func TestGetUseVMManagedIdentity(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"useVMManagedIdentity": "",
+				UseVMManagedIdentityParameter: "",
 			},
 			expected: false,
 		},
 		{
 			name: "set to true",
 			parameters: map[string]string{
-				"useVMManagedIdentity": "true",
+				UseVMManagedIdentityParameter: "true",
 			},
 			expected: true,
 		},
 		{
 			name: "set to false",
 			parameters: map[string]string{
-				"useVMManagedIdentity": "false",
+				UseVMManagedIdentityParameter: "false",
 			},
 			expected: false,
 		},
 		{
 			name: "set to True",
 			parameters: map[string]string{
-				"useVMManagedIdentity": "True",
+				UseVMManagedIdentityParameter: "True",
 			},
 			expected: true,
 		},
 		{
 			name: "set to False",
 			parameters: map[string]string{
-				"useVMManagedIdentity": "False",
+				UseVMManagedIdentityParameter: "False",
 			},
 			expected: false,
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				UseVMManagedIdentityParameter: " true ",
+			},
+			expected: true,
 		},
 	}
 
@@ -192,7 +220,7 @@ func TestGetUseVMManagedIdentity(t *testing.T) {
 
 func TestGetUseVMManagedIdentityError(t *testing.T) {
 	parameters := map[string]string{
-		"useVMManagedIdentity": "test",
+		UseVMManagedIdentityParameter: "test",
 	}
 	if _, err := GetUseVMManagedIdentity(parameters); err == nil {
 		t.Errorf("GetUseVMManagedIdentity() error = nil, expected error")
@@ -208,14 +236,21 @@ func TestGetUserAssignedIdentityID(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"userAssignedIdentityID": "",
+				UserAssignedIdentityIDParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"userAssignedIdentityID": "test",
+				UserAssignedIdentityIDParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				UserAssignedIdentityIDParameter: " test ",
 			},
 			expected: "test",
 		},
@@ -240,14 +275,21 @@ func TestGetTenantID(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"tenantId": "",
+				TenantIDParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"tenantId": "test",
+				TenantIDParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				TenantIDParameter: " test ",
 			},
 			expected: "test",
 		},
@@ -272,14 +314,21 @@ func TestGetCloudEnvFileName(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"cloudEnvFileName": "",
+				CloudEnvFileNameParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"cloudEnvFileName": "test",
+				CloudEnvFileNameParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CloudEnvFileNameParameter: " test ",
 			},
 			expected: "test",
 		},
@@ -315,6 +364,13 @@ func TestGetPodName(t *testing.T) {
 			},
 			expected: "test",
 		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CSIAttributePodName: " test ",
+			},
+			expected: "test",
+		},
 	}
 
 	for _, test := range tests {
@@ -344,6 +400,13 @@ func TestGetPodNamespace(t *testing.T) {
 			name: "not empty",
 			parameters: map[string]string{
 				CSIAttributePodNamespace: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CSIAttributePodNamespace: " test ",
 			},
 			expected: "test",
 		},
@@ -379,6 +442,13 @@ func TestGetClientID(t *testing.T) {
 			},
 			expected: "test",
 		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				"clientID": " test ",
+			},
+			expected: "test",
+		},
 	}
 
 	for _, test := range tests {
@@ -411,6 +481,13 @@ func TestGetServiceAccountTokens(t *testing.T) {
 			},
 			expected: "test",
 		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CSIAttributeServiceAccountTokens: " test ",
+			},
+			expected: "test",
+		},
 	}
 
 	for _, test := range tests {
@@ -432,14 +509,21 @@ func TestGetObjects(t *testing.T) {
 		{
 			name: "empty",
 			parameters: map[string]string{
-				"objects": "",
+				ObjectsParameter: "",
 			},
 			expected: "",
 		},
 		{
 			name: "not empty",
 			parameters: map[string]string{
-				"objects": "test",
+				ObjectsParameter: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				ObjectsParameter: " test ",
 			},
 			expected: "test",
 		},

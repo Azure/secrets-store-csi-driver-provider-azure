@@ -7,41 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// KeyVaultObject holds keyvault object related config
-type KeyVaultObject struct {
-	// the name of the Azure Key Vault objects
-	ObjectName string `json:"objectName" yaml:"objectName"`
-	// the filename the object will be written to
-	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
-	// the version of the Azure Key Vault objects
-	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
-	// the type of the Azure Key Vault objects
-	ObjectType string `json:"objectType" yaml:"objectType"`
-	// the format of the Azure Key Vault objects
-	// supported formats are PEM, PFX
-	ObjectFormat string `json:"objectFormat" yaml:"objectFormat"`
-	// The encoding of the object in KeyVault
-	// Supported encodings are Base64, Hex, Utf-8
-	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
-	// FilePermission is the file permissions
-	FilePermission string `json:"filePermission" yaml:"filePermission"`
-}
-
-// SecretFile holds content and metadata of a secret file that is sent
-// back to the driver
-type SecretFile struct {
-	Content  []byte
-	Path     string
-	FileMode int32
-	UID      string
-	Version  string
-}
-
-// StringArray holds a list of strings
-type StringArray struct {
-	Array []string `json:"array" yaml:"array"`
-}
-
 // GetKeyVaultName returns the key vault name
 func GetKeyVaultName(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[KeyVaultNameParameter])
