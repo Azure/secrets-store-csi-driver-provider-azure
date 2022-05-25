@@ -293,6 +293,20 @@ func TestGetTenantID(t *testing.T) {
 			},
 			expected: "test",
 		},
+		{
+			name: "new tenantID parameter",
+			parameters: map[string]string{
+				"tenantID": "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "new tenantID parameter with spaces",
+			parameters: map[string]string{
+				"tenantID": " test ",
+			},
+			expected: "test",
+		},
 	}
 
 	for _, test := range tests {

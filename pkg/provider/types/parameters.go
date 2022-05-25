@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 )
 
 // GetKeyVaultName returns the key vault name
@@ -42,6 +43,12 @@ func GetUserAssignedIdentityID(parameters map[string]string) string {
 
 // GetTenantID returns the tenant ID
 func GetTenantID(parameters map[string]string) string {
+	// ref: https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/857
+	tenantID := strings.TrimSpace(parameters["tenantID"])
+	if tenantID != "" {
+		return tenantID
+	}
+	klog.V(3).Info("tenantId is deprecated and will be removed in a future release. Use 'tenantID' instead")
 	return strings.TrimSpace(parameters[TenantIDParameter])
 }
 
