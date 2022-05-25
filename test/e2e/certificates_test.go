@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/certificates"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
@@ -46,64 +46,64 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "pemcert1",
-				ObjectType: provider.VaultObjectTypeCertificate,
+				ObjectType: types.VaultObjectTypeCertificate,
 			},
 			{
 				ObjectName: "pkcs12cert1",
-				ObjectType: provider.VaultObjectTypeCertificate,
+				ObjectType: types.VaultObjectTypeCertificate,
 			},
 			{
 				ObjectName: "ecccert1",
-				ObjectType: provider.VaultObjectTypeCertificate,
+				ObjectType: types.VaultObjectTypeCertificate,
 			},
 			{
 				ObjectName:  "pemcert1",
-				ObjectType:  provider.VaultObjectTypeKey,
+				ObjectType:  types.VaultObjectTypeKey,
 				ObjectAlias: "pemcert1-pub-key",
 			},
 			{
 				ObjectName:  "pkcs12cert1",
-				ObjectType:  provider.VaultObjectTypeKey,
+				ObjectType:  types.VaultObjectTypeKey,
 				ObjectAlias: "pkcs12cert1-pub-key",
 			},
 			{
 				ObjectName:  "ecccert1",
-				ObjectType:  provider.VaultObjectTypeKey,
+				ObjectType:  types.VaultObjectTypeKey,
 				ObjectAlias: "ecccert1-pub-key",
 			},
 			{
 				ObjectName:  "pemcert1",
-				ObjectType:  provider.VaultObjectTypeSecret,
+				ObjectType:  types.VaultObjectTypeSecret,
 				ObjectAlias: "pemcert1-secret",
 			},
 			{
 				ObjectName:  "pkcs12cert1",
-				ObjectType:  provider.VaultObjectTypeSecret,
+				ObjectType:  types.VaultObjectTypeSecret,
 				ObjectAlias: "pkcs12cert1-secret",
 			},
 			{
 				ObjectName:  "ecccert1",
-				ObjectType:  provider.VaultObjectTypeSecret,
+				ObjectType:  types.VaultObjectTypeSecret,
 				ObjectAlias: "ecccert1-secret",
 			},
 			{
 				ObjectName:   "pkcs12cert1",
-				ObjectType:   provider.VaultObjectTypeSecret,
+				ObjectType:   types.VaultObjectTypeSecret,
 				ObjectAlias:  "pkcs12cert1-secret-pfx",
 				ObjectFormat: "pfx",
 			},
 			{
 				ObjectName:   "ecccert1",
-				ObjectType:   provider.VaultObjectTypeSecret,
+				ObjectType:   types.VaultObjectTypeSecret,
 				ObjectAlias:  "ecccert1-secret-pfx",
 				ObjectFormat: "pfx",
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -121,9 +121,9 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 			Spec: v1alpha1.SecretProviderClassSpec{
 				Provider: "azure",
 				Parameters: map[string]string{
-					"keyvaultName": config.KeyvaultName,
-					"tenantId":     config.TenantID,
-					"objects":      string(objects),
+					types.KeyVaultNameParameter: config.KeyvaultName,
+					types.TenantIDParameter:     config.TenantID,
+					types.ObjectsParameter:      string(objects),
 				},
 			},
 		})
