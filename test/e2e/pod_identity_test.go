@@ -123,6 +123,9 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 		if config.IsWindowsTest {
 			Skip("test case not supported for windows cluster")
 		}
+		if config.IsArcTest {
+			Skip("test is not supported in Arc cluster")
+		}
 
 		By("Deploying aad-pod-identity")
 		helm.InstallPodIdentity()

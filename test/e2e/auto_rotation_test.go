@@ -307,6 +307,9 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		if config.IsWindowsTest {
 			Skip("test case not supported for windows cluster")
 		}
+		if config.IsArcTest {
+			Skip("test is not supported in Arc cluster")
+		}
 
 		secretName := fmt.Sprintf("secret-pi-%s", utilrand.String(randomLength))
 		// create secret in keyvault
