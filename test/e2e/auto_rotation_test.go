@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
@@ -76,14 +76,14 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: secretName,
-				ObjectType: provider.VaultObjectTypeSecret,
+				ObjectType: types.VaultObjectTypeSecret,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -114,11 +114,11 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 					},
 				},
 				Parameters: map[string]string{
-					"keyvaultName":         config.KeyvaultName,
-					"tenantId":             config.TenantID,
-					"objects":              string(objects),
-					"usePodIdentity":       "false",
-					"useVMManagedIdentity": "false",
+					types.KeyVaultNameParameter:         config.KeyvaultName,
+					types.TenantIDParameter:             config.TenantID,
+					types.ObjectsParameter:              string(objects),
+					types.UsePodIdentityParameter:       "false",
+					types.UseVMManagedIdentityParameter: "false",
 				},
 			},
 		})
@@ -195,14 +195,14 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: secretName,
-				ObjectType: provider.VaultObjectTypeSecret,
+				ObjectType: types.VaultObjectTypeSecret,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -233,12 +233,12 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 					},
 				},
 				Parameters: map[string]string{
-					"keyvaultName":           config.KeyvaultName,
-					"tenantId":               config.TenantID,
-					"objects":                string(objects),
-					"usePodIdentity":         "false",
-					"useVMManagedIdentity":   "true",
-					"userAssignedIdentityID": config.UserAssignedIdentityID,
+					types.KeyVaultNameParameter:           config.KeyvaultName,
+					types.TenantIDParameter:               config.TenantID,
+					types.ObjectsParameter:                string(objects),
+					types.UsePodIdentityParameter:         "false",
+					types.UseVMManagedIdentityParameter:   "true",
+					types.UserAssignedIdentityIDParameter: config.UserAssignedIdentityID,
 				},
 			},
 		})
@@ -307,6 +307,9 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		if config.IsWindowsTest {
 			Skip("test case not supported for windows cluster")
 		}
+		if config.IsArcTest {
+			Skip("test is not supported in Arc cluster")
+		}
 
 		secretName := fmt.Sprintf("secret-pi-%s", utilrand.String(randomLength))
 		// create secret in keyvault
@@ -317,14 +320,14 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: secretName,
-				ObjectType: provider.VaultObjectTypeSecret,
+				ObjectType: types.VaultObjectTypeSecret,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -355,11 +358,11 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 					},
 				},
 				Parameters: map[string]string{
-					"keyvaultName":         config.KeyvaultName,
-					"tenantId":             config.TenantID,
-					"objects":              string(objects),
-					"usePodIdentity":       "true",
-					"useVMManagedIdentity": "false",
+					types.KeyVaultNameParameter:         config.KeyvaultName,
+					types.TenantIDParameter:             config.TenantID,
+					types.ObjectsParameter:              string(objects),
+					types.UsePodIdentityParameter:       "true",
+					types.UseVMManagedIdentityParameter: "false",
 				},
 			},
 		})

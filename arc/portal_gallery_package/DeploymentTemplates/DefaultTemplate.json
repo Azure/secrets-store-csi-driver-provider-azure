@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "releaseTrain": {
-            "defaultValue": "preview",
+            "defaultValue": "stable",
             "type": "String"
         },
         "releaseNamespace": {

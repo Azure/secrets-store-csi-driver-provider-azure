@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
@@ -59,18 +59,18 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 			Name:    specName,
 		})
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName: "secret1",
-				ObjectType: provider.VaultObjectTypeSecret,
+				ObjectType: types.VaultObjectTypeSecret,
 			},
 			{
 				ObjectName: "key1",
-				ObjectType: provider.VaultObjectTypeKey,
+				ObjectType: types.VaultObjectTypeKey,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -88,11 +88,11 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 			Spec: v1alpha1.SecretProviderClassSpec{
 				Provider: "azure",
 				Parameters: map[string]string{
-					"keyvaultName":         config.KeyvaultName,
-					"tenantId":             config.TenantID,
-					"objects":              string(objects),
-					"usePodIdentity":       "true",
-					"useVMManagedIdentity": "false",
+					types.KeyVaultNameParameter:         config.KeyvaultName,
+					types.TenantIDParameter:             config.TenantID,
+					types.ObjectsParameter:              string(objects),
+					types.UsePodIdentityParameter:       "true",
+					types.UseVMManagedIdentityParameter: "false",
 				},
 			},
 		})
@@ -122,6 +122,9 @@ var _ = Describe("CSI inline volume test with aad-pod-identity", func() {
 		}
 		if config.IsWindowsTest {
 			Skip("test case not supported for windows cluster")
+		}
+		if config.IsArcTest {
+			Skip("test is not supported in Arc cluster")
 		}
 
 		By("Deploying aad-pod-identity")

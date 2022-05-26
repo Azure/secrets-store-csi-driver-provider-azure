@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 )
 
@@ -432,40 +433,40 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 
 	cases := []struct {
 		desc            string
-		kvObject        KeyVaultObject
-		versions        KeyVaultObjectVersionList
-		expectedObjects []KeyVaultObject
+		kvObject        types.KeyVaultObject
+		versions        types.KeyVaultObjectVersionList
+		expectedObjects []types.KeyVaultObject
 	}{
 		{
 			desc: "filename is name/index when no alias provided",
-			kvObject: KeyVaultObject{
+			kvObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersion:        "latest",
 				ObjectVersionHistory: 5,
 			},
-			versions: KeyVaultObjectVersionList{
-				KeyVaultObjectVersion{
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
 					Version: "a",
 					Created: now.Add(time.Hour * 10),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "b",
 					Created: now.Add(time.Hour * 9),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "c",
 					Created: now.Add(time.Hour * 8),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "d",
 					Created: now.Add(time.Hour * 7),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "e",
 					Created: now.Add(time.Hour * 6),
 				},
 			},
-			expectedObjects: []KeyVaultObject{
+			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
 					ObjectAlias:          "secret1/0",
@@ -500,34 +501,34 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 		},
 		{
 			desc: "sorts versions by descending created date",
-			kvObject: KeyVaultObject{
+			kvObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersion:        "latest",
 				ObjectVersionHistory: 5,
 			},
-			versions: KeyVaultObjectVersionList{
-				KeyVaultObjectVersion{
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
 					Version: "c",
 					Created: now.Add(time.Hour * 8),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "e",
 					Created: now.Add(time.Hour * 6),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "b",
 					Created: now.Add(time.Hour * 9),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "a",
 					Created: now.Add(time.Hour * 10),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "d",
 					Created: now.Add(time.Hour * 7),
 				},
 			},
-			expectedObjects: []KeyVaultObject{
+			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
 					ObjectAlias:          "secret1/0",
@@ -562,21 +563,21 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 		},
 		{
 			desc: "starts with latest version when no version specified",
-			kvObject: KeyVaultObject{
+			kvObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersionHistory: 2,
 			},
-			versions: KeyVaultObjectVersionList{
-				KeyVaultObjectVersion{
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
 					Version: "a",
 					Created: now.Add(time.Hour * 10),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "b",
 					Created: now.Add(time.Hour * 9),
 				},
 			},
-			expectedObjects: []KeyVaultObject{
+			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
 					ObjectAlias:          "secret1/0",
@@ -593,21 +594,21 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 		},
 		{
 			desc: "fewer than ObjectVersionHistory results returns all versions",
-			kvObject: KeyVaultObject{
+			kvObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersionHistory: 200,
 			},
-			versions: KeyVaultObjectVersionList{
-				KeyVaultObjectVersion{
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
 					Version: "a",
 					Created: now.Add(time.Hour * 10),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "b",
 					Created: now.Add(time.Hour * 9),
 				},
 			},
-			expectedObjects: []KeyVaultObject{
+			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
 					ObjectAlias:          "secret1/0",
@@ -624,34 +625,34 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 		},
 		{
 			desc: "starts at ObjectVersion when specified",
-			kvObject: KeyVaultObject{
+			kvObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersion:        "c",
 				ObjectVersionHistory: 5,
 			},
-			versions: KeyVaultObjectVersionList{
-				KeyVaultObjectVersion{
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
 					Version: "c",
 					Created: now.Add(time.Hour * 8),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "e",
 					Created: now.Add(time.Hour * 6),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "b",
 					Created: now.Add(time.Hour * 9),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "a",
 					Created: now.Add(time.Hour * 10),
 				},
-				KeyVaultObjectVersion{
+				types.KeyVaultObjectVersion{
 					Version: "d",
 					Created: now.Add(time.Hour * 7),
 				},
 			},
-			expectedObjects: []KeyVaultObject{
+			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
 					ObjectAlias:          "secret1/0",
@@ -688,19 +689,19 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 func TestFormatKeyVaultObject(t *testing.T) {
 	cases := []struct {
 		desc                   string
-		keyVaultObject         KeyVaultObject
-		expectedKeyVaultObject KeyVaultObject
+		keyVaultObject         types.KeyVaultObject
+		expectedKeyVaultObject types.KeyVaultObject
 	}{
 		{
 			desc: "leading and trailing whitespace trimmed from all fields",
-			keyVaultObject: KeyVaultObject{
+			keyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1     ",
 				ObjectVersion:  "",
 				ObjectEncoding: "base64   ",
 				ObjectType:     "  secret",
 				ObjectAlias:    "",
 			},
-			expectedKeyVaultObject: KeyVaultObject{
+			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "",
 				ObjectEncoding: "base64",
@@ -710,14 +711,14 @@ func TestFormatKeyVaultObject(t *testing.T) {
 		},
 		{
 			desc: "no data loss for already sanitized object",
-			keyVaultObject: KeyVaultObject{
+			keyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "version1",
 				ObjectEncoding: "base64",
 				ObjectType:     "secret",
 				ObjectAlias:    "alias",
 			},
-			expectedKeyVaultObject: KeyVaultObject{
+			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "version1",
 				ObjectEncoding: "base64",
@@ -727,7 +728,7 @@ func TestFormatKeyVaultObject(t *testing.T) {
 		},
 		{
 			desc: "no data loss for int properties",
-			keyVaultObject: KeyVaultObject{
+			keyVaultObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersion:        "latest",
 				ObjectEncoding:       "base64",
@@ -735,7 +736,7 @@ func TestFormatKeyVaultObject(t *testing.T) {
 				ObjectAlias:          "alias",
 				ObjectVersionHistory: 12,
 			},
-			expectedKeyVaultObject: KeyVaultObject{
+			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:           "secret1",
 				ObjectVersion:        "latest",
 				ObjectEncoding:       "base64",
