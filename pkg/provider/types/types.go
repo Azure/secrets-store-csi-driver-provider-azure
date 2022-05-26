@@ -38,6 +38,8 @@ const (
 	// UserAssignedIdentityIDParameter is the name of the user assigned identity ID parameter
 	UserAssignedIdentityIDParameter = "userAssignedIdentityID"
 	// TenantIDParameter is the name of the tenant ID parameter
+	// TODO(aramase): change this from tenantId to tenantID after v1.2 release
+	// ref: https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/857
 	TenantIDParameter = "tenantId"
 	// CloudEnvFileNameParameter is the name of the cloud env file name parameter
 	CloudEnvFileNameParameter = "cloudEnvFileName"
