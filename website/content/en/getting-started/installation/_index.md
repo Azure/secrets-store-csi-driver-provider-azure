@@ -84,14 +84,14 @@ For a list of customizable values that can be injected when invoking helm instal
     To validate the driver is running as expected, run the following command:
 
     ```bash
-    kubectl get pods -l app=csi-secrets-store -n kube-system
+    kubectl get pods -l app=secrets-store-csi-driver -n kube-system
     ```
 
     You should see the driver pods running on each agent node:
 
     ```bash
     NAME                      READY   STATUS    RESTARTS   AGE
-    csi-secrets-store-bp4f4   3/3     Running   0          24s
+    aks-secrets-store-csi-driver-bp4f4   3/3     Running   0          24s
     ```
 
 2. **Install the Azure Key Vault provider**
@@ -113,15 +113,15 @@ For a list of customizable values that can be injected when invoking helm instal
     To validate the provider's installer is running as expected, run the following commands:
 
     ```bash
-    kubectl get pods -l app=csi-secrets-store-provider-azure
+    kubectl get pods -l app=secrets-store-provider-azure
     ```
 
     You should see the provider pods running on each agent node:
 
     ```bash
     NAME                                     READY   STATUS    RESTARTS   AGE
-    csi-secrets-store-provider-azure-4ngf4   1/1     Running   0          8s
-    csi-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
+    aks-secrets-store-provider-azure-4ngf4   1/1     Running   0          8s
+    aks-secrets-store-provider-azure-bxr5k   1/1     Running   0          8s
     ```
 
 **In addition, if you are using Secrets Store CSI Driver and the Azure Keyvault Provider in a cluster with [pod security policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/) enabled**, review and create the following policy that enables the spec required for Secrets Store CSI Driver and the Azure Keyvault Provider to work:
