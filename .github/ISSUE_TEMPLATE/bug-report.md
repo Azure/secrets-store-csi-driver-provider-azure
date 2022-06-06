@@ -32,3 +32,4 @@ assignees: ''
 - Azure Key Vault provider version: (use the image tag):
 - Kubernetes version: (use `kubectl version` and `kubectl get nodes -o wide`):
 - Cluster type: (e.g. AKS, aks-engine, etc):
+- Installation method: (Manual, AKS managed add-on):
