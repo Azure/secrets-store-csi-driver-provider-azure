@@ -55,7 +55,7 @@ func main() {
 
 	if *logFormatJSON {
 		jsonFactory := json.Factory{}
-		logger, _ := jsonFactory.Create(config.FormatOptions{})
+		logger, _ := jsonFactory.Create(config.LoggingConfiguration{Format: "json"})
 		klog.SetLogger(logger)
 	}
 

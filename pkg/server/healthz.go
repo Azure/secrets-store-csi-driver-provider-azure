@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"k8s.io/klog/v2"
 )
@@ -72,7 +73,7 @@ func (h *HealthZ) checkRPC(ctx context.Context, client grpc_health_v1.HealthClie
 func (h *HealthZ) dialUnixSocket() (*grpc.ClientConn, error) {
 	return grpc.Dial(
 		h.UnixSocketPath,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, target string) (net.Conn, error) {
 			return (&net.Dialer{}).DialContext(ctx, "unix", target)
 		}),
