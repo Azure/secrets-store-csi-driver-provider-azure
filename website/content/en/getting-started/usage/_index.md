@@ -41,6 +41,7 @@ To provide identity to access key vault, refer to the following [section](#provi
       usePodIdentity: "false"               # [OPTIONAL] if not provided, will default to "false"
       useVMManagedIdentity: "false"         # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
       userAssignedIdentityID: "client_id"   # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
+      clientID: "client_id"                 # [OPTIONAL available for version > 1.1.0] client id of the Azure AD Application or managed identity to use for workload identity
       keyvaultName: "kvname"                # the name of the KeyVault
       cloudName: ""                         # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
       cloudEnvFileName: ""                  # [OPTIONAL available for version > 0.0.7] use to define path to file for populating azure environment
@@ -83,12 +84,13 @@ To provide identity to access key vault, refer to the following [section](#provi
 
 #### Provide Identity to Access Key Vault
 
-The Azure Key Vault Provider offers four modes for accessing a Key Vault instance:
+The Azure Key Vault Provider offers five modes for accessing a Key Vault instance:
 
 1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
 2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode)
 3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
 4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
+5. [Workload Identity](../../configurations/identity-access-modes/workload-identity-mode.md)
 
 #### Update your Deployment Yaml
 
