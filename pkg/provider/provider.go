@@ -32,7 +32,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/context"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 )
 

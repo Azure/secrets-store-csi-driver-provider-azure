@@ -32,3 +32,4 @@ assignees: ''
 - Azure Key Vault provider version: (use the image tag):
 - Kubernetes version: (use `kubectl version` and `kubectl get nodes -o wide`):
 - Cluster type: (e.g. AKS, aks-engine, etc):
+- Installation method: ([Helm](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/getting-started/installation/#deployment-using-helm) , [Deployment yamls](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/getting-started/installation/#using-deployment-yamls), [AKS managed add-on](https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver)):
