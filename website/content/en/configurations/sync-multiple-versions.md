@@ -1,7 +1,7 @@
 ---
 type: docs
-title: "Sync Mulitple Versions of a Secret"
-linkTitle: "Sync Mulitple Versions of a Secret"
+title: "Sync Multiple Versions of a Secret"
+linkTitle: "Sync Multiple Versions of a Secret"
 weight: 1
 description: >
   How to sync multiple versions of a key vault secret, key, or certificate
@@ -29,12 +29,12 @@ spec:
           objectType: secret                     # object types: secret, key or cert
           objectAlias: secretalias
           objectVersion: $SECRET_VERSION         # [OPTIONAL] object versions, default to latest if empty
-          objectVersionHistory: 5                # The number of verisons to sync (including the specified version)
+          objectVersionHistory: 5                # The number of versions to sync (including the specified version)
         - |
           objectName: $KEY_NAME
           objectType: key
           objectVersion: $KEY_VERSION
-          objectVersionHistory: 5                # The number of verisons to sync (including the specified version)
+          objectVersionHistory: 5                # The number of versions to sync (including the specified version)
     tenantId: "tid"                              # the tenant ID of the KeyVault
 ```
 
