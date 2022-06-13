@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/helm"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
@@ -76,15 +76,15 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName:           secretName,
-				ObjectType:           provider.VaultObjectTypeSecret,
+				ObjectType:           types.VaultObjectTypeSecret,
 				ObjectVersionHistory: 5,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -201,15 +201,15 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName:           secretName,
-				ObjectType:           provider.VaultObjectTypeSecret,
+				ObjectType:           types.VaultObjectTypeSecret,
 				ObjectVersionHistory: 5,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
@@ -329,15 +329,15 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			Expect(err).To(BeNil())
 		}()
 
-		keyVaultObjects := []provider.KeyVaultObject{
+		keyVaultObjects := []types.KeyVaultObject{
 			{
 				ObjectName:           secretName,
-				ObjectType:           provider.VaultObjectTypeSecret,
+				ObjectType:           types.VaultObjectTypeSecret,
 				ObjectVersionHistory: 5,
 			},
 		}
 
-		yamlArray := provider.StringArray{Array: []string{}}
+		yamlArray := types.StringArray{Array: []string{}}
 		for _, object := range keyVaultObjects {
 			obj, err := yaml.Marshal(object)
 			Expect(err).To(BeNil())
