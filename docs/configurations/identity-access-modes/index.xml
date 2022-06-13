@@ -99,12 +99,11 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;h2 id="pros">Pros&lt;/h2>
 &lt;ol>
 &lt;li>Supported on both Windows and Linux.&lt;/li>
-&lt;li>Easiest option to connect to Azure Key Vault.&lt;/li>
+&lt;li>Supports Kubernetes clusters hosted in any cloud or on-premises.&lt;/li>
 &lt;/ol>
 &lt;h2 id="cons">Cons&lt;/h2>
 &lt;ol>
 &lt;li>Service Principal credentials(client id &amp;amp; client secret) need to be created as a kubernetes &lt;em>Secret&lt;/em> which is stored as plaintext in etcd.&lt;/li>
-&lt;li>The only supported way to connect to Azure Key Vault from a non Azure environment.&lt;/li>
 &lt;/ol></description></item><item><title>Configurations: Workload Identity (Preview)</title><link>https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/workload-identity-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/workload-identity-mode/</guid><description>
 &lt;details>
 &lt;summary>Examples&lt;/summary>
