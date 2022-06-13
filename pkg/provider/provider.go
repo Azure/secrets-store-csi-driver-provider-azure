@@ -241,11 +241,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		}
 
 		for _, resolvedKvObject := range resolvedKvObjects {
-			fileName := resolvedKvObject.ObjectName
-
-			if resolvedKvObject.ObjectAlias == "" {
-				fileName = resolvedKvObject.ObjectAlias
-			}
+			fileName := getKeyVaultObjectFileName(resolvedKvObject)
 
 			if err := validateFileName(fileName); err != nil {
 				return nil, wrapObjectTypeError(err, resolvedKvObject.ObjectType, resolvedKvObject.ObjectName, resolvedKvObject.ObjectVersion)
@@ -295,6 +291,13 @@ func (p *Provider) resolveObjectVersions(ctx context.Context, kvClient *kv.BaseC
 	return getLatestNKeyVaultObjects(kvObject, kvObjectVersions), nil
 }
 
+func getKeyVaultObjectFileName(kvObject types.KeyVaultObject) string {
+	if kvObject.ObjectAlias != "" {
+		return kvObject.ObjectAlias
+	}
+	return kvObject.ObjectName
+}
+
 /*
 Given a base key vault object and a list of object versions and their created dates, find
 the latest kvObject.ObjectVersionHistory versions and return key vault objects with the
@@ -304,10 +307,7 @@ The alias is determine by the index of the version starting with 0 at the specif
 latest if no version is specified).
 */
 func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions types.KeyVaultObjectVersionList) []types.KeyVaultObject {
-	baseFileName := kvObject.ObjectName
-	if kvObject.ObjectAlias != "" {
-		baseFileName = kvObject.ObjectAlias
-	}
+	baseFileName := getKeyVaultObjectFileName(kvObject)
 
 	objects := []types.KeyVaultObject{}
 

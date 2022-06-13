@@ -428,6 +428,40 @@ func TestGetContentBytes(t *testing.T) {
 	}
 }
 
+func TestGetKeyVaultObjectFileNameFileName(t *testing.T) {
+	cases := []struct {
+		desc             string
+		kvObject         types.KeyVaultObject
+		expectedFileName string
+	}{
+		{
+			desc: "file name is pulled from alias when it's provided",
+			kvObject: types.KeyVaultObject{
+				ObjectName:  "secret1",
+				ObjectAlias: "secret1-alias",
+			},
+			expectedFileName: "secret1-alias",
+		},
+		{
+			desc: "file name is pulled from objectname when alias is not provided",
+			kvObject: types.KeyVaultObject{
+				ObjectName: "secret1",
+			},
+			expectedFileName: "secret1",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			fileName := getKeyVaultObjectFileName(tc.kvObject)
+
+			if fileName != tc.expectedFileName {
+				t.Fatalf("expected: %+v, but got: %+v", tc.expectedFileName, fileName)
+			}
+		})
+	}
+}
+
 func TestGetLatestNKeyVaultObjects(t *testing.T) {
 	now := time.Now()
 
