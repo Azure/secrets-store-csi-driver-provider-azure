@@ -118,7 +118,7 @@ Login to [Azure Cloud Shell](https://portal.azure.com/#cloudshell/) and run the 
 
 ```bash
 # Get the object ID of the AAD application
-export APPLICATION_OBJECT_ID="$(az ad app show --id ${APPLICATION_CLIENT_ID} --query objectId -otsv)"
+export APPLICATION_OBJECT_ID="$(az ad app show --id ${APPLICATION_CLIENT_ID} --query id -otsv)"
 export SERVICE_ACCOUNT_NAME=<name of the service account used by the application pod (pod requesting the volume mount)>
 export SERVICE_ACCOUNT_NAMESPACE=<namespace of the service account>
 ```
