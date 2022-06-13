@@ -139,4 +139,4 @@ The Azure Key Vault Provider allows syncing previous versions of a secret via th
 If you want to sync one of these versions with a kubernetes secret, the only difference is that you have to specify which version you want (i.e., to use the latest version, you specify `{objectAlias}/0` in `[secretObjects].[objectName]`)
 
 ##### Permissions
-If you use this functionality, the principal being used to access Key Vault will also need the secret/list permission. 
+If you use this functionality, the principal being used to access Key Vault will also need the list permission for secrets, keys, and certificates. 
