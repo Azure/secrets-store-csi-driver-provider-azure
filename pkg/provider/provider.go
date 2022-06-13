@@ -504,7 +504,7 @@ func getCurve(crv kv.JSONWebKeyCurveName) (elliptic.Curve, error) {
 	case kv.P521:
 		return elliptic.P521(), nil
 	default:
-		return nil, fmt.Errorf("curve %s is not suppported", crv)
+		return nil, fmt.Errorf("curve %s is not supported", crv)
 	}
 }
 
@@ -655,6 +655,7 @@ type node struct {
 	isParent bool
 }
 
+// implementation xref: https://social.technet.microsoft.com/wiki/contents/articles/3147.pki-certificate-chaining-engine-cce.aspx#Building_the_Certificate_Chain
 func fetchCertChains(data []byte) ([]byte, error) {
 	var newCertChain []*x509.Certificate
 	var pemData []byte
@@ -728,6 +729,10 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		}
 		newCertChain = append(newCertChain, leaf.cert)
 		leaf = leaf.parent
+	}
+
+	if len(nodes) != len(newCertChain) {
+		klog.Warning("certificate chain is not complete due to missing intermediate/root certificates in the cert from key vault")
 	}
 
 	for _, cert := range newCertChain {

@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/klog/v2"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
@@ -650,6 +651,71 @@ fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
 	}
 }
 
+func TestFetchCertChainWarning(t *testing.T) {
+	rootCACert := `
+-----BEGIN CERTIFICATE-----
+MIIBeTCCAR6gAwIBAgIRAM3RAPH7k1Q+bICMC0mzKhkwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAxNFoXDTMwMTIw
+MTAwMTAxNFowGjEYMBYGA1UEAxMPRXhhbXBsZSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAE1/AGExuSemtxPRzFECpefowtkcOQr7jaq355kfb2hUR2
+LnMn+71fD4mZmMXT0kuxgeE2zC2CxOHdoJ/FmcQJxaNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFKTuLl7BATUYGD6ZeUV3
+2f8UAWoqMAoGCCqGSM49BAMCA0kAMEYCIQDEz2XKXPb0Q/Y40Gtxo8r6sa0Ra6U0
+fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
+-----END CERTIFICATE-----
+`
+
+	serverCert := `
+-----BEGIN CERTIFICATE-----
+MIIBwjCCAWmgAwIBAgIQGIPRUsQ/sFI1fkxZHCSU6jAKBggqhkjOPQQDAjAkMSIw
+IAYDVQQDExlFeGFtcGxlIEludGVybWVkaWF0ZSBDQSAxMB4XDTIwMTIwMzAwMTAz
+NloXDTIwMTIwNDAwMTAzNlowFjEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS0FvMzMHAfc6mOIEgijRngeRcNaDdp63AbCVeJ
+tuKNX7j4KLbkQcACj6g+hblJu4NCJChFmeEYf8b7xw+q0dPOo4GKMIGHMA4GA1Ud
+DwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0O
+BBYEFIRRQ0915ExZz30TeVhCpwgP3SEYMB8GA1UdIwQYMBaAFH7YljRWGOtaytSe
+D5Xx2B5kE4YnMBYGA1UdEQQPMA2CC2V4YW1wbGUuY29tMAoGCCqGSM49BAMCA0cA
+MEQCIH9NxXnWaip9fZyv9VJcfFz7tcdxTq10SrTO7gKhyJkpAiAljZFFK687kc6J
+kzqEt441cQasPp5ohL5U4cJN6lAuwA==
+-----END CERTIFICATE-----
+`
+
+	expectedCert := `-----BEGIN CERTIFICATE-----
+MIIBwjCCAWmgAwIBAgIQGIPRUsQ/sFI1fkxZHCSU6jAKBggqhkjOPQQDAjAkMSIw
+IAYDVQQDExlFeGFtcGxlIEludGVybWVkaWF0ZSBDQSAxMB4XDTIwMTIwMzAwMTAz
+NloXDTIwMTIwNDAwMTAzNlowFjEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS0FvMzMHAfc6mOIEgijRngeRcNaDdp63AbCVeJ
+tuKNX7j4KLbkQcACj6g+hblJu4NCJChFmeEYf8b7xw+q0dPOo4GKMIGHMA4GA1Ud
+DwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0O
+BBYEFIRRQ0915ExZz30TeVhCpwgP3SEYMB8GA1UdIwQYMBaAFH7YljRWGOtaytSe
+D5Xx2B5kE4YnMBYGA1UdEQQPMA2CC2V4YW1wbGUuY29tMAoGCCqGSM49BAMCA0cA
+MEQCIH9NxXnWaip9fZyv9VJcfFz7tcdxTq10SrTO7gKhyJkpAiAljZFFK687kc6J
+kzqEt441cQasPp5ohL5U4cJN6lAuwA==
+-----END CERTIFICATE-----
+`
+
+	var buf bytes.Buffer
+	klog.SetOutput(&buf)
+	klog.LogToStderr(false)
+	defer klog.LogToStderr(true)
+	// certificate chain missing intermediate certificate
+	cert := serverCert + rootCACert
+	certChain, err := fetchCertChains([]byte(cert))
+	if err != nil {
+		t.Fatalf("fetchCertChains() error = %v, expected nil", err)
+	}
+	if string(certChain) != expectedCert {
+		t.Fatalf(cmp.Diff(expectedCert, string(certChain)))
+	}
+
+	klog.Flush()
+	klog.SetOutput(&bytes.Buffer{}) // prevent further writes into buf
+	capturedOutput := buf.String()
+	if !strings.Contains(capturedOutput, `certificate chain is not complete due to missing intermediate/root certificates in the cert from key vault`) {
+		t.Fatalf("expected warning, got: %s", capturedOutput)
+	}
+}
+
 func TestInitializeKVClient(t *testing.T) {
 	testEnvs := []azure.Environment{
 		azure.PublicCloud,
@@ -864,7 +930,7 @@ func TestGetCurve(t *testing.T) {
 		{
 			crv:           kv.SECP256K1,
 			expectedCurve: nil,
-			expectedErr:   fmt.Errorf("curve SECP256K1 is not suppported"),
+			expectedErr:   fmt.Errorf("curve SECP256K1 is not supported"),
 		},
 	}
 
