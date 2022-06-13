@@ -47,6 +47,6 @@ description: >
 
     ```bash
     # Replace $target_namespace with the namespace used for helm install
-    oc adm policy remove-scc-to-user privileged system:serviceaccount:$target_namespace:secrets-store-csi-driver
-    oc adm policy remove-scc-to-user privileged system:serviceaccount:$target_namespace:csi-secrets-store-provider-azure
+    oc adm policy remove-scc-from-user privileged system:serviceaccount:$target_namespace:secrets-store-csi-driver
+    oc adm policy remove-scc-from-user privileged system:serviceaccount:$target_namespace:csi-secrets-store-provider-azure
     ```
