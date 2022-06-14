@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -87,4 +89,26 @@ func GetObjectsArray(objects string) (StringArray, error) {
 	var a StringArray
 	err := yaml.Unmarshal([]byte(objects), &a)
 	return a, err
+}
+
+// GetFileName returns the file name for the secret
+// 1. If the object alias is specified, it will be used
+// 2. If the object alias is not specified, the object name will be used
+func (kv KeyVaultObject) GetFileName() string {
+	if kv.ObjectAlias != "" {
+		return kv.ObjectAlias
+	}
+	return kv.ObjectName
+}
+
+// GetFilePermission returns the file permission and error if any
+func (kv KeyVaultObject) GetFilePermission(defaultFilePermission os.FileMode) (int32, error) {
+	if kv.FilePermission == "" {
+		return int32(defaultFilePermission), nil
+	}
+	permission, err := strconv.ParseInt(kv.FilePermission, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("file permission must be a valid octal number: %w", err)
+	}
+	return int32(permission), nil
 }

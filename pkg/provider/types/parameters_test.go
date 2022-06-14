@@ -1,6 +1,7 @@
 package types
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -593,5 +594,106 @@ func TestGetObjectsArrayError(t *testing.T) {
 	objects := "invalid"
 	if _, err := GetObjectsArray(objects); err == nil {
 		t.Errorf("GetObjectsArray() error is nil, expected error")
+	}
+}
+
+func TestGetFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		object   KeyVaultObject
+		expected string
+	}{
+		{
+			name: "empty",
+			object: KeyVaultObject{
+				ObjectName: "",
+			},
+			expected: "",
+		},
+		{
+			name: "object alias and object name",
+			object: KeyVaultObject{
+				ObjectName:  "test",
+				ObjectAlias: "alias",
+			},
+			expected: "alias",
+		},
+		{
+			name: "object name only",
+			object: KeyVaultObject{
+				ObjectName: "test",
+			},
+			expected: "test",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.object.GetFileName()
+			if actual != test.expected {
+				t.Errorf("GetFileName() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetFilePermission(t *testing.T) {
+	cases := []struct {
+		name     string
+		object   KeyVaultObject
+		expected int32
+	}{
+		{
+			name: "valid file permission",
+			object: KeyVaultObject{
+				FilePermission: "0600",
+			},
+			expected: 0600,
+		},
+		{
+			name:     "empty file permission",
+			object:   KeyVaultObject{},
+			expected: 0644,
+		},
+	}
+
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := test.object.GetFilePermission(os.FileMode(0644))
+			if err != nil {
+				t.Errorf("GetFilePermission() error = %v", err)
+			}
+			if actual != test.expected {
+				t.Errorf("GetFilePermission() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetFilePermissionError(t *testing.T) {
+	cases := []struct {
+		name   string
+		object KeyVaultObject
+	}{
+		{
+			name: "invalid file permission",
+			object: KeyVaultObject{
+				FilePermission: "0900",
+			},
+		},
+		{
+			name: "invalid octal number",
+			object: KeyVaultObject{
+				FilePermission: "900",
+			},
+		},
+	}
+
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := test.object.GetFilePermission(os.FileMode(0644)); err == nil {
+				t.Errorf("GetFilePermission() error = nil, expected error")
+			}
+		})
 	}
 }
