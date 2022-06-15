@@ -135,6 +135,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 	})
 
 	It("should read secret from pod", func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -150,6 +154,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 	})
 
 	It("should read secret from pod with alias", func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -165,6 +173,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 	})
 
 	It("should sync secret as kubernetes tls secret", func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
@@ -184,6 +196,10 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 	})
 
 	It("should sync secret as kubernetes opaque secret", func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		pod.WaitFor(pod.WaitForInput{
 			Getter:         kubeClient,
 			KubeconfigPath: kubeconfigPath,
