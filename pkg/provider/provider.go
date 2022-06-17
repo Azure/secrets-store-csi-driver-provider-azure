@@ -12,10 +12,8 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -198,6 +196,11 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		}
 		// remove whitespace from all fields in keyVaultObject
 		formatKeyVaultObject(&keyVaultObject)
+
+		if err = validate(keyVaultObject); err != nil {
+			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
+		}
+
 		keyVaultObjects = append(keyVaultObjects, keyVaultObject)
 	}
 
@@ -222,25 +225,6 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	files := []types.SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
-		if err := validateObjectFormat(keyVaultObject.ObjectFormat, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
-		if err := validateObjectEncoding(keyVaultObject.ObjectEncoding, keyVaultObject.ObjectType); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
-		fileName := keyVaultObject.ObjectName
-		if keyVaultObject.ObjectAlias != "" {
-			fileName = keyVaultObject.ObjectAlias
-		}
-		if err := validateFileName(fileName); err != nil {
-			return nil, wrapObjectTypeError(err, keyVaultObject.ObjectType, keyVaultObject.ObjectName, keyVaultObject.ObjectVersion)
-		}
-
-		filePermission, err := validateFilePermission(keyVaultObject.FilePermission, defaultFilePermission)
-		if err != nil {
-			return nil, err
-		}
-
 		// fetch the object from Key Vault
 		content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
@@ -255,16 +239,17 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		// objectUID is a unique identifier in the format <object type>/<object name>
 		// This is the object id the user sees in the SecretProviderClassPodStatus
 		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+		file := types.SecretFile{
+			Path:    keyVaultObject.GetFileName(),
+			Content: objectContent,
+			UID:     objectUID,
+			Version: newObjectVersion,
+		}
+		// the validity of file permission is already checked in the validate function above
+		file.FileMode, _ = keyVaultObject.GetFilePermission(defaultFilePermission)
 
-		// these files will be returned to the CSI driver as part of gRPC response
-		files = append(files, types.SecretFile{
-			Path:     fileName,
-			Content:  objectContent,
-			FileMode: filePermission,
-			UID:      objectUID,
-			Version:  newObjectVersion,
-		})
-		klog.V(5).InfoS("added file to the gRPC response", "file", fileName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		files = append(files, file)
+		klog.V(5).InfoS("added file to the gRPC response", "file", file.Path, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 	}
 
 	return files, nil
@@ -531,23 +516,6 @@ func setAzureEnvironmentFilePath(envFileName string) error {
 	return os.Setenv(azure.EnvironmentFilepathName, envFileName)
 }
 
-// validateObjectFormat checks if the object format is valid and is supported
-// for the given object type
-func validateObjectFormat(objectFormat, objectType string) error {
-	if len(objectFormat) == 0 {
-		return nil
-	}
-	if !strings.EqualFold(objectFormat, types.ObjectFormatPEM) && !strings.EqualFold(objectFormat, types.ObjectFormatPFX) {
-		return fmt.Errorf("invalid objectFormat: %v, should be PEM or PFX", objectFormat)
-	}
-	// Azure Key Vault returns the base64 encoded binary content only for type secret
-	// for types cert/key, the content is always in pem format
-	if objectFormat == types.ObjectFormatPFX && objectType != types.VaultObjectTypeSecret {
-		return fmt.Errorf("PFX format only supported for objectType: secret")
-	}
-	return nil
-}
-
 // getObjectVersion parses the id to retrieve the version
 // of object fetched
 // example id format - https://kindkv.vault.azure.net/secrets/actual/1f304204f3624873aab40231241243eb
@@ -562,25 +530,6 @@ func getObjectVersion(id string) string {
 // <object type>/<object name>
 func getObjectUID(objectName, objectType string) string {
 	return fmt.Sprintf("%s/%s", objectType, objectName)
-}
-
-// validateObjectEncoding checks if the object encoding is valid and is supported
-// for the given object type
-func validateObjectEncoding(objectEncoding, objectType string) error {
-	if len(objectEncoding) == 0 {
-		return nil
-	}
-
-	// ObjectEncoding is supported only for secret types
-	if objectType != types.VaultObjectTypeSecret {
-		return fmt.Errorf("objectEncoding only supported for objectType: secret")
-	}
-
-	if !strings.EqualFold(objectEncoding, types.ObjectEncodingHex) && !strings.EqualFold(objectEncoding, types.ObjectEncodingBase64) && !strings.EqualFold(objectEncoding, types.ObjectEncodingUtf8) {
-		return fmt.Errorf("invalid objectEncoding: %v, should be hex, base64 or utf-8", objectEncoding)
-	}
-
-	return nil
 }
 
 // getContentBytes takes the given content string and returns the bytes to write to disk
@@ -618,35 +567,6 @@ func formatKeyVaultObject(object *types.KeyVaultObject) {
 		str = strings.TrimSpace(str)
 		field.SetString(str)
 	}
-}
-
-// This validate will make sure fileName:
-// 1. is not abs path
-// 2. does not contain any '..' elements
-// 3. does not start with '..'
-// These checks have been implemented based on -
-// [validateLocalDescendingPath] https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/validation/validation.go#L1158-L1170
-// [validatePathNoBacksteps] https://github.com/kubernetes/kubernetes/blob/master/pkg/apis/core/validation/validation.go#L1172-L1186
-func validateFileName(fileName string) error {
-	if len(fileName) == 0 {
-		return fmt.Errorf("file name must not be empty")
-	}
-	// is not abs path
-	if filepath.IsAbs(fileName) {
-		return fmt.Errorf("file name must be a relative path")
-	}
-	// does not have any element which is ".."
-	parts := strings.Split(filepath.ToSlash(fileName), "/")
-	for _, item := range parts {
-		if item == ".." {
-			return fmt.Errorf("file name must not contain '..'")
-		}
-	}
-	// fallback logic if .. is missed in the previous check
-	if strings.Contains(fileName, "..") {
-		return fmt.Errorf("file name must not contain '..'")
-	}
-	return nil
 }
 
 type node struct {
@@ -743,21 +663,4 @@ func fetchCertChains(data []byte) ([]byte, error) {
 		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 	return pemData, nil
-}
-
-// validateFilePermission checks if the given file permission is correct octal number and returns
-// a. decimal equivalent of the default file permission (0644) if file permission is not provided Or
-// b. decimal equivalent Or
-// c. error if it's not valid
-func validateFilePermission(filePermission string, defaultFilePermission os.FileMode) (int32, error) {
-	if filePermission == "" {
-		return int32(defaultFilePermission), nil
-	}
-
-	permission, err := strconv.ParseInt(filePermission, 8, 32)
-	if err != nil {
-		return 0, fmt.Errorf("file permission must be a valid octal number: %w", err)
-	}
-
-	return int32(permission), nil
 }
