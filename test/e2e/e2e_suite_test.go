@@ -6,6 +6,7 @@ package e2e
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -50,7 +51,7 @@ const (
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	// adding JUnitReporter for arc conformance test. If JUNIT_OUTPUT_FILEPATH is empty, it will not produce xml output.
-	junitReporter := reporters.NewJUnitReporter(os.Getenv("JUNIT_OUTPUT_FILEPATH"))
+	junitReporter := reporters.NewJUnitReporter(filepath.Join(os.Getenv("JUNIT_OUTPUT_FILEPATH"), "junit.xml"))
 	RunSpecsWithDefaultAndCustomReporters(t, "sscdproviderazure", []Reporter{junitReporter})
 }
 
