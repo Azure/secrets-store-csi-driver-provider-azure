@@ -16,7 +16,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	google.golang.org/grpc v1.47.0
-	gopkg.in/yaml.v3 v3.0.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/component-base v0.24.1
 	k8s.io/klog/v2 v2.60.1
 	sigs.k8s.io/secrets-store-csi-driver v1.1.2
