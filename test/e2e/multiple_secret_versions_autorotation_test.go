@@ -39,6 +39,10 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 	)
 
 	BeforeEach(func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
 		ns = namespace.Create(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
@@ -57,9 +61,6 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 	It("should auto rotate mount contents with service principal", func() {
 		if config.IsKindCluster {
 			Skip("test case not supported for kind cluster")
-		}
-		if config.ImageVersion < "1.3.0" {
-			Skip("functionality not yet supported in release version")
 		}
 
 		nodePublishSecretRef := secret.Create(secret.CreateInput{
@@ -194,9 +195,6 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		if config.IsKindCluster {
 			Skip("test case not supported for kind cluster")
 		}
-		if config.ImageVersion < "1.3.0" {
-			Skip("functionality not yet supported in release version")
-		}
 
 		secretName := fmt.Sprintf("secret-msi-%s", utilrand.String(multipleSecretsRandomLength))
 		// create secret in keyvault
@@ -324,9 +322,6 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		}
 		if config.IsWindowsTest {
 			Skip("test case not supported for windows cluster")
-		}
-		if config.ImageVersion < "1.3.0" {
-			Skip("functionality not yet supported in release version")
 		}
 
 		secretName := fmt.Sprintf("secret-pi-%s", utilrand.String(multipleSecretsRandomLength))
