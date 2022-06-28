@@ -93,6 +93,9 @@ spec:
             capabilities:
               add: 
                 - NET_ADMIN
+            {{- if eq .Values.Azure.Cluster.Distribution "openshift" }}
+            privileged: true
+            {{- end }}
         # Telegraf
         - name: telegraf
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
