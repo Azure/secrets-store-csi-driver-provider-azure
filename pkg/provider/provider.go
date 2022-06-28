@@ -12,9 +12,11 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -305,7 +307,7 @@ func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions t
 			length := len(objects)
 			newObject := kvObject
 
-			newObject.ObjectAlias = fmt.Sprintf("%s/%d", baseFileName, length)
+			newObject.ObjectAlias = filepath.Join(baseFileName, strconv.Itoa(length))
 			newObject.ObjectVersion = objectVersion.Version
 
 			objects = append(objects, newObject)

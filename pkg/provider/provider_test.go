@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -372,31 +373,31 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/0",
+					ObjectAlias:          filepath.Join("secret1", "0"),
 					ObjectVersion:        "a",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
 					ObjectVersion:        "b",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/2",
+					ObjectAlias:          filepath.Join("secret1", "2"),
 					ObjectVersion:        "c",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/3",
+					ObjectAlias:          filepath.Join("secret1", "3"),
 					ObjectVersion:        "d",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/4",
+					ObjectAlias:          filepath.Join("secret1", "4"),
 					ObjectVersion:        "e",
 					ObjectVersionHistory: 5,
 				},
@@ -434,31 +435,31 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/0",
+					ObjectAlias:          filepath.Join("secret1", "0"),
 					ObjectVersion:        "a",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
 					ObjectVersion:        "b",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/2",
+					ObjectAlias:          filepath.Join("secret1", "2"),
 					ObjectVersion:        "c",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/3",
+					ObjectAlias:          filepath.Join("secret1", "3"),
 					ObjectVersion:        "d",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/4",
+					ObjectAlias:          filepath.Join("secret1", "4"),
 					ObjectVersion:        "e",
 					ObjectVersionHistory: 5,
 				},
@@ -483,13 +484,13 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/0",
+					ObjectAlias:          filepath.Join("secret1", "0"),
 					ObjectVersion:        "a",
 					ObjectVersionHistory: 2,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
 					ObjectVersion:        "b",
 					ObjectVersionHistory: 2,
 				},
@@ -514,13 +515,13 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/0",
+					ObjectAlias:          filepath.Join("secret1", "0"),
 					ObjectVersion:        "a",
 					ObjectVersionHistory: 200,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
 					ObjectVersion:        "b",
 					ObjectVersionHistory: 200,
 				},
@@ -558,19 +559,19 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 			expectedObjects: []types.KeyVaultObject{
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/0",
+					ObjectAlias:          filepath.Join("secret1", "0"),
 					ObjectVersion:        "c",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
 					ObjectVersion:        "d",
 					ObjectVersionHistory: 5,
 				},
 				{
 					ObjectName:           "secret1",
-					ObjectAlias:          "secret1/2",
+					ObjectAlias:          filepath.Join("secret1", "2"),
 					ObjectVersion:        "e",
 					ObjectVersionHistory: 5,
 				},
