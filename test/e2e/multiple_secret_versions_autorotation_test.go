@@ -185,9 +185,8 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			var oldValue string
 			cmd = getPodExecCommand(fmt.Sprintf("cat /mnt/secrets-store/%s/1", secretName))
 			oldValue, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
-			Expect(err).To(BeNil())
 
-			return out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
+			return err == nil && out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
 		}, 2*time.Minute, 15*time.Second).Should(BeTrue())
 	})
 
@@ -310,9 +309,8 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			var oldValue string
 			cmd = getPodExecCommand(fmt.Sprintf("cat /mnt/secrets-store/%s/1", secretName))
 			oldValue, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
-			Expect(err).To(BeNil())
 
-			return out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
+			return err == nil && out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
 		}, 2*time.Minute, 15*time.Second).Should(BeTrue())
 	})
 
@@ -495,9 +493,8 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 			var oldValue string
 			cmd = getPodExecCommand(fmt.Sprintf("cat /mnt/secrets-store/%s/1", secretName))
 			oldValue, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
-			Expect(err).To(BeNil())
 
-			return out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
+			return err == nil && out == string(k8sSecret.Data["foo"]) && out == "rotated" && oldValue == "secret"
 		}, 2*time.Minute, 15*time.Second).Should(BeTrue())
 	})
 })
