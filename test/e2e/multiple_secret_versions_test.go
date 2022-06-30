@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
@@ -97,11 +96,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 						Type:       "kubernetes.io/tls",
 						Data: []*v1alpha1.SecretObjectData{
 							{
-								ObjectName: filepath.Join("pemcert1", "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath("pemcert1", 0),
 								Key:        "tls.crt",
 							},
 							{
-								ObjectName: filepath.Join("pemcert1", "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath("pemcert1", 0),
 								Key:        "tls.key",
 							},
 						},
@@ -111,7 +110,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 						Type:       "Opaque",
 						Data: []*v1alpha1.SecretObjectData{
 							{
-								ObjectName: filepath.Join("secret1", "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath("secret1", 0),
 								Key:        "opaque-secret",
 							},
 						},

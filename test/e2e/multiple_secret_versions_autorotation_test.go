@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -113,7 +112,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 						Labels:     map[string]string{"environment": "test"},
 						Data: []*v1alpha1.SecretObjectData{
 							{
-								ObjectName: filepath.Join(secretName, "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath(secretName, 0),
 								Key:        "foo",
 							},
 						},
@@ -237,7 +236,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 						Labels:     map[string]string{"environment": "test"},
 						Data: []*v1alpha1.SecretObjectData{
 							{
-								ObjectName: filepath.Join(secretName, "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath(secretName, 0),
 								Key:        "foo",
 							},
 						},
@@ -364,7 +363,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 						Labels:     map[string]string{"environment": "test"},
 						Data: []*v1alpha1.SecretObjectData{
 							{
-								ObjectName: filepath.Join(secretName, "0"),
+								ObjectName: config.GetOsSpecificVersionedFilePath(secretName, 0),
 								Key:        "foo",
 							},
 						},
