@@ -292,7 +292,6 @@ latest if no version is specified).
 */
 func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions types.KeyVaultObjectVersionList) []types.KeyVaultObject {
 	baseFileName := kvObject.GetFileName()
-
 	objects := []types.KeyVaultObject{}
 
 	sort.Sort(kvObjectVersions)
