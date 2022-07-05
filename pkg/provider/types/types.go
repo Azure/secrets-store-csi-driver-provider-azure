@@ -89,11 +89,14 @@ type StringArray struct {
 	Array []string `json:"array" yaml:"array"`
 }
 
+// KeyVaultObjectVersion holds the version id and when that version was
+// created for a specific version of a secret from KeyVault
 type KeyVaultObjectVersion struct {
 	Version string
 	Created time.Time
 }
 
+// KeyVaultObjectVersionList holds a list of KeyVaultObjectVersions
 type KeyVaultObjectVersionList []KeyVaultObjectVersion
 
 func (list KeyVaultObjectVersionList) Len() int {
