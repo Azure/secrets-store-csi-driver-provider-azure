@@ -297,7 +297,7 @@ func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions t
 	sort.Sort(kvObjectVersions)
 
 	// if we're being asked for the latest, then there's no need to skip any versions
-	var foundFirst = kvObject.ObjectVersion == "" || kvObject.ObjectVersion == "latest"
+	foundFirst := kvObject.ObjectVersion == "" || kvObject.ObjectVersion == "latest"
 
 	for _, objectVersion := range kvObjectVersions {
 		foundFirst = foundFirst || objectVersion.Version == kvObject.ObjectVersion
@@ -383,10 +383,10 @@ func getKeyVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL strin
 		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
 	}
 
-	secretVersions := types.KeyVaultObjectVersionList{}
+	keyVersions := types.KeyVaultObjectVersionList{}
 
 	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
-		for _, secret := range kvVersionsList.Values() {
+		for _, key := range kvVersionsList.Values() {
 			objectVersion := getObjectVersion(*secret.Kid)
 			created := date.UnixEpoch()
 
@@ -417,10 +417,10 @@ func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultU
 		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
 	}
 
-	secretVersions := types.KeyVaultObjectVersionList{}
+	certVersions := types.KeyVaultObjectVersionList{}
 
 	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
-		for _, secret := range kvVersionsList.Values() {
+		for _, cert := range kvVersionsList.Values() {
 			objectVersion := getObjectVersion(*secret.ID)
 			created := date.UnixEpoch()
 

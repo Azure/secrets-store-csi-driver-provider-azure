@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
 
-var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
+var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD with secrets", func() {
 	var (
 		specName             = "multiversionsecret"
 		spc                  *v1alpha1.SecretProviderClass
