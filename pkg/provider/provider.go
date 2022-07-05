@@ -220,7 +220,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	}
 	klog.V(2).InfoS("vault url", "vaultName", mc.keyvaultName, "vaultURL", *vaultURL, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
-	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault o`bject defined
+	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault object defined
 	kvClient, err := mc.initializeKvClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyvault client")
