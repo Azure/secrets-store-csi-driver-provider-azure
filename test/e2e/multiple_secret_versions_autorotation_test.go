@@ -30,7 +30,7 @@ const (
 	multipleSecretsRandomLength = 5
 )
 
-var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() {
+var _ = Describe("[ObjectVersionHistory] Test auto rotation of mount contents and K8s secrets", func() {
 	var (
 		specName = "multiversionautorotation"
 		spc      *v1alpha1.SecretProviderClass
