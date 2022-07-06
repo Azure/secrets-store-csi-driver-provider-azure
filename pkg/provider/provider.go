@@ -387,15 +387,15 @@ func getKeyVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL strin
 
 	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
 		for _, key := range kvVersionsList.Values() {
-			objectVersion := getObjectVersion(*secret.Kid)
+			objectVersion := getObjectVersion(*key.Kid)
 			created := date.UnixEpoch()
 
-			if secret.Attributes != nil {
-				created = time.Time(*secret.Attributes.Created)
+			if key.Attributes != nil {
+				created = time.Time(*key.Attributes.Created)
 			}
 
-			if secret.Attributes.Enabled != nil && *secret.Attributes.Enabled {
-				secretVersions = append(secretVersions, types.KeyVaultObjectVersion{
+			if key.Attributes.Enabled != nil && *key.Attributes.Enabled {
+				keyVersions = append(keyVersions, types.KeyVaultObjectVersion{
 					Version: objectVersion,
 					Created: created,
 				})
@@ -408,7 +408,7 @@ func getKeyVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL strin
 		}
 	}
 
-	return secretVersions, nil
+	return keyVersions, nil
 }
 
 func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) ([]types.KeyVaultObjectVersion, error) {
@@ -421,15 +421,15 @@ func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultU
 
 	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
 		for _, cert := range kvVersionsList.Values() {
-			objectVersion := getObjectVersion(*secret.ID)
+			objectVersion := getObjectVersion(*cert.ID)
 			created := date.UnixEpoch()
 
-			if secret.Attributes != nil {
-				created = time.Time(*secret.Attributes.Created)
+			if cert.Attributes != nil {
+				created = time.Time(*cert.Attributes.Created)
 			}
 
-			if secret.Attributes.Enabled != nil && *secret.Attributes.Enabled {
-				secretVersions = append(secretVersions, types.KeyVaultObjectVersion{
+			if cert.Attributes.Enabled != nil && *cert.Attributes.Enabled {
+				certVersions = append(certVersions, types.KeyVaultObjectVersion{
 					Version: objectVersion,
 					Created: created,
 				})
@@ -442,7 +442,7 @@ func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultU
 		}
 	}
 
-	return secretVersions, nil
+	return certVersions, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
