@@ -80,8 +80,8 @@ func ParseConfig() (*Config, error) {
 
 func (c *Config) GetOsSpecificVersionedFilePath(baseFileName string, versionIndex int32) string {
 	if c.IsWindowsTest {
-		return fmt.Sprintf("%s\\%s", baseFileName, versionIndex)
+		return fmt.Sprintf("%s\\%d", baseFileName, versionIndex)
 	}
 
-	return fmt.Sprintf("%s/%s", baseFileName, versionIndex)
+	return fmt.Sprintf("%s/%d", baseFileName, versionIndex)
 }
