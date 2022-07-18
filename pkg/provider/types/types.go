@@ -96,7 +96,7 @@ type KeyVaultObjectVersion struct {
 	Created time.Time
 }
 
-// KeyVaultObjectVersionList holds a list of KeyVaultObjectVersions
+// KeyVaultObjectVersionList holds a list of KeyVaultObjectVersion
 type KeyVaultObjectVersionList []KeyVaultObjectVersion
 
 func (list KeyVaultObjectVersionList) Len() int {
