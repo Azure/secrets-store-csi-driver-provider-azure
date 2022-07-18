@@ -356,7 +356,7 @@ func getSecretVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL st
 			objectVersion := getObjectVersion(*secret.ID)
 			created := date.UnixEpoch()
 
-			if secret.Attributes != nil {
+			if secret.Attributes.Created != nil {
 				created = time.Time(*secret.Attributes.Created)
 			}
 
@@ -390,7 +390,7 @@ func getKeyVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL strin
 			objectVersion := getObjectVersion(*key.Kid)
 			created := date.UnixEpoch()
 
-			if key.Attributes != nil {
+			if key.Attributes.Created != nil {
 				created = time.Time(*key.Attributes.Created)
 			}
 
@@ -424,7 +424,7 @@ func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultU
 			objectVersion := getObjectVersion(*cert.ID)
 			created := date.UnixEpoch()
 
-			if cert.Attributes != nil {
+			if cert.Attributes.Created != nil {
 				created = time.Time(*cert.Attributes.Created)
 			}
 
