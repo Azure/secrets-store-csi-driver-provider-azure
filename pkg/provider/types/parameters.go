@@ -91,6 +91,12 @@ func GetObjectsArray(objects string) (StringArray, error) {
 	return a, err
 }
 
+// IsSyncingSingleVersion returns true if the object is configured
+// to only sync a single specific version of the secret
+func (kv KeyVaultObject) IsSyncingSingleVersion() bool {
+	return kv.ObjectVersionHistory <= 1
+}
+
 // GetFileName returns the file name for the secret
 // 1. If the object alias is specified, it will be used
 // 2. If the object alias is not specified, the object name will be used

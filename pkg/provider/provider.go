@@ -249,7 +249,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 
 			// objectUID is a unique identifier in the format <object type>/<object name>
 			// This is the object id the user sees in the SecretProviderClassPodStatus
-			objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
+			objectUID := getObjectUID(resolvedKvObject)
 			file := types.SecretFile{
 				Path:    resolvedKvObject.GetFileName(),
 				Content: objectContent,
@@ -257,7 +257,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 				Version: newObjectVersion,
 			}
 			// the validity of file permission is already checked in the validate function above
-			file.FileMode, _ = keyVaultObject.GetFilePermission(defaultFilePermission)
+			file.FileMode, _ = resolvedKvObject.GetFilePermission(defaultFilePermission)
 
 			files = append(files, file)
 			klog.V(5).InfoS("added file to the gRPC response", "file", file.Path, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
@@ -268,7 +268,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 }
 
 func (p *Provider) resolveObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions []types.KeyVaultObject, err error) {
-	if kvObject.ObjectVersionHistory <= 1 {
+	if kvObject.IsSyncingSingleVersion() {
 		// version history less than or equal to 1 means only sync the latest and
 		// don't add anything to the file name
 		return []types.KeyVaultObject{kvObject}, nil
@@ -722,10 +722,15 @@ func getObjectVersion(id string) string {
 	return splitID[len(splitID)-1]
 }
 
-// getObjectUID returns UID for the object with the format
-// <object type>/<object name>
-func getObjectUID(objectName, objectType string) string {
-	return fmt.Sprintf("%s/%s", objectType, objectName)
+// getObjectUID returns UID for the object with the format:
+// <object type>/<object name> if syncing a single version
+// <object type/<object name>/<object version> if syncing multiple versions
+func getObjectUID(kvObject types.KeyVaultObject) string {
+	if kvObject.IsSyncingSingleVersion() {
+		return fmt.Sprintf("%s/%s", kvObject.ObjectType, kvObject.ObjectName)
+	}
+
+	return fmt.Sprintf("%s/%s/%s", kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
 }
 
 // getContentBytes takes the given content string and returns the bytes to write to disk
