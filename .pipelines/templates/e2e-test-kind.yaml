@@ -13,29 +13,23 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     strategy:
       matrix:
-        kind_v1_21_10_helm:
-          KIND_K8S_VERSION: v1.21.10
+        kind_v1_22_9_helm:
+          KIND_K8S_VERSION: v1.22.9
           IS_HELM_TEST: true
-        kind_v1_22_7_helm:
-          KIND_K8S_VERSION: v1.22.7
+        kind_v1_23_6_helm:
+          KIND_K8S_VERSION: v1.23.6
           IS_HELM_TEST: true
-        kind_v1_23_5_helm:
-          KIND_K8S_VERSION: v1.23.5
+        kind_v1_24_2_helm:
+          KIND_K8S_VERSION: v1.24.2
           IS_HELM_TEST: true
-        kind_v1_24_0_helm:
-          KIND_K8S_VERSION: v1.24.0
-          IS_HELM_TEST: true
-        kind_v1_21_10_deployment_manifest:
-          KIND_K8S_VERSION: v1.21.10
-          IS_HELM_TEST: false
-        kind_v1_22_7_deployment_manifest:
-          KIND_K8S_VERSION: v1.22.7
+        kind_v1_22_9_deployment_manifest:
+          KIND_K8S_VERSION: v1.22.9
           IS_HELM_TEST: false 
-        kind_v1_23_5_deployment_manifest:
-          KIND_K8S_VERSION: v1.23.5
+        kind_v1_23_6_deployment_manifest:
+          KIND_K8S_VERSION: v1.23.6
           IS_HELM_TEST: false
-        kind_v1_24_0_deployment_manifest:
-          KIND_K8S_VERSION: v1.24.0
+        kind_v1_24_2_deployment_manifest:
+          KIND_K8S_VERSION: v1.24.2
           IS_HELM_TEST: false
 
     steps:
