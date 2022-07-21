@@ -668,7 +668,7 @@ func TestGetObjectUID(t *testing.T) {
 			expected: "secret/single-version",
 		},
 		{
-			name: "syncing mulitple versions (with alias)",
+			name: "syncing multiple versions (with alias)",
 			object: KeyVaultObject{
 				ObjectType:           "secret",
 				ObjectName:           "multiple-versions",
@@ -679,7 +679,7 @@ func TestGetObjectUID(t *testing.T) {
 			expected: "secret/multiple-versions/0",
 		},
 		{
-			name: "syncing mulitple versions (without alias)",
+			name: "syncing multiple versions (without alias)",
 			object: KeyVaultObject{
 				ObjectType:           "secret",
 				ObjectName:           "multiple-versions",
@@ -690,7 +690,7 @@ func TestGetObjectUID(t *testing.T) {
 			expected: "secret/multiple-versions/0",
 		},
 		{
-			name: "syncing mulitple versions with mulitple levels in path",
+			name: "syncing multiple versions with multiple levels in path",
 			object: KeyVaultObject{
 				ObjectType:           "secret",
 				ObjectName:           "multiple-versions",
