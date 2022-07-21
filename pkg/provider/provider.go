@@ -249,7 +249,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 
 			// objectUID is a unique identifier in the format <object type>/<object name>
 			// This is the object id the user sees in the SecretProviderClassPodStatus
-			objectUID := getObjectUID(resolvedKvObject)
+			objectUID := resolvedKvObject.GetObjectUID()
 			file := types.SecretFile{
 				Path:    resolvedKvObject.GetFileName(),
 				Content: objectContent,
@@ -720,17 +720,6 @@ func setAzureEnvironmentFilePath(envFileName string) error {
 func getObjectVersion(id string) string {
 	splitID := strings.Split(id, "/")
 	return splitID[len(splitID)-1]
-}
-
-// getObjectUID returns UID for the object with the format:
-// <object type>/<object name> if syncing a single version
-// <object type/<object name>/<object version> if syncing multiple versions
-func getObjectUID(kvObject types.KeyVaultObject) string {
-	if kvObject.IsSyncingSingleVersion() {
-		return fmt.Sprintf("%s/%s", kvObject.ObjectType, kvObject.ObjectName)
-	}
-
-	return fmt.Sprintf("%s/%s/%s", kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
 }
 
 // getContentBytes takes the given content string and returns the bytes to write to disk

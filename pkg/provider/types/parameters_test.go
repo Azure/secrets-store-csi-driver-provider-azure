@@ -597,6 +597,87 @@ func TestGetObjectsArrayError(t *testing.T) {
 	}
 }
 
+func TestIsSyncingSingleVersion(t *testing.T) {
+	tests := []struct {
+		name     string
+		object   KeyVaultObject
+		expected bool
+	}{
+		{
+			name:     "object version history uninitialized",
+			object:   KeyVaultObject{},
+			expected: true,
+		},
+		{
+			name: "object version history set to 0",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 0,
+			},
+			expected: true,
+		},
+		{
+			name: "object version history set to 1",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 1,
+			},
+			expected: true,
+		},
+		{
+			name: "object version history set higher than 1",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 4,
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.object.IsSyncingSingleVersion()
+			if actual != test.expected {
+				t.Errorf("IsSyncingSingleVersion() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetObjectUID(t *testing.T) {
+	tests := []struct {
+		name     string
+		object   KeyVaultObject
+		expected string
+	}{
+		{
+			name: "syncing a single version",
+			object: KeyVaultObject{
+				ObjectType:    "secret",
+				ObjectName:    "single-version",
+				ObjectVersion: "version-id",
+			},
+			expected: "secret/single-version",
+		},
+		{
+			name: "syncing mulitple versions",
+			object: KeyVaultObject{
+				ObjectType:           "secret",
+				ObjectName:           "multiple-versions",
+				ObjectVersion:        "version-id",
+				ObjectVersionHistory: 10,
+			},
+			expected: "secret/multiple-versions/version-id",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.object.GetObjectUID()
+			if actual != test.expected {
+				t.Errorf("IsSyncingSingleVersion() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
 func TestGetFileName(t *testing.T) {
 	tests := []struct {
 		name     string

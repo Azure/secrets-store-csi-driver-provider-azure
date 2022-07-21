@@ -97,6 +97,17 @@ func (kv KeyVaultObject) IsSyncingSingleVersion() bool {
 	return kv.ObjectVersionHistory <= 1
 }
 
+// GetObjectUID returns UID for the object with the format:
+// <object type>/<object name> if syncing a single version
+// <object type/<object name>/<object version> if syncing multiple versions
+func (kv KeyVaultObject) GetObjectUID() string {
+	if kv.IsSyncingSingleVersion() {
+		return fmt.Sprintf("%s/%s", kv.ObjectType, kv.ObjectName)
+	}
+
+	return fmt.Sprintf("%s/%s/%s", kv.ObjectType, kv.ObjectName, kv.ObjectVersion)
+}
+
 // GetFileName returns the file name for the secret
 // 1. If the object alias is specified, it will be used
 // 2. If the object alias is not specified, the object name will be used
