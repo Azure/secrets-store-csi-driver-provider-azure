@@ -657,7 +657,7 @@ func TestGetObjectUID(t *testing.T) {
 			expected: "secret/single-version",
 		},
 		{
-			name: "syncing mulitple versions",
+			name: "syncing multiple versions",
 			object: KeyVaultObject{
 				ObjectType:           "secret",
 				ObjectName:           "multiple-versions",
