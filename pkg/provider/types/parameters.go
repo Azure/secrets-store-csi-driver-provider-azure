@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -99,13 +100,15 @@ func (kv KeyVaultObject) IsSyncingSingleVersion() bool {
 
 // GetObjectUID returns UID for the object with the format:
 // <object type>/<object name> if syncing a single version
-// <object type/<object name>/<object version> if syncing multiple versions
+// <object type/<object name>/<version index> if syncing multiple versions
 func (kv KeyVaultObject) GetObjectUID() string {
 	if kv.IsSyncingSingleVersion() {
 		return fmt.Sprintf("%s/%s", kv.ObjectType, kv.ObjectName)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", kv.ObjectType, kv.ObjectName, kv.ObjectVersion)
+	parts := strings.Split(kv.ObjectAlias, string(filepath.Separator))
+	versionIndex := parts[len(parts)-1]
+	return fmt.Sprintf("%s/%s/%s", kv.ObjectType, kv.ObjectName, versionIndex)
 }
 
 // GetFileName returns the file name for the secret
