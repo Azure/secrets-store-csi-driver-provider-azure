@@ -672,7 +672,7 @@ func TestGetObjectUID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			actual := test.object.GetObjectUID()
 			if actual != test.expected {
-				t.Errorf("IsSyncingSingleVersion() = %v, expected %v", actual, test.expected)
+				t.Errorf("GetObjectUID() = %v, expected %v", actual, test.expected)
 			}
 		})
 	}
