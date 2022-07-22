@@ -111,6 +111,7 @@ secrets-store-csi-driver:
     enabled: true
     kubeletRootDir: /var/lib/kubelet
     metricsAddr: ":8080"
+    priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
       tag: v1.2.2
@@ -134,6 +135,7 @@ secrets-store-csi-driver:
     enabled: false
     kubeletRootDir: C:\var\lib\kubelet
     metricsAddr: ":8080"
+    priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
       tag: v1.2.2
