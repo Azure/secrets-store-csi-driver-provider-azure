@@ -129,6 +129,7 @@ secrets-store-csi-driver:
         tag: v1.2.2
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
+    priorityClassName: ""
 
   windows:
     enabled: false
