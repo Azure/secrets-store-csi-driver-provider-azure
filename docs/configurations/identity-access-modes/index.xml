@@ -459,6 +459,13 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
 &lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Keyvault&lt;/span>
 az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;strong>&lt;em>NOTE&lt;/em>&lt;/strong>: If you are using the &lt;code>objectVersionHistory&lt;/code> functionality, then the identity will also need the list permission:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#8f5902;font-style:italic"># set policy to access keys in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --key-permissions get,list --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access secrets in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --secret-permissions get,list --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
+&lt;span style="color:#8f5902;font-style:italic"># set policy to access certs in your Keyvault&lt;/span>
+az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> --certificate-permissions get,list --spn &amp;lt;USER-ASSIGNED MANAGED IDENTITY CLIENTID&amp;gt;
 &lt;/code>&lt;/pre>&lt;/div>&lt;/li>
 &lt;li>
 &lt;p>Deploy your application. Specify &lt;code>useVMManagedIdentity&lt;/code> to &lt;code>true&lt;/code> and provide &lt;code>userAssignedIdentityID&lt;/code>.&lt;/p>
