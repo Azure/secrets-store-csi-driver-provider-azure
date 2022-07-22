@@ -110,7 +110,7 @@ secrets-store-csi-driver:
   linux:
     enabled: true
     kubeletRootDir: /var/lib/kubelet
-    metricsAddr: ":8080" 
+    metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
       tag: v1.2.2
