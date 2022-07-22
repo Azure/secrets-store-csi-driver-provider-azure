@@ -4,6 +4,8 @@
 package framework
 
 import (
+	"fmt"
+
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -74,4 +76,12 @@ func ParseConfig() (*Config, error) {
 		return c, err
 	}
 	return c, nil
+}
+
+func (c *Config) GetOsSpecificVersionedFilePath(baseFileName string, versionIndex int32) string {
+	if c.IsWindowsTest {
+		return fmt.Sprintf("%s\\%d", baseFileName, versionIndex)
+	}
+
+	return fmt.Sprintf("%s/%d", baseFileName, versionIndex)
 }

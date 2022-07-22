@@ -5,8 +5,8 @@
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=${env:HOME}${env:USERPROFILE}/.azure,target=/root/.azure,type=bind"
   ],
-  "workspaceMount": "src=${localWorkspaceFolder},dst=${env:GOPATH}/src/secrets-store-csi-driver-provider-azure,type=bind,consistency=cached",
-  "workspaceFolder": "${env:GOPATH}/src/secrets-store-csi-driver-provider-azure",
+  "workspaceMount": "src=${localWorkspaceFolder},dst=/go/src/secrets-store-csi-driver-provider-azure,type=bind,consistency=cached",
+  "workspaceFolder": "/go/src/secrets-store-csi-driver-provider-azure",
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"
   },

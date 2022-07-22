@@ -52,6 +52,7 @@ To provide identity to access key vault, refer to the following [section](#provi
             objectAlias: SECRET_1           # [OPTIONAL available for version > 0.0.4] object alias
             objectType: secret              # object types: secret, key or cert. For Key Vault certificates, refer to https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/getting-certs-and-keys/ for the object type to use
             objectVersion: ""               # [OPTIONAL] object versions, default to latest if empty
+            objectVersionHistory: 5         # [OPTIONAL] if greater than 1, the number of versions to sync starting at the specified version.
             filePermission: 0755                # [OPTIONAL] permission for secret file being mounted into the pod, default is 0644 if not specified.
           - |
             objectName: key1
@@ -77,6 +78,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                                 | ""            |
   | objectType             | yes      | type of a Key Vault object: secret, key or cert.<br>For Key Vault certificates, refer to [doc](../../configurations/getting-certs-and-keys) for the object type to use.</br>                                           | ""            |
   | objectVersion          | no       | version of a Key Vault object, if not provided, will use latest                                                                                                                                                        | ""            |
+  | objectVersionHistory   | no       | [__*available for version > v1.3.0*__] number of previous versions to sync, if not provided, will only sync the specified versions                                                                                                                                                      | 0             |
   | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates        | "pem"         |
   | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`                      | "utf-8"       |
   | filePermission         | no       | [__*available for version > v1.1.0*__] permission for secret file being mounted into the pod                      | "0644"       |
@@ -129,3 +131,12 @@ To validate, once the pod is started, you should see the new mounted content at 
   ## print a test secret held in secrets-store
   kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
   ```
+
+#### Syncing Multiple Versions of a Secret
+
+The Azure Key Vault Provider allows syncing previous versions of a secret via the `objectVersionHistory` property. If this property is specified, and the value is greater than 1, the provider will sync up to that many versions of the specified secret starting with the version specified. The file name for each version of the secret will be `{objectAlias}/{versionIndex}` where version index is the 0-based starting with the latest version.
+
+If you want to sync one of these versions with a kubernetes secret, the only difference is that you have to specify which version you want (i.e., to use the latest version, you specify `{objectAlias}/0` in `[secretObjects].[objectName]`)
+
+##### Permissions
+If you use this functionality, the principal being used to access Key Vault will also need the list permission for secrets, keys, and certificates. 

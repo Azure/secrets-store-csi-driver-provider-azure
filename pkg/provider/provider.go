@@ -12,8 +12,11 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +28,7 @@ import (
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/context"
@@ -225,34 +229,226 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	files := []types.SecretFile{}
 	for _, keyVaultObject := range keyVaultObjects {
 		klog.V(5).InfoS("fetching object from key vault", "objectName", keyVaultObject.ObjectName, "objectType", keyVaultObject.ObjectType, "keyvault", mc.keyvaultName, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
-		// fetch the object from Key Vault
-		content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, keyVaultObject, *vaultURL)
+
+		resolvedKvObjects, err := p.resolveObjectVersions(ctx, kvClient, keyVaultObject, *vaultURL)
 		if err != nil {
 			return nil, err
 		}
 
-		objectContent, err := getContentBytes(content, keyVaultObject.ObjectType, keyVaultObject.ObjectEncoding)
-		if err != nil {
-			return nil, err
-		}
+		for _, resolvedKvObject := range resolvedKvObjects {
+			// fetch the object from Key Vault
+			content, newObjectVersion, err := p.getKeyVaultObjectContent(ctx, kvClient, resolvedKvObject, *vaultURL)
+			if err != nil {
+				return nil, err
+			}
 
-		// objectUID is a unique identifier in the format <object type>/<object name>
-		// This is the object id the user sees in the SecretProviderClassPodStatus
-		objectUID := getObjectUID(keyVaultObject.ObjectName, keyVaultObject.ObjectType)
-		file := types.SecretFile{
-			Path:    keyVaultObject.GetFileName(),
-			Content: objectContent,
-			UID:     objectUID,
-			Version: newObjectVersion,
-		}
-		// the validity of file permission is already checked in the validate function above
-		file.FileMode, _ = keyVaultObject.GetFilePermission(defaultFilePermission)
+			objectContent, err := getContentBytes(content, resolvedKvObject.ObjectType, resolvedKvObject.ObjectEncoding)
+			if err != nil {
+				return nil, err
+			}
 
-		files = append(files, file)
-		klog.V(5).InfoS("added file to the gRPC response", "file", file.Path, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+			// objectUID is a unique identifier in the format <object type>/<object name>
+			// This is the object id the user sees in the SecretProviderClassPodStatus
+			objectUID := resolvedKvObject.GetObjectUID()
+			file := types.SecretFile{
+				Path:    resolvedKvObject.GetFileName(),
+				Content: objectContent,
+				UID:     objectUID,
+				Version: newObjectVersion,
+			}
+			// the validity of file permission is already checked in the validate function above
+			file.FileMode, _ = resolvedKvObject.GetFilePermission(defaultFilePermission)
+
+			files = append(files, file)
+			klog.V(5).InfoS("added file to the gRPC response", "file", file.Path, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+		}
 	}
 
 	return files, nil
+}
+
+func (p *Provider) resolveObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions []types.KeyVaultObject, err error) {
+	if kvObject.IsSyncingSingleVersion() {
+		// version history less than or equal to 1 means only sync the latest and
+		// don't add anything to the file name
+		return []types.KeyVaultObject{kvObject}, nil
+	}
+
+	kvObjectVersions, err := p.getKeyVaultObjectVersions(ctx, kvClient, kvObject, vaultURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return getLatestNKeyVaultObjects(kvObject, kvObjectVersions), nil
+}
+
+/*
+Given a base key vault object and a list of object versions and their created dates, find
+the latest kvObject.ObjectVersionHistory versions and return key vault objects with the
+appropriate alias and version.
+
+The alias is determine by the index of the version starting with 0 at the specified version (or
+latest if no version is specified).
+*/
+func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions types.KeyVaultObjectVersionList) []types.KeyVaultObject {
+	baseFileName := kvObject.GetFileName()
+	objects := []types.KeyVaultObject{}
+
+	sort.Sort(kvObjectVersions)
+
+	// if we're being asked for the latest, then there's no need to skip any versions
+	foundFirst := kvObject.ObjectVersion == "" || kvObject.ObjectVersion == "latest"
+
+	for _, objectVersion := range kvObjectVersions {
+		foundFirst = foundFirst || objectVersion.Version == kvObject.ObjectVersion
+
+		if foundFirst {
+			length := len(objects)
+			newObject := kvObject
+
+			newObject.ObjectAlias = filepath.Join(baseFileName, strconv.Itoa(length))
+			newObject.ObjectVersion = objectVersion.Version
+
+			objects = append(objects, newObject)
+
+			if length+1 > int(kvObject.ObjectVersionHistory) {
+				break
+			}
+		}
+	}
+
+	return objects
+}
+
+func (p *Provider) getKeyVaultObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions types.KeyVaultObjectVersionList, err error) {
+	start := time.Now()
+	defer func() {
+		var errMsg string
+		if err != nil {
+			errMsg = err.Error()
+		}
+		p.reporter.ReportKeyvaultRequest(ctx, time.Since(start).Seconds(), kvObject.ObjectType, kvObject.ObjectName, errMsg)
+	}()
+
+	switch kvObject.ObjectType {
+	case types.VaultObjectTypeSecret:
+		return getSecretVersions(ctx, kvClient, vaultURL, kvObject)
+	case types.VaultObjectTypeKey:
+		return getKeyVersions(ctx, kvClient, vaultURL, kvObject)
+	case types.VaultObjectTypeCertificate:
+		return getCertificateVersions(ctx, kvClient, vaultURL, kvObject)
+	default:
+		err := errors.Errorf("Invalid vaultObjectTypes. Should be secret, key, or cert")
+		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+	}
+}
+
+func getSecretVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) ([]types.KeyVaultObjectVersion, error) {
+	kvVersionsList, err := kvClient.GetSecretVersions(ctx, vaultURL, kvObject.ObjectName, nil)
+	if err != nil {
+		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+	}
+
+	secretVersions := types.KeyVaultObjectVersionList{}
+
+	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
+		for _, secret := range kvVersionsList.Values() {
+			if secret.Attributes != nil {
+				objectVersion := getObjectVersion(*secret.ID)
+				created := date.UnixEpoch()
+
+				if secret.Attributes.Created != nil {
+					created = time.Time(*secret.Attributes.Created)
+				}
+
+				if secret.Attributes.Enabled != nil && *secret.Attributes.Enabled {
+					secretVersions = append(secretVersions, types.KeyVaultObjectVersion{
+						Version: objectVersion,
+						Created: created,
+					})
+				}
+			}
+		}
+
+		err = kvVersionsList.NextWithContext(ctx)
+		if err != nil {
+			return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+	}
+
+	return secretVersions, nil
+}
+
+func getKeyVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) ([]types.KeyVaultObjectVersion, error) {
+	kvVersionsList, err := kvClient.GetKeyVersions(ctx, vaultURL, kvObject.ObjectName, nil)
+	if err != nil {
+		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+	}
+
+	keyVersions := types.KeyVaultObjectVersionList{}
+
+	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
+		for _, key := range kvVersionsList.Values() {
+			if key.Attributes != nil {
+				objectVersion := getObjectVersion(*key.Kid)
+				created := date.UnixEpoch()
+
+				if key.Attributes.Created != nil {
+					created = time.Time(*key.Attributes.Created)
+				}
+
+				if key.Attributes.Enabled != nil && *key.Attributes.Enabled {
+					keyVersions = append(keyVersions, types.KeyVaultObjectVersion{
+						Version: objectVersion,
+						Created: created,
+					})
+				}
+			}
+		}
+
+		err = kvVersionsList.NextWithContext(ctx)
+		if err != nil {
+			return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+	}
+
+	return keyVersions, nil
+}
+
+func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultURL string, kvObject types.KeyVaultObject) ([]types.KeyVaultObjectVersion, error) {
+	kvVersionsList, err := kvClient.GetCertificateVersions(ctx, vaultURL, kvObject.ObjectName, nil)
+	if err != nil {
+		return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+	}
+
+	certVersions := types.KeyVaultObjectVersionList{}
+
+	for notDone := true; notDone; notDone = kvVersionsList.NotDone() {
+		for _, cert := range kvVersionsList.Values() {
+			if cert.Attributes != nil {
+				objectVersion := getObjectVersion(*cert.ID)
+				created := date.UnixEpoch()
+
+				if cert.Attributes.Created != nil {
+					created = time.Time(*cert.Attributes.Created)
+				}
+
+				if cert.Attributes.Enabled != nil && *cert.Attributes.Enabled {
+					certVersions = append(certVersions, types.KeyVaultObjectVersion{
+						Version: objectVersion,
+						Created: created,
+					})
+				}
+			}
+		}
+
+		err = kvVersionsList.NextWithContext(ctx)
+		if err != nil {
+			return nil, wrapObjectTypeError(err, kvObject.ObjectType, kvObject.ObjectName, kvObject.ObjectVersion)
+		}
+	}
+
+	return certVersions, nil
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
@@ -524,12 +720,6 @@ func setAzureEnvironmentFilePath(envFileName string) error {
 func getObjectVersion(id string) string {
 	splitID := strings.Split(id, "/")
 	return splitID[len(splitID)-1]
-}
-
-// getObjectUID returns UID for the object with the format
-// <object type>/<object name>
-func getObjectUID(objectName, objectType string) string {
-	return fmt.Sprintf("%s/%s", objectType, objectName)
 }
 
 // getContentBytes takes the given content string and returns the bytes to write to disk

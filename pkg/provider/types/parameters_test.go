@@ -2,6 +2,7 @@ package types
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -594,6 +595,120 @@ func TestGetObjectsArrayError(t *testing.T) {
 	objects := "invalid"
 	if _, err := GetObjectsArray(objects); err == nil {
 		t.Errorf("GetObjectsArray() error is nil, expected error")
+	}
+}
+
+func TestIsSyncingSingleVersion(t *testing.T) {
+	tests := []struct {
+		name     string
+		object   KeyVaultObject
+		expected bool
+	}{
+		{
+			name:     "object version history uninitialized",
+			object:   KeyVaultObject{},
+			expected: true,
+		},
+		{
+			name: "object version history set to 0",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 0,
+			},
+			expected: true,
+		},
+		{
+			name: "object version history set to 1",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 1,
+			},
+			expected: true,
+		},
+		{
+			name: "object version history set higher than 1",
+			object: KeyVaultObject{
+				ObjectVersionHistory: 4,
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.object.IsSyncingSingleVersion()
+			if actual != test.expected {
+				t.Errorf("IsSyncingSingleVersion() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetObjectUID(t *testing.T) {
+	tests := []struct {
+		name     string
+		object   KeyVaultObject
+		expected string
+	}{
+		{
+			name: "syncing a single version (with alias)",
+			object: KeyVaultObject{
+				ObjectType:    "secret",
+				ObjectName:    "single-version",
+				ObjectAlias:   "alias",
+				ObjectVersion: "version-id",
+			},
+			expected: "secret/single-version",
+		},
+		{
+			name: "syncing a single version (without alias)",
+			object: KeyVaultObject{
+				ObjectType:    "secret",
+				ObjectName:    "single-version",
+				ObjectVersion: "version-id",
+			},
+			expected: "secret/single-version",
+		},
+		{
+			name: "syncing multiple versions (with alias)",
+			object: KeyVaultObject{
+				ObjectType:           "secret",
+				ObjectName:           "multiple-versions",
+				ObjectAlias:          filepath.Join("alias", "0"),
+				ObjectVersion:        "version-id",
+				ObjectVersionHistory: 10,
+			},
+			expected: "secret/multiple-versions/0",
+		},
+		{
+			name: "syncing multiple versions (without alias)",
+			object: KeyVaultObject{
+				ObjectType:           "secret",
+				ObjectName:           "multiple-versions",
+				ObjectAlias:          filepath.Join("multiple-versions", "0"),
+				ObjectVersion:        "version-id",
+				ObjectVersionHistory: 10,
+			},
+			expected: "secret/multiple-versions/0",
+		},
+		{
+			name: "syncing multiple versions with multiple levels in path",
+			object: KeyVaultObject{
+				ObjectType:           "secret",
+				ObjectName:           "multiple-versions",
+				ObjectAlias:          filepath.Join("folder", "multiple-versions", "8"),
+				ObjectVersion:        "version-id",
+				ObjectVersionHistory: 10,
+			},
+			expected: "secret/multiple-versions/8",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.object.GetObjectUID()
+			if actual != test.expected {
+				t.Errorf("GetObjectUID() = %v, expected %v", actual, test.expected)
+			}
+		})
 	}
 }
 

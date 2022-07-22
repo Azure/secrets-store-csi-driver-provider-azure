@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -330,6 +332,264 @@ func TestGetContentBytes(t *testing.T) {
 	}
 }
 
+func TestGetLatestNKeyVaultObjects(t *testing.T) {
+	now := time.Now()
+
+	cases := []struct {
+		desc            string
+		kvObject        types.KeyVaultObject
+		versions        types.KeyVaultObjectVersionList
+		expectedObjects []types.KeyVaultObject
+	}{
+		{
+			desc: "filename is name/index when no alias provided",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectVersionHistory: 5,
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "2"),
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "3"),
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "4"),
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+		{
+			desc: "sorts versions by descending created date",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectVersionHistory: 5,
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "2"),
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "3"),
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "4"),
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+		{
+			desc: "starts with latest version when no version specified",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersionHistory: 2,
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 2,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 2,
+				},
+			},
+		},
+		{
+			desc: "fewer than ObjectVersionHistory results returns all versions",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersionHistory: 200,
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "a",
+					ObjectVersionHistory: 200,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 200,
+				},
+			},
+		},
+		{
+			desc: "starts at ObjectVersion when specified",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "c",
+				ObjectVersionHistory: 5,
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "c",
+					Created: now.Add(time.Hour * 8),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "e",
+					Created: now.Add(time.Hour * 6),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: now.Add(time.Hour * 9),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: now.Add(time.Hour * 10),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "d",
+					Created: now.Add(time.Hour * 7),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 5,
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "2"),
+					ObjectVersion:        "e",
+					ObjectVersionHistory: 5,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			actualObjects := getLatestNKeyVaultObjects(tc.kvObject, tc.versions)
+
+			if !reflect.DeepEqual(actualObjects, tc.expectedObjects) {
+				t.Fatalf("expected: %+v, but got: %+v", tc.expectedObjects, actualObjects)
+			}
+		})
+	}
+}
+
 func TestFormatKeyVaultObject(t *testing.T) {
 	cases := []struct {
 		desc                   string
@@ -368,6 +628,25 @@ func TestFormatKeyVaultObject(t *testing.T) {
 				ObjectEncoding: "base64",
 				ObjectType:     "secret",
 				ObjectAlias:    "alias",
+			},
+		},
+		{
+			desc: "no data loss for int properties",
+			keyVaultObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectEncoding:       "base64",
+				ObjectType:           "secret",
+				ObjectAlias:          "alias",
+				ObjectVersionHistory: 12,
+			},
+			expectedKeyVaultObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersion:        "latest",
+				ObjectEncoding:       "base64",
+				ObjectType:           "secret",
+				ObjectAlias:          "alias",
+				ObjectVersionHistory: 12,
 			},
 		},
 	}

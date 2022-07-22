@@ -107,6 +107,17 @@ In AKS you can use the [User-assigned Kubelet managed identity](https://docs.mic
    az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
    ```
 
+   __*NOTE*__: If you are using the `objectVersionHistory` functionality, then the identity will also need the list permission:
+
+   ```bash
+   # set policy to access keys in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get,list --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
+   # set policy to access secrets in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get,list --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
+   # set policy to access certs in your Keyvault
+   az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get,list --spn <USER-ASSIGNED MANAGED IDENTITY CLIENTID>
+   ```
+
 4. Deploy your application. Specify `useVMManagedIdentity` to `true` and provide `userAssignedIdentityID`.
 
     ```yaml

@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 const (
 	// VaultObjectTypeSecret secret vault object type
 	VaultObjectTypeSecret = "secret"
@@ -58,6 +60,8 @@ type KeyVaultObject struct {
 	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
 	// the version of the Azure Key Vault objects
 	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
+	// The number of versions to load for this secret starting at the latest version
+	ObjectVersionHistory int32 `json:"objectVersionHistory" yaml:"objectVersionHistory"`
 	// the type of the Azure Key Vault objects
 	ObjectType string `json:"objectType" yaml:"objectType"`
 	// the format of the Azure Key Vault objects
@@ -83,4 +87,26 @@ type SecretFile struct {
 // StringArray holds a list of strings
 type StringArray struct {
 	Array []string `json:"array" yaml:"array"`
+}
+
+// KeyVaultObjectVersion holds the version id and when that version was
+// created for a specific version of a secret from KeyVault
+type KeyVaultObjectVersion struct {
+	Version string
+	Created time.Time
+}
+
+// KeyVaultObjectVersionList holds a list of KeyVaultObjectVersion
+type KeyVaultObjectVersionList []KeyVaultObjectVersion
+
+func (list KeyVaultObjectVersionList) Len() int {
+	return len(list)
+}
+
+func (list KeyVaultObjectVersionList) Less(i, j int) bool {
+	return list[i].Created.After(list[j].Created)
+}
+
+func (list KeyVaultObjectVersionList) Swap(i, j int) {
+	list[i], list[j] = list[j], list[i]
 }
