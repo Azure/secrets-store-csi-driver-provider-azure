@@ -41,6 +41,10 @@
             "type": "Microsoft.KubernetesConfiguration/extensions",
             "apiVersion": "2021-09-01",
             "name": "[parameters('extensionName')]",
+            "scope": "[concat('Microsoft.Kubernetes/connectedClusters/', parameters('connectedClusterName'))]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "tags": "[ if(contains(parameters('tagsByResource'), 'Microsoft.KubernetesConfiguration/extensions'), parameters('tagsByResource')['Microsoft.KubernetesConfiguration/extensions'], json('{}')) ]",
             "properties": {
                 "extensionType": "Microsoft.AzureKeyVaultSecretsProvider",
@@ -55,8 +59,7 @@
                     "secrets-store-csi-driver.rotationPollInterval": "[parameters('rotationPollInterval')]",
                     "secrets-store-csi-driver.syncSecret.enabled": "[parameters('enableSyncSecret')]"
                 }
-            },
-            "scope": "[concat('Microsoft.Kubernetes/connectedClusters/', parameters('connectedClusterName'))]"
+            }
         }
     ]
 }
