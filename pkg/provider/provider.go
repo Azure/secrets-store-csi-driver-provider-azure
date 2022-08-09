@@ -41,7 +41,11 @@ var (
 )
 
 // Provider implements the secrets-store-csi-driver provider interface
-type Provider struct {
+type Interface interface {
+	GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error)
+}
+
+type provider struct {
 	reporter metrics.StatsReporter
 }
 
@@ -62,8 +66,8 @@ type mountConfig struct {
 }
 
 // NewProvider creates a new provider
-func NewProvider() *Provider {
-	return &Provider{
+func NewProvider() Interface {
+	return &provider{
 		reporter: metrics.NewStatsReporter(),
 	}
 }
@@ -119,7 +123,7 @@ func (mc *mountConfig) GetAuthorizer(ctx context.Context, resource string) (auto
 
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
 // to the CSI driver. The driver will write the content to the file system.
-func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
+func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
 	keyvaultName := types.GetKeyVaultName(attrib)
 	cloudName := types.GetCloudName(attrib)
 	userAssignedIdentityID := types.GetUserAssignedIdentityID(attrib)
@@ -267,7 +271,7 @@ func (p *Provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	return files, nil
 }
 
-func (p *Provider) resolveObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions []types.KeyVaultObject, err error) {
+func (p *provider) resolveObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions []types.KeyVaultObject, err error) {
 	if kvObject.IsSyncingSingleVersion() {
 		// version history less than or equal to 1 means only sync the latest and
 		// don't add anything to the file name
@@ -320,7 +324,7 @@ func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions t
 	return objects
 }
 
-func (p *Provider) getKeyVaultObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions types.KeyVaultObjectVersionList, err error) {
+func (p *provider) getKeyVaultObjectVersions(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (versions types.KeyVaultObjectVersionList, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
@@ -452,7 +456,7 @@ func getCertificateVersions(ctx context.Context, kvClient *kv.BaseClient, vaultU
 }
 
 // GetKeyVaultObjectContent get content of the keyvault object
-func (p *Provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (content, version string, err error) {
+func (p *provider) getKeyVaultObjectContent(ctx context.Context, kvClient *kv.BaseClient, kvObject types.KeyVaultObject, vaultURL string) (content, version string, err error) {
 	start := time.Now()
 	defer func() {
 		var errMsg string
