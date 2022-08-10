@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/client9/misspell v0.3.4
+	github.com/golang/mock v1.6.0
 	github.com/golangci/golangci-lint v1.45.2
 )
 
