@@ -66,6 +66,10 @@ $(TOOLS_DIR)/misspell: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_M
 	cd $(TOOLS_MOD_DIR) && \
 	go build -o $(TOOLS_DIR)/misspell github.com/client9/misspell/cmd/misspell
 
+$(TOOLS_DIR)/mockgen: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
+	cd $(TOOLS_MOD_DIR) && \
+	go build -o $(TOOLS_DIR)/$(MOCKGEN) github.com/golang/mock/mockgen
+
 SHELLCHECK := $(TOOLS_BIN_DIR)/shellcheck-$(SHELLCHECK_VER)
 $(SHELLCHECK): OS := $(shell uname | tr '[:upper:]' '[:lower:]')
 $(SHELLCHECK): ARCH := $(shell uname -m)
@@ -255,3 +259,12 @@ promote-staging-manifest: #promote staging manifests to release dir
 	@cp -r manifest_staging/deployment .
 	@rm -rf charts/csi-secrets-store-provider-azure
 	@cp -r manifest_staging/charts/csi-secrets-store-provider-azure ./charts
+
+## --------------------------------------
+## Code Generation
+## --------------------------------------
+
+# Generate code
+.PHONY: generate
+generate: $(TOOLS_DIR)/mockgen ## Runs Go related generate targets
+	go generate ./...
