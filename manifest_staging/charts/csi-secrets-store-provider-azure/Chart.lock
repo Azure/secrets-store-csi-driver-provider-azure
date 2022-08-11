@@ -1,6 +1,6 @@
 dependencies:
 - name: secrets-store-csi-driver
   repository: https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
-  version: 1.2.2
-digest: sha256:62774544307c9c7aeed42b4f49f40278b4f160f03ecb544566eaec4cab2d6a57
-generated: "2022-07-14T20:30:32.729237414Z"
+  version: 1.2.3
+digest: sha256:9646ceda3b60e7795c1ecf730811a12770ba44160559065f660119cbdaf66641
+generated: "2022-08-11T21:35:23.149639291Z"
