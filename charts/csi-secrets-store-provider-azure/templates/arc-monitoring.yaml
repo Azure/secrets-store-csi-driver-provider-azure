@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: arc-monitoring
+  name: akvsecretsprovider-arc-monitoring
   namespace: {{ .Release.Namespace }}
   labels:
     app: arc-monitoring
@@ -24,7 +24,7 @@ spec:
       containers:
         # Prom MDM Converter
         - name: prom-mdm-converter
-          image: "upstreamarc.azurecr.io/prom-mdm-converter:v1.0.0"
+          image: "upstreamarc.azurecr.io/prom-mdm-converter:v1.0.2"
           imagePullPolicy: IfNotPresent
           env:
           - name: SERVER_PORT
@@ -186,7 +186,7 @@ spec:
               memory: 100Mi
             limits:
               cpu: 50m
-              memory: 100Mi
+              memory: 150Mi
           env:
             - name: FLUENTD_CONF
               value: /etc/fluentd/fluentd.conf
