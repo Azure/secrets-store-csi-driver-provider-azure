@@ -1,6 +1,6 @@
 module github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Azure/azure-sdk-for-go v66.0.0+incompatible
