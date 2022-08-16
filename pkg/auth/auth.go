@@ -137,10 +137,10 @@ func (c Config) GetAuthorizer(ctx context.Context, podName, podNamespace, resour
 }
 
 func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string) (autorest.Authorizer, error) {
-	cred, err := confidential.NewCredFromAssertion(signedAssertion)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create confidential creds: %w", err)
-	}
+	cred := confidential.NewCredFromAssertionCallback(func(context.Context, confidential.AssertionRequestOptions) (string, error) {
+		return signedAssertion, nil
+	})
+
 	confidentialClientApp, err := confidential.New(clientID, cred,
 		confidential.WithAuthority(fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, tenantID)))
 	if err != nil {
