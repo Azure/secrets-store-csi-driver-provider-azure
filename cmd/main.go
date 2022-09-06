@@ -23,7 +23,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"k8s.io/component-base/config"
+	logsapi "k8s.io/component-base/logs/api/v1"
 	json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
 	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
@@ -55,7 +55,7 @@ func main() {
 
 	if *logFormatJSON {
 		jsonFactory := json.Factory{}
-		logger, _ := jsonFactory.Create(config.LoggingConfiguration{Format: "json"})
+		logger, _ := jsonFactory.Create(logsapi.LoggingConfiguration{Format: "json"})
 		klog.SetLogger(logger)
 	}
 

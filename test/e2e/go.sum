@@ -904,8 +904,8 @@ k8s.io/component-base v0.25.0/go.mod h1:F2Sumv9CnbBlqrpdf7rKZTmmd2meJq0HizeyY/yA
 k8s.io/component-helpers v0.25.0 h1:vNzYfqnVXj7f+CPksduKVv2Z9kC+IDsOs9yaOyxZrj0=
 k8s.io/component-helpers v0.25.0/go.mod h1:auaFj2bvb5Zmy0mLk4WJNmwP0w4e7Zk+/Tu9FFBGA20=
 k8s.io/klog/v2 v2.0.0/go.mod h1:PBfzABfn139FHAV07az/IF9Wp1bkk3vpT2XSJ76fSDE=
-k8s.io/klog/v2 v2.70.1 h1:7aaoSdahviPmR+XkS7FyxlkkXs6tHISSG03RxleQAVQ=
-k8s.io/klog/v2 v2.70.1/go.mod h1:y1WjHnz7Dj687irZUWR/WLkLc5N1YHtjLdmgWjndZn0=
+k8s.io/klog/v2 v2.80.0 h1:lyJt0TWMPaGoODa8B8bUuxgHS3W/m/bNr2cca3brA/g=
+k8s.io/klog/v2 v2.80.0/go.mod h1:y1WjHnz7Dj687irZUWR/WLkLc5N1YHtjLdmgWjndZn0=
 k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 h1:MQ8BAZPZlWk3S9K4a9NCkIFQtZShWqoha7snGixVgEA=
 k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1/go.mod h1:C/N6wCaBHeBHkHUesQOQy2/MZqGgMAFPqGsGQLdbZBU=
 k8s.io/kubectl v0.25.0 h1:/Wn1cFqo8ik3iee1EvpxYre3bkWsGLXzLQI6uCCAkQc=
@@ -927,8 +927,8 @@ sigs.k8s.io/controller-runtime v0.13.0 h1:iqa5RNciy7ADWnIc8QxCbOX5FEKVR3uxVxKHRM
 sigs.k8s.io/controller-runtime v0.13.0/go.mod h1:Zbz+el8Yg31jubvAEyglRZGdLAjplZl+PgtYNI6WNTI=
 sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 h1:iXTIw73aPyC+oRdyqqvVJuloN1p0AC/kzH07hu3NE+k=
 sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
-sigs.k8s.io/secrets-store-csi-driver v1.2.2 h1:GGy40rjlHfxmvDHxxQe/dpB7jjfvBENEaMfZBinjJxc=
-sigs.k8s.io/secrets-store-csi-driver v1.2.2/go.mod h1:rLWqmapEJNLj/z0siDS8NiMS4JpOrjmudu7fNh0pM9M=
+sigs.k8s.io/secrets-store-csi-driver v1.2.3 h1:qOvFEdPhPBooofbs430agDoZaFWB+p6f8g32UvWe1Jc=
+sigs.k8s.io/secrets-store-csi-driver v1.2.3/go.mod h1:zbvY7oF5TdvXsKPgvY4vBDg6QUFo6HWPgifpAmMA30k=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.3 h1:PRbqxJClWWYMNV1dhaG4NsibJbArud9kFxnAMREiWFE=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.3/go.mod h1:qjx8mGObPmV2aSZepjQjbmb2ihdVs8cGKBraizNC69E=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
