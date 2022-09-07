@@ -5,8 +5,6 @@ package e2e
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -17,8 +15,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -50,9 +47,7 @@ const (
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	// adding JUnitReporter for arc conformance test. If JUNIT_OUTPUT_FILEPATH is empty, it will not produce xml output.
-	junitReporter := reporters.NewJUnitReporter(filepath.Join(os.Getenv("JUNIT_OUTPUT_FILEPATH"), "junit.xml"))
-	RunSpecsWithDefaultAndCustomReporters(t, "sscdproviderazure", []Reporter{junitReporter})
+	RunSpecs(t, "sscdproviderazure")
 }
 
 var _ = BeforeSuite(func() {
@@ -77,7 +72,6 @@ var _ = BeforeSuite(func() {
 	if !config.IsHelmTest {
 		By("Installing Secrets Store CSI Driver and Azure Key Vault Provider via kubectl from deployment manifest.")
 		deploy.InstallManifest(kubeconfigPath, config)
-
 		return
 	}
 
@@ -103,7 +97,7 @@ var _ = BeforeSuite(func() {
 	listOpts := metav1.ListOptions{
 		LabelSelector: driverAndProviderLabels.String(),
 	}
-	if err := e2epod.WaitForMatchPodsCondition(clientSet, listOpts, "Running", podStartTimeout, testutils.PodRunningReady); err != nil {
+	if _, err := e2epod.WaitForAllPodsCondition(clientSet, framework.NamespaceKubeSystem, listOpts, 1, "running and ready", podStartTimeout, testutils.PodRunningReady); err != nil {
 		e2eframework.Failf("error waiting for driver and provider pods to be running and ready: %v", err)
 	}
 })
