@@ -46,7 +46,6 @@ nodes:
         service-account-issuer: ${SERVICE_ACCOUNT_ISSUER}
         service-account-key-file: /etc/kubernetes/pki/sa.pub
         service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-        feature-gates: "CSIServiceAccountToken=true"
     controllerManager:
       extraArgs:
         service-account-private-key-file: /etc/kubernetes/pki/sa.key

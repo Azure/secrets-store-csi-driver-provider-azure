@@ -54,8 +54,8 @@ BUILDX_BUILDER_NAME ?= img-builder
 STEP_CLI_VERSION=0.18.0
 
 # E2E test variables
-KIND_VERSION ?= 0.13.0
-KIND_K8S_VERSION ?= v1.23.5
+KIND_VERSION ?= 0.15.0
+KIND_K8S_VERSION ?= v1.24.0
 SHELLCHECK_VER ?= v0.8.0
 
 $(TOOLS_DIR)/golangci-lint: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MOD_DIR)/tools.go
