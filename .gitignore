@@ -352,3 +352,6 @@ website/resources
 coverage.txt
 test/e2e/_output
 arc/monitoring/
+
+# logs
+_artifacts/
