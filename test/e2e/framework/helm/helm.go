@@ -51,6 +51,7 @@ func Install(input InstallInput) {
 		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
 		fmt.Sprintf("--set=secrets-store-csi-driver.syncSecret.enabled=true"),
 		fmt.Sprintf(`--set=secrets-store-csi-driver.tokenRequests[0].audience=api://AzureADTokenExchange`),
+		fmt.Sprintf(`--set=linux.podAnnotations.foo=bar`),
 		fmt.Sprintf("--set=logVerbosity=5"),
 		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
 		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
