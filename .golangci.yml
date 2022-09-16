@@ -6,7 +6,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errorlint
     - goconst
     - gocyclo
@@ -21,8 +20,6 @@ linters:
     - prealloc
     - revive
     - staticcheck
-    - structcheck
     - unconvert
     - unused
-    - varcheck
     - whitespace

@@ -26,7 +26,12 @@ type HealthZ struct {
 func (h *HealthZ) Serve() {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
-	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && errors.Is(err, http.ErrServerClosed) {
+	server := &http.Server{
+		Addr:              h.HealthCheckURL.Host,
+		ReadHeaderTimeout: 5 * time.Second,
+		Handler:           serveMux,
+	}
+	if err := server.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
 		klog.ErrorS(err, "failed to start health check server")
 		os.Exit(1)
 	}
