@@ -126,7 +126,7 @@ export SERVICE_ACCOUNT_NAMESPACE=<namespace of the service account>
 Add the federated identity credential:
 
 ```json
-cat <<EOF > body.json
+cat <<EOF > params.json
 {
   "name": "kubernetes-federated-credential",
   "issuer": "${SERVICE_ACCOUNT_ISSUER}",
@@ -137,8 +137,10 @@ cat <<EOF > body.json
   ]
 }
 EOF
+```
 
-az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${APPLICATION_OBJECT_ID}/federatedIdentityCredentials" --body @body.json
+```bash
+az ad app federated-credential create --id "${APPLICATION_OBJECT_ID}" --parameters @params.json
 ```
 
 ### 4. Deploy your secretproviderclass and application
