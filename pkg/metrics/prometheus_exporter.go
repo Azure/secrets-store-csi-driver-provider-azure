@@ -3,9 +3,14 @@ package metrics
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel/exporters/metric/prometheus"
 	"k8s.io/klog/v2"
+)
+
+const (
+	readHeaderTimeout = 5 * time.Second
 )
 
 func initPrometheusExporter(port int) error {
@@ -18,7 +23,11 @@ func initPrometheusExporter(port int) error {
 	}
 	http.HandleFunc("/metrics", pusher.ServeHTTP)
 	go func() {
-		klog.ErrorS(http.ListenAndServe(fmt.Sprintf(":%v", port), nil), "listen and server error")
+		server := &http.Server{
+			Addr:              fmt.Sprintf(":%v", port),
+			ReadHeaderTimeout: readHeaderTimeout,
+		}
+		klog.ErrorS(server.ListenAndServe(), "listen and server error")
 	}()
 
 	return err

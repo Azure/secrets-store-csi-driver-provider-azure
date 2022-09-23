@@ -29,6 +29,10 @@ import (
 	k8spb "sigs.k8s.io/secrets-store-csi-driver/provider/v1alpha1"
 )
 
+const (
+	readHeaderTimeout = 5 * time.Second
+)
+
 var (
 	versionInfo   = flag.Bool("version", false, "prints the version information")
 	endpoint      = flag.String("endpoint", "unix:///tmp/azure.sock", "CSI gRPC endpoint")
@@ -71,8 +75,11 @@ func main() {
 	if *enableProfile {
 		klog.InfoS("Starting profiling", "port", *profilePort)
 		go func() {
-			addr := fmt.Sprintf("%s:%d", "localhost", *profilePort)
-			klog.ErrorS(http.ListenAndServe(addr, nil), "unable to start profiling server")
+			server := &http.Server{
+				Addr:              fmt.Sprintf("%s:%d", "localhost", *profilePort),
+				ReadHeaderTimeout: readHeaderTimeout,
+			}
+			klog.ErrorS(server.ListenAndServe(), "unable to start profiling server")
 		}()
 	}
 	// initialize metrics exporter before creating measurements
