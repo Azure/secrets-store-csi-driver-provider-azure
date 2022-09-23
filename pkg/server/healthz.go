@@ -16,6 +16,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	readHeaderTimeout = 5 * time.Second
+)
+
 type HealthZ struct {
 	HealthCheckURL *url.URL
 	UnixSocketPath string
@@ -28,7 +32,7 @@ func (h *HealthZ) Serve() {
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 	server := &http.Server{
 		Addr:              h.HealthCheckURL.Host,
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadHeaderTimeout: readHeaderTimeout,
 		Handler:           serveMux,
 	}
 	if err := server.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {

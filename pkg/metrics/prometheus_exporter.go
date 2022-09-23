@@ -9,6 +9,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	readHeaderTimeout = 5 * time.Second
+)
+
 func initPrometheusExporter(port int) error {
 	pusher, err := prometheus.InstallNewPipeline(prometheus.Config{
 		DefaultHistogramBoundaries: []float64{
@@ -21,7 +25,7 @@ func initPrometheusExporter(port int) error {
 	go func() {
 		server := &http.Server{
 			Addr:              fmt.Sprintf(":%v", port),
-			ReadHeaderTimeout: 5 * time.Second,
+			ReadHeaderTimeout: readHeaderTimeout,
 		}
 		klog.ErrorS(server.ListenAndServe(), "listen and server error")
 	}()
