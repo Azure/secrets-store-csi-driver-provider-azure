@@ -21,7 +21,7 @@ spec:
   provider: azure
   parameters:
     usePodIdentity: "false"         # set to true for pod identity access mode
-    clientID: "<client id of the Azure AD Application or managed identity to use for workload identity>"
+    clientID: "<client id of the Azure AD Application or user-assigned managed identity to use for workload identity>"
     keyvaultName: "kvname"
     cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
     objects:  |
@@ -67,16 +67,17 @@ spec:
 
 ## Prerequisites
 
-- [AKS Kubernetes 1.21+ cluster with OIDC Issuer](https://docs.microsoft.com/en-us/azure/aks/cluster-configuration#oidc-issuer-preview)
+- [AKS Kubernetes 1.21+ cluster with OIDC Issuer](https://learn.microsoft.com/en-us/azure/aks/cluster-configuration#oidc-issuer)
   - The workload identity feature is implemented using the [Token Requests](https://kubernetes-csi.github.io/docs/token-requests.html) API in CSI driver. This is available by default in Kubernetes 1.21+.
 - Secrets Store CSI Driver v1.1.0+
 - Azure Key Vault Provider v1.1.0+
+- Azure CLI version `2.40.0` or higher. Run `az --version` to verify.
 
 ## Configure Workload Identity to access Keyvault
 
-### 1. Create an Azure AD Application
+### 1. Create an Azure AD Application or user-assigned managed identity
 
-> [Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) is currently only supported for Azure AD Applications. Managed identity support will be coming soon.
+> [Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) is supported for Azure AD Applications and user-assigned managed identity.
 
 ```bash
 # environment variables for the AAD application
@@ -87,20 +88,29 @@ export APPLICATION_CLIENT_ID=$(az ad sp list --display-name ${APPLICATION_NAME} 
 
 > NOTE: `az ad sp create-for-rbac` will create a new application with secret. However, the secret is not required for workload identity federation.
 
+If you want to use a user-assigned managed identity, you can create one using the following command:
+
+```bash
+export RESOURCE_GROUP=<resource group name>
+export USER_ASSIGNED_IDENTITY_NAME="<your user-assigned managed identity name>"
+az identity create -g ${RESOURCE_GROUP} -n ${USER_ASSIGNED_IDENTITY_NAME}
+export USER_ASSIGNED_IDENTITY_CLIENT_ID=$(az identity show -g ${RESOURCE_GROUP} -n ${USER_ASSIGNED_IDENTITY_NAME} --query clientId -otsv)
+```
+
 ### 2. Grant workload identity permission to access Keyvault
 
- Ensure that your Azure AD Application has the role assignments required to access content in keyvault instance. Run the following Azure CLI commands to assign the roles if required:
+ Ensure that your Azure AD Application or user-assigned managed identity has the role assignments required to access content in keyvault instance. Run the following Azure CLI commands to assign the roles if required:
 
  ```bash
  # set policy to access keys in your Keyvault
- az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn $APPLICATION_CLIENT_ID
+ az keyvault set-policy -n $KEYVAULT_NAME --key-permissions get --spn ${APPLICATION_CLIENT_ID:-$USER_ASSIGNED_IDENTITY_CLIENT_ID}
  # set policy to access secrets in your Keyvault
- az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn $APPLICATION_CLIENT_ID
+ az keyvault set-policy -n $KEYVAULT_NAME --secret-permissions get --spn ${APPLICATION_CLIENT_ID:-$USER_ASSIGNED_IDENTITY_CLIENT_ID}
  # set policy to access certs in your Keyvault
- az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn $APPLICATION_CLIENT_ID
+ az keyvault set-policy -n $KEYVAULT_NAME --certificate-permissions get --spn ${APPLICATION_CLIENT_ID:-$USER_ASSIGNED_IDENTITY_CLIENT_ID}
  ```
 
-### 3. Establish federated identity credential between the AAD application and the service account issuer & subject
+### 3. Establish federated identity credential between the workload identity and the service account issuer & subject
 
 Get the AKS cluster OIDC issuer URL:
 
@@ -109,18 +119,21 @@ Get the AKS cluster OIDC issuer URL:
 az aks show --resource-group <resource_group> --name <cluster_name> --query "oidcIssuerProfile.issuerUrl" -otsv
 ```
 
-> If the URL is empty, ensure the oidc issuer is enabled in the cluster by following these [steps](https://docs.microsoft.com/en-us/azure/aks/cluster-configuration#oidc-issuer-preview).
+> If the URL is empty, ensure the oidc issuer is enabled in the cluster by following these [steps](https://learn.microsoft.com/en-us/azure/aks/cluster-configuration#oidc-issuer).
 > If using other managed cluster, refer to [doc](https://azure.github.io/azure-workload-identity/docs/installation/managed-clusters.html) for retrieving the OIDC issuer URL.
 
-#### Using Azure Cloud Shell
+#### Using Azure CLI
 
-Login to [Azure Cloud Shell](https://portal.azure.com/#cloudshell/) and run the following commands:
+```bash
+export SERVICE_ACCOUNT_NAME=<name of the service account used by the application pod (pod requesting the volume mount)>
+export SERVICE_ACCOUNT_NAMESPACE=<namespace of the service account>
+```
+
+##### Using Azure AD Application
 
 ```bash
 # Get the object ID of the AAD application
 export APPLICATION_OBJECT_ID="$(az ad app show --id ${APPLICATION_CLIENT_ID} --query id -otsv)"
-export SERVICE_ACCOUNT_NAME=<name of the service account used by the application pod (pod requesting the volume mount)>
-export SERVICE_ACCOUNT_NAMESPACE=<namespace of the service account>
 ```
 
 Add the federated identity credential:
@@ -143,19 +156,28 @@ EOF
 az ad app federated-credential create --id "${APPLICATION_OBJECT_ID}" --parameters @params.json
 ```
 
+##### Using user-assigned managed identity
+
+Add the federated identity credential:
+
+```bash
+az identity federated-credential create \
+  --name "kubernetes-federated-credential" \
+  --identity-name "${USER_ASSIGNED_IDENTITY_NAME}" \
+  --resource-group "${RESOURCE_GROUP}" \
+  --issuer "${SERVICE_ACCOUNT_ISSUER}" \
+  --subject "system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}"
+```
+
 ### 4. Deploy your secretproviderclass and application
 
-Set the `clientID` in the `SecretProviderClass` to the client ID of the AAD application.
+Set the `clientID` in the `SecretProviderClass` to the client ID of the AAD application or user-assigned managed identity.
 
 ```yaml
-clientID: "${APPLICATION_CLIENT_ID}"
+clientID: "${APPLICATION_OR_MANAGED_IDENTITY_CLIENT_ID}"
 ```
 
 ## Pros
 
 1. Supported on both Windows and Linux.
 2. Supports Kubernetes clusters hosted in any cloud or on-premises.
-
-## Cons
-
-1. [Workload Identity Federation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) is currently only supported for Azure AD Applications. Managed identity support will be coming soon.
