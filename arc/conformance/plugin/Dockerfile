@@ -1,9 +1,9 @@
-ARG STEP_CLI_VERSION=0.18.0
+ARG STEP_CLI_VERSION=0.22.0
 ARG STEP_CLI_IMAGE=smallstep/step-cli:${STEP_CLI_VERSION}
 FROM $STEP_CLI_IMAGE as step-cli
 
-FROM k8s.gcr.io/build-image/debian-base:bullseye-v1.4.0
-ARG KUBE_VERSION=v1.21.2
+FROM k8s.gcr.io/build-image/debian-base:bullseye-v1.4.1
+ARG KUBE_VERSION=v1.25.3
 ARG TARGETARCH
 
 # install dependencies
