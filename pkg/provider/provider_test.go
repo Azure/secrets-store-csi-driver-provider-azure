@@ -209,7 +209,8 @@ lKn75l/9h0PwiiPaI0TGKN2O8AwvhGGwDElmFhYtXedbbaST6rbVRDUj
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			content, err := decodePKCS12(tc.value)
+			p := &provider{constructPEMChain: true}
+			content, err := p.decodePKCS12(tc.value)
 			if err != nil {
 				t.Fatalf("expected nil err, got: %v", err)
 			}
@@ -1029,7 +1030,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			p := NewProvider()
+			p := NewProvider(false, false)
 
 			tmpDir, err := os.MkdirTemp("", "ut")
 			assert.NoError(t, err)
@@ -1187,4 +1188,107 @@ func TestGetObjectVersion(t *testing.T) {
 	expectedVersion := "c55925c29c6743dcb9bb4bf091be03b0"
 	actual := getObjectVersion(id)
 	assert.Equal(t, expectedVersion, actual)
+}
+
+func TestSplitCertAndKey(t *testing.T) {
+	rootCACert := `-----BEGIN CERTIFICATE-----
+MIIBeTCCAR6gAwIBAgIRAM3RAPH7k1Q+bICMC0mzKhkwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAxNFoXDTMwMTIw
+MTAwMTAxNFowGjEYMBYGA1UEAxMPRXhhbXBsZSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAE1/AGExuSemtxPRzFECpefowtkcOQr7jaq355kfb2hUR2
+LnMn+71fD4mZmMXT0kuxgeE2zC2CxOHdoJ/FmcQJxaNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFKTuLl7BATUYGD6ZeUV3
+2f8UAWoqMAoGCCqGSM49BAMCA0kAMEYCIQDEz2XKXPb0Q/Y40Gtxo8r6sa0Ra6U0
+fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
+-----END CERTIFICATE-----
+`
+
+	intermediateCert := `-----BEGIN CERTIFICATE-----
+MIIBozCCAUmgAwIBAgIRANEldEfXaQ+L2M1ahC6w4vAwCgYIKoZIzj0EAwIwGjEY
+MBYGA1UEAxMPRXhhbXBsZSBSb290IENBMB4XDTIwMTIwMzAwMTAyNFoXDTMwMTIw
+MTAwMTAyNFowJDEiMCAGA1UEAxMZRXhhbXBsZSBJbnRlcm1lZGlhdGUgQ0EgMTBZ
+MBMGByqGSM49AgEGCCqGSM49AwEHA0IABOhTE8r5NpDIDF/6VLgPT+//0IR59Uzn
+78JfV54E0qFA21khrcqc20/RJD+lyUv313gYQD9SxBXXxcGtl1OJ0s2jZjBkMA4G
+A1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBR+2JY0
+VhjrWsrUng+V8dgeZBOGJzAfBgNVHSMEGDAWgBSk7i5ewQE1GBg+mXlFd9n/FAFq
+KjAKBggqhkjOPQQDAgNIADBFAiB9EQB+siuNboL7k78CUzhZJ+5lD0cXUpGYGWYT
+rxcX6QIhALGptitzrZ4z/MDMBPkan48bqk6O08e1tQ9dJOIoEKq7
+-----END CERTIFICATE-----
+`
+
+	serverCert := `-----BEGIN CERTIFICATE-----
+MIIBwjCCAWmgAwIBAgIQGIPRUsQ/sFI1fkxZHCSU6jAKBggqhkjOPQQDAjAkMSIw
+IAYDVQQDExlFeGFtcGxlIEludGVybWVkaWF0ZSBDQSAxMB4XDTIwMTIwMzAwMTAz
+NloXDTIwMTIwNDAwMTAzNlowFjEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS0FvMzMHAfc6mOIEgijRngeRcNaDdp63AbCVeJ
+tuKNX7j4KLbkQcACj6g+hblJu4NCJChFmeEYf8b7xw+q0dPOo4GKMIGHMA4GA1Ud
+DwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0O
+BBYEFIRRQ0915ExZz30TeVhCpwgP3SEYMB8GA1UdIwQYMBaAFH7YljRWGOtaytSe
+D5Xx2B5kE4YnMBYGA1UdEQQPMA2CC2V4YW1wbGUuY29tMAoGCCqGSM49BAMCA0cA
+MEQCIH9NxXnWaip9fZyv9VJcfFz7tcdxTq10SrTO7gKhyJkpAiAljZFFK687kc6J
+kzqEt441cQasPp5ohL5U4cJN6lAuwA==
+-----END CERTIFICATE-----
+`
+
+	privateKey := `-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC17SizxfpkpsRR
+agUl1J9xihKi9vE8GG2KwQl39T6g4rWMof8cwGWJO/72Xo68iGV223jy/nuaTg/Q
+zvYpPy6VdwFqw1X3kM2c+wSkCqzvAquF+2V54Mwo+eTxW9TqOJ0/LpI7o21uny0l
+yGtt8zBlbt7bL49XB4o3xDA0QJA9/KAG1fyM/3cIbqhi8r0UNLjlTVRwpR3FMt9e
+ZK85E+jQcURcs29nGZ2NKys/ShJtqwl8yvTYNlvn/oxLEJsn8Wc/B2pdAf9wzqtA
+MvDYizmJafRBc8Rhkyphu0wAmhjRQRUdUeAhRv8e5xD5ISS23qQbewgYqwouK7KZ
+kajNEU2rAgMBAAECggEBAK9MJxUapkxH+RDt1KoAN+aigZSv2ADtFNhHa0VAdal2
+6jLpgbWFmhDjU6i3slfuIb6meePC3PzxTQIJ+l4COHPi6OWj9PkIeWdS5MTgWIQx
+kW8Xr08CEhdFu5npv7408SgJSvTWY8Lc9BbdCM84LqD+dRTEvhzA8ikMDNq8f4CJ
+hLreFUUl/udHacpMdE8mpB6vgCUliZEjBlHHC9qD2mDKgWb0cm4jkO9PcHxz8CXL
+szcRV2vqTwvsJcZWcJwTzjhFxq/lUZrgbwpn60iKlov3BCRoTJBppOXi01giom3v
+Wz7Y7DoFbHfizh6jyBrf3ODhKJQ3CGvS65QCS0aJ/kECgYEA4JuGC9DpQYmlzWbV
+0CqJYnTcZKqcPQx/A1QZDKot0VWqF61vZIku5XuoGKGfY3eLwVZJJZqxoTlVTbuT
+nNzYJe+EHzftRoUxUqXZtIh9VdirJMwCu4RMdwk705FA8+8FcTKXarKWBbAzUmFi
+iINR2rlRJHVyh2cOA9hWPbEXX0sCgYEAz1qAYUIMBGnccY9mALGArWTmtyNN3DcB
+9tl3/5SzfL1NlcOWsBXdZL61oTl9LhOjqHGZbf164/uFuKNHTsT1E63180UKujmV
+TbHL6N6MrMctaJfgru3+XprTMd5pwjzd8huX603OtS8Gvn5gKdBRkG1ZI8CrfTl6
+sJI9YRvl7yECgYEAjUIiptHHsVkhdrIDLL1j1BEM/x6xzk9KnkxIyMdKs4n9xJBm
+K0N/xAHmMT+Mn6DyuzBKJqVIq84EETQ0XQYjxpABdyTUTHK+F22JItpogRIYaLcJ
+zOcitAaRoriKsh+UO6IGyqrwYTl0vY3Ty2lTlIzSNGzND81HajGn43q56UsCgYEA
+pGqArZ3vZXiDgdBQ82/MNrFxd/oYfOtpNVFPI2vHvrtkT8KdM9bCjGXkI4kwR17v
+QFuDa4G49hm0+KkPm9f09LvV8CXo0a1jRA4dP/Nn3IC68tqrIEo6js15dWuEtK4K
+1zUmC0DRDT3SvS38FmvGoRzzt7PIxyzSqjvrS5sRgcECgYAQ6b0YsM4p+89s4ALK
+BPfGIKpoIEMKUcwiT3ovRrwIu1vbu70WRcYAi5do6rwOakp3FyUcQznkeZEOAQmc
+xrBy8R64vg83WMuRITAqY6vartSa3oehqUHW0YbhGDVEtSrolXEs5elArUHbpYnX
+SIVZww73PTGisLmXfIvKvr8GBA==
+-----END PRIVATE KEY-----
+`
+
+	cases := []struct {
+		desc         string
+		certAndKey   string
+		expectedKey  string
+		expectedCert string
+	}{
+		{
+			desc:         "cert and key",
+			certAndKey:   serverCert + privateKey,
+			expectedCert: serverCert,
+			expectedKey:  privateKey,
+		},
+		{
+			desc:         "cert chain",
+			certAndKey:   rootCACert + intermediateCert + serverCert + privateKey,
+			expectedCert: rootCACert + intermediateCert + serverCert,
+			expectedKey:  privateKey,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cert, key := splitCertAndKey(tc.certAndKey)
+			if cert != tc.expectedCert {
+				t.Errorf("splitCertAndKey() = \n%q, want \n%q", cert, tc.expectedCert)
+			}
+			if key != tc.expectedKey {
+				t.Errorf("splitCertAndKey() = \n%q, want \n%q", key, tc.expectedKey)
+			}
+		})
+	}
 }

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
@@ -46,6 +45,10 @@ var (
 
 	metricsBackend = flag.String("metrics-backend", "Prometheus", "Backend used for metrics")
 	prometheusPort = flag.Int("prometheus-port", 8898, "Prometheus port for metrics backend")
+
+	constructPEMChain              = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
+	writeCertAndKeyInSeparateFiles = flag.Bool("write-cert-and-key-in-separate-files", false,
+		"Write cert and key in separate files. The individual files will be named as <secret-name>.crt and <secret-name>.key. These files will be created in addition to the single file.")
 )
 
 func main() {
@@ -89,8 +92,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *provider.ConstructPEMChain {
+	if *constructPEMChain {
 		klog.Infof("construct pem chain feature enabled")
+	}
+	if *writeCertAndKeyInSeparateFiles {
+		klog.Infof("write cert and key in separate files feature enabled")
 	}
 	// Add csi-secrets-store user agent to adal requests
 	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
@@ -124,7 +130,7 @@ func main() {
 		grpc.UnaryInterceptor(utils.LogInterceptor()),
 	}
 	s := grpc.NewServer(opts...)
-	csiDriverProviderServer := server.New()
+	csiDriverProviderServer := server.New(*constructPEMChain, *writeCertAndKeyInSeparateFiles)
 	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
 	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)
