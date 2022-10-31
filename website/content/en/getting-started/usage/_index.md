@@ -28,7 +28,7 @@ Create a `SecretProviderClass` custom resource to provide provider-specific para
 
 Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/service-principal/v1alpha1_secretproviderclass_service_principal.yaml) to create a `SecretProviderClass` resource to provide Azure-specific parameters for the Secrets Store CSI driver.
 
-To provide identity to access key vault, refer to the following [section](#provide-identity-to-access-key-vault).
+To provide identity to access Key Vault, refer to the following [section](#provide-identity-to-access-key-vault).
 
   ```yaml
   apiVersion: secrets-store.csi.x-k8s.io/v1
@@ -82,7 +82,7 @@ To provide identity to access key vault, refer to the following [section](#provi
   | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates        | "pem"         |
   | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`                      | "utf-8"       |
   | filePermission         | no       | [__*available for version > v1.1.0*__] permission for secret file being mounted into the pod                      | "0644"       |
-  | tenantId               | yes      | tenant ID containing key vault instance                                                                                                                                                                                | ""            |
+  | tenantId               | yes      | tenant ID containing the Key Vault instance. Should be set to `"adfs"` for [custom clouds](../../configurations/custom-environments) using the AD FS identity provider system                                                                       | ""            |
 
 #### Provide Identity to Access Key Vault
 
@@ -139,4 +139,5 @@ The Azure Key Vault Provider allows syncing previous versions of a secret via th
 If you want to sync one of these versions with a kubernetes secret, the only difference is that you have to specify which version you want (i.e., to use the latest version, you specify `{objectAlias}/0` in `[secretObjects].[objectName]`)
 
 ##### Permissions
-If you use this functionality, the principal being used to access Key Vault will also need the list permission for secrets, keys, and certificates. 
+
+If you use this functionality, the principal being used to access Key Vault will also need the list permission for secrets, keys, and certificates.
