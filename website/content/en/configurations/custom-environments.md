@@ -55,7 +55,8 @@ The `cloudEnvFileName` parameter should match the volumeMount that was configure
 
 Even if the target cloud is not an Azure Stack Hub cloud, cloud name must be set to `"AzureStackCloud"` to signal `azure-sdk-for-go` to load the custom cloud environment details from `cloudEnvFileName`.
 
-If the target cloud's identity provider system is [AD FS][adfs] (instead of Azure AD), then the `tenantId` property should be set to `"adfs"`.
+If the target cloud's identity provider system is [AD FS][adfs] (instead of Azure AD), then the `tenantId` property in `SecretProviderClass` should be set to `"adfs"`.
+
 
 ```yaml
 parameters:
