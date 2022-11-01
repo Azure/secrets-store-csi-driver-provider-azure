@@ -72,3 +72,7 @@ steps:
         CI_KIND_CLUSTER: ${{ parameters.ciKindCluster }}
       ${{ if parameters.isArcTest }}:
         IS_ARC_TEST: ${{ parameters.isArcTest }}
+      # If the image is a released versions (i.e <= v1.3), it still doesn't support the 
+      # split cert/key feature, so we need to skip tests for those versions.
+      ${{ if parameters.testReleasedVersion }}:
+        GINKGO_SKIP: WriteCertAndKeyInSeparateFiles

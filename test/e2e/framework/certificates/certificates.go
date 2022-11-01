@@ -46,12 +46,12 @@ func ValidateCert(certData, dnsName string) {
 
 // ValidateCertBundle validates the certificate, public key and private key returned by the provider match
 // and are usable
-func ValidateCertBundle(data, publicKey, dnsName string) {
+func ValidateCertBundle(data, publicKey, privKey, dnsName string) {
 	By(fmt.Sprintf("Ensuring certificate and private key is valid for dns name %s", dnsName))
 	certPEMBlock, err := getCert([]byte(data))
 	Expect(err).To(BeNil())
 
-	keyPEMBlock, err := getPrivateKey([]byte(data))
+	keyPEMBlock, err := getPrivateKey([]byte(privKey))
 	Expect(err).To(BeNil())
 
 	certs, err := X509KeyPair(certPEMBlock, keyPEMBlock, []byte(publicKey), []byte{})

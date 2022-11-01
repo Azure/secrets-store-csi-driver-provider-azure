@@ -59,6 +59,9 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+            {{- if .Values.writeCertAndKeyInSeparateFiles }}
+            - --write-cert-and-key-in-separate-files={{ .Values.writeCertAndKeyInSeparateFiles }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}

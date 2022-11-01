@@ -883,11 +883,11 @@ func fetchCertChains(data []byte) ([]byte, error) {
 // this function doesn't check if the returned cert and key is not empty as this
 // can't be enforced. It is possible the secret in the key vault only contains the
 // cert or key.
-func splitCertAndKey(certAndKey string) (string, string) {
+func splitCertAndKey(certAndKey string) (certs string, privKey string) {
 	// split the cert and key for PEM format
 	// This does not handle the case where cert and key is in PFX format
 	// TODO(aramase) consider adding support for PFX format if there is an ask
-	var certs, key []byte
+	var cert, key []byte
 	data := []byte(certAndKey)
 	for {
 		block, rest := pem.Decode(data)
@@ -895,12 +895,14 @@ func splitCertAndKey(certAndKey string) (string, string) {
 			break
 		}
 		if block.Type == types.CertificateType {
-			certs = append(certs, pem.EncodeToMemory(block)...)
+			cert = append(cert, pem.EncodeToMemory(block)...)
 		} else {
 			key = append(key, pem.EncodeToMemory(block)...)
 		}
 		data = rest
 	}
 
-	return string(certs), string(key)
+	certs = string(cert)
+	privKey = string(key)
+	return certs, privKey
 }

@@ -102,6 +102,8 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 
 		// Configure higher log verbosity for debugging CI failures
 		ds.Spec.Template.Spec.Containers[0].Args = append(ds.Spec.Template.Spec.Containers[0].Args, "-v=5")
+		// Configure writeCertAndKeyInSeparateFiles to true as it's feature on top of default behavior
+		ds.Spec.Template.Spec.Containers[0].Args = append(ds.Spec.Template.Spec.Containers[0].Args, "--write-cert-and-key-in-separate-files=true")
 
 		updatedDS, err := yaml.Marshal(ds)
 		Expect(err).To(BeNil())
