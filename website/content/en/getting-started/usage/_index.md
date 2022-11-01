@@ -82,7 +82,7 @@ To provide identity to access Key Vault, refer to the following [section](#provi
   | objectFormat           | no       | [__*available for version > 0.0.7*__] the format of the Azure Key Vault object, supported types are pem and pfx. `objectFormat: pfx` is only supported with `objectType: secret` and PKCS12 or ECC certificates        | "pem"         |
   | objectEncoding         | no       | [__*available for version > 0.0.8*__] the encoding of the Azure Key Vault secret object, supported types are `utf-8`, `hex` and `base64`. This option is supported only with `objectType: secret`                      | "utf-8"       |
   | filePermission         | no       | [__*available for version > v1.1.0*__] permission for secret file being mounted into the pod                      | "0644"       |
-  | tenantId               | yes      | tenant ID containing the Key Vault instance. Should be set to `"adfs"` for [custom clouds](../../configurations/custom-environments) using the AD FS identity provider system                                                                       | ""            |
+  | tenantId               | yes      | tenant ID containing the Key Vault instance. Should be set to `"adfs"` for [Azure Stack Hub clouds](../../configurations/custom-environments) using the AD FS identity provider system                                                                       | ""            |
 
 #### Provide Identity to Access Key Vault
 
