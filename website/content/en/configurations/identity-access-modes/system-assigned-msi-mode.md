@@ -2,7 +2,7 @@
 type: docs
 title: "System-assigned Managed Identity"
 linkTitle: "System-assigned Managed Identity"
-weight: 4
+weight: 2
 description: >
   Use a System-assigned Managed Identity to access Keyvault.
 ---

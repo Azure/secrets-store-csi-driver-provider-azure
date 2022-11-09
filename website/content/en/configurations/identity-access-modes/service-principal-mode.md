@@ -2,7 +2,7 @@
 type: docs
 title: "Service Principal"
 linkTitle: "Service Principal"
-weight: 1
+weight: 3
 description: >
   Use a Service Principal to access Keyvault. 
 ---
