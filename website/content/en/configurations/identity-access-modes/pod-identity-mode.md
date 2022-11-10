@@ -2,7 +2,7 @@
 type: docs
 title: "Pod Identity"
 linkTitle: "Pod Identity"
-weight: 2
+weight: 4
 description: >
   Use Pod Identity to access Keyvault.
 ---
@@ -67,6 +67,8 @@ spec:
 </details>
 
 ## Configure AAD Pod Identity to access Keyvault
+
+> NOTE: [AAD Pod Identity](https://github.com/Azure/aad-pod-identity) has been [DEPRECATED](https://github.com/Azure/aad-pod-identity#-announcement). We recommend using [Workload Identity](../workload-identity-mode) instead.
 
 **Prerequisites**
 

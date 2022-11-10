@@ -1,6 +1,6 @@
 ---
 type: docs
-title: "Workload Identity (Preview)"
+title: "Workload Identity"
 linkTitle: "Workload Identity"
 weight: 1
 description: >

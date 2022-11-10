@@ -2,7 +2,7 @@
 type: docs
 title: "User-assigned Managed Identity"
 linkTitle: "User-assigned Managed Identity"
-weight: 3
+weight: 2
 description: >
   Use a User-assigned Managed Identity to access Keyvault.
 ---
