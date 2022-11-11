@@ -12,3 +12,9 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
+  - package-ecosystem: "docker"
+    directory: "/manifest_staging/charts/csi-secrets-store-provider-azure"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
