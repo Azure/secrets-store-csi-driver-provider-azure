@@ -32,4 +32,3 @@ jobs:
       - "csi-secrets-store-soak-linux-aks"
       - "csi-secrets-store-soak-win-aks"
   - template: templates/arc/e2e-test-kind.yaml
-  - template: templates/arc/e2e-test-aks.yaml
