@@ -168,7 +168,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		cmd = getPodExecCommand("cat /mnt/secrets-store/pemcert1-secret")
 		out, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		certificates.ValidateCertBundle(out, pubKey, "test.domain.com")
+		certificates.ValidateCertBundle(out, pubKey, out, "test.domain.com")
 	})
 
 	It("should read pkcs12 cert, private and public key from pod", func() {
@@ -192,7 +192,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		cmd = getPodExecCommand("cat /mnt/secrets-store/pkcs12cert1-secret")
 		out, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		certificates.ValidateCertBundle(out, pubKey, "test.domain.com")
+		certificates.ValidateCertBundle(out, pubKey, out, "test.domain.com")
 
 		cmd = getPodExecCommand("cat /mnt/secrets-store/pkcs12cert1-secret-pfx")
 		out, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
@@ -204,7 +204,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		pem, err := openssl.ParsePKCS12(string(pfxRaw), "")
 		Expect(err).To(BeNil())
 
-		certificates.ValidateCertBundle(pem, pubKey, "test.domain.com")
+		certificates.ValidateCertBundle(pem, pubKey, pem, "test.domain.com")
 	})
 
 	It("should read ecc cert, private and public key from pod", func() {
@@ -228,7 +228,7 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		cmd = getPodExecCommand("cat /mnt/secrets-store/ecccert1-secret")
 		out, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
 		Expect(err).To(BeNil())
-		certificates.ValidateCertBundle(out, pubKey, "")
+		certificates.ValidateCertBundle(out, pubKey, out, "")
 
 		cmd = getPodExecCommand("cat /mnt/secrets-store/ecccert1-secret-pfx")
 		out, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
@@ -240,6 +240,34 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 		pem, err := openssl.ParsePKCS12(string(pfxRaw), "")
 		Expect(err).To(BeNil())
 
-		certificates.ValidateCertBundle(pem, pubKey, "")
+		certificates.ValidateCertBundle(pem, pubKey, pem, "")
+	})
+
+	Describe("[Feature:WriteCertAndKeyInSeparateFiles] Writing certificates and private key in separate files", func() {
+		It("should write cert and key in separate files", func() {
+			pod.WaitFor(pod.WaitForInput{
+				Getter:         kubeClient,
+				KubeconfigPath: kubeconfigPath,
+				Config:         config,
+				PodName:        p.Name,
+				Namespace:      ns.Name,
+			})
+
+			// validate pemcert1
+			cmd := getPodExecCommand("cat /mnt/secrets-store/pemcert1-secret.crt")
+			cert, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+			Expect(err).To(BeNil())
+			certificates.ValidateCert(cert, "test.domain.com")
+
+			cmd = getPodExecCommand("cat /mnt/secrets-store/pemcert1-pub-key")
+			pubKey, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+			Expect(err).To(BeNil())
+
+			cmd = getPodExecCommand("cat /mnt/secrets-store/pemcert1-secret.key")
+			privKey, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+			Expect(err).To(BeNil())
+
+			certificates.ValidateCertBundle(cert, pubKey, privKey, "test.domain.com")
+		})
 	})
 })
