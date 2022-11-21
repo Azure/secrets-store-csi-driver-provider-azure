@@ -6,15 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	"github.com/jongio/azidext/go/azidext"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
 )
@@ -25,12 +28,6 @@ const (
 	// Pod Identity podNamespaceHeader
 	podNamespaceHeader = "podns"
 
-	// the format for expires_on in UTC with AM/PM
-	expiresOnDateFormatPM = "1/2/2006 15:04:05 PM +00:00"
-	// the format for expires_on in UTC without AM/PM
-	expiresOnDateFormat = "1/2/2006 15:04:05 +00:00"
-
-	tokenTypeBearer = "Bearer"
 	// For Azure AD Workload Identity, the audience recommended for use is
 	// "api://AzureADTokenExchange"
 	DefaultTokenAudience = "api://AzureADTokenExchange" //nolint
@@ -41,18 +38,23 @@ var (
 	ErrServiceAccountTokensNotFound = errors.New("service account tokens not found")
 )
 
-// authResult contains the subset of results from token acquisition operation in ConfidentialClientApplication
-// For details see https://aka.ms/msal-net-authenticationresult
-type authResult struct {
-	accessToken    string
-	expiresOn      time.Time
-	grantedScopes  []string
-	declinedScopes []string
+// Token encapsulates the access token used to authorize Azure requests.
+// https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-oauth2-client-creds-grant-flow#service-to-service-access-token-response
+type Token struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+
+	ExpiresIn json.Number `json:"expires_in"`
+	ExpiresOn json.Number `json:"expires_on"`
+	NotBefore json.Number `json:"not_before"`
+
+	Resource string `json:"resource"`
+	Type     string `json:"token_type"`
 }
 
-// NMIResponse is the response received from aad-pod-identity when requesting token
+// PodIdentityResponse is the response received from aad-pod-identity when requesting token
 // on behalf of the pod
-type NMIResponse struct {
+type PodIdentityResponse struct {
 	Token    adal.Token `json:"token"`
 	ClientID string     `json:"clientid"`
 }
@@ -85,6 +87,23 @@ type SATokens struct {
 		Token               string    `json:"token"`
 		ExpirationTimestamp time.Time `json:"expirationTimestamp"`
 	} `json:"api://AzureADTokenExchange"`
+}
+
+type workloadIdentityCredential struct {
+	assertion string
+	cred      *azidentity.ClientAssertionCredential
+}
+
+type workloadIdentityCredentialOptions struct {
+	azcore.ClientOptions
+}
+
+type podIdentityCredential struct {
+	podName      string
+	podNamespace string
+	resource     string
+	tenantID     string
+	nmiPort      string
 }
 
 // NewConfig returns new auth config
@@ -120,144 +139,134 @@ func NewConfig(
 
 // GetAuthorizer returns an Azure authorizer based on the provided azure identity
 func (c Config) GetAuthorizer(ctx context.Context, podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (autorest.Authorizer, error) {
-	if c.UsePodIdentity {
-		return getAuthorizerForPodIdentity(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort)
-	}
-	if c.UseVMManagedIdentity {
-		return getAuthorizerForManagedIdentity(resource, c.UserAssignedIdentityID)
-	}
-	if len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0 {
-		return getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, resource, aadEndpoint, tenantID)
-	}
-	if len(c.WorkloadIdentityToken) > 0 && len(c.WorkloadIdentityClientID) > 0 {
-		return getAuthorizerForWorkloadIdentity(ctx, c.WorkloadIdentityClientID, c.WorkloadIdentityToken, resource, aadEndpoint, tenantID)
+	var cred azcore.TokenCredential
+	var err error
+
+	// use switch case to ensure only one of the identity modes is enabled
+	switch {
+	case c.UsePodIdentity:
+		cred, err = getAuthorizerForPodIdentity(podName, podNamespace, resource, tenantID, nmiPort)
+	case c.UseVMManagedIdentity:
+		cred, err = getAuthorizerForManagedIdentity(resource, c.UserAssignedIdentityID)
+	case len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0:
+		cred, err = getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, resource, aadEndpoint, tenantID)
+	case len(c.WorkloadIdentityClientID) > 0 && len(c.WorkloadIdentityToken) > 0:
+		cred, err = getAuthorizerForWorkloadIdentity(ctx, c.WorkloadIdentityClientID, c.WorkloadIdentityToken, resource, aadEndpoint, tenantID)
+	default:
+		return nil, fmt.Errorf("no identity mode is enabled")
 	}
 
-	return nil, fmt.Errorf("no valid identity access mode specified")
-}
-
-func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string) (autorest.Authorizer, error) {
-	cred := confidential.NewCredFromAssertionCallback(func(context.Context, confidential.AssertionRequestOptions) (string, error) {
-		return signedAssertion, nil
-	})
-
-	confidentialClientApp, err := confidential.New(clientID, cred,
-		confidential.WithAuthority(fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, tenantID)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create confidential client app: %w", err)
-	}
-	scope := resource
-	// .default needs to be added to the scope
-	if !strings.Contains(resource, ".default") {
-		scope = fmt.Sprintf("%s/.default", resource)
-	}
-	result, err := confidentialClientApp.AcquireTokenByCredential(ctx, []string{scope})
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire token: %w", err)
-	}
-
-	token := adal.Token{
-		AccessToken: result.AccessToken,
-		Resource:    resource,
-		Type:        tokenTypeBearer,
-	}
-	token.ExpiresOn, err = parseExpiresOn(result.ExpiresOn.UTC().Local().Format(expiresOnDateFormat))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse expires_on: %w", err)
-	}
-	return autorest.NewBearerAuthorizer(authResult{
-		accessToken:    result.AccessToken,
-		expiresOn:      result.ExpiresOn,
-		grantedScopes:  result.GrantedScopes,
-		declinedScopes: result.DeclinedScopes,
-	}), nil
-}
-
-// OAuthToken implements the OAuthTokenProvider interface.  It returns the current access token.
-func (ar authResult) OAuthToken() string {
-	return ar.accessToken
-}
-
-func getAuthorizerForServicePrincipal(clientID, clientSecret, resource, aadEndpoint, tenantID string) (autorest.Authorizer, error) {
-	oauthConfig, err := adal.NewOAuthConfig(aadEndpoint, tenantID)
 	if err != nil {
 		return nil, err
 	}
-	spt, err := adal.NewServicePrincipalToken(
-		*oauthConfig,
-		clientID,
-		clientSecret,
-		resource)
+
+	return azidext.NewTokenCredentialAdapter(cred, []string{getScope(resource)}), nil
+}
+
+func newWorkloadIdentityCredential(tenantID, clientID, assertion string, options *workloadIdentityCredentialOptions) (azcore.TokenCredential, error) {
+	w := &workloadIdentityCredential{assertion: assertion}
+	cred, err := azidentity.NewClientAssertionCredential(tenantID, clientID, w.getAssertion, &azidentity.ClientAssertionCredentialOptions{ClientOptions: options.ClientOptions})
 	if err != nil {
 		return nil, err
 	}
-	return autorest.NewBearerAuthorizer(spt), nil
+	w.cred = cred
+	return w, nil
 }
 
-func getAuthorizerForManagedIdentity(resource, identityClientID string) (autorest.Authorizer, error) {
-	managedIdentityOpts := &adal.ManagedIdentityOptions{ClientID: identityClientID}
-	spt, err := adal.NewServicePrincipalTokenFromManagedIdentity(resource, managedIdentityOpts)
-	if err != nil {
-		return nil, err
+func (w *workloadIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+	return w.cred.GetToken(ctx, opts)
+}
+
+func (w *workloadIdentityCredential) getAssertion(context.Context) (string, error) {
+	return w.assertion, nil
+}
+
+func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+	opts := &workloadIdentityCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: cloud.Configuration{
+				ActiveDirectoryAuthorityHost: aadEndpoint,
+			},
+		},
 	}
-	return autorest.NewBearerAuthorizer(spt), nil
+	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
-func getAuthorizerForPodIdentity(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (autorest.Authorizer, error) {
+func getAuthorizerForServicePrincipal(clientID, secret, resource, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+	opts := &azidentity.ClientSecretCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: cloud.Configuration{
+				ActiveDirectoryAuthorityHost: aadEndpoint,
+			},
+		},
+	}
+	return azidentity.NewClientSecretCredential(tenantID, clientID, secret, opts)
+}
+
+func getAuthorizerForManagedIdentity(resource, identityClientID string) (azcore.TokenCredential, error) {
+	opts := &azidentity.ManagedIdentityCredentialOptions{
+		ID: azidentity.ClientID(identityClientID),
+	}
+	return azidentity.NewManagedIdentityCredential(opts)
+}
+
+func (c *podIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	// For usePodIdentity mode, the CSI driver makes an authorization request to fetch token for a resource from the NMI host endpoint (http://127.0.0.1:2579/host/token/).
 	// The request includes the pod namespace `podns` and the pod name `podname` in the request header and the resource endpoint of the resource requesting the token.
 	// The NMI server identifies the pod based on the `podns` and `podname` in the request header and then queries k8s (through MIC) for a matching azure identity.
 	// Then nmi makes an adal request to get a token for the resource in the request, returns the `token` and the `clientid` as a response to the CSI request.
-	klog.V(5).InfoS("using pod identity to retrieve token", "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
-	// pod name and namespace are required for the Key Vault provider to request a token
-	// on behalf of the application pod
-	if len(podName) == 0 || len(podNamespace) == 0 {
-		return nil, fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount: true")
-	}
+	klog.V(5).InfoS("using pod identity to retrieve token", "pod", klog.ObjectRef{Namespace: c.podNamespace, Name: c.podName})
 
-	endpoint := fmt.Sprintf("http://localhost:%s/host/token/?resource=%s", nmiPort, resource)
+	endpoint := fmt.Sprintf("http://localhost:%s/host/token/?resource=%s", c.nmiPort, c.resource)
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
-		return nil, err
+		return azcore.AccessToken{}, err
 	}
-	req.Header.Add(podNamespaceHeader, podNamespace)
-	req.Header.Add(podNameHeader, podName)
+	req.Header.Add(podNamespaceHeader, c.podNamespace)
+	req.Header.Add(podNameHeader, c.podName)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return azcore.AccessToken{}, err
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return azcore.AccessToken{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("nmi response failed with status code: %d, response body: %+v", resp.StatusCode, string(bodyBytes))
+		return azcore.AccessToken{}, fmt.Errorf("nmi response failed with status code: %d, response body: %+v", resp.StatusCode, string(bodyBytes))
 	}
 
-	var nmiResp = new(NMIResponse)
-	err = json.Unmarshal(bodyBytes, &nmiResp)
-	if err != nil {
-		return nil, err
+	podIdentityResponse := &PodIdentityResponse{}
+	if err = json.Unmarshal(bodyBytes, &podIdentityResponse); err != nil {
+		return azcore.AccessToken{}, err
 	}
-	klog.V(5).InfoS("successfully acquired access token", "accessToken", utils.RedactSecureString(nmiResp.Token.AccessToken), "clientID", utils.RedactSecureString(nmiResp.ClientID), "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
+	klog.V(5).InfoS("successfully acquired access token", "accessToken", utils.RedactSecureString(podIdentityResponse.Token.AccessToken), "clientID", utils.RedactSecureString(podIdentityResponse.ClientID), "pod", klog.ObjectRef{Namespace: c.podNamespace, Name: c.podName})
 
-	token, clientID := nmiResp.Token, nmiResp.ClientID
+	token, clientID := podIdentityResponse.Token, podIdentityResponse.ClientID
 	if token.AccessToken == "" || clientID == "" {
-		return nil, fmt.Errorf("nmi did not return expected values in response: token and clientid")
+		return azcore.AccessToken{}, fmt.Errorf("nmi did not return expected values in response: token and clientid")
 	}
 
-	oauthConfig, err := adal.NewOAuthConfig(aadEndpoint, tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create OAuth config: %w", err)
+	return azcore.AccessToken{
+		Token:     token.AccessToken,
+		ExpiresOn: podIdentityResponse.Token.Expires(),
+	}, nil
+}
+
+func getAuthorizerForPodIdentity(podName, podNamespace, resource, tenantID, nmiPort string) (azcore.TokenCredential, error) {
+	if len(podName) == 0 || len(podNamespace) == 0 {
+		return nil, fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount: true")
 	}
-	spt, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, clientID, resource, token, nil)
-	if err != nil {
-		return nil, err
-	}
-	return autorest.NewBearerAuthorizer(spt), nil
+	return &podIdentityCredential{
+		podName:      podName,
+		podNamespace: podNamespace,
+		resource:     resource,
+		tenantID:     tenantID,
+		nmiPort:      nmiPort,
+	}, nil
 }
 
 // getCredential gets clientid and clientsecret from the secrets
@@ -283,27 +292,6 @@ func getCredential(secrets map[string]string) (string, string, error) {
 		return "", "", fmt.Errorf("could not find clientsecret in secrets(%v)", secrets)
 	}
 	return clientID, clientSecret, nil
-}
-
-// Vendored from https://github.com/Azure/go-autorest/blob/def88ef859fb980eff240c755a70597bc9b490d0/autorest/adal/token.go
-// converts expires_on to the number of seconds
-func parseExpiresOn(s string) (json.Number, error) {
-	// convert the expiration date to the number of seconds from now
-	timeToDuration := func(t time.Time) json.Number {
-		dur := t.Sub(time.Now().UTC())
-		return json.Number(strconv.FormatInt(int64(dur.Round(time.Second).Seconds()), 10))
-	}
-	if _, err := strconv.ParseInt(s, 10, 64); err == nil {
-		// this is the number of seconds case, no conversion required
-		return json.Number(s), nil
-	} else if eo, err := time.Parse(expiresOnDateFormatPM, s); err == nil {
-		return timeToDuration(eo), nil
-	} else if eo, err := time.Parse(expiresOnDateFormat, s); err == nil {
-		return timeToDuration(eo), nil
-	} else {
-		// unknown format
-		return json.Number(""), err
-	}
 }
 
 // ParseServiceAccountToken parses the bound service account token from the tokens
@@ -332,4 +320,12 @@ func ParseServiceAccountToken(saTokens string) (string, error) {
 		return "", fmt.Errorf("token for audience %s not found", DefaultTokenAudience)
 	}
 	return tokens.APIAzureADTokenExchange.Token, nil
+}
+
+func getScope(resource string) string {
+	scope := resource
+	if !strings.HasSuffix(resource, "/.default") {
+		scope += "/.default"
+	}
+	return scope
 }

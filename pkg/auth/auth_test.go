@@ -1,19 +1,8 @@
 package auth
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
-	"strings"
 	"testing"
-	"time"
-
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -132,134 +121,6 @@ func TestGetCredential(t *testing.T) {
 	}
 }
 
-func TestGetAuthorizerForServicePrincipal(t *testing.T) {
-	env := &azure.PublicCloud
-	authorizer, err := getAuthorizerForServicePrincipal("AADClientID", "AADClientSecret", env.KeyVaultEndpoint, env.ActiveDirectoryEndpoint, "tenantID")
-	assert.NoError(t, err)
-
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, "tenantID")
-	assert.NoError(t, err)
-
-	spt, err := adal.NewServicePrincipalToken(*oauthConfig, "AADClientID", "AADClientSecret", env.KeyVaultEndpoint)
-	assert.NoError(t, err)
-
-	assert.Equal(t, authorizer, autorest.NewBearerAuthorizer(spt))
-}
-
-func TestGetAuthorizerForPodIdentity(t *testing.T) {
-	env := &azure.PublicCloud
-
-	cases := []struct {
-		desc        string
-		tokenResp   NMIResponse
-		podName     string
-		expectedErr error
-	}{
-		{
-			desc:        "pod name is empty",
-			tokenResp:   NMIResponse{},
-			podName:     "",
-			expectedErr: fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount: true"),
-		},
-		{
-			desc:        "token response is empty",
-			tokenResp:   NMIResponse{},
-			podName:     "pod",
-			expectedErr: fmt.Errorf("nmi did not return expected values in response: token and clientid"),
-		},
-		{
-			desc: "valid token response",
-			tokenResp: NMIResponse{
-				Token: adal.Token{
-					AccessToken: "accessToken",
-					ExpiresIn:   "0",
-					ExpiresOn:   "0",
-					NotBefore:   "0",
-				},
-				ClientID: "clientID",
-			},
-			podName:     "pod",
-			expectedErr: nil,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			// mock NMI server
-			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Contains(t, r.URL.String(), "/host/token/")
-				tr, err := json.Marshal(tc.tokenResp)
-				assert.NoError(t, err)
-
-				w.Write(tr)
-			}))
-			defer ts.Close()
-
-			splitURL := strings.Split(ts.URL, ":")
-			mockNMIPort := splitURL[len(splitURL)-1]
-
-			authorizer, err := getAuthorizerForPodIdentity(tc.podName, "default", env.KeyVaultEndpoint, env.ActiveDirectoryEndpoint, "tenantID", mockNMIPort)
-			assert.Equal(t, tc.expectedErr, err)
-
-			if tc.expectedErr == nil {
-				oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, "tenantID")
-				assert.NoError(t, err)
-
-				spt, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, "clientID", env.KeyVaultEndpoint, tc.tokenResp.Token, nil)
-				assert.NoError(t, err)
-				assert.Equal(t, authorizer, autorest.NewBearerAuthorizer(spt))
-			}
-		})
-	}
-}
-
-// Vendored from https://github.com/Azure/go-autorest/blob/def88ef859fb980eff240c755a70597bc9b490d0/autorest/adal/token_test.go
-func TestParseExpiresOn(t *testing.T) {
-	// get current time, round to nearest second, and add one hour
-	n := time.Now().UTC().Round(time.Second).Add(time.Hour)
-	amPM := "AM"
-	if n.Hour() >= 12 {
-		amPM = "PM"
-	}
-	testcases := []struct {
-		Name   string
-		String string
-		Value  int64
-	}{
-		{
-			Name:   "integer",
-			String: "3600",
-			Value:  3600,
-		},
-		{
-			Name:   "timestamp with AM/PM",
-			String: fmt.Sprintf("%d/%d/%d %d:%02d:%02d %s +00:00", n.Month(), n.Day(), n.Year(), n.Hour(), n.Minute(), n.Second(), amPM),
-			Value:  3600,
-		},
-		{
-			Name:   "timestamp without AM/PM",
-			String: fmt.Sprintf("%d/%d/%d %d:%02d:%02d +00:00", n.Month(), n.Day(), n.Year(), n.Hour(), n.Minute(), n.Second()),
-			Value:  3600,
-		},
-	}
-	for _, tc := range testcases {
-		t.Run(tc.Name, func(subT *testing.T) {
-			jn, err := parseExpiresOn(tc.String)
-			if err != nil {
-				subT.Error(err)
-			}
-			i, err := jn.Int64()
-			if err != nil {
-				subT.Error(err)
-			}
-			if i != tc.Value {
-				subT.Logf("expected %d, got %d", tc.Value, i)
-				subT.Fail()
-			}
-		})
-	}
-}
-
 func TestParseServiceAccountTokenError(t *testing.T) {
 	cases := []struct {
 		desc     string
@@ -303,5 +164,38 @@ func TestParseServiceAccountToken(t *testing.T) {
 	}
 	if token != expectedToken {
 		t.Errorf("ParseServiceAccountToken(%s) = %s, want %s", saTokens, token, expectedToken)
+	}
+}
+
+func TestGetScope(t *testing.T) {
+	tests := []struct {
+		name     string
+		scope    string
+		expected string
+	}{
+		{
+			name:     "resource doesn't have /.default suffix",
+			scope:    "https://vault.azure.net",
+			expected: "https://vault.azure.net/.default",
+		},
+		{
+			name:     "resource has /.default suffix",
+			scope:    "https://vault.azure.net/.default",
+			expected: "https://vault.azure.net/.default",
+		},
+		{
+			name:     "resource doesn't  have /.default suffix and has trailing slash",
+			scope:    "https://vault.azure.net/",
+			expected: "https://vault.azure.net//.default",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			scope := getScope(test.scope)
+			if scope != test.expected {
+				t.Errorf("expected scope %s, got %s", test.expected, scope)
+			}
+		})
 	}
 }
