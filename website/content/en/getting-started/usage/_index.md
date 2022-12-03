@@ -92,7 +92,7 @@ The Azure Key Vault Provider offers five modes for accessing a Key Vault instanc
 2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode)
 3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
 4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
-5. [Workload Identity](../../configurations/identity-access-modes/workload-identity-mode.md)
+5. [Workload Identity](../../configurations/identity-access-modes/workload-identity-mode)
 
 #### Update your Deployment Yaml
 
