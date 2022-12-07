@@ -245,6 +245,10 @@ var _ = Describe("When fetching certificates and private key from Key Vault", fu
 
 	Describe("[Feature:WriteCertAndKeyInSeparateFiles] Writing certificates and private key in separate files", func() {
 		It("should write cert and key in separate files", func() {
+			if config.IsArcTest {
+				Skip("test is not supported in Arc cluster")
+			}
+
 			pod.WaitFor(pod.WaitForInput{
 				Getter:         kubeClient,
 				KubeconfigPath: kubeconfigPath,
