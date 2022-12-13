@@ -22,6 +22,9 @@ jobs:
         kind_v1_25_3_helm:
           KIND_K8S_VERSION: v1.25.3
           IS_HELM_TEST: true
+        kind_v1_26_0_helm:
+          KIND_K8S_VERSION: v1.26.0
+          IS_HELM_TEST: true
         kind_v1_23_13_deployment_manifest:
           KIND_K8S_VERSION: v1.23.13
           IS_HELM_TEST: false
@@ -30,6 +33,9 @@ jobs:
           IS_HELM_TEST: false
         kind_v1_25_3_deployment_manifest:
           KIND_K8S_VERSION: v1.25.3
+          IS_HELM_TEST: false
+        kind_v1_26_0_deployment_manifest:
+          KIND_K8S_VERSION: v1.26.0
           IS_HELM_TEST: false
 
     steps:
