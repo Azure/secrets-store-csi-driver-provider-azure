@@ -70,5 +70,7 @@ spec:
         - name: providervol
           hostPath:
             path: "/var/run/secrets-store-csi-providers"
+      tolerations:
+      - operator: Exists
       nodeSelector:
         kubernetes.io/os: linux
