@@ -24,7 +24,7 @@ spec:
 {{- end }}
 {{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
-        prometheus.io/scrape: "true" 
+        prometheus.io/scrape: "true"
         prometheus.io/port: "8898"
 {{- end }}
 {{- end }}
@@ -63,6 +63,9 @@ spec:
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
+            {{- if .Values.writeCertAndKeyInSeparateFiles }}
+            - --write-cert-and-key-in-separate-files={{ .Values.writeCertAndKeyInSeparateFiles }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}
