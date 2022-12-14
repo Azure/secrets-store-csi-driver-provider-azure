@@ -103,7 +103,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	// cleanup
 	defer func() {
 		// uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test
 		if !config.IsSoakTest && !config.IsArcTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {

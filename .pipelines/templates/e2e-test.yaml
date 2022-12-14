@@ -3,7 +3,7 @@ parameters:
     type: string
   - name: testReleasedVersion
     type: boolean
-    default: false    
+    default: false
   - name: resetImageVersion
     type: boolean
     default: false
@@ -47,9 +47,7 @@ steps:
         export REGISTRY="${REGISTRY:-$(REGISTRY_NAME).azurecr.io/k8s/csi/secrets-store}"
       fi
       if [ "${{ parameters.testReleasedVersion }}" == True ] ; then
-        export HELM_CHART_DIR=charts/csi-secrets-store-provider-azure
-      else
-        export HELM_CHART_DIR=manifest_staging/charts/csi-secrets-store-provider-azure
+        export HELM_CHART_DIR=https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
       fi
       make e2e-test
     displayName: "${{ parameters.testName }}"
@@ -72,7 +70,7 @@ steps:
         CI_KIND_CLUSTER: ${{ parameters.ciKindCluster }}
       ${{ if parameters.isArcTest }}:
         IS_ARC_TEST: ${{ parameters.isArcTest }}
-      # If the image is a released versions (i.e <= v1.3), it still doesn't support the 
+      # If the image is a released versions (i.e <= v1.3), it still doesn't support the
       # split cert/key feature, so we need to skip tests for those versions.
       ${{ if parameters.testReleasedVersion }}:
         GINKGO_SKIP: WriteCertAndKeyInSeparateFiles
