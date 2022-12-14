@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.1.0/deploy"
+	driverResourcePath        = "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.3.0/deploy"
 	providerResourceDirectory = "manifest_staging/deployment"
 
 	driverResources = []string{
