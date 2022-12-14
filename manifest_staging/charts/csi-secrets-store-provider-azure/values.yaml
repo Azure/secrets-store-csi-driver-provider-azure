@@ -20,7 +20,10 @@ linux:
     tag: v1.3.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
-  tolerations: []
+  # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+  tolerations:
+  - operator: Exists
   enabled: true
   resources:
     requests:
@@ -63,7 +66,10 @@ windows:
     tag: v1.3.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
-  tolerations: []
+  # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+  tolerations:
+  - operator: Exists
   enabled: false
   resources:
     requests:
