@@ -20,6 +20,7 @@ const (
 	// see https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/596
 	chartName            = "csi-secrets-store-provider-azure"
 	podIdentityChartName = "pi"
+	providerChartsRepo   = "https://azure.github.io/secrets-store-csi-driver-provider-azure/charts"
 )
 
 // InstallInput is the input for Install.
@@ -41,6 +42,17 @@ func Install(input InstallInput) {
 	defer os.Chdir(cwd)
 
 	chartDir := input.Config.HelmChartDir
+	// if chartDir is the official helm repo, then add the repo and update so the latest package is used
+	if chartDir == providerChartsRepo {
+		args := append([]string{"repo", "add", "csi-secrets-store-provider-azure", providerChartsRepo})
+		err := helm(args)
+		Expect(err).To(BeNil())
+
+		args = append([]string{"repo", "update"})
+		err = helm(args)
+		Expect(err).To(BeNil())
+		chartDir = "csi-secrets-store-provider-azure/csi-secrets-store-provider-azure"
+	}
 
 	args := append([]string{
 		"install",
