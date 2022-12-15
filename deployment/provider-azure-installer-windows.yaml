@@ -23,7 +23,7 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.3.0
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
@@ -63,5 +63,7 @@ spec:
           hostPath:
             path: "C:\\k\\secrets-store-csi-providers"
             type: DirectoryOrCreate
+      tolerations:
+      - operator: Exists
       nodeSelector:
         kubernetes.io/os: windows
