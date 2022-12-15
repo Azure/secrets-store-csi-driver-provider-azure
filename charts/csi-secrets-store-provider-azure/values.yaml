@@ -17,10 +17,13 @@ enableArcExtension: false
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.3.0
+    tag: v1.4.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
-  tolerations: []
+  # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+  tolerations:
+  - operator: Exists
   enabled: true
   resources:
     requests:
@@ -60,10 +63,13 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.3.0
+    tag: v1.4.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
-  tolerations: []
+  # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  # An empty key with operator Exists matches all keys, values and effects which means this will tolerate everything.
+  tolerations:
+  - operator: Exists
   enabled: false
   resources:
     requests:
@@ -114,20 +120,20 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.2.3
+      tag: v1.3.0
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.5.1
+      tag: v2.6.2
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.7.0
+      tag: v2.8.0
       pullPolicy: IfNotPresent
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.2.3
+        tag: v1.3.0
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
 
@@ -138,22 +144,22 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.2.3
+      tag: v1.3.0
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.5.1
+      tag: v2.6.2
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.7.0
+      tag: v2.8.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
   rotationPollInterval: 2m
   # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on actions to take before enabling this feature
   filteredWatchSecret: true
-  
+
   syncSecret:
     enabled: false
 
@@ -167,3 +173,6 @@ rbac:
 
 # explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT
 constructPEMChain: true
+
+# Write cert and key in separate files. The individual files will be named as <secret-name>.crt and <secret-name>.key. These files will be created in addition to the single file.
+writeCertAndKeyInSeparateFiles: false
