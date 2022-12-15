@@ -22,13 +22,13 @@ linux:
   nodeSelector: {}
   tolerations: []
   enabled: true
-  resources:
-    requests:
-      cpu: 50m
-      memory: 100Mi
-    limits:
-      cpu: 50m
-      memory: 100Mi
+#  resources:
+#    requests:
+#      cpu: 50m
+#      memory: 100Mi
+#    limits:
+#      cpu: 50m
+#      memory: 100Mi
   podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
@@ -65,13 +65,13 @@ windows:
   nodeSelector: {}
   tolerations: []
   enabled: false
-  resources:
-    requests:
-      cpu: 100m
-      memory: 200Mi
-    limits:
-      cpu: 100m
-      memory: 200Mi
+#  resources:
+#    requests:
+#      cpu: 100m
+#      memory: 200Mi
+#    limits:
+#      cpu: 100m
+#      memory: 200Mi
   podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
@@ -153,7 +153,7 @@ secrets-store-csi-driver:
   rotationPollInterval: 2m
   # Refer to https://secrets-store-csi-driver.sigs.k8s.io/load-tests.html for more details on actions to take before enabling this feature
   filteredWatchSecret: true
-  
+
   syncSecret:
     enabled: false
 
