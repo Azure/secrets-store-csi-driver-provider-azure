@@ -69,7 +69,7 @@ kubectl create ns $NAMESPACE
 ### Create the SecretProviderClass
 
 * To provide identity to access key vault, refer to the following [section](../identity-access-modes).
-* Set the `tenantId` and `keyvaultName`
+* Set the `tenantID` and `keyvaultName`
 * If using **AAD pod identity** to access Azure Key Vault - set `usePodIdentity: "true"`
 * Use `objectType: secret` for the certificate, as this is the only way to retrieve the certificate and private key from azure key vault as documented [here](../getting-certs-and-keys)
 * Set secret type to `kubernetes.io/tls`
@@ -102,7 +102,7 @@ spec:
         - |
           objectName: $CERT_NAME
           objectType: secret
-    tenantId: $TENANT_ID                    # the tenant ID of the KeyVault
+    tenantID: $TENANT_ID                    # the tenant ID of the KeyVault
 EOF
 ```
 
