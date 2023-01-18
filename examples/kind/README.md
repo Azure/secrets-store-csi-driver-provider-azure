@@ -29,7 +29,7 @@ objects: |
     objectName: key1
     objectType: key
     objectVersion: ""
-tenantId: '<tenant id>'       # the tenant ID of the KeyVault
+tenantID: '<tenant id>'       # the tenant ID of the KeyVault
 ```
 
 ## Usage
