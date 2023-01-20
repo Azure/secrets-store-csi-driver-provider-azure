@@ -35,7 +35,7 @@ spec:
           objectName: key1
           objectType: key
           objectVersion: ""
-    tenantId: "tid"                 # the tenant ID of the KeyVault  
+    tenantID: "tid"                 # the tenant ID of the KeyVault  
 ``` 
 
 - `Pod` yaml

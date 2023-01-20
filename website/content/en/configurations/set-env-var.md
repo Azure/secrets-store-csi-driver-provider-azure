@@ -41,7 +41,7 @@ spec:
           objectName: $KEY_NAME
           objectType: key
           objectVersion: $KEY_VERSION
-    tenantId: "tid"                             # the tenant ID of the KeyVault
+    tenantID: "tid"                             # the tenant ID of the KeyVault
 ```
 
 - `Pod` yaml

@@ -103,7 +103,7 @@ spec:
           objectName: secret1              
           objectType: secret
           objectVersion: ""
-    tenantId: "${TENANT_ID}"
+    tenantID: "${TENANT_ID}"
 EOF
 ```
 

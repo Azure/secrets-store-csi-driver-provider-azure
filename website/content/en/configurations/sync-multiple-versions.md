@@ -35,7 +35,7 @@ spec:
           objectType: key
           objectVersion: $KEY_VERSION
           objectVersionHistory: 5                # The number of versions to sync (including the specified version)
-    tenantId: "tid"                              # the tenant ID of the KeyVault
+    tenantID: "tid"                              # the tenant ID of the KeyVault
 ```
 
 - `Pod` yaml
