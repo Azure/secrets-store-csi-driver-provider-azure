@@ -26,7 +26,7 @@
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectName: key1
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectType: key
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectVersion: &amp;#34;&amp;#34;
-&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantId: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
+&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantID: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
 &lt;li>&lt;code>Pod&lt;/code> yaml&lt;/li>
 &lt;/ul>
@@ -161,7 +161,7 @@ If using other managed cluster, refer to &lt;a href="https://azure.github.io/azu
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectName: key1
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectType: key
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectVersion: &amp;#34;&amp;#34;
-&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantId: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
+&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantID: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
 &lt;li>&lt;code>Pod&lt;/code> yaml&lt;/li>
 &lt;/ul>
@@ -248,7 +248,7 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectName: key1
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectType: key
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectVersion: &amp;#34;&amp;#34;
-&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantId: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
+&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantID: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
 &lt;li>&lt;code>Pod&lt;/code> yaml&lt;/li>
 &lt;/ul>
@@ -347,7 +347,7 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectName: key1
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectType: key
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectVersion: &amp;#34;&amp;#34;
-&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantId: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
+&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantID: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
 &lt;li>&lt;code>Pod&lt;/code> yaml&lt;/li>
 &lt;/ul>
@@ -453,7 +453,7 @@ az keyvault set-policy -n &lt;span style="color:#000">$KEYVAULT_NAME&lt;/span> -
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectName: key1
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectType: key
 &lt;/span>&lt;span style="color:#8f5902;font-style:italic"> objectVersion: &amp;#34;&amp;#34;
-&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantId: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
+&lt;/span>&lt;span style="color:#8f5902;font-style:italic"> tenantID: &amp;#34;tid&amp;#34; # the tenant ID of the KeyVault
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
 &lt;li>&lt;code>Pod&lt;/code> yaml&lt;/li>
 &lt;/ul>
