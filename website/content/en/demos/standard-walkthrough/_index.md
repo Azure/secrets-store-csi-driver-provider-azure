@@ -100,7 +100,7 @@ spec:
     objects: |
       array:
         - |
-          objectName: secret1              
+          objectName: secret1
           objectType: secret
           objectVersion: ""
     tenantID: "${TENANT_ID}"
@@ -120,7 +120,7 @@ metadata:
 spec:
   containers:
   - name: busybox
-    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    image: registry.k8s.io/e2e-test-images/busybox:1.29-4
     command:
       - "/bin/sleep"
       - "10000"
@@ -155,7 +155,7 @@ If successful, the output will be similar to:
   ```bash
   kubectl exec busybox-secrets-store-inline -- ls /mnt/secrets-store/
   secret1
-  
+
   kubectl exec busybox-secrets-store-inline -- cat /mnt/secrets-store/secret1
   Hello!
   ```

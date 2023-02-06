@@ -20,7 +20,7 @@ metadata:
 spec:
   provider: azure
   parameters:
-    usePodIdentity: "true"                      
+    usePodIdentity: "true"
     keyvaultName: "$KEYVAULT_NAME"               # the name of the KeyVault
     objects: |
       array:
@@ -48,7 +48,7 @@ metadata:
 spec:
   containers:
     - name: busybox
-      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      image: registry.k8s.io/e2e-test-images/busybox:1.29-4
       command:
         - "/bin/sleep"
         - "10000"
@@ -76,6 +76,6 @@ When you do this, the provider will treat the object name/alias as a folder and 
 {{% alert title="NOTE" color="warning" %}}
 
 - There may be fewer than `objectVersionHistory` versions synced. For instance if you specify 5 and the secret only has 3 versions, then only 3 versions will be synced.
-- Disabled versions of the secret are ignored. 
+- Disabled versions of the secret are ignored.
 
 {{% /alert %}}

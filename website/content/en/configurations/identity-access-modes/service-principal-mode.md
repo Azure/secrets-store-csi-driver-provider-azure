@@ -4,7 +4,7 @@ title: "Service Principal"
 linkTitle: "Service Principal"
 weight: 3
 description: >
-  Use a Service Principal to access Keyvault. 
+  Use a Service Principal to access Keyvault.
 ---
 
 <details>
@@ -22,7 +22,7 @@ spec:
   parameters:
     usePodIdentity: "false"         # [OPTIONAL] if not provided, will default to "false"
     keyvaultName: "kvname"          # the name of the KeyVault
-    cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud 
+    cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
     objects:  |
       array:
         - |
@@ -34,7 +34,7 @@ spec:
           objectType: key
           objectVersion: ""
     tenantID: "tid"                 # the tenant ID of the KeyVault
-``` 
+```
 
 - `Pod` yaml
 ```yaml
@@ -46,7 +46,7 @@ metadata:
 spec:
   containers:
   - name: busybox
-    image: k8s.gcr.io/e2e-test-images/busybox:1.29
+    image: registry.k8s.io/e2e-test-images/busybox:1.29-4
     command:
       - "/bin/sleep"
       - "10000"
