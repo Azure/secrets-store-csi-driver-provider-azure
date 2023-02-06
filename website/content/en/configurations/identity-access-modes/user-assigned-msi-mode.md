@@ -35,8 +35,8 @@ spec:
           objectName: key1
           objectType: key
           objectVersion: ""
-    tenantID: "tid"                 # the tenant ID of the KeyVault  
-``` 
+    tenantID: "tid"                 # the tenant ID of the KeyVault
+```
 
 - `Pod` yaml
 ```yaml
@@ -48,7 +48,7 @@ metadata:
 spec:
   containers:
     - name: busybox
-      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      image: registry.k8s.io/e2e-test-images/busybox:1.29-4
       command:
         - "/bin/sleep"
         - "10000"

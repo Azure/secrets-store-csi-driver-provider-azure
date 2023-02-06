@@ -33,8 +33,8 @@ spec:
           objectName: key1
           objectType: key
           objectVersion: ""
-    tenantID: "tid"                    # the tenant ID of the KeyVault  
-``` 
+    tenantID: "tid"                    # the tenant ID of the KeyVault
+```
 
 - `Pod` yaml
 ```yaml
@@ -48,7 +48,7 @@ metadata:
 spec:
   containers:
     - name: busybox
-      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      image: registry.k8s.io/e2e-test-images/busybox:1.29-4
       command:
         - "/bin/sleep"
         - "10000"
@@ -158,14 +158,14 @@ Not all steps need to be followed on the instructions for the aad-pod-identity p
     labels:
       aadpodidbinding: <AzureIdentityBinding Selector created from previous step>
     ```
-    
+
 7. Update [this sample deployment](https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/examples/pod-identity/v1alpha1_secretproviderclass_pod_identity.yaml) to create a `SecretProviderClass` resource with `usePodIdentity: "true"` to provide Azure-specific parameters for the Secrets Store CSI driver.
 
     Make sure to set `usePodIdentity` to `true`
     ```yaml
     usePodIdentity: "true"
     ```
-    
+
 8. Deploy your app
 
     ```bash
