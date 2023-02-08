@@ -72,7 +72,7 @@ func Create(input CreateInput) *corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:            "tester",
-					Image:           "k8s.gcr.io/e2e-test-images/busybox:1.29",
+					Image:           "registry.k8s.io/e2e-test-images/busybox:1.29-4",
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					Command:         []string{"/bin/sleep", "10000"},
 					VolumeMounts: []corev1.VolumeMount{

@@ -22,13 +22,13 @@ spec:
   secretObjects:                                 # [OPTIONAL] SecretObject defines the desired state of synced K8s secret objects
   - secretName: foosecret
     type: Opaque
-    labels:                                   
+    labels:
       environment: "test"
-    data: 
-    - objectName: secretalias                    # name of the mounted content to sync. this could be the object name or object alias 
+    data:
+    - objectName: secretalias                    # name of the mounted content to sync. this could be the object name or object alias
       key: username
   parameters:
-    usePodIdentity: "true"                      
+    usePodIdentity: "true"
     keyvaultName: "$KEYVAULT_NAME"               # the name of the KeyVault
     objects: |
       array:
@@ -54,7 +54,7 @@ metadata:
 spec:
   containers:
     - name: busybox
-      image: k8s.gcr.io/e2e-test-images/busybox:1.29
+      image: registry.k8s.io/e2e-test-images/busybox:1.29-4
       command:
         - "/bin/sleep"
         - "10000"
@@ -96,7 +96,7 @@ kind: SecretProviderClass
 metadata:
   name: my-provider
 spec:
-  provider: azure                             
+  provider: azure
   secretObjects:                              # [OPTIONAL] SecretObject defines the desired state of synced K8s secret objects
   - data:
     - key: username                           # data field to populate
