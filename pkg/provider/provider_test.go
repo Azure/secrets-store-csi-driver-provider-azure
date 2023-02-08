@@ -871,6 +871,7 @@ func TestInitializeKVClient(t *testing.T) {
 			authConfig:            authConfig,
 			podName:               "pod",
 			podNamespace:          "default",
+			tenantID:              "tenant",
 		}
 
 		version.BuildVersion = "version"
