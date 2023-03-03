@@ -13,9 +13,6 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     strategy:
       matrix:
-        kind_v1_23_13_helm:
-          KIND_K8S_VERSION: v1.23.13
-          IS_HELM_TEST: true
         kind_v1_24_7_helm:
           KIND_K8S_VERSION: v1.24.7
           IS_HELM_TEST: true
@@ -25,9 +22,6 @@ jobs:
         kind_v1_26_0_helm:
           KIND_K8S_VERSION: v1.26.0
           IS_HELM_TEST: true
-        kind_v1_23_13_deployment_manifest:
-          KIND_K8S_VERSION: v1.23.13
-          IS_HELM_TEST: false
         kind_v1_24_7_deployment_manifest:
           KIND_K8S_VERSION: v1.24.7
           IS_HELM_TEST: false
