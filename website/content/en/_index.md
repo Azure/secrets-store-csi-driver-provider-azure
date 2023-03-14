@@ -29,3 +29,8 @@ For Secrets Store CSI Driver project status and supported versions, check the do
 - Supports Linux and Windows containers
 - Supports sync with Kubernetes Secrets
 - Supports auto rotation of secrets
+
+## Managed Add-ons
+Azure Key Vault provider for Secrets Store CSI Driver is available as a managed add-on in:
+- Azure Kubernetes Service (AKS). For more information, see [Use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-driver).
+- Azure Arc enabled Kubernetes. For more information, see [Use the Azure Key Vault Secrets Provider extension to fetch secrets into Azure Arc-enabled Kubernetes clusters](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-akv-secrets-provider).
