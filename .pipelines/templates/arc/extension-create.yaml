@@ -45,6 +45,10 @@ steps:
         exit 1
       fi
 
+      # validate if monitoring pod is Running
+      echo "validating monitoring pod..."
+      kubectl wait --for=condition=Ready pod -l app=arc-monitoring --timeout=1m -n kube-system
+
       helm ls -A
       helm get values ${{ parameters.azureClusterName }} -n kube-system
       kubectl get pods -n kube-system
