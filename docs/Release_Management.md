@@ -29,9 +29,6 @@ This project strictly follows [semantic versioning](https://semver.org/spec/v2.0
 
 - Ideally we will avoid making multiple major releases to be always backward compatible, unless project evolves in important new directions and such release is necessary.
 
-- AKV provider for Secrets Store CSI Driver is currently tracking towards first stable release(v1.0.0) with [this](https://github.com/Azure/secrets-store-csi-driver-provider-azure/milestone/5) milestone.
-
-
 
 ## Release Cadence and Branching
 - AKV provider for Secrets Store CSI Driver follows `monthly` release schedule.
