@@ -31,16 +31,16 @@ You can use `grep ^E` and `--since` flag from `kubectl` to isolate any errors oc
 To troubleshoot issues with the provider, you can look at logs from the provider pod running on the same node as your application pod
 
 ```bash
-# find the csi-secrets-store-provider-azure pod running on the same node as your application pod
-kubectl get pods -l app=csi-secrets-store-provider-azure -o wide
+# find the secrets-store-provider-azure pod running on the same node as your application pod
+kubectl get pods -l app=secrets-store-provider-azure -o wide -A
 kubectl logs <provider pod name> --since=1h | grep ^E
 ```
 
 #### For CSI driver logs
 
 ```bash
-# find the secrets store csi driver pod running on the same node as your application pod
-kubectl get pods -l app=secrets-store-csi-driver -o wide
+# find the secrets-store-csi-driver pod running on the same node as your application pod
+kubectl get pods -l app=secrets-store-csi-driver -o wide -A
 kubectl logs <driver pod name> secrets-store --since=1h | grep ^E
 ```
 
