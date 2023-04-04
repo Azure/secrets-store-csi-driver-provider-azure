@@ -32,7 +32,7 @@ To troubleshoot issues with the provider, you can look at logs from the provider
 
 ```bash
 # find the secrets-store-provider-azure pod running on the same node as your application pod
-kubectl get pods -l app=secrets-store-provider-azure -o wide -A
+kubectl get pods -l 'app in (csi-secrets-store-provider-azure, secrets-store-provider-azure)' -o wide -A
 kubectl logs <provider pod name> --since=1h | grep ^E
 ```
 
