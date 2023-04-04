@@ -15,9 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/jongio/azidext/go/azidext"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
 )
@@ -137,30 +135,21 @@ func NewConfig(
 	return config, nil
 }
 
-// GetAuthorizer returns an Azure authorizer based on the provided azure identity
-func (c Config) GetAuthorizer(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (autorest.Authorizer, error) {
-	var cred azcore.TokenCredential
-	var err error
-
+// GetCredential returns the azure credential to use based on the auth config
+func (c Config) GetCredential(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (azcore.TokenCredential, error) {
 	// use switch case to ensure only one of the identity modes is enabled
 	switch {
 	case c.UsePodIdentity:
-		cred, err = getAuthorizerForPodIdentity(podName, podNamespace, resource, tenantID, nmiPort)
+		return getPodIdentityTokenCredential(podName, podNamespace, resource, tenantID, nmiPort)
 	case c.UseVMManagedIdentity:
-		cred, err = getAuthorizerForManagedIdentity(c.UserAssignedIdentityID)
+		return getManagedIdentityTokenCredential(c.UserAssignedIdentityID)
 	case len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0:
-		cred, err = getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
+		return getServicePrincipalTokenCredential(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
 	case len(c.WorkloadIdentityClientID) > 0 && len(c.WorkloadIdentityToken) > 0:
-		cred, err = getAuthorizerForWorkloadIdentity(c.WorkloadIdentityClientID, c.WorkloadIdentityToken, aadEndpoint, tenantID)
+		return getWorkloadIdentityTokenCredential(c.WorkloadIdentityClientID, c.WorkloadIdentityToken, aadEndpoint, tenantID)
 	default:
 		return nil, fmt.Errorf("no identity mode is enabled")
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return azidext.NewTokenCredentialAdapter(cred, []string{getScope(resource)}), nil
 }
 
 func newWorkloadIdentityCredential(tenantID, clientID, assertion string, options *workloadIdentityCredentialOptions) (azcore.TokenCredential, error) {
@@ -181,7 +170,7 @@ func (w *workloadIdentityCredential) getAssertion(context.Context) (string, erro
 	return w.assertion, nil
 }
 
-func getAuthorizerForWorkloadIdentity(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+func getWorkloadIdentityTokenCredential(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
 	opts := &workloadIdentityCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
@@ -192,7 +181,7 @@ func getAuthorizerForWorkloadIdentity(clientID, signedAssertion, aadEndpoint, te
 	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
-func getAuthorizerForServicePrincipal(clientID, secret, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+func getServicePrincipalTokenCredential(clientID, secret, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
 	opts := &azidentity.ClientSecretCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
@@ -203,7 +192,7 @@ func getAuthorizerForServicePrincipal(clientID, secret, aadEndpoint, tenantID st
 	return azidentity.NewClientSecretCredential(tenantID, clientID, secret, opts)
 }
 
-func getAuthorizerForManagedIdentity(identityClientID string) (azcore.TokenCredential, error) {
+func getManagedIdentityTokenCredential(identityClientID string) (azcore.TokenCredential, error) {
 	opts := &azidentity.ManagedIdentityCredentialOptions{
 		ID: azidentity.ClientID(identityClientID),
 	}
@@ -258,7 +247,7 @@ func (c *podIdentityCredential) GetToken(ctx context.Context, _ policy.TokenRequ
 	}, nil
 }
 
-func getAuthorizerForPodIdentity(podName, podNamespace, resource, tenantID, nmiPort string) (azcore.TokenCredential, error) {
+func getPodIdentityTokenCredential(podName, podNamespace, resource, tenantID, nmiPort string) (azcore.TokenCredential, error) {
 	if len(podName) == 0 || len(podNamespace) == 0 {
 		return nil, fmt.Errorf("pod information is not available. deploy a CSIDriver object to set podInfoOnMount: true")
 	}

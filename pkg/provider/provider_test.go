@@ -7,6 +7,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rsa"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,15 +17,18 @@ import (
 	"testing"
 	"time"
 
-	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azcertificates"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/klog/v2"
 
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/mock_keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 )
 
 func TestGetVaultURL(t *testing.T) {
@@ -65,7 +69,7 @@ func TestGetVaultURL(t *testing.T) {
 		}
 
 		for idx := range testEnvs {
-			azCloudEnv, err := ParseAzureEnvironment(testEnvs[idx])
+			azCloudEnv, err := parseAzureEnvironment(testEnvs[idx])
 			if err != nil {
 				t.Fatalf("Error parsing cloud environment %v", err)
 			}
@@ -85,7 +89,7 @@ func TestGetVaultURL(t *testing.T) {
 func TestParseAzureEnvironment(t *testing.T) {
 	envNamesArray := []string{"AZURECHINACLOUD", "AZUREGERMANCLOUD", "AZUREPUBLICCLOUD", "AZUREUSGOVERNMENTCLOUD", ""}
 	for _, envName := range envNamesArray {
-		azureEnv, err := ParseAzureEnvironment(envName)
+		azureEnv, err := parseAzureEnvironment(envName)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -97,7 +101,7 @@ func TestParseAzureEnvironment(t *testing.T) {
 	}
 
 	wrongEnvName := "AZUREWRONGCLOUD"
-	_, err := ParseAzureEnvironment(wrongEnvName)
+	_, err := parseAzureEnvironment(wrongEnvName)
 	if err == nil {
 		t.Fatalf("expected error for wrong azure environment name")
 	}
@@ -232,7 +236,7 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	_, err = ParseAzureEnvironment(azureStackCloudEnvName)
+	_, err = parseAzureEnvironment(azureStackCloudEnvName)
 	if err == nil {
 		t.Fatalf("expected error to be not nil as AZURE_ENVIRONMENT_FILEPATH is not set")
 	}
@@ -242,7 +246,7 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	env, err := ParseAzureEnvironment(azureStackCloudEnvName)
+	env, err := parseAzureEnvironment(azureStackCloudEnvName)
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
@@ -855,37 +859,6 @@ kzqEt441cQasPp5ohL5U4cJN6lAuwA==
 	}
 }
 
-func TestInitializeKVClient(t *testing.T) {
-	testEnvs := []azure.Environment{
-		azure.PublicCloud,
-		azure.GermanCloud,
-		azure.ChinaCloud,
-		azure.USGovernmentCloud,
-	}
-	for i := range testEnvs {
-		authConfig, err := auth.NewConfig(false, false, "", "", "", map[string]string{"clientid": "id", "clientsecret": "secret"})
-		assert.NoError(t, err)
-
-		mc := &mountConfig{
-			azureCloudEnvironment: &testEnvs[i],
-			authConfig:            authConfig,
-			podName:               "pod",
-			podNamespace:          "default",
-			tenantID:              "tenant",
-		}
-
-		version.BuildVersion = "version"
-		version.BuildDate = "Now"
-		version.Vcs = "hash"
-
-		kvBaseClient, err := mc.initializeKvClient()
-		assert.NoError(t, err)
-		assert.NotNil(t, kvBaseClient)
-		assert.NotNil(t, kvBaseClient.Authorizer)
-		assert.Contains(t, kvBaseClient.UserAgent, "csi-secrets-store")
-	}
-}
-
 func TestGetSecretsStoreObjectContent(t *testing.T) {
 	cases := []struct {
 		desc        string
@@ -1033,7 +1006,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			p := NewProvider(false, false)
 
-			_, err := p.GetSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, 0420)
+			_, err := p.GetSecretsStoreObjectContent(testContext(t), tc.parameters, tc.secrets, 0420)
 			if tc.expectedErr {
 				assert.NotNil(t, err)
 			} else {
@@ -1045,29 +1018,29 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 
 func TestGetCurve(t *testing.T) {
 	cases := []struct {
-		crv           kv.JSONWebKeyCurveName
+		crv           azkeys.JSONWebKeyCurveName
 		expectedCurve elliptic.Curve
 		expectedErr   error
 	}{
 		{
-			crv:           kv.P256,
+			crv:           azkeys.JSONWebKeyCurveNameP256,
 			expectedCurve: elliptic.P256(),
 			expectedErr:   nil,
 		},
 		{
-			crv:           kv.P384,
+			crv:           azkeys.JSONWebKeyCurveNameP384,
 			expectedCurve: elliptic.P384(),
 			expectedErr:   nil,
 		},
 		{
-			crv:           kv.P521,
+			crv:           azkeys.JSONWebKeyCurveNameP521,
 			expectedCurve: elliptic.P521(),
 			expectedErr:   nil,
 		},
 		{
-			crv:           kv.SECP256K1,
+			crv:           azkeys.JSONWebKeyCurveNameP256K,
 			expectedCurve: nil,
-			expectedErr:   fmt.Errorf("curve SECP256K1 is not supported"),
+			expectedErr:   fmt.Errorf("curve P-256K is not supported"),
 		},
 	}
 
@@ -1181,13 +1154,6 @@ PxrUsXyXty7ERMp5QNyxjMWS+0w93FrAIw==
 	}
 }
 
-func TestGetObjectVersion(t *testing.T) {
-	id := "https://kindkv.vault.azure.net/secrets/secret1/c55925c29c6743dcb9bb4bf091be03b0"
-	expectedVersion := "c55925c29c6743dcb9bb4bf091be03b0"
-	actual := getObjectVersion(id)
-	assert.Equal(t, expectedVersion, actual)
-}
-
 func TestSplitCertAndKey(t *testing.T) {
 	rootCACert := `-----BEGIN CERTIFICATE-----
 MIIBeTCCAR6gAwIBAgIRAM3RAPH7k1Q+bICMC0mzKhkwCgYIKoZIzj0EAwIwGjEY
@@ -1289,4 +1255,356 @@ SIVZww73PTGisLmXfIvKvr8GBA==
 			}
 		})
 	}
+}
+
+func TestGetSecret(t *testing.T) {
+	id := azsecrets.ID("https://test.vault.azure.net/secrets/secret1/v1")
+	testPFX := "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"
+	testCert := `-----BEGIN CERTIFICATE-----
+MIIC2DCCAcACCQD9DZdcsr7kJDANBgkqhkiG9w0BAQsFADAuMRYwFAYDVQQDDA1k
+ZW1vLnRlc3QuY29tMRQwEgYDVQQKDAtpbmdyZXNzLXRsczAeFw0yMDA1MjIxNjIz
+MjZaFw0yMTA1MjIxNjIzMjZaMC4xFjAUBgNVBAMMDWRlbW8udGVzdC5jb20xFDAS
+BgNVBAoMC2luZ3Jlc3MtdGxzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAte0os8X6ZKbEUWoFJdSfcYoSovbxPBhtisEJd/U+oOK1jKH/HMBliTv+9l6O
+vIhldtt48v57mk4P0M72KT8ulXcBasNV95DNnPsEpAqs7wKrhftleeDMKPnk8VvU
+6jidPy6SO6Ntbp8tJchrbfMwZW7e2y+PVweKN8QwNECQPfygBtX8jP93CG6oYvK9
+FDS45U1UcKUdxTLfXmSvORPo0HFEXLNvZxmdjSsrP0oSbasJfMr02DZb5/6MSxCb
+J/FnPwdqXQH/cM6rQDLw2Is5iWn0QXPEYZMqYbtMAJoY0UEVHVHgIUb/HucQ+SEk
+tt6kG3sIGKsKLiuymZGozRFNqwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCSZNbl
+WFMjnZuGiFzIZoqfKOp/Dtw48poNJkrxMBJLkiciJD6drXj8vnTQrZUuR25TIiD/
+Sq+cO+XVRcJKNP13FjFpRdyHYRtAze4TaQZSJlW2nyfeUtUQkwj2iMhv5l1UMnPG
+7+Jxg56aA+IBvyE/tAQVvS0NPdq6Ht2MX6j40ERTXmS8qNdY6qi3ZCEAPazlNsUF
+C6nLdViZ/vbQ+l6uEcNsEsPJ6SDTNKLkO9tU7pWCa6QBTncuFLbpDqr3Q+lvx4mv
+MVw9RO3NiLuDiPQA0VfKSMrEJJUp4F88pbEax5nq525Rbp85RWkmVoc97UuFS+oc
+ldGQrUHVb2/iI1fd
+-----END CERTIFICATE-----
+`
+	testPrivateKey := `-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC17SizxfpkpsRR
+agUl1J9xihKi9vE8GG2KwQl39T6g4rWMof8cwGWJO/72Xo68iGV223jy/nuaTg/Q
+zvYpPy6VdwFqw1X3kM2c+wSkCqzvAquF+2V54Mwo+eTxW9TqOJ0/LpI7o21uny0l
+yGtt8zBlbt7bL49XB4o3xDA0QJA9/KAG1fyM/3cIbqhi8r0UNLjlTVRwpR3FMt9e
+ZK85E+jQcURcs29nGZ2NKys/ShJtqwl8yvTYNlvn/oxLEJsn8Wc/B2pdAf9wzqtA
+MvDYizmJafRBc8Rhkyphu0wAmhjRQRUdUeAhRv8e5xD5ISS23qQbewgYqwouK7KZ
+kajNEU2rAgMBAAECggEBAK9MJxUapkxH+RDt1KoAN+aigZSv2ADtFNhHa0VAdal2
+6jLpgbWFmhDjU6i3slfuIb6meePC3PzxTQIJ+l4COHPi6OWj9PkIeWdS5MTgWIQx
+kW8Xr08CEhdFu5npv7408SgJSvTWY8Lc9BbdCM84LqD+dRTEvhzA8ikMDNq8f4CJ
+hLreFUUl/udHacpMdE8mpB6vgCUliZEjBlHHC9qD2mDKgWb0cm4jkO9PcHxz8CXL
+szcRV2vqTwvsJcZWcJwTzjhFxq/lUZrgbwpn60iKlov3BCRoTJBppOXi01giom3v
+Wz7Y7DoFbHfizh6jyBrf3ODhKJQ3CGvS65QCS0aJ/kECgYEA4JuGC9DpQYmlzWbV
+0CqJYnTcZKqcPQx/A1QZDKot0VWqF61vZIku5XuoGKGfY3eLwVZJJZqxoTlVTbuT
+nNzYJe+EHzftRoUxUqXZtIh9VdirJMwCu4RMdwk705FA8+8FcTKXarKWBbAzUmFi
+iINR2rlRJHVyh2cOA9hWPbEXX0sCgYEAz1qAYUIMBGnccY9mALGArWTmtyNN3DcB
+9tl3/5SzfL1NlcOWsBXdZL61oTl9LhOjqHGZbf164/uFuKNHTsT1E63180UKujmV
+TbHL6N6MrMctaJfgru3+XprTMd5pwjzd8huX603OtS8Gvn5gKdBRkG1ZI8CrfTl6
+sJI9YRvl7yECgYEAjUIiptHHsVkhdrIDLL1j1BEM/x6xzk9KnkxIyMdKs4n9xJBm
+K0N/xAHmMT+Mn6DyuzBKJqVIq84EETQ0XQYjxpABdyTUTHK+F22JItpogRIYaLcJ
+zOcitAaRoriKsh+UO6IGyqrwYTl0vY3Ty2lTlIzSNGzND81HajGn43q56UsCgYEA
+pGqArZ3vZXiDgdBQ82/MNrFxd/oYfOtpNVFPI2vHvrtkT8KdM9bCjGXkI4kwR17v
+QFuDa4G49hm0+KkPm9f09LvV8CXo0a1jRA4dP/Nn3IC68tqrIEo6js15dWuEtK4K
+1zUmC0DRDT3SvS38FmvGoRzzt7PIxyzSqjvrS5sRgcECgYAQ6b0YsM4p+89s4ALK
+BPfGIKpoIEMKUcwiT3ovRrwIu1vbu70WRcYAi5do6rwOakp3FyUcQznkeZEOAQmc
+xrBy8R64vg83WMuRITAqY6vartSa3oehqUHW0YbhGDVEtSrolXEs5elArUHbpYnX
+SIVZww73PTGisLmXfIvKvr8GBA==
+-----END PRIVATE KEY-----
+`
+
+	cases := []struct {
+		desc                           string
+		initKeyVaultSecret             *azsecrets.SecretBundle
+		inputKeyVaultObject            types.KeyVaultObject
+		writeCertAndKeyInSeparateFiles bool
+		expectedKeyVaultObject         []keyvaultObject
+	}{
+		{
+			desc: "secret",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:    &id,
+				Value: to.StringPtr("secret1value"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName: "secret1",
+			},
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content: "secret1value",
+					version: "v1",
+				},
+			},
+		},
+		{
+			desc: "secret with kid, pem cert and key",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr(testCert + testPrivateKey),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pem-file"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName: "secret1",
+			},
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content: testCert + testPrivateKey,
+					version: "v1",
+				},
+			},
+		},
+		{
+			desc: "secret with kid, pfx, objectFormat=pfx",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr(testPFX),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pkcs12"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName:   "secret1",
+				ObjectFormat: "pfx",
+			},
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content: testPFX,
+					version: "v1",
+				},
+			},
+		},
+		{
+			desc: "secret with kid, pfx, objectFormat=pem",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr(testPFX),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pkcs12"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName:   "secret1",
+				ObjectFormat: "pem",
+			},
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content: testPrivateKey + testCert,
+					version: "v1",
+				},
+			},
+		},
+		{
+			desc: "secret with kid, pfx, default objectFormat",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr(testPFX),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pkcs12"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName: "secret1",
+			},
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content: testPrivateKey + testCert,
+					version: "v1",
+				},
+			},
+		},
+		{
+			desc: "write cert and key in separate files",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr(testPFX),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pkcs12"),
+			},
+			inputKeyVaultObject: types.KeyVaultObject{
+				ObjectName: "secret1",
+			},
+			writeCertAndKeyInSeparateFiles: true,
+			expectedKeyVaultObject: []keyvaultObject{
+				{
+					content:        testCert,
+					version:        "v1",
+					fileNameSuffix: ".crt",
+				},
+				{
+					content:        testPrivateKey,
+					version:        "v1",
+					fileNameSuffix: ".key",
+				},
+				{
+					content: testPrivateKey + testCert,
+					version: "v1",
+				},
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := testContext(t)
+
+			p := &provider{writeCertAndKeyInSeparateFiles: tc.writeCertAndKeyInSeparateFiles}
+			kvClient := mock_keyvault.NewMockKeyVault(ctrl)
+			kvClient.EXPECT().GetSecret(ctx, "secret1", "").Return(
+				tc.initKeyVaultSecret, nil,
+			)
+
+			objs, err := p.getSecret(ctx, kvClient, tc.inputKeyVaultObject)
+			if err != nil {
+				t.Fatalf("getSecret() = %v, want nil", err)
+			}
+			if !reflect.DeepEqual(objs, tc.expectedKeyVaultObject) {
+				t.Errorf("getSecret() = \n%v, want \n%v", objs, tc.expectedKeyVaultObject)
+			}
+		})
+	}
+}
+
+func TestGetSecretError(t *testing.T) {
+	id := azsecrets.ID("https://test.vault.azure.net/secrets/secret1/v1")
+
+	cases := []struct {
+		desc                   string
+		initKeyVaultSecret     *azsecrets.SecretBundle
+		kvError                error
+		expectedKeyVaultObject []keyvaultObject
+	}{
+		{
+			desc:               "keyvault get secret error",
+			initKeyVaultSecret: &azsecrets.SecretBundle{},
+			kvError:            errors.New("keyvault error"),
+		},
+		{
+			desc: "secret value is nil",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID: &id,
+			},
+		},
+		{
+			desc: "secret id is nil",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				Value: to.StringPtr("test"),
+			},
+		},
+		{
+			desc: "secret has kid, not valid pfx",
+			initKeyVaultSecret: &azsecrets.SecretBundle{
+				ID:          &id,
+				Value:       to.StringPtr("invalid"),
+				Kid:         to.StringPtr("https://testvault.vault.azure.net/keys/secrets/secret1/v1"),
+				ContentType: to.StringPtr("application/x-pkcs12"),
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := testContext(t)
+
+			p := &provider{}
+			kvClient := mock_keyvault.NewMockKeyVault(ctrl)
+			kvClient.EXPECT().GetSecret(ctx, "secret1", "").Return(
+				tc.initKeyVaultSecret, nil,
+			)
+
+			if _, err := p.getSecret(ctx, kvClient, types.KeyVaultObject{ObjectName: "secret1"}); err == nil {
+				t.Fatalf("getSecret() = nil, want error")
+			}
+		})
+	}
+}
+
+func TestGetCertificate(t *testing.T) {
+	id := azcertificates.ID("https://test.vault.azure.net/certificates/cert1/v1")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := testContext(t)
+
+	p := &provider{}
+	kvClient := mock_keyvault.NewMockKeyVault(ctrl)
+	kvClient.EXPECT().GetCertificate(ctx, "cert1", "").Return(
+		&azcertificates.CertificateBundle{
+			CER: []byte("test"),
+			ID:  &id,
+		}, nil,
+	)
+
+	objs, err := p.getCertificate(ctx, kvClient, types.KeyVaultObject{ObjectName: "cert1"})
+	if err != nil {
+		t.Fatalf("getCertificate() = %v, want nil", err)
+	}
+
+	expected := []keyvaultObject{
+		{
+			content: `-----BEGIN CERTIFICATE-----
+dGVzdA==
+-----END CERTIFICATE-----
+`,
+			version: "v1",
+		},
+	}
+
+	if !reflect.DeepEqual(objs, expected) {
+		t.Fatalf("getCertificate() = \n%v, want \n%v", objs, expected)
+	}
+}
+
+func TestGetCertificateError(t *testing.T) {
+	id := azcertificates.ID("https://test.vault.azure.net/certificates/cert1/v1")
+
+	cases := []struct {
+		desc                   string
+		initKeyVaultCert       *azcertificates.CertificateBundle
+		kvError                error
+		expectedKeyVaultObject []keyvaultObject
+	}{
+		{
+			desc:             "keyvault get certificate error",
+			initKeyVaultCert: &azcertificates.CertificateBundle{},
+			kvError:          errors.New("keyvault error"),
+		},
+		{
+			desc: "certificate CER is nil",
+			initKeyVaultCert: &azcertificates.CertificateBundle{
+				ID: &id,
+			},
+		},
+		{
+			desc: "certificate id is nil",
+			initKeyVaultCert: &azcertificates.CertificateBundle{
+				CER: []byte("test"),
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := testContext(t)
+
+			p := &provider{}
+			kvClient := mock_keyvault.NewMockKeyVault(ctrl)
+			kvClient.EXPECT().GetCertificate(ctx, "cert1", "").Return(
+				tc.initKeyVaultCert, nil,
+			)
+
+			if _, err := p.getCertificate(ctx, kvClient, types.KeyVaultObject{ObjectName: "cert1"}); err == nil {
+				t.Fatalf("getCertificate() = nil, want error")
+			}
+		})
+	}
+}
+
+func testContext(t *testing.T) context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	return ctx
 }
