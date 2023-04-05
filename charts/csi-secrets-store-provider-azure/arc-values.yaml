@@ -15,7 +15,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.4.0
+    tag: v1.4.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -58,11 +58,11 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.4.0
+    tag: v1.4.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
-  enabled: false
+  enabled: true
   resources:
     requests:
       cpu: 100m
@@ -132,7 +132,7 @@ secrets-store-csi-driver:
       prometheus.io/port: "8080"
 
   windows:
-    enabled: false
+    enabled: true
     kubeletRootDir: C:\var\lib\kubelet
     metricsAddr: ":8080"
     image:
