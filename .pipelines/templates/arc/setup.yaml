@@ -4,7 +4,7 @@ parameters:
 steps:
   - script: |
       az extension add --name connectedk8s
-      az extension add --name k8s-extension
+      az extension add --name k8s-extension --version 1.3.5
       echo "az version:"
       az version
     displayName: "add cli extensions"

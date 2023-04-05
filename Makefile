@@ -8,7 +8,7 @@ REPO_PATH="$(ORG_PATH)/$(PROJECT_NAME)"
 REGISTRY_NAME ?= upstream
 REPO_PREFIX ?= k8s/csi/secrets-store
 REGISTRY ?= $(REGISTRY_NAME).azurecr.io/$(REPO_PREFIX)
-IMAGE_VERSION ?= v1.4.0
+IMAGE_VERSION ?= v1.4.1
 IMAGE_NAME ?= provider-azure
 CONFORMANCE_IMAGE_NAME ?= provider-azure-arc-conformance
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_VERSION)
@@ -49,6 +49,9 @@ OSVERSION ?= 1809
 # Output type of docker buildx build
 OUTPUT_TYPE ?= registry
 BUILDX_BUILDER_NAME ?= img-builder
+# pinning buildkit version to v0.10.6 as v0.11.0 is injecting sbom/prov to manifest
+# causing the manifest push to fail
+BUILDKIT_VERSION ?= 0.10.6
 
 # step cli version
 STEP_CLI_VERSION=0.18.0
@@ -145,7 +148,7 @@ container-windows: docker-buildx-builder
 .PHONY: docker-buildx-builder
 docker-buildx-builder:
 	@if ! docker buildx ls | grep $(BUILDX_BUILDER_NAME); then \
-		docker buildx create --name $(BUILDX_BUILDER_NAME) --use; \
+		docker buildx create --driver-opt image=mcr.microsoft.com/oss/moby/buildkit:$(BUILDKIT_VERSION) --name $(BUILDX_BUILDER_NAME) --use; \
 		docker buildx inspect $(BUILDX_BUILDER_NAME) --bootstrap; \
 	fi
 
