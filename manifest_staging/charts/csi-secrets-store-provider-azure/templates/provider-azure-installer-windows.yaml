@@ -17,9 +17,17 @@ spec:
 {{- if .Values.windows.podLabels }}
 {{- toYaml .Values.windows.podLabels | nindent 8 }}
 {{- end }}
-{{- if .Values.windows.podAnnotations }}
+{{- if or .Values.windows.podAnnotations .Values.enableArcExtension }}
       annotations:
+{{- if .Values.windows.podAnnotations}}
 {{- toYaml .Values.windows.podAnnotations | nindent 8 }}
+{{- end }}
+{{- if .Values.enableArcExtension }}
+{{- if .Values.arc.enableMonitoring }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8898"
+{{- end }}
+{{- end }}
 {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
@@ -61,6 +69,13 @@ spec:
             periodSeconds: 30
           resources:
 {{ toYaml .Values.windows.resources | indent 12 }}
+          {{- if .Values.enableArcExtension }}
+          {{- if .Values.Azure.proxySettings.isProxyEnabled }}
+          envFrom:
+            - secretRef:
+                name: arc-proxy-config
+          {{- end }}
+          {{- end }}
           volumeMounts:
             - name: provider-vol
               mountPath: "C:\\provider"
