@@ -58,7 +58,7 @@ func TestMount(t *testing.T) {
 
 	testServer := &CSIDriverProviderServer{}
 	mockProvider := mock_provider.NewMockInterface(ctrl)
-	mockProvider.EXPECT().GetSecretsStoreObjectContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+	mockProvider.EXPECT().GetSecretsStoreObjectContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		[]types.SecretFile{
 			{
 				Content: []byte("foo"),

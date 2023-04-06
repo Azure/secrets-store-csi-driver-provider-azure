@@ -37,16 +37,16 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 }
 
 // GetSecretsStoreObjectContent mocks base method.
-func (m *MockInterface) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
+func (m *MockInterface) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSecretsStoreObjectContent", ctx, attrib, secrets, targetPath, defaultFilePermission)
+	ret := m.ctrl.Call(m, "GetSecretsStoreObjectContent", ctx, attrib, secrets, defaultFilePermission)
 	ret0, _ := ret[0].([]types.SecretFile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSecretsStoreObjectContent indicates an expected call of GetSecretsStoreObjectContent.
-func (mr *MockInterfaceMockRecorder) GetSecretsStoreObjectContent(ctx, attrib, secrets, targetPath, defaultFilePermission interface{}) *gomock.Call {
+func (mr *MockInterfaceMockRecorder) GetSecretsStoreObjectContent(ctx, attrib, secrets, defaultFilePermission interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretsStoreObjectContent", reflect.TypeOf((*MockInterface)(nil).GetSecretsStoreObjectContent), ctx, attrib, secrets, targetPath, defaultFilePermission)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretsStoreObjectContent", reflect.TypeOf((*MockInterface)(nil).GetSecretsStoreObjectContent), ctx, attrib, secrets, defaultFilePermission)
 }

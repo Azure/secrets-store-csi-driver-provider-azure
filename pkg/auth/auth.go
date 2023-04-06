@@ -138,7 +138,7 @@ func NewConfig(
 }
 
 // GetAuthorizer returns an Azure authorizer based on the provided azure identity
-func (c Config) GetAuthorizer(ctx context.Context, podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (autorest.Authorizer, error) {
+func (c Config) GetAuthorizer(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (autorest.Authorizer, error) {
 	var cred azcore.TokenCredential
 	var err error
 
@@ -147,11 +147,11 @@ func (c Config) GetAuthorizer(ctx context.Context, podName, podNamespace, resour
 	case c.UsePodIdentity:
 		cred, err = getAuthorizerForPodIdentity(podName, podNamespace, resource, tenantID, nmiPort)
 	case c.UseVMManagedIdentity:
-		cred, err = getAuthorizerForManagedIdentity(resource, c.UserAssignedIdentityID)
+		cred, err = getAuthorizerForManagedIdentity(c.UserAssignedIdentityID)
 	case len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0:
-		cred, err = getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, resource, aadEndpoint, tenantID)
+		cred, err = getAuthorizerForServicePrincipal(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
 	case len(c.WorkloadIdentityClientID) > 0 && len(c.WorkloadIdentityToken) > 0:
-		cred, err = getAuthorizerForWorkloadIdentity(ctx, c.WorkloadIdentityClientID, c.WorkloadIdentityToken, resource, aadEndpoint, tenantID)
+		cred, err = getAuthorizerForWorkloadIdentity(c.WorkloadIdentityClientID, c.WorkloadIdentityToken, aadEndpoint, tenantID)
 	default:
 		return nil, fmt.Errorf("no identity mode is enabled")
 	}
@@ -181,7 +181,7 @@ func (w *workloadIdentityCredential) getAssertion(context.Context) (string, erro
 	return w.assertion, nil
 }
 
-func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAssertion, resource, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+func getAuthorizerForWorkloadIdentity(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
 	opts := &workloadIdentityCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
@@ -192,7 +192,7 @@ func getAuthorizerForWorkloadIdentity(ctx context.Context, clientID, signedAsser
 	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
-func getAuthorizerForServicePrincipal(clientID, secret, resource, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+func getAuthorizerForServicePrincipal(clientID, secret, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
 	opts := &azidentity.ClientSecretCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
@@ -203,14 +203,14 @@ func getAuthorizerForServicePrincipal(clientID, secret, resource, aadEndpoint, t
 	return azidentity.NewClientSecretCredential(tenantID, clientID, secret, opts)
 }
 
-func getAuthorizerForManagedIdentity(resource, identityClientID string) (azcore.TokenCredential, error) {
+func getAuthorizerForManagedIdentity(identityClientID string) (azcore.TokenCredential, error) {
 	opts := &azidentity.ManagedIdentityCredentialOptions{
 		ID: azidentity.ClientID(identityClientID),
 	}
 	return azidentity.NewManagedIdentityCredential(opts)
 }
 
-func (c *podIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+func (c *podIdentityCredential) GetToken(ctx context.Context, _ policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	// For usePodIdentity mode, the CSI driver makes an authorization request to fetch token for a resource from the NMI host endpoint (http://127.0.0.1:2579/host/token/).
 	// The request includes the pod namespace `podns` and the pod name `podname` in the request header and the resource endpoint of the resource requesting the token.
 	// The NMI server identifies the pod based on the `podns` and `podname` in the request header and then queries k8s (through MIC) for a matching azure identity.
@@ -225,6 +225,8 @@ func (c *podIdentityCredential) GetToken(ctx context.Context, opts policy.TokenR
 	}
 	req.Header.Add(podNamespaceHeader, c.podNamespace)
 	req.Header.Add(podNameHeader, c.podName)
+	req = req.WithContext(ctx)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return azcore.AccessToken{}, err
