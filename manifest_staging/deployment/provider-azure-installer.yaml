@@ -47,6 +47,10 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
+          ports:
+            - containerPort: 8898
+              name: metrics
+              protocol: TCP                 
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
