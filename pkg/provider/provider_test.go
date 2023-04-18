@@ -878,7 +878,7 @@ func TestInitializeKVClient(t *testing.T) {
 		version.BuildDate = "Now"
 		version.Vcs = "hash"
 
-		kvBaseClient, err := mc.initializeKvClient(context.TODO())
+		kvBaseClient, err := mc.initializeKvClient()
 		assert.NoError(t, err)
 		assert.NotNil(t, kvBaseClient)
 		assert.NotNil(t, kvBaseClient.Authorizer)
@@ -1033,10 +1033,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			p := NewProvider(false, false)
 
-			tmpDir, err := os.MkdirTemp("", "ut")
-			assert.NoError(t, err)
-
-			_, err = p.GetSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, tmpDir, 0420)
+			_, err := p.GetSecretsStoreObjectContent(context.TODO(), tc.parameters, tc.secrets, 0420)
 			if tc.expectedErr {
 				assert.NotNil(t, err)
 			} else {

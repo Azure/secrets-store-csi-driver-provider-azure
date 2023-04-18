@@ -53,7 +53,7 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to unmarshal file permission, error: %w", err)
 	}
 
-	files, err := s.provider.GetSecretsStoreObjectContent(ctx, attrib, secret, req.GetTargetPath(), defaultFilePermission)
+	files, err := s.provider.GetSecretsStoreObjectContent(ctx, attrib, secret, defaultFilePermission)
 	if err != nil {
 		klog.ErrorS(err, "failed to process mount request")
 		return &v1alpha1.MountResponse{}, fmt.Errorf("failed to mount objects, error: %w", err)
@@ -81,7 +81,7 @@ func (s *CSIDriverProviderServer) Mount(ctx context.Context, req *v1alpha1.Mount
 	}, nil
 }
 
-func (s *CSIDriverProviderServer) Version(ctx context.Context, req *v1alpha1.VersionRequest) (*v1alpha1.VersionResponse, error) {
+func (s *CSIDriverProviderServer) Version(_ context.Context, _ *v1alpha1.VersionRequest) (*v1alpha1.VersionResponse, error) {
 	return &v1alpha1.VersionResponse{
 		Version:        "v1alpha1",
 		RuntimeVersion: version.BuildVersion,
@@ -89,13 +89,13 @@ func (s *CSIDriverProviderServer) Version(ctx context.Context, req *v1alpha1.Ver
 	}, nil
 }
 
-func (s *CSIDriverProviderServer) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+func (s *CSIDriverProviderServer) Check(_ context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	return &grpc_health_v1.HealthCheckResponse{
 		Status: grpc_health_v1.HealthCheckResponse_SERVING,
 	}, nil
 }
 
 // Watch for the serving status of the requested service.
-func (s *CSIDriverProviderServer) Watch(req *grpc_health_v1.HealthCheckRequest, w grpc_health_v1.Health_WatchServer) error {
+func (s *CSIDriverProviderServer) Watch(_ *grpc_health_v1.HealthCheckRequest, _ grpc_health_v1.Health_WatchServer) error {
 	return status.Error(codes.Unimplemented, "Watch is not supported")
 }

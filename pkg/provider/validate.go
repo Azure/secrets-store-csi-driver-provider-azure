@@ -16,10 +16,7 @@ func validate(kv types.KeyVaultObject) error {
 	if err := validateObjectEncoding(kv.ObjectEncoding, kv.ObjectType); err != nil {
 		return err
 	}
-	if err := validateFileName(kv.GetFileName()); err != nil {
-		return err
-	}
-	return nil
+	return validateFileName(kv.GetFileName())
 }
 
 // validateObjectFormat checks if the object format is valid and is supported

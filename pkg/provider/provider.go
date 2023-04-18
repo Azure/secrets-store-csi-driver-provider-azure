@@ -37,7 +37,7 @@ import (
 
 // Provider implements the secrets-store-csi-driver provider interface
 type Interface interface {
-	GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error)
+	GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, defaultFilePermission os.FileMode) ([]types.SecretFile, error)
 }
 
 type provider struct {
@@ -90,7 +90,7 @@ func ParseAzureEnvironment(cloudName string) (*azure.Environment, error) {
 	return &env, err
 }
 
-func (mc *mountConfig) initializeKvClient(ctx context.Context) (*kv.BaseClient, error) {
+func (mc *mountConfig) initializeKvClient() (*kv.BaseClient, error) {
 	kvClient := kv.New()
 	kvEndpoint := strings.TrimSuffix(mc.azureCloudEnvironment.KeyVaultEndpoint, "/")
 
@@ -99,7 +99,7 @@ func (mc *mountConfig) initializeKvClient(ctx context.Context) (*kv.BaseClient, 
 		return nil, errors.Wrapf(err, "failed to add user agent to keyvault client")
 	}
 
-	kvClient.Authorizer, err = mc.GetAuthorizer(ctx, kvEndpoint)
+	kvClient.Authorizer, err = mc.GetAuthorizer(kvEndpoint)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get authorizer for keyvault client")
 	}
@@ -123,13 +123,13 @@ func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
 }
 
 // GetAuthorizer returns an Azure authorizer based on the provided azure identity
-func (mc *mountConfig) GetAuthorizer(ctx context.Context, resource string) (autorest.Authorizer, error) {
-	return mc.authConfig.GetAuthorizer(ctx, mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, types.PodIdentityNMIPort)
+func (mc *mountConfig) GetAuthorizer(resource string) (autorest.Authorizer, error) {
+	return mc.authConfig.GetAuthorizer(mc.podName, mc.podNamespace, resource, mc.azureCloudEnvironment.ActiveDirectoryEndpoint, mc.tenantID, types.PodIdentityNMIPort)
 }
 
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
 // to the CSI driver. The driver will write the content to the file system.
-func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, targetPath string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
+func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
 	keyvaultName := types.GetKeyVaultName(attrib)
 	cloudName := types.GetCloudName(attrib)
 	userAssignedIdentityID := types.GetUserAssignedIdentityID(attrib)
@@ -231,7 +231,7 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	klog.V(2).InfoS("vault url", "vaultName", mc.keyvaultName, "vaultURL", *vaultURL, "pod", klog.ObjectRef{Namespace: podNamespace, Name: podName})
 
 	// the keyvault name is per SPC and we don't need to recreate the client for every single keyvault object defined
-	kvClient, err := mc.initializeKvClient(ctx)
+	kvClient, err := mc.initializeKvClient()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyvault client")
 	}
