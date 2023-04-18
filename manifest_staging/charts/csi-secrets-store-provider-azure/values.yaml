@@ -124,11 +124,11 @@ secrets-store-csi-driver:
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.6.2
+      tag: v2.7.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.8.0
+      tag: v2.9.0
       pullPolicy: IfNotPresent
     crds:
       image:
@@ -148,11 +148,11 @@ secrets-store-csi-driver:
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.6.2
+      tag: v2.7.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.8.0
+      tag: v2.9.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
