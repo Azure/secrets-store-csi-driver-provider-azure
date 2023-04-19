@@ -8,7 +8,7 @@ schedules:
       include:
         - master
 
-pool: staging-pool
+pool: staging-pool-amd64-mariner-2
 
 jobs:
   # to get image scan results on nightly runs
@@ -21,7 +21,7 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
-  - template: templates/e2e-test-azure.yaml 
+  - template: templates/e2e-test-azure.yaml
     parameters:
       osTypes:
       - "linux"
