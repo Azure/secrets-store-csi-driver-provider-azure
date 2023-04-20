@@ -11,7 +11,7 @@ pr:
       - website/*
       - README.md
 
-pool: staging-pool
+pool: staging-pool-amd64-mariner-2
 
 jobs:
   - template: templates/e2e-test-azure.yaml
