@@ -112,7 +112,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -125,7 +125,7 @@ secrets-store-csi-driver:
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.3.2
+        tag: v1.3.3
         pullPolicy: IfNotPresent
     podAnnotations:
       prometheus.io/scrape: "true"
@@ -137,7 +137,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
