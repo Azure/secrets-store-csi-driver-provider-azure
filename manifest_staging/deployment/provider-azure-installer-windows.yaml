@@ -46,6 +46,10 @@ spec:
             limits:
               cpu: 100m
               memory: 200Mi
+          ports:
+            - containerPort: 8898
+              name: metrics
+              protocol: TCP                 
           volumeMounts:
             - mountPath: "C:\\provider"
               name: providervol
