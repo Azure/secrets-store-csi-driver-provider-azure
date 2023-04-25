@@ -9,9 +9,10 @@ import (
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 
-	kv "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo/v2"
@@ -26,53 +27,47 @@ type Client interface {
 }
 
 type client struct {
-	config         *framework.Config
-	keyvaultClient kv.BaseClient
+	config        *framework.Config
+	secretsClient *azsecrets.Client
 }
 
 func NewClient(config *framework.Config) Client {
-	kvClient := kv.New()
-	kvEndPoint := azure.PublicCloud.KeyVaultEndpoint
-	if '/' == kvEndPoint[len(kvEndPoint)-1] {
-		kvEndPoint = kvEndPoint[:len(kvEndPoint)-1]
+	opts := &azidentity.ClientSecretCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: cloud.Configuration{
+				ActiveDirectoryAuthorityHost: azure.PublicCloud.ActiveDirectoryEndpoint,
+			},
+		},
 	}
 
-	oauthConfig, err := getOAuthConfig(azure.PublicCloud, config.TenantID)
+	cred, err := azidentity.NewClientSecretCredential(config.TenantID, config.AzureClientID, config.AzureClientSecret, opts)
 	Expect(err).To(BeNil())
 
-	armSpt, err := adal.NewServicePrincipalToken(*oauthConfig, config.AzureClientID, config.AzureClientSecret, kvEndPoint)
+	c, err := azsecrets.NewClient(getVaultURL(config.KeyvaultName), cred, nil)
 	Expect(err).To(BeNil())
-	kvClient.Authorizer = autorest.NewBearerAuthorizer(armSpt)
 
 	return &client{
-		config:         config,
-		keyvaultClient: kvClient,
+		config:        config,
+		secretsClient: c,
 	}
 }
 
 // SetSecret sets the secret in key vault
 func (c *client) SetSecret(name, value string) error {
-	By(fmt.Sprintf("Setting secret \"%s\" in keyvault \"%s\"", name, c.config.KeyvaultName))
-	_, err := c.keyvaultClient.SetSecret(context.Background(), getVaultURL(c.config.KeyvaultName), name, kv.SecretSetParameters{
+	params := azsecrets.SetSecretParameters{
 		Value: to.StringPtr(value),
-	})
+	}
+
+	By(fmt.Sprintf("Setting secret \"%s\" in keyvault \"%s\"", name, c.config.KeyvaultName))
+	_, err := c.secretsClient.SetSecret(context.Background(), name, params, &azsecrets.SetSecretOptions{})
 	return err
 }
 
 // DeleteSecret deletes the secret in key vault
 func (c *client) DeleteSecret(name string) error {
 	By(fmt.Sprintf("Deleting secret \"%s\" in keyvault \"%s\"", name, c.config.KeyvaultName))
-	_, err := c.keyvaultClient.DeleteSecret(context.Background(), getVaultURL(c.config.KeyvaultName), name)
+	_, err := c.secretsClient.DeleteSecret(context.Background(), name, &azsecrets.DeleteSecretOptions{})
 	return err
-}
-
-func getOAuthConfig(env azure.Environment, tenantID string) (*adal.OAuthConfig, error) {
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, tenantID)
-	if err != nil {
-		return nil, err
-	}
-
-	return oauthConfig, nil
 }
 
 func getVaultURL(vaultName string) string {
