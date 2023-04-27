@@ -6,14 +6,14 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: "docker"
     directory: "/manifest_staging/charts/csi-secrets-store-provider-azure"
     schedule:
@@ -27,38 +27,38 @@ updates:
       interval: daily
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: daily
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: docker
     directory: /arc/conformance/plugin
     schedule:
       interval: daily
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: gomod
     directory: /
     schedule:
       interval: daily
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: gomod
     directory: /test/e2e
     schedule:
       interval: daily
     commit-message:
       prefix: "chore"
-      
+
   - package-ecosystem: gomod
     directory: /tools
     schedule:
       interval: daily
-     commit-message:
+    commit-message:
       prefix: "chore"
