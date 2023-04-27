@@ -1,3 +1,4 @@
+titleOnly: true
 types:
   - build
   - chore
