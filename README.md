@@ -5,6 +5,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/Azure/secrets-store-csi-driver-provider-azure)
 [![Go Report Card](https://goreportcard.com/badge/Azure/secrets-store-csi-driver-provider-azure)](https://goreportcard.com/report/Azure/secrets-store-csi-driver-provider-azure)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Azure/secrets-store-csi-driver-provider-azure)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Azure/secrets-store-csi-driver-provider-azure/badge)](https://api.securityscorecards.dev/projects/github.com/Azure/secrets-store-csi-driver-provider-azure)
 
 Azure Key Vault provider for [Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) allows you to get secret contents stored in an [Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) instance and use the Secrets Store CSI driver interface to mount them into Kubernetes pods.
 
