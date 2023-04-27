@@ -18,3 +18,34 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
+
+
+  - package-ecosystem: docker
+    directory: /.devcontainer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /arc/conformance/plugin
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /test/e2e
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /tools
+    schedule:
+      interval: daily
