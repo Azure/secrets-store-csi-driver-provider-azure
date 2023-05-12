@@ -202,7 +202,7 @@ mod:
 
 .PHONY: install-kubectl
 install-kubectl:
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
+	curl -LO https://dl.k8s.io/release/${KIND_K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x ./kubectl && sudo mv kubectl /usr/local/bin/
 
 .PHONY: e2e-bootstrap
 e2e-bootstrap: install-helm
