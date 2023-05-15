@@ -23,7 +23,7 @@ RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >
     rm -rf /var/lib/apt/lists/*
 
 # install kubectl
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
+RUN curl -LO https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/kubectl
 

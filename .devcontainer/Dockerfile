@@ -108,7 +108,7 @@ RUN mkdir -p /tmp/downloads/helm \
   && mv /tmp/downloads/helm/linux-amd64/helm /usr/local/bin
 
 # Install Kubectl
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl \
+RUN curl -LO https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl \
   && chmod +x ./kubectl \
   && mv kubectl /usr/bin/kubectl
 
