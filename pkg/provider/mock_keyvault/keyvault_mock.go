@@ -8,9 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	azcertificates "github.com/Azure/azure-sdk-for-go/sdk/keyvault/azcertificates"
-	azkeys "github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
-	azsecrets "github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
+	azcertificates "github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates"
+	azkeys "github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
+	azsecrets "github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
 	types "github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	gomock "github.com/golang/mock/gomock"
 )

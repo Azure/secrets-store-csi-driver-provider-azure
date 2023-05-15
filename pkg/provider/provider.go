@@ -23,7 +23,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
