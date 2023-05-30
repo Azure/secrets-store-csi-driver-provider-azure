@@ -112,20 +112,20 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.6.2
+      tag: v2.8.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.8.0
+      tag: v2.10.0
       pullPolicy: IfNotPresent
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.3.2
+        tag: v1.3.3
         pullPolicy: IfNotPresent
     podAnnotations:
       prometheus.io/scrape: "true"
@@ -137,15 +137,15 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.6.2
+      tag: v2.8.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.8.0
+      tag: v2.10.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false
@@ -193,3 +193,6 @@ Azure:
 # Arc monitoring
 arc:
   enableMonitoring: true
+
+# Port that serves metrics
+metricsAddr: "8898"
