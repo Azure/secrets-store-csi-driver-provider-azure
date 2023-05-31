@@ -83,5 +83,8 @@ func kubectl(args []string) (string, error) {
 	cmd := exec.Command("kubectl", args...)
 	stdoutStderr, err := cmd.CombinedOutput()
 
+	if err != nil {
+		By(fmt.Sprintf("kubectl %s failed: %s", strings.Join(args, " "), stdoutStderr))
+	}
 	return strings.TrimSpace(string(stdoutStderr)), err
 }

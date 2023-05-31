@@ -120,20 +120,20 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.7.0
+      tag: v2.8.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.9.0
+      tag: v2.10.0
       pullPolicy: IfNotPresent
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.3.2
+        tag: v1.3.3
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
 
@@ -144,15 +144,15 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.3.2
+      tag: v1.3.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
-      tag: v2.7.0
+      tag: v2.8.0
       pullPolicy: IfNotPresent
     livenessProbeImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/livenessprobe
-      tag: v2.9.0
+      tag: v2.10.0
       pullPolicy: IfNotPresent
 
   enableSecretRotation: false

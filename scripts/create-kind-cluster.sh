@@ -16,7 +16,7 @@ KIND_CLUSTER_NAME="${KIND_CLUSTER_NAME:-kind}"
 
 create_kind_cluster() {
   # create a kind cluster
-  cat <<EOF | kind create cluster --name "${KIND_CLUSTER_NAME}" --image "kindest/node:${KIND_K8S_VERSION:-v1.22.4}" --config=-
+  cat <<EOF | kind create cluster --name "${KIND_CLUSTER_NAME}" --image "kindest/node:${KIND_K8S_VERSION:-v1.27.1}" --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
