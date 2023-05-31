@@ -25,7 +25,7 @@ spec:
 {{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8898"
+        prometheus.io/port: "{{ .Values.metricsAddr }}"
 {{- end }}
 {{- end }}
 {{- end }}
@@ -76,6 +76,10 @@ spec:
                 name: arc-proxy-config
           {{- end }}
           {{- end }}
+          ports:
+            - containerPort: {{ .Values.metricsAddr }}
+              name: metrics
+              protocol: TCP          
           volumeMounts:
             - name: provider-vol
               mountPath: "C:\\provider"
