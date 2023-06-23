@@ -3,7 +3,7 @@ module github.com/Azure/secrets-store-csi-driver-provider-azure
 go 1.19
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.6.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.6.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v0.10.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v0.11.0
