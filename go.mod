@@ -16,9 +16,9 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.2
-	go.opentelemetry.io/otel v0.20.0
-	go.opentelemetry.io/otel/exporters/metric/prometheus v0.20.0
-	go.opentelemetry.io/otel/metric v0.20.0
+	go.opentelemetry.io/otel v1.0.0-RC1
+	go.opentelemetry.io/otel/exporters/metric/prometheus v0.21.0
+	go.opentelemetry.io/otel/metric v0.21.0
 	golang.org/x/crypto v0.9.0
 	golang.org/x/net v0.10.0
 	google.golang.org/grpc v1.47.0
@@ -55,10 +55,11 @@ require (
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	go.opentelemetry.io/otel/sdk v0.20.0 // indirect
-	go.opentelemetry.io/otel/sdk/export/metric v0.20.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v0.20.0 // indirect
-	go.opentelemetry.io/otel/trace v0.20.0 // indirect
+	go.opentelemetry.io/otel/internal/metric v0.21.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.0.0-RC1 // indirect
+	go.opentelemetry.io/otel/sdk/export/metric v0.21.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v0.21.0 // indirect
+	go.opentelemetry.io/otel/trace v1.0.0-RC1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
