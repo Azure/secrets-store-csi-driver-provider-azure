@@ -25,7 +25,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/component-base v0.25.3
 	k8s.io/klog/v2 v2.80.1
-	sigs.k8s.io/secrets-store-csi-driver v1.3.3
+	sigs.k8s.io/secrets-store-csi-driver v1.3.4
 )
 
 require (
