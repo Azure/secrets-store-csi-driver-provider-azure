@@ -845,7 +845,7 @@ rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 h1:iXTIw73aPyC+oRdyqqvVJuloN1p0AC/kzH07hu3NE+k=
-sigs.k8s.io/secrets-store-csi-driver v1.3.3 h1:8UXTMIO4kZqGLJ65UWRfJXbRnb6PU6olP+vSriGZRp0=
-sigs.k8s.io/secrets-store-csi-driver v1.3.3/go.mod h1:jh6wML45aTbxT2YZtU4khzSm8JYxwVrQbhsum+WR6j8=
+sigs.k8s.io/secrets-store-csi-driver v1.3.4 h1:rCMOb2I4lJaN6sw0CjT6YHA8ts2yscWAOBGu0EaCIWk=
+sigs.k8s.io/secrets-store-csi-driver v1.3.4/go.mod h1:jh6wML45aTbxT2YZtU4khzSm8JYxwVrQbhsum+WR6j8=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
