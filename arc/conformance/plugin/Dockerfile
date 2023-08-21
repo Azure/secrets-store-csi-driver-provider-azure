@@ -2,7 +2,7 @@ ARG STEP_CLI_VERSION=0.22.0
 ARG STEP_CLI_IMAGE=smallstep/step-cli:${STEP_CLI_VERSION}
 FROM $STEP_CLI_IMAGE as step-cli
 
-FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.2@sha256:e6e8c911b1566556ae105d3600df04c600241f43b06d22c73592ebb446d60c49
+FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3@sha256:3fcf9bcc4949392155cde1f96591ba3eda092f4735a9cc856bf526d71f48af47
 ARG KUBE_VERSION=v1.25.3
 ARG TARGETARCH
 
