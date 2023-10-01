@@ -46,6 +46,7 @@ linux:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  env: []
   volumes: []
   volumeMounts: []
   kubeletRootDir: /var/lib/kubelet
@@ -91,6 +92,7 @@ windows:
   healthzPort: 8989
   healthzPath: "/healthz"
   healthzTimeout: "5s"
+  env: []
   volumes: []
   volumeMounts: []
   kubeletRootDir: C:\var\lib\kubelet

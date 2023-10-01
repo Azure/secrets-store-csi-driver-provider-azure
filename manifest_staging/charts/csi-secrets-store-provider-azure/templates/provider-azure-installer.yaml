@@ -66,6 +66,10 @@ spec:
             {{- if .Values.writeCertAndKeyInSeparateFiles }}
             - --write-cert-and-key-in-separate-files={{ .Values.writeCertAndKeyInSeparateFiles }}
             {{- end }}
+          {{- with .Values.linux.env }}
+          env:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.linux.healthzPath }}

@@ -59,6 +59,10 @@ spec:
             {{- if .Values.writeCertAndKeyInSeparateFiles }}
             - --write-cert-and-key-in-separate-files={{ .Values.writeCertAndKeyInSeparateFiles }}
             {{- end }}
+          {{- with .Values.windows.env }}
+          env:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.windows.healthzPath }}
