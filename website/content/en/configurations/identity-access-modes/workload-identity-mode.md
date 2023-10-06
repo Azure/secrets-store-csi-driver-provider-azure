@@ -45,6 +45,7 @@ apiVersion: v1
 metadata:
   name: busybox-secrets-store-inline-wi
 spec:
+  serviceAccountName: ${SERVICE_ACCOUNT_NAME}
   containers:
     - name: busybox
       image: registry.k8s.io/e2e-test-images/busybox:1.29-4
