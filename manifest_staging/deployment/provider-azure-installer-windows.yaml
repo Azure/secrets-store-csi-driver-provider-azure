@@ -23,7 +23,7 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.4.1
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.5.0
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
@@ -49,7 +49,7 @@ spec:
           ports:
             - containerPort: 8898
               name: metrics
-              protocol: TCP                 
+              protocol: TCP
           volumeMounts:
             - mountPath: "C:\\provider"
               name: providervol
