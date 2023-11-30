@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.4.1
+          image: mcr.microsoft.com/oss/azure/secrets-store/provider-azure:v1.5.0
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix:///provider/azure.sock
@@ -47,6 +47,10 @@ spec:
             limits:
               cpu: 50m
               memory: 100Mi
+          ports:
+            - containerPort: 8898
+              name: metrics
+              protocol: TCP
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

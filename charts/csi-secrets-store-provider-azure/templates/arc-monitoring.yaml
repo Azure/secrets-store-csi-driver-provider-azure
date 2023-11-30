@@ -40,7 +40,7 @@ spec:
               memory: 100Mi
         # MDM
         - name: mdm
-          image: "linuxgeneva-microsoft.azurecr.io/genevamdm:master_20220401.1"
+          image: "linuxgeneva-microsoft.azurecr.io/distroless/genevamdm:2.2023.1027.1417-08a588-20231027t1613"
           imagePullPolicy: IfNotPresent
           env: 
           - name: ROLEINSTANCE
@@ -113,7 +113,7 @@ spec:
               subPath: telegraf.conf
         # Pipeline agent for logging
         - name: amacoreagent
-          image: "pipelineagent.azurecr.io/amacoreagent:3.0"
+          image: "linuxgeneva-microsoft.azurecr.io/amacoreagentaot:1.2.47"
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -123,6 +123,10 @@ spec:
               cpu: 50m
               memory: 100Mi
           env:
+          - name: MONITORING_USE_GENEVA_CONFIG_SERVICE
+            value: "true"
+          - name: SKIP_IMDS_LOOKUP_FOR_LEGACY_AUTH
+            value: "1"
           - name: MONITORING_GCS_AUTH_ID_TYPE
             value: AuthMSIToken
           - name: PA_TENANTS_DIR
@@ -164,7 +168,7 @@ spec:
           - name: MONITORING_GCS_NAMESPACE
             value: "akvsecretsprovider"
           - name: MONITORING_CONFIG_VERSION
-            value: "1.0"
+            value: "2.2"
           - name: MDSD_CONFIG_DIR
             value: /tmp
           - name: DOCKER_LOGGING
@@ -178,7 +182,7 @@ spec:
               mountPath: /var/run/mdsd
         # FluentD
         - name: fluentd
-          image: "linuxgeneva-microsoft.azurecr.io/genevafluentd_td-agent:master_20220403.1"
+          image: "linuxgeneva-microsoft.azurecr.io/distroless/genevafluentd_td-agent:mariner_20230915.3"
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -188,7 +192,7 @@ spec:
               cpu: 50m
               memory: 250Mi
           env:
-            - name: FLUENTD_CONF
+            - name: FLUENT_CONF
               value: /etc/fluentd/fluentd.conf
           volumeMounts:
             - name: fluentd-conf-vol
