@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/static
+FROM mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
 ARG TARGETARCH
 COPY ./_output/${TARGETARCH}/secrets-store-csi-driver-provider-azure /bin/
 
