@@ -15,7 +15,7 @@ Azure Key Vault provider for [Secrets Store CSI Driver](https://github.com/kuber
 
 | Azure Key Vault Provider                                                                       | Compatible Kubernetes | `secrets-store.csi.x-k8s.io` Versions |
 | ---------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------- |
-| [v1.5.0](https://github.com/Azure/secrets-store-csi-driver-provider-azure/releases/tag/v1.5.0) | 1.21+                 | `v1`, `v1alpha1 [DEPRECATED]`         |
+| [v1.5.1](https://github.com/Azure/secrets-store-csi-driver-provider-azure/releases/tag/v1.5.1) | 1.21+                 | `v1`, `v1alpha1 [DEPRECATED]`         |
 | [v1.4.1](https://github.com/Azure/secrets-store-csi-driver-provider-azure/releases/tag/v1.4.1) | 1.21+                 | `v1`, `v1alpha1 [DEPRECATED]`         |
 
 For Secrets Store CSI Driver project status and supported versions, check the doc [here](https://secrets-store-csi-driver.sigs.k8s.io/#project-status)
