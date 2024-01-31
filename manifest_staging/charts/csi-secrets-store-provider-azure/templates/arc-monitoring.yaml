@@ -65,7 +65,7 @@ spec:
               memory: 100Mi
         # MSI Adapter
         - name: msi-adapter
-          image: "mcr.microsoft.com/azurearck8s/msi-adapter:1.0.4"
+          image: "mcr.microsoft.com/azurearck8s/msi-adapter:1.0.6"
           imagePullPolicy: IfNotPresent
           env: 
           - name: TOKEN_NAMESPACE 
