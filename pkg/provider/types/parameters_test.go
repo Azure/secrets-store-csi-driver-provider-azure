@@ -438,45 +438,6 @@ func TestGetPodNamespace(t *testing.T) {
 	}
 }
 
-func TestGetClientID(t *testing.T) {
-	tests := []struct {
-		name       string
-		parameters map[string]string
-		expected   string
-	}{
-		{
-			name: "empty",
-			parameters: map[string]string{
-				"clientID": "",
-			},
-			expected: "",
-		},
-		{
-			name: "not empty",
-			parameters: map[string]string{
-				"clientID": "test",
-			},
-			expected: "test",
-		},
-		{
-			name: "trim spaces",
-			parameters: map[string]string{
-				"clientID": " test ",
-			},
-			expected: "test",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			actual := GetClientID(test.parameters)
-			if actual != test.expected {
-				t.Errorf("GetClientID() = %v, expected %v", actual, test.expected)
-			}
-		})
-	}
-}
-
 func TestGetServiceAccountTokens(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -511,6 +472,45 @@ func TestGetServiceAccountTokens(t *testing.T) {
 			actual := GetServiceAccountTokens(test.parameters)
 			if actual != test.expected {
 				t.Errorf("GetServiceAccountTokens() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetServiceAccountName(t *testing.T) {
+	tests := []struct {
+		name       string
+		parameters map[string]string
+		expected   string
+	}{
+		{
+			name: "empty",
+			parameters: map[string]string{
+				CSIAttributeServiceAccountName: "",
+			},
+			expected: "",
+		},
+		{
+			name: "not empty",
+			parameters: map[string]string{
+				CSIAttributeServiceAccountName: "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				CSIAttributeServiceAccountName: " test ",
+			},
+			expected: "test",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := GetServiceAccountName(test.parameters)
+			if actual != test.expected {
+				t.Errorf("GetServiceAccountName() = %v, expected %v", actual, test.expected)
 			}
 		})
 	}

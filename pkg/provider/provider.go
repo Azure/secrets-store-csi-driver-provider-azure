@@ -123,6 +123,7 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	cloudEnvFileName := types.GetCloudEnvFileName(attrib)
 	podName := types.GetPodName(attrib)
 	podNamespace := types.GetPodNamespace(attrib)
+	saName := types.GetServiceAccountName(attrib)
 
 	usePodIdentity, err := types.GetUsePodIdentity(attrib)
 	if err != nil {
@@ -134,7 +135,11 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	}
 
 	// attributes for workload identity
-	workloadIdentityClientID := types.GetClientID(attrib)
+	kubernetesHelper := NewKubernetesHelper(podNamespace, saName)
+	workloadIdentityClientID, err := kubernetesHelper.GetServiceAccountClientID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service account client id, error: %w", err)
+	}
 	saTokens := types.GetServiceAccountTokens(attrib)
 
 	if keyvaultName == "" {

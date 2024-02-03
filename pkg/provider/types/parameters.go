@@ -70,14 +70,14 @@ func GetPodNamespace(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributePodNamespace])
 }
 
-// GetClientID returns the client ID
-func GetClientID(parameters map[string]string) string {
-	return strings.TrimSpace(parameters[ClientIDParameter])
-}
-
 // GetServiceAccountTokens returns the service account tokens
 func GetServiceAccountTokens(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributeServiceAccountTokens])
+}
+
+// GetServiceAccountName returns the service account name
+func GetServiceAccountName(parameters map[string]string) string {
+	return strings.TrimSpace(parameters[CSIAttributeServiceAccountName])
 }
 
 // GetObjects returns the key vault objects
