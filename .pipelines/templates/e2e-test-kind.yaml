@@ -1,5 +1,7 @@
 jobs:
   - job:
+    # using the tmp pool as a workaround for the kind cluster creation issue.
+    pool: tmp-staging-pool-amd64-mariner-2
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     dependsOn:
@@ -13,29 +15,29 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     strategy:
       matrix:
-        kind_v1_24_12_helm:
-          KIND_K8S_VERSION: v1.24.12
+        kind_v1_26_14_helm:
+          KIND_K8S_VERSION: v1.26.14
           IS_HELM_TEST: true
-        kind_v1_25_8_helm:
-          KIND_K8S_VERSION: v1.25.8
+        kind_v1_27_11_helm:
+          KIND_K8S_VERSION: v1.27.11
           IS_HELM_TEST: true
-        kind_v1_26_3_helm:
-          KIND_K8S_VERSION: v1.26.3
+        kind_v1_28_7_helm:
+          KIND_K8S_VERSION: v1.28.7
           IS_HELM_TEST: true
-        kind_v1_27_1_helm:
-          KIND_K8S_VERSION: v1.27.1
+        kind_v1_29_2_helm:
+          KIND_K8S_VERSION: v1.29.2
           IS_HELM_TEST: true
-        kind_v1_24_12_deployment_manifest:
-          KIND_K8S_VERSION: v1.24.12
+        kind_v1_26_14_deployment_manifest:
+          KIND_K8S_VERSION: v1.26.14
           IS_HELM_TEST: false
-        kind_v1_25_8_deployment_manifest:
-          KIND_K8S_VERSION: v1.25.8
+        kind_v1_27_11_deployment_manifest:
+          KIND_K8S_VERSION: v1.27.11
           IS_HELM_TEST: false
-        kind_v1_26_3_deployment_manifest:
-          KIND_K8S_VERSION: v1.26.3
+        kind_v1_28_7_deployment_manifest:
+          KIND_K8S_VERSION: v1.28.7
           IS_HELM_TEST: false
-        kind_v1_27_1_deployment_manifest:
-          KIND_K8S_VERSION: v1.27.1
+        kind_v1_29_2_deployment_manifest:
+          KIND_K8S_VERSION: v1.29.2
           IS_HELM_TEST: false
 
     steps:
