@@ -54,6 +54,8 @@ linux:
             operator: NotIn
             values:
             - virtual-kubelet
+  # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+  dnsPolicy: ""
 
 windows:
   image:
