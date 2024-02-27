@@ -1,7 +1,9 @@
 jobs:
   - job:
-    # using the tmp pool as a workaround for the kind cluster creation issue.
-    pool: tmp-staging-pool-amd64-mariner-2
+    pool:
+      name: staging-pool-amd64-mariner-2
+      demands:
+      - ImageOverride -equals azcu-agent-amd64-mariner-2-cgv2-img
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     dependsOn:
