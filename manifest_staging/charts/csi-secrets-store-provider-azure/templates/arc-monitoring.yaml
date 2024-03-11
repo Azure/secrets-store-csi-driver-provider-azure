@@ -32,12 +32,7 @@ spec:
           - name: EXTENSION_RESOURCE_ID
             value: "{{ .Values.Azure.Extension.ResourceId }}"
           resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
+            {{- toYaml .Values.promMdmConverter.resources | nindent 12 }}
         # MDM
         - name: mdm
           image: "linuxgeneva-microsoft.azurecr.io/distroless/genevamdm:2.2023.1027.1417-08a588-20231027t1613"
@@ -57,12 +52,7 @@ spec:
             - name: mdm-config 
               mountPath: /tmp/geneva_mdm
           resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
+            {{- toYaml .Values.mdm.resources | nindent 12 }}
         # MSI Adapter
         - name: msi-adapter
           image: "mcr.microsoft.com/azurearck8s/msi-adapter:1.0.6"
@@ -83,12 +73,7 @@ spec:
           - name: TEST_MODE 
             value: "false"
           resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
+            {{- toYaml .Values.msiAdapter.resources | nindent 12 }}
           securityContext:
             capabilities:
               add: 
@@ -101,12 +86,7 @@ spec:
           image: "mcr.microsoft.com/oss/mirror/docker.io/library/telegraf:1.21"
           imagePullPolicy: IfNotPresent
           resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
+            {{- toYaml .Values.telegraf.resources | nindent 12 }}
           volumeMounts: 
             - name: telegraf-conf
               mountPath: /etc/telegraf/telegraf.conf
@@ -116,12 +96,7 @@ spec:
           image: "linuxgeneva-microsoft.azurecr.io/amacoreagentaot:1.2.47"
           imagePullPolicy: IfNotPresent
           resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
+            {{- toYaml .Values.amacoreagent.resources | nindent 12 }}
           env:
           - name: MONITORING_USE_GENEVA_CONFIG_SERVICE
             value: "true"
@@ -185,12 +160,7 @@ spec:
           image: "linuxgeneva-microsoft.azurecr.io/distroless/genevafluentd_td-agent:mariner_20230915.3"
           imagePullPolicy: IfNotPresent
           resources:
-            requests:
-              cpu: 50m
-              memory: 250Mi
-            limits:
-              cpu: 50m
-              memory: 250Mi
+            {{- toYaml .Values.fluentd.resources | nindent 12 }}
           env:
             - name: FLUENT_CONF
               value: /etc/fluentd/fluentd.conf

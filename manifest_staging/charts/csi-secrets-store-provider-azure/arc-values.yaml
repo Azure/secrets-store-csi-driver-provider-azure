@@ -171,6 +171,54 @@ constructPEMChain: true
 
 # Azure Arc Extension
 enableArcExtension: true
+promMdmConverter:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+mdm:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+msiAdapter:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+telegraf:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+amacoreagent:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+fluentd:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 250Mi
+    limits:
+      cpu: 50m
+      memory: 250Mi
 
 # Values populated by Azure Arc K8s RP during the installation of the extension.
 Azure:
