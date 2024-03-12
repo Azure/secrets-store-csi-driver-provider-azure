@@ -72,8 +72,7 @@ steps:
 
       if [[ "$(OS_TYPE)" == "windows" ]]; then
         if [[ ${{ parameters.containerRuntime }} == "containerd" ]]; then
-          # pinning to 0.5.87 because of https://github.com/Azure/azure-cli/issues/23267
-          az extension add --name aks-preview --version 0.5.87
+          az extension add --name aks-preview
           EXTRA_ARGS="--aks-custom-headers WindowsContainerRuntime=containerd"
         fi
 
@@ -83,8 +82,7 @@ steps:
       # add gpu node pool
       if [[ ${{ parameters.testWithGPU }} == True ]]; then
         echo "adding gpu node pool"
-        # pinning to 0.5.87 because of https://github.com/Azure/azure-cli/issues/23267
-        az extension add --name aks-preview --version 0.5.87
+        az extension add --name aks-preview
 
         az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --name gpu --node-count $(AGENT_COUNT) --node-vm-size Standard_NC6 --aks-custom-headers UseGPUDedicatedVHD=true
       fi
