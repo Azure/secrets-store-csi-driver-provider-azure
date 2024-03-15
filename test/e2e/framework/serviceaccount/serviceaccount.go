@@ -14,9 +14,10 @@ import (
 
 // CreateInput is the input for Create.
 type CreateInput struct {
-	Creator   framework.Creator
-	Name      string
-	Namespace string
+	Creator     framework.Creator
+	Name        string
+	Namespace   string
+	Annotations map[string]string
 }
 
 // Create creates a ServiceAccount resource.
@@ -28,8 +29,9 @@ func Create(input CreateInput) *corev1.ServiceAccount {
 	By(fmt.Sprintf("Creating ServiceAccount \"%s/%s\"", input.Namespace, input.Name))
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      input.Name,
-			Namespace: input.Namespace,
+			Name:        input.Name,
+			Namespace:   input.Namespace,
+			Annotations: input.Annotations,
 		},
 	}
 
