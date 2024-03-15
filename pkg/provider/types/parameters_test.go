@@ -148,6 +148,69 @@ func TestGetUsePodIdentity(t *testing.T) {
 	}
 }
 
+func TestGetUsePodServiceAccountAnnotation(t *testing.T) {
+	tests := []struct {
+		name       string
+		parameters map[string]string
+		expected   bool
+	}{
+		{
+			name: "empty",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: "",
+			},
+			expected: false,
+		},
+		{
+			name: "set to true",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: "true",
+			},
+			expected: true,
+		},
+		{
+			name: "set to false",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: "false",
+			},
+			expected: false,
+		},
+		{
+			name: "set to True",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: "True",
+			},
+			expected: true,
+		},
+		{
+			name: "set to False",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: "False",
+			},
+			expected: false,
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				UsePodServiceAccountAnnotationParameter: " true ",
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := GetUsePodServiceAccountAnnotation(test.parameters)
+			if err != nil {
+				t.Errorf("GetUsePodServiceAccountAnnotation() error = %v, expected nil", err)
+			}
+			if actual != test.expected {
+				t.Errorf("GetUsePodServiceAccountAnnotation() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
 func TestGetUsePodIdentityError(t *testing.T) {
 	parameters := map[string]string{
 		UsePodIdentityParameter: "test",
@@ -433,6 +496,45 @@ func TestGetPodNamespace(t *testing.T) {
 			actual := GetPodNamespace(test.parameters)
 			if actual != test.expected {
 				t.Errorf("GetPodNamespace() = %v, expected %v", actual, test.expected)
+			}
+		})
+	}
+}
+
+func TestGetClientID(t *testing.T) {
+	tests := []struct {
+		name       string
+		parameters map[string]string
+		expected   string
+	}{
+		{
+			name: "empty",
+			parameters: map[string]string{
+				"clientID": "",
+			},
+			expected: "",
+		},
+		{
+			name: "not empty",
+			parameters: map[string]string{
+				"clientID": "test",
+			},
+			expected: "test",
+		},
+		{
+			name: "trim spaces",
+			parameters: map[string]string{
+				"clientID": " test ",
+			},
+			expected: "test",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := GetClientID(test.parameters)
+			if actual != test.expected {
+				t.Errorf("GetClientID() = %v, expected %v", actual, test.expected)
 			}
 		})
 	}

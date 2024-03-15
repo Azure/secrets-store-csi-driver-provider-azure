@@ -21,6 +21,7 @@ spec:
   provider: azure
   parameters:
     usePodIdentity: "false"         # set to true for pod identity access mode
+    clientID: "<client id of the Azure AD Application or user-assigned managed identity to use for workload identity>"
     keyvaultName: "kvname"
     cloudName: ""                   # [OPTIONAL for Azure] if not provided, azure environment will default to AzurePublicCloud
     objects:  |
@@ -171,12 +172,10 @@ az identity federated-credential create \
 
 ### 4. Deploy your secretproviderclass and application
 
-Set the `azure.workload.identity/client-id` annotation in the `ServiceAccount` of your pod to the client ID of the AAD application or user-assigned managed identity.
+Set the `clientID` in the `SecretProviderClass` to the client ID of the AAD application or user-assigned managed identity.
 
 ```yaml
-metadata: 
-  annoations:
-    azure.workload.identity/client-id: "${APPLICATION_OR_MANAGED_IDENTITY_CLIENT_ID}"
+clientID: "${APPLICATION_OR_MANAGED_IDENTITY_CLIENT_ID}"
 ```
 
 ## Pros

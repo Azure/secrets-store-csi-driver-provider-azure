@@ -30,6 +30,15 @@ func GetUsePodIdentity(parameters map[string]string) (bool, error) {
 	return strconv.ParseBool(str)
 }
 
+// GetUsePodServiceAccountAnnotation returns if pod service account annotation is enabled
+func GetUsePodServiceAccountAnnotation(parameters map[string]string) (bool, error) {
+	str := strings.TrimSpace(parameters[UsePodServiceAccountAnnotationParameter])
+	if str == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(str)
+}
+
 // GetUseVMManagedIdentity returns if VM managed identity is enabled
 func GetUseVMManagedIdentity(parameters map[string]string) (bool, error) {
 	str := strings.TrimSpace(parameters[UseVMManagedIdentityParameter])
@@ -68,6 +77,11 @@ func GetPodName(parameters map[string]string) string {
 // GetPodNamespace returns the pod namespace
 func GetPodNamespace(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributePodNamespace])
+}
+
+// GetClientID returns the client ID
+func GetClientID(parameters map[string]string) string {
+	return strings.TrimSpace(parameters[ClientIDParameter])
 }
 
 // GetServiceAccountTokens returns the service account tokens

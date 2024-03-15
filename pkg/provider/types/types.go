@@ -36,6 +36,8 @@ const (
 	CloudNameParameter = "cloudName"
 	// UsePodIdentityParameter is the name of the use pod identity parameter
 	UsePodIdentityParameter = "usePodIdentity"
+	// UsePodServiceAccountAnnotationParameter is the name of the use pod service account annotation parameter
+	UsePodServiceAccountAnnotationParameter = "usePodServiceAccountAnnotation"
 	// UseVMManagedIdentityParameter is the name of the use VM managed identity parameter
 	UseVMManagedIdentityParameter = "useVMManagedIdentity"
 	// UserAssignedIdentityIDParameter is the name of the user assigned identity ID parameter

@@ -38,12 +38,14 @@ To provide identity to access Key Vault, refer to the following [section](#provi
   spec:
     provider: azure
     parameters:
-      usePodIdentity: "false"               # [OPTIONAL] if not provided, will default to "false"
-      useVMManagedIdentity: "false"         # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
-      userAssignedIdentityID: "client_id"   # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
-      keyvaultName: "kvname"                # the name of the KeyVault
-      cloudName: ""                         # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
-      cloudEnvFileName: ""                  # [OPTIONAL available for version > 0.0.7] use to define path to file for populating azure environment
+      usePodIdentity: "false"                 # [OPTIONAL] if not provided, will default to "false"
+      useVMManagedIdentity: "false"           # [OPTIONAL available for version > 0.0.4] if not provided, will default to "false"
+      usePodServiceAccountAnnotation: "false" # [OPTIONAL available for version > 1.6.0] if not provided, will default to "false" - set to true in order to dynamically retrieve the pod's service account annotation configuring the clientID for workload identity
+      userAssignedIdentityID: "client_id"     # [OPTIONAL available for version > 0.0.4] use the client id to specify which user assigned managed identity to use. If using a user assigned identity as the VM's managed identity, then specify the identity's client id. If empty, then defaults to use the system assigned identity on the VM
+      clientID: "client_id"                   # [OPTIONAL available for version > 1.1.0] client id of the Azure AD Application or managed identity to use for workload identity
+      keyvaultName: "kvname"                  # the name of the KeyVault
+      cloudName: ""                           # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
+      cloudEnvFileName: ""                    # [OPTIONAL available for version > 0.0.7] use to define path to file for populating azure environment
       objects:  |
         array:
           - |
@@ -69,6 +71,7 @@ To provide identity to access Key Vault, refer to the following [section](#provi
   | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of User-assigned managed identity                                                                                                              | "false"       |
   | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for User-assigned Managed Identity mode                                                                                                | ""            |
   | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                           | ""            |
+  | clientID | no       | [__*available for version > 1.1.0*__] client id of the Azure AD Application or managed identity to use for workload identity                                                                                                | ""            |
   | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                                     | ""            |
   | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](../../configurations/custom-environments). | ""            |
   | objects                | yes      | a string of arrays of strings                                                                                                                                                                                          | ""            |
