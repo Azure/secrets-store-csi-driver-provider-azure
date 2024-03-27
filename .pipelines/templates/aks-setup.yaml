@@ -26,7 +26,7 @@ steps:
 
   - script: |
       # Run test with latest non-preview aks version available
-      aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query 'values[?isPreview==null].patchVersions[]' | jq '[.[] | to_entries[] | .key ] | max')
+      aksVersion=$(az aks get-versions -l eastus --query 'values[?isPreview==null].patchVersions[]' | jq '[.[] | to_entries[] | .key ] | max')
       echo "AKS Install version - $aksVersion"
 
       echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
@@ -37,7 +37,7 @@ steps:
     # Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
     # If we are running test with cluster upgrade, start with minimum possible non preview version.
     - script: |
-        aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query 'values[?isPreview==null].patchVersions[]' | jq '[.[] | to_entries[] | .key ] | min')
+        aksVersion=$(az aks get-versions -l eastus --query 'values[?isPreview==null].patchVersions[]' | jq '[.[] | to_entries[] | .key ] | min')
         echo "AKS Install version - $aksVersion"
 
         echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
@@ -45,7 +45,7 @@ steps:
       condition: succeeded()
 
   - script: |
-      az group create -n ${AZURE_CLUSTER_NAME} -l $(AZURE_LOCATION)
+      az group create -n ${AZURE_CLUSTER_NAME} -l eastus
 
       az aks create \
         -g ${AZURE_CLUSTER_NAME} \
@@ -55,7 +55,7 @@ steps:
         --node-count $(AGENT_COUNT) \
         --nodepool-name nodepool1 \
         --node-vm-size $(NODE_VM_SIZE) \
-        --location $(AZURE_LOCATION) \
+        --location eastus \
         --windows-admin-username azureuser \
         --windows-admin-password $(WINDOWS_ADMIN_PASSWORD) \
         --no-ssh-key \
