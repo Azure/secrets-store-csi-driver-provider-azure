@@ -700,6 +700,12 @@ func fetchCertChains(data []byte) ([]byte, error) {
 			if i == j {
 				continue
 			}
+
+			// a leaf cert SubjectKeyId is optional per RFC3280
+			if nodes[i].cert.AuthorityKeyId == nil && nodes[j].cert.SubjectKeyId == nil {
+				continue
+			}
+
 			// if ith node AuthorityKeyId is same as jth node SubjectKeyId, jth node was used
 			// to sign the ith certificate
 			if string(nodes[i].cert.AuthorityKeyId) == string(nodes[j].cert.SubjectKeyId) {
