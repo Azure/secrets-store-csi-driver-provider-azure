@@ -21,4 +21,5 @@ jobs:
       - "windows_docker"
       - "windows_containerd"
   # this will ensure any changes to provider works on arc extension too.
-  - template: templates/arc/e2e-extension-test.yaml
+  # xref: https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/1382 for tracking
+  # - template: templates/arc/e2e-extension-test.yaml
