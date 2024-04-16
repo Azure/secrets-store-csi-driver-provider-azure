@@ -1,8 +1,8 @@
 steps:
   - script: |
       # install trivy
-      wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION:-0.27.1}/trivy_${TRIVY_VERSION:-0.27.1}_Linux-64bit.tar.gz
-      tar zxvf trivy_${TRIVY_VERSION:-0.27.1}_Linux-64bit.tar.gz
+      wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION:-0.50.1}/trivy_${TRIVY_VERSION:-0.50.1}_Linux-64bit.tar.gz
+      tar zxvf trivy_${TRIVY_VERSION:-0.50.1}_Linux-64bit.tar.gz
 
       make container arc-conformance-container
       ./trivy image --reset
@@ -18,4 +18,4 @@ steps:
       REGISTRY: e2e
       IMAGE_VERSION: test
       OUTPUT_TYPE: docker
-      TRIVY_VERSION: $(TRIVY_VERSION)
+      TRIVY_VERSION: "0.50.1"
