@@ -794,6 +794,252 @@ fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
 	}
 }
 
+func TestFetchCertChainWithLeafMissingSKI(t *testing.T) {
+	rootCACert := `
+-----BEGIN CERTIFICATE-----
+MIIC8jCCAdqgAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNVBAMTB3Rl
+c3QtY2EwHhcNMjQwNDAyMTYwODU0WhcNMzQwNDAyMTYwODU0WjASMRAwDgYDVQQD
+Ewd0ZXN0LWNhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt0R6suEJ
+zlRDkMUKUEFIRRnqPmbDUM+h5k4tc5bgAJgX1EGf/lVBJ4gzUGzYayc9qyIcsKqI
+/wyxsEm9SOnqR5lQkE/dJ3BsiSV/+wts6OX86KLWn4gHFm1xzl3xAj0/7w0qrEGj
+5ASEF+RsfQq+oY/jglZCRWaVq23F77L6NeOFCicEKCRRLKClwXFFrGErwoUk3ef1
+CJ7GD1C+7Pk4uHQC4BYttcSyVYfTn4fdYMEQtEY3hAWRsfZqJ/epRvxFFaDXnfGL
+PWoj+IYRx0YWsV6FY8rqyat8PGtvY4JR5RdF9nNIKapV3n3W98tc6EiXBZybULsd
+5z9PHU0hDabSxwIDAQABo1EwTzAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUH
+AwEwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUALAG+YJ+DGejdTyT9T6+nYg+
+4ZIwDQYJKoZIhvcNAQELBQADggEBABgkDtHj51xeHwFfSYQmUXnTQl59VCXGdulU
+Fx8yfI5aMJzWR0SGTnJ8/VpBUZi6VTTz45qvi8xJgnpF8SLtKjXQlbqIerO7KL+M
+7EnK2O1IGMKPboGM3pgJJQ7jS6aPObtFvuLUwECYoFw6dEzQkauzZjNA5FjWPImM
+9VonFvAOpA45r9/b5liZ/Lg7gfdOtlLYUpCU1bPtem4v60oFmKh5IMOdLDVCgcga
+HXlyr1Q1xkPwnHMt1aOPJPuMs1DSfbhP40bUvYh3gU5B7XpUpaHxlltm/h9/CsPE
+z9rzlA+Co/z78Wn/LtvjVrxJj4QHcfXhiIltAaAUnJP+kZ0+3I0=
+-----END CERTIFICATE-----
+`
+
+	intermediateCert1 := `
+-----BEGIN CERTIFICATE-----
+MIIDFTCCAf2gAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNVBAMTB3Rl
+c3QtY2EwHhcNMjQwNDAyMTYwODU1WhcNMzQwNDAyMTYwODU1WjAUMRIwEAYDVQQD
+Ewl0ZXN0LWludDEwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCtCcWc
+98ConFAuw6PpsuljvSDfoee9UqFCpfxeIHdTu1wcxTtdRROvbwbdDfc0UYsOIRlR
+J+zVJdPJBS2n/lCiXVjfWgCmPQpSQhXyJAmD1VwgDrT4YFm31RCQmkQlQCaY7s4Y
+KG/eawzaSA0CYBjMS4ss58zFJeZyPB5y0OMb6Cu7Q5MsJBkwpdjADuT5otfZPIDG
+wB1N7vRtS37ajPR3cxrR7+jehcjEiZBeiW0tTdTgH1TFpoDqxCITkAyqu40AhG1i
+xH4DZs285LaeqVZnLiW2CwlKAMXaHwxL8FmhoFN6+FwXq/fBE2oUFhI5V00wp99Y
+WucRgoHZHjPLm4j9AgMBAAGjcjBwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEF
+BQcDATAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTOi/c99QBhXboU8Jo153ux
+QY/QFjAfBgNVHSMEGDAWgBQAsAb5gn4MZ6N1PJP1Pr6diD7hkjANBgkqhkiG9w0B
+AQsFAAOCAQEAhH5ygm9o2hxMJl4AuKfq3S2AKtDho+gW7D7XDTAyoCDjxskzTagz
+DNi1sEkgOOt+pYPdzZLqAPb5qE+jvHpXSrIiG+wYEZ3I9bMjOfXFFh9wfgNNpiCO
+KCP6c6XGJuAzDLLOqe726TjXFwh2rtCs6IXl6MZBfYEWpCYgbJytuGiVbEy/4zHu
+REXmmUVKBTT7nq9zMGqK7rkyEJeq51uGrO4NfkgDEPJqN7RQySMi8drXFcjjyvEo
+vfXoEug1sLeGyrEMD+8wfvhFJDtFIxCCu6gRIn6H8QMouNTIZBiZhtHPD9La5vh/
+RAqYxnujJ1Gw4ZpQExiLxPq0MdP3NLOibg==
+-----END CERTIFICATE-----
+`
+
+	intermediateCert2 := `
+-----BEGIN CERTIFICATE-----
+MIIDFzCCAf+gAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNVBAMTCXRl
+c3QtaW50MTAeFw0yNDA0MDIxNjA4NTVaFw0zNDA0MDIxNjA4NTVaMBQxEjAQBgNV
+BAMTCXRlc3QtaW50MjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANYX
+Dy2Uk67tIDsrVNnfTUJRFVCFNFgAEcFjTUZDLNPJiJy3i4QTDn+4oZpjlZjSC0l1
+QabxqQGgAycwA0TBJykKCKWN1uCucVBvXW8s4OdF/2HQIw13HZWZJOTJvMK+kfIx
+2/4cUr7lXl7QoC01VnhHQW1cLrzjfs2WZ+Nv1VGOxFx1S8yjNc4CvV4pKzeeANxE
+cgjAdMqwaT9uLKJ2fa/6jnlf4xVrTaO96LlPaiI/qn5Q/xdcdizQ3SDREV5BXe4V
+MOVoI0K9uoluy98RZvGG0G92PN7gM1BOfc8S/2Qaulq5eKzMShK4LmE2sWNniWjd
+4IEysKsOnllIxHae9wkCAwEAAaNyMHAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsG
+AQUFBwMBMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFC1hoo+AKqTs77o5YwSf
+e11hmyX0MB8GA1UdIwQYMBaAFM6L9z31AGFduhTwmjXne7FBj9AWMA0GCSqGSIb3
+DQEBCwUAA4IBAQCQhr+0m+UukGYqhwZSIlgL8YKulwMz0SNhyMkEcrxEl03Nx7SZ
+KgwZH+bxgykYocL0RxAZcjBCmcoLyy3Ebl743s4eRppBXQc+kYzYyaWEUpUxNoq2
+tFi+yqruQbkNSQ/rzKrRrwZAD8vP3mcUScjx9UNwXAbr4NbA10US1WlWYA17v4kf
+HXGhV997/HNLNyUYizePeeU4DrdVNgI3hdy4mpyWRDWc6fyaKbeFJbWo+KHqT5zB
+fTEBltyrpTqCdq0nXLwIzR+J4brtBH/LE2Wo9kp5bh4xUJQeybc46QeAyAvbV812
+e4t6jdnEGzymy5pzbGjtEp+gW4zaSGLBGL3V
+-----END CERTIFICATE-----
+`
+
+	serverCert := `
+-----BEGIN CERTIFICATE-----
+MIIDGjCCAgKgAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNVBAMTCXRl
+c3QtaW50MjAeFw0yNDA0MDIxNjA4NTVaFw0yNTA0MDIxNjA4NTVaMBQxEjAQBgNV
+BAMTCXRlc3QtbGVhZjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALg2
+kdP54gsbku7vUfIYf59H5VQLoDXoCZpTO7lxsHEh9QveViINEgYJ5Ycq8YijRR9J
+W2oAWSLdE+mEQ+kvzxjqIwcZgCq0cGwErXKaPZCNnQKiV0cGCgWBPyqZcE1noiSE
+5FqWBK0FDXmdiA5p2TSNfu6okJqVB/u0Bxbxqq+/V+aQ5KuFjwmIBT+/2kxwBma2
+Si/SDJts/H9izYcjTuxyJ1Cq9FPe87r/5t9riJ8QT1Czd2m+39yYJ7frnd1rjuh7
+FAvqyULP9uSZN5FBR7+YPR3rWfUK+D5C1Nq2BJ+XUwdIZpZn+r848Vntgy631h+x
+3O7tHO1aEhc0WXEIv0UCAwEAAaN1MHMwDgYDVR0PAQH/BAQDAgeAMB0GA1UdJQQW
+MBQGCCsGAQUFBwMCBggrBgEFBQcDATAfBgNVHSMEGDAWgBQtYaKPgCqk7O+6OWME
+n3tdYZsl9DAhBgNVHREEGjAYhwR/AAABhxAAAAAAAAAAAAAAAAAAAAABMA0GCSqG
+SIb3DQEBCwUAA4IBAQAvFuuaf+xbL8pZkJ8g8yYHlqA1xFOebTUmzBPZ1c1tVIkf
+KaKPTmgENmp4iiBgL/yptLohxQoJG2jr5BQqFialbs+A0lwLUe1PaEu0QE8x8ko4
+BZl0xFVJ7Lm9/WcMDbXclIdnz2J/3Oqnv3ltEW/c0VKydHFMWds/P4DPNX50baI0
+eDTPs4f3ZQDjkiV0o7gS86SbeGl92ByT/1nhz82gysayo/H2Ywg6j5hyjtb0gq7E
+sw1Z28Ia6wLxhTBxqtOmSB4N7Y3E8C868lmiCoK4ETFFAiFHZU7gmlIXVul3X6IT
++i3TggXpd0XjNatkK2EfmLOv1bQNPz5i0oyYtJBS
+-----END CERTIFICATE-----
+`
+
+	expectedCertChain := `-----BEGIN CERTIFICATE-----
+MIIDGjCCAgKgAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNVBAMTCXRl
+c3QtaW50MjAeFw0yNDA0MDIxNjA4NTVaFw0yNTA0MDIxNjA4NTVaMBQxEjAQBgNV
+BAMTCXRlc3QtbGVhZjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALg2
+kdP54gsbku7vUfIYf59H5VQLoDXoCZpTO7lxsHEh9QveViINEgYJ5Ycq8YijRR9J
+W2oAWSLdE+mEQ+kvzxjqIwcZgCq0cGwErXKaPZCNnQKiV0cGCgWBPyqZcE1noiSE
+5FqWBK0FDXmdiA5p2TSNfu6okJqVB/u0Bxbxqq+/V+aQ5KuFjwmIBT+/2kxwBma2
+Si/SDJts/H9izYcjTuxyJ1Cq9FPe87r/5t9riJ8QT1Czd2m+39yYJ7frnd1rjuh7
+FAvqyULP9uSZN5FBR7+YPR3rWfUK+D5C1Nq2BJ+XUwdIZpZn+r848Vntgy631h+x
+3O7tHO1aEhc0WXEIv0UCAwEAAaN1MHMwDgYDVR0PAQH/BAQDAgeAMB0GA1UdJQQW
+MBQGCCsGAQUFBwMCBggrBgEFBQcDATAfBgNVHSMEGDAWgBQtYaKPgCqk7O+6OWME
+n3tdYZsl9DAhBgNVHREEGjAYhwR/AAABhxAAAAAAAAAAAAAAAAAAAAABMA0GCSqG
+SIb3DQEBCwUAA4IBAQAvFuuaf+xbL8pZkJ8g8yYHlqA1xFOebTUmzBPZ1c1tVIkf
+KaKPTmgENmp4iiBgL/yptLohxQoJG2jr5BQqFialbs+A0lwLUe1PaEu0QE8x8ko4
+BZl0xFVJ7Lm9/WcMDbXclIdnz2J/3Oqnv3ltEW/c0VKydHFMWds/P4DPNX50baI0
+eDTPs4f3ZQDjkiV0o7gS86SbeGl92ByT/1nhz82gysayo/H2Ywg6j5hyjtb0gq7E
+sw1Z28Ia6wLxhTBxqtOmSB4N7Y3E8C868lmiCoK4ETFFAiFHZU7gmlIXVul3X6IT
++i3TggXpd0XjNatkK2EfmLOv1bQNPz5i0oyYtJBS
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDFzCCAf+gAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNVBAMTCXRl
+c3QtaW50MTAeFw0yNDA0MDIxNjA4NTVaFw0zNDA0MDIxNjA4NTVaMBQxEjAQBgNV
+BAMTCXRlc3QtaW50MjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANYX
+Dy2Uk67tIDsrVNnfTUJRFVCFNFgAEcFjTUZDLNPJiJy3i4QTDn+4oZpjlZjSC0l1
+QabxqQGgAycwA0TBJykKCKWN1uCucVBvXW8s4OdF/2HQIw13HZWZJOTJvMK+kfIx
+2/4cUr7lXl7QoC01VnhHQW1cLrzjfs2WZ+Nv1VGOxFx1S8yjNc4CvV4pKzeeANxE
+cgjAdMqwaT9uLKJ2fa/6jnlf4xVrTaO96LlPaiI/qn5Q/xdcdizQ3SDREV5BXe4V
+MOVoI0K9uoluy98RZvGG0G92PN7gM1BOfc8S/2Qaulq5eKzMShK4LmE2sWNniWjd
+4IEysKsOnllIxHae9wkCAwEAAaNyMHAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsG
+AQUFBwMBMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFC1hoo+AKqTs77o5YwSf
+e11hmyX0MB8GA1UdIwQYMBaAFM6L9z31AGFduhTwmjXne7FBj9AWMA0GCSqGSIb3
+DQEBCwUAA4IBAQCQhr+0m+UukGYqhwZSIlgL8YKulwMz0SNhyMkEcrxEl03Nx7SZ
+KgwZH+bxgykYocL0RxAZcjBCmcoLyy3Ebl743s4eRppBXQc+kYzYyaWEUpUxNoq2
+tFi+yqruQbkNSQ/rzKrRrwZAD8vP3mcUScjx9UNwXAbr4NbA10US1WlWYA17v4kf
+HXGhV997/HNLNyUYizePeeU4DrdVNgI3hdy4mpyWRDWc6fyaKbeFJbWo+KHqT5zB
+fTEBltyrpTqCdq0nXLwIzR+J4brtBH/LE2Wo9kp5bh4xUJQeybc46QeAyAvbV812
+e4t6jdnEGzymy5pzbGjtEp+gW4zaSGLBGL3V
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDFTCCAf2gAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNVBAMTB3Rl
+c3QtY2EwHhcNMjQwNDAyMTYwODU1WhcNMzQwNDAyMTYwODU1WjAUMRIwEAYDVQQD
+Ewl0ZXN0LWludDEwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCtCcWc
+98ConFAuw6PpsuljvSDfoee9UqFCpfxeIHdTu1wcxTtdRROvbwbdDfc0UYsOIRlR
+J+zVJdPJBS2n/lCiXVjfWgCmPQpSQhXyJAmD1VwgDrT4YFm31RCQmkQlQCaY7s4Y
+KG/eawzaSA0CYBjMS4ss58zFJeZyPB5y0OMb6Cu7Q5MsJBkwpdjADuT5otfZPIDG
+wB1N7vRtS37ajPR3cxrR7+jehcjEiZBeiW0tTdTgH1TFpoDqxCITkAyqu40AhG1i
+xH4DZs285LaeqVZnLiW2CwlKAMXaHwxL8FmhoFN6+FwXq/fBE2oUFhI5V00wp99Y
+WucRgoHZHjPLm4j9AgMBAAGjcjBwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEF
+BQcDATAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTOi/c99QBhXboU8Jo153ux
+QY/QFjAfBgNVHSMEGDAWgBQAsAb5gn4MZ6N1PJP1Pr6diD7hkjANBgkqhkiG9w0B
+AQsFAAOCAQEAhH5ygm9o2hxMJl4AuKfq3S2AKtDho+gW7D7XDTAyoCDjxskzTagz
+DNi1sEkgOOt+pYPdzZLqAPb5qE+jvHpXSrIiG+wYEZ3I9bMjOfXFFh9wfgNNpiCO
+KCP6c6XGJuAzDLLOqe726TjXFwh2rtCs6IXl6MZBfYEWpCYgbJytuGiVbEy/4zHu
+REXmmUVKBTT7nq9zMGqK7rkyEJeq51uGrO4NfkgDEPJqN7RQySMi8drXFcjjyvEo
+vfXoEug1sLeGyrEMD+8wfvhFJDtFIxCCu6gRIn6H8QMouNTIZBiZhtHPD9La5vh/
+RAqYxnujJ1Gw4ZpQExiLxPq0MdP3NLOibg==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIC8jCCAdqgAwIBAgIDEjRWMA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNVBAMTB3Rl
+c3QtY2EwHhcNMjQwNDAyMTYwODU0WhcNMzQwNDAyMTYwODU0WjASMRAwDgYDVQQD
+Ewd0ZXN0LWNhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt0R6suEJ
+zlRDkMUKUEFIRRnqPmbDUM+h5k4tc5bgAJgX1EGf/lVBJ4gzUGzYayc9qyIcsKqI
+/wyxsEm9SOnqR5lQkE/dJ3BsiSV/+wts6OX86KLWn4gHFm1xzl3xAj0/7w0qrEGj
+5ASEF+RsfQq+oY/jglZCRWaVq23F77L6NeOFCicEKCRRLKClwXFFrGErwoUk3ef1
+CJ7GD1C+7Pk4uHQC4BYttcSyVYfTn4fdYMEQtEY3hAWRsfZqJ/epRvxFFaDXnfGL
+PWoj+IYRx0YWsV6FY8rqyat8PGtvY4JR5RdF9nNIKapV3n3W98tc6EiXBZybULsd
+5z9PHU0hDabSxwIDAQABo1EwTzAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUH
+AwEwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUALAG+YJ+DGejdTyT9T6+nYg+
+4ZIwDQYJKoZIhvcNAQELBQADggEBABgkDtHj51xeHwFfSYQmUXnTQl59VCXGdulU
+Fx8yfI5aMJzWR0SGTnJ8/VpBUZi6VTTz45qvi8xJgnpF8SLtKjXQlbqIerO7KL+M
+7EnK2O1IGMKPboGM3pgJJQ7jS6aPObtFvuLUwECYoFw6dEzQkauzZjNA5FjWPImM
+9VonFvAOpA45r9/b5liZ/Lg7gfdOtlLYUpCU1bPtem4v60oFmKh5IMOdLDVCgcga
+HXlyr1Q1xkPwnHMt1aOPJPuMs1DSfbhP40bUvYh3gU5B7XpUpaHxlltm/h9/CsPE
+z9rzlA+Co/z78Wn/LtvjVrxJj4QHcfXhiIltAaAUnJP+kZ0+3I0=
+-----END CERTIFICATE-----
+`
+
+	cases := []struct {
+		desc        string
+		cert        string
+		expectedErr bool
+	}{
+		{
+			desc:        "order: root, intermediate1, intermediate2, server certs",
+			cert:        rootCACert + intermediateCert1 + intermediateCert2 + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: root, server, intermediate1, intermediate2, certs",
+			cert:        rootCACert + serverCert + intermediateCert1 + intermediateCert2,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate1, intermediate2, root, server certs",
+			cert:        intermediateCert1 + intermediateCert2 + rootCACert + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate1, intermediate2, server, root certs",
+			cert:        intermediateCert1 + intermediateCert2 + serverCert + rootCACert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, root, intermediate1, intermediate2 certs",
+			cert:        serverCert + rootCACert + intermediateCert1 + intermediateCert2,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, intermediate1, intermediate2, root certs",
+			cert:        serverCert + intermediateCert1 + intermediateCert2 + rootCACert,
+			expectedErr: false,
+		},
+
+		{
+			desc:        "order: root, intermediate2, intermediate1, server certs",
+			cert:        rootCACert + intermediateCert1 + intermediateCert2 + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: root, server, intermediate2, intermediate1 certs",
+			cert:        rootCACert + serverCert + intermediateCert1 + intermediateCert2,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate2, intermediate1, root, server certs",
+			cert:        intermediateCert1 + intermediateCert2 + rootCACert + serverCert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: intermediate2, intermediate1, server, root certs",
+			cert:        intermediateCert1 + intermediateCert2 + serverCert + rootCACert,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, root, intermediate2, intermediate1 certs",
+			cert:        serverCert + rootCACert + intermediateCert1 + intermediateCert2,
+			expectedErr: false,
+		},
+		{
+			desc:        "order: server, intermediate2, intermediate1, root certs",
+			cert:        serverCert + intermediateCert1 + intermediateCert2 + rootCACert,
+			expectedErr: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			certChain, err := fetchCertChains([]byte(tc.cert))
+			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
+				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
+			}
+			if string(certChain) != expectedCertChain {
+				t.Fatalf(cmp.Diff(expectedCertChain, string(certChain)))
+			}
+		})
+	}
+}
+
 func TestFetchCertChainWarning(t *testing.T) {
 	rootCACert := `
 -----BEGIN CERTIFICATE-----
