@@ -17,7 +17,7 @@ enableArcExtension: false
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.5.1
+    tag: v1.5.2
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -63,7 +63,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.5.1
+    tag: v1.5.2
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -120,7 +120,7 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.4.1
+      tag: v1.4.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -133,7 +133,7 @@ secrets-store-csi-driver:
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.4.1
+        tag: v1.4.3
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
 
@@ -144,7 +144,7 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.4.1
+      tag: v1.4.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar

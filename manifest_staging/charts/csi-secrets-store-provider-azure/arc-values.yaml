@@ -15,7 +15,7 @@ logVerbosity: 0
 linux:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.5.1
+    tag: v1.5.2
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -58,7 +58,7 @@ linux:
 windows:
   image:
     repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.5.1
+    tag: v1.5.2
     pullPolicy: IfNotPresent
   nodeSelector: {}
   tolerations: []
@@ -112,7 +112,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.4.1
+      tag: v1.4.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
@@ -125,7 +125,7 @@ secrets-store-csi-driver:
     crds:
       image:
         repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.4.1
+        tag: v1.4.3
         pullPolicy: IfNotPresent
     podAnnotations:
       prometheus.io/scrape: "true"
@@ -137,7 +137,7 @@ secrets-store-csi-driver:
     metricsAddr: ":8080"
     image:
       repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver
-      tag: v1.4.1
+      tag: v1.4.3
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar
