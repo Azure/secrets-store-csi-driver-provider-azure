@@ -18,8 +18,7 @@ jobs:
     parameters:
       osTypes:
       - "linux"
-      - "windows_docker"
-      - "windows_containerd"
+      - "windows"
   # TODO: re-enable this job after implementing automated ext release process
   # using https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/1382 for tracking
   # this will ensure any changes to provider works on arc extension too.
