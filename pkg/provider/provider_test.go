@@ -34,6 +34,7 @@ import (
 func TestGetVaultURL(t *testing.T) {
 	testEnvs := []string{"", "AZUREPUBLICCLOUD", "AZURECHINACLOUD", "AZUREGERMANCLOUD", "AZUREUSGOVERNMENTCLOUD"}
 	vaultDNSSuffix := []string{"vault.azure.net", "vault.azure.net", "vault.azure.cn", "vault.microsoftazure.de", "vault.usgovcloudapi.net"}
+	testProvider := provider{defaultCloudEnvironment: azure.PublicCloud}
 
 	cases := []struct {
 		desc        string
@@ -69,7 +70,7 @@ func TestGetVaultURL(t *testing.T) {
 		}
 
 		for idx := range testEnvs {
-			azCloudEnv, err := parseAzureEnvironment(testEnvs[idx])
+			azCloudEnv, err := testProvider.parseAzureEnvironment(testEnvs[idx])
 			if err != nil {
 				t.Fatalf("Error parsing cloud environment %v", err)
 			}
@@ -88,8 +89,10 @@ func TestGetVaultURL(t *testing.T) {
 
 func TestParseAzureEnvironment(t *testing.T) {
 	envNamesArray := []string{"AZURECHINACLOUD", "AZUREGERMANCLOUD", "AZUREPUBLICCLOUD", "AZUREUSGOVERNMENTCLOUD", ""}
+	testProvider := provider{defaultCloudEnvironment: azure.PublicCloud}
+
 	for _, envName := range envNamesArray {
-		azureEnv, err := parseAzureEnvironment(envName)
+		azureEnv, err := testProvider.parseAzureEnvironment(envName)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -101,7 +104,7 @@ func TestParseAzureEnvironment(t *testing.T) {
 	}
 
 	wrongEnvName := "AZUREWRONGCLOUD"
-	_, err := parseAzureEnvironment(wrongEnvName)
+	_, err := testProvider.parseAzureEnvironment(wrongEnvName)
 	if err == nil {
 		t.Fatalf("expected error for wrong azure environment name")
 	}
@@ -226,6 +229,7 @@ lKn75l/9h0PwiiPaI0TGKN2O8AwvhGGwDElmFhYtXedbbaST6rbVRDUj
 }
 
 func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
+	testProvider := provider{defaultCloudEnvironment: azure.PublicCloud}
 	azureStackCloudEnvName := "AZURESTACKCLOUD"
 	file, err := os.CreateTemp("", "ut")
 	defer os.Remove(file.Name())
@@ -236,7 +240,7 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	_, err = parseAzureEnvironment(azureStackCloudEnvName)
+	_, err = testProvider.parseAzureEnvironment(azureStackCloudEnvName)
 	if err == nil {
 		t.Fatalf("expected error to be not nil as AZURE_ENVIRONMENT_FILEPATH is not set")
 	}
@@ -246,7 +250,7 @@ func TestParseAzureEnvironmentAzureStackCloud(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
-	env, err := parseAzureEnvironment(azureStackCloudEnvName)
+	env, err := testProvider.parseAzureEnvironment(azureStackCloudEnvName)
 	if err != nil {
 		t.Fatalf("expected error to be nil, got: %+v", err)
 	}
@@ -1250,7 +1254,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			p := NewProvider(false, false)
+			p := NewProvider(false, false, azure.PublicCloud)
 
 			_, err := p.GetSecretsStoreObjectContent(testContext(t), tc.parameters, tc.secrets, 0420)
 			if tc.expectedErr {

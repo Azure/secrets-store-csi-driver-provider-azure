@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
@@ -24,9 +26,9 @@ type CSIDriverProviderServer struct {
 }
 
 // New returns an instance of CSIDriverProviderServer
-func New(constructPEMChain, writeCertAndKeyInSeparateFiles bool) *CSIDriverProviderServer {
+func New(constructPEMChain, writeCertAndKeyInSeparateFiles bool, defaultCloudEnvironment azure.Environment) *CSIDriverProviderServer {
 	return &CSIDriverProviderServer{
-		provider: provider.NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles),
+		provider: provider.NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles, defaultCloudEnvironment),
 	}
 }
 

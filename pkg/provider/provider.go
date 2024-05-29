@@ -42,6 +42,8 @@ type provider struct {
 
 	constructPEMChain              bool
 	writeCertAndKeyInSeparateFiles bool
+
+	defaultCloudEnvironment azure.Environment
 }
 
 // mountConfig holds the information for the mount event
@@ -49,7 +51,7 @@ type mountConfig struct {
 	// the name of the Azure Key Vault instance
 	keyvaultName string
 	// the type of azure cloud based on azure go sdk
-	azureCloudEnvironment *azure.Environment
+	azureCloudEnvironment azure.Environment
 	// authConfig is the config parameters for accessing Key Vault
 	authConfig auth.Config
 	// tenantID in AAD
@@ -67,24 +69,21 @@ type keyvaultObject struct {
 }
 
 // NewProvider creates a new provider
-func NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles bool) Interface {
+func NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles bool, defaultCloudEnvironment azure.Environment) Interface {
 	return &provider{
 		reporter:                       metrics.NewStatsReporter(),
 		constructPEMChain:              constructPEMChain,
 		writeCertAndKeyInSeparateFiles: writeCertAndKeyInSeparateFiles,
+		defaultCloudEnvironment:        defaultCloudEnvironment,
 	}
 }
 
 // parseAzureEnvironment returns azure environment by name
-func parseAzureEnvironment(cloudName string) (*azure.Environment, error) {
-	var env azure.Environment
-	var err error
+func (p *provider) parseAzureEnvironment(cloudName string) (azure.Environment, error) {
 	if cloudName == "" {
-		env = azure.PublicCloud
-	} else {
-		env, err = azure.EnvironmentFromName(cloudName)
+		return p.defaultCloudEnvironment, nil
 	}
-	return &env, err
+	return azure.EnvironmentFromName(cloudName)
 }
 
 func (mc *mountConfig) initializeKvClient(vaultURI string) (KeyVault, error) {
@@ -148,7 +147,7 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	if err != nil {
 		return nil, fmt.Errorf("failed to set AZURE_ENVIRONMENT_FILEPATH env to %s, error %w", cloudEnvFileName, err)
 	}
-	azureCloudEnv, err := parseAzureEnvironment(cloudName)
+	azureCloudEnv, err := p.parseAzureEnvironment(cloudName)
 	if err != nil {
 		return nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
 	}
