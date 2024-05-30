@@ -22,27 +22,18 @@ import (
 
 var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 	var (
-		specName             = "secret"
+		specName             = "secret-test"
 		spc                  *v1alpha1.SecretProviderClass
 		ns                   *corev1.Namespace
-		nodePublishSecretRef *corev1.Secret
 		p                    *corev1.Pod
 		syncTLSSecretName    = "sync-tls-secret"
 		syncOpaqueSecretName = "sync-opaque-secret"
 	)
 
 	BeforeEach(func() {
-		ns = namespace.Create(namespace.CreateInput{
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
-		})
-
-		nodePublishSecretRef = secret.Create(secret.CreateInput{
-			Creator:   kubeClient,
-			Name:      "secrets-store-creds",
-			Namespace: ns.Name,
-			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
-			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
 		keyVaultObjects := []types.KeyVaultObject{
@@ -82,6 +73,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 					types.KeyVaultNameParameter: config.KeyvaultName,
 					types.TenantIDParameter:     config.TenantID,
 					types.ObjectsParameter:      string(objects),
+					types.ClientIDParameter:     config.AzureClientID,
 				},
 				SecretObjects: []*v1alpha1.SecretObject{
 					{
@@ -113,12 +105,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with secrets", func() {
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 	})
 

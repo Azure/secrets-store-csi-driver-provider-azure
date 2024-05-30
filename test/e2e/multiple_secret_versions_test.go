@@ -25,7 +25,6 @@ var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD 
 		specName             = "multiversionsecret"
 		spc                  *v1alpha1.SecretProviderClass
 		ns                   *corev1.Namespace
-		nodePublishSecretRef *corev1.Secret
 		p                    *corev1.Pod
 		syncTLSSecretName    = "sync-tls-secret"
 		syncOpaqueSecretName = "sync-opaque-secret"
@@ -36,17 +35,9 @@ var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD 
 			Skip("functionality not yet supported in release version")
 		}
 
-		ns = namespace.Create(namespace.CreateInput{
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
-		})
-
-		nodePublishSecretRef = secret.Create(secret.CreateInput{
-			Creator:   kubeClient,
-			Name:      "secrets-store-creds",
-			Namespace: ns.Name,
-			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
-			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
 		keyVaultObjects := []types.KeyVaultObject{
@@ -89,6 +80,7 @@ var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD 
 					"keyvaultName": config.KeyvaultName,
 					"tenantId":     config.TenantID,
 					"objects":      string(objects),
+					"clientID":     config.AzureClientID,
 				},
 				SecretObjects: []*v1alpha1.SecretObject{
 					{
@@ -120,12 +112,11 @@ var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD 
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 	})
 
