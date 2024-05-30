@@ -13,7 +13,6 @@ import (
 type Config struct {
 	SubscriptionID                    string `envconfig:"SUBSCRIPTION_ID"`
 	AzureClientID                     string `envconfig:"AZURE_CLIENT_ID"`
-	AzureClientSecret                 string `envconfig:"AZURE_CLIENT_SECRET"`
 	TenantID                          string `envconfig:"TENANT_ID"`
 	KeyvaultName                      string `envconfig:"KEYVAULT_NAME"`
 	Registry                          string `envconfig:"REGISTRY" default:"mcr.microsoft.com/oss/azure/secrets-store"`
@@ -36,13 +35,15 @@ type Config struct {
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
 	AzureEnvironmentFilePath          string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
 	IsArcTest                         bool   `envconfig:"IS_ARC_TEST" default:"false"`
+
+	// KeyvaultClientID is the client ID of the service principal used to access the keyvault
+	KeyvaultClientID string `envconfig:"KEYVAULT_CLIENT_ID" default:"878afdc6-3fc3-4c3e-be5c-f28377892326"`
 }
 
 func (c *Config) DeepCopy() *Config {
 	copy := new(Config)
 	copy.SubscriptionID = c.SubscriptionID
 	copy.AzureClientID = c.AzureClientID
-	copy.AzureClientSecret = c.AzureClientSecret
 	copy.TenantID = c.TenantID
 	copy.KeyvaultName = c.KeyvaultName
 	copy.Registry = c.Registry
@@ -65,6 +66,7 @@ func (c *Config) DeepCopy() *Config {
 	copy.AzureEnvironmentFilePath = c.AzureEnvironmentFilePath
 	copy.IsHelmTest = c.IsHelmTest
 	copy.IsArcTest = c.IsArcTest
+	copy.KeyvaultClientID = c.KeyvaultClientID
 
 	return copy
 }
