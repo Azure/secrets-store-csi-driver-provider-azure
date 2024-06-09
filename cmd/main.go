@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
@@ -49,6 +51,9 @@ var (
 	constructPEMChain              = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
 	writeCertAndKeyInSeparateFiles = flag.Bool("write-cert-and-key-in-separate-files", false,
 		"Write cert and key in separate files. The individual files will be named as <secret-name>.crt and <secret-name>.key. These files will be created in addition to the single file.")
+
+	cloudName = flag.String("cloud-name", "AzurePublicCloud", "default cloud environment to use for Azure SDK if not provided in the SecretProviderClass. "+
+		"Allowed values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud or AzureStackCloud")
 )
 
 func main() {
@@ -75,6 +80,12 @@ func main() {
 	}
 	klog.InfoS("Starting Azure Key Vault Provider", "version", version.BuildVersion)
 
+	cloudEnv, err := azure.EnvironmentFromName(*cloudName)
+	if err != nil {
+		klog.ErrorS(err, "failed validating default cloud environment", "cloudName", *cloudName)
+		os.Exit(1)
+	}
+
 	if *enableProfile {
 		klog.InfoS("Starting profiling", "port", *profilePort)
 		go func() {
@@ -86,8 +97,7 @@ func main() {
 		}()
 	}
 	// initialize metrics exporter before creating measurements
-	err := metrics.InitMetricsExporter(*metricsBackend, *prometheusPort)
-	if err != nil {
+	if err = metrics.InitMetricsExporter(*metricsBackend, *prometheusPort); err != nil {
 		klog.ErrorS(err, "failed to initialize metrics exporter")
 		os.Exit(1)
 	}
@@ -130,7 +140,7 @@ func main() {
 		grpc.UnaryInterceptor(utils.LogInterceptor()),
 	}
 	s := grpc.NewServer(opts...)
-	csiDriverProviderServer := server.New(*constructPEMChain, *writeCertAndKeyInSeparateFiles)
+	csiDriverProviderServer := server.New(*constructPEMChain, *writeCertAndKeyInSeparateFiles, cloudEnv)
 	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
 	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)
