@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/namespace"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/pod"
-	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secret"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/secretproviderclass"
 
 	"github.com/ghodss/yaml"
@@ -22,25 +21,16 @@ import (
 
 var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 	var (
-		specName             = "key"
-		spc                  *v1alpha1.SecretProviderClass
-		ns                   *corev1.Namespace
-		nodePublishSecretRef *corev1.Secret
-		p                    *corev1.Pod
+		specName = "key-test"
+		spc      *v1alpha1.SecretProviderClass
+		ns       *corev1.Namespace
+		p        *corev1.Pod
 	)
 
 	BeforeEach(func() {
-		ns = namespace.Create(namespace.CreateInput{
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
-		})
-
-		nodePublishSecretRef = secret.Create(secret.CreateInput{
-			Creator:   kubeClient,
-			Name:      "secrets-store-creds",
-			Namespace: ns.Name,
-			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
-			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
 		})
 
 		keyVaultObjects := []types.KeyVaultObject{
@@ -76,6 +66,7 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 					types.KeyVaultNameParameter: config.KeyvaultName,
 					types.TenantIDParameter:     config.TenantID,
 					types.ObjectsParameter:      string(objects),
+					types.ClientIDParameter:     config.AzureClientID,
 				},
 			},
 		})
@@ -92,12 +83,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 
 	It("should read key from pod", func() {
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{
@@ -116,12 +106,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 
 	It("should read key from pod with alias", func() {
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{
@@ -168,12 +157,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{
@@ -222,12 +210,11 @@ var _ = Describe("When deploying SecretProviderClass CRD with keys", func() {
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline-crd",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{
