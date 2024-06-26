@@ -13,7 +13,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/golang/mock v1.6.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/otel v0.20.0
@@ -21,7 +21,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.20.0
 	golang.org/x/crypto v0.24.0
 	golang.org/x/net v0.26.0
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.64.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/component-base v0.25.3
 	k8s.io/klog/v2 v2.80.1
@@ -65,7 +65,7 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/apimachinery v0.25.3 // indirect
