@@ -1,0 +1,25 @@
+steps:
+  - script: |
+      echo "Creating user-assigned managed identity"
+      user_msi_name="${AZURE_CLUSTER_NAME}-msi-for-wi"
+      user_msi_principal_id=$(az identity create -g ${CLUSTER_RESOURCE_GROUP} -n $user_msi_name --subscription ${SUBSCRIPTION_ID} --query principalId -otsv)
+      
+      # Create federated identity credentials for all service account namespace/name used in e2e tests
+      # In future if we have more service accounts/namespace, we need to add them here as well
+      az identity federated-credential create --name fic-secret-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:secret-test:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-secret-file-permission --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:secret-file-permission:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-multiversionsecret --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:multiversionsecret:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-multiversionautorotation --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:multiversionautorotation:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-key-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:key-test:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-custom-cloud-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:custom-cloud-test:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-certificates-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:certificates-test:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-autorotation --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:autorotation:default" --audiences api://AzureADTokenExchange
+      
+      # Create role assignment for the user-assigned managed identity
+      az keyvault set-policy -n ${KEYVAULT_NAME} --object-id $user_msi_principal_id --secret-permissions get list set --key-permissions get list --certificate-permissions get list
+      
+      # set the user-assigned managed identity client id as a variable
+      AZURE_CLIENT_ID=$(az identity show -g ${CLUSTER_RESOURCE_GROUP} -n $user_msi_name --subscription $(SUBSCRIPTION_ID) --query clientId -otsv)
+      echo "##vso[task.setvariable variable=AZURE_CLIENT_ID]$AZURE_CLIENT_ID"
+
+    displayName: "Create managed identity and FICs"

@@ -54,6 +54,8 @@ jobs:
 
       - template: role-assignment.yaml
 
+      - template: create-fic.yaml
+
       # Run e2e tests with Released Version
       - template: e2e-test.yaml
         parameters:

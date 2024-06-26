@@ -32,15 +32,15 @@ type client struct {
 }
 
 func NewClient(config *framework.Config) Client {
-	opts := &azidentity.ClientSecretCredentialOptions{
+	opts := &azidentity.ManagedIdentityCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
 				ActiveDirectoryAuthorityHost: azure.PublicCloud.ActiveDirectoryEndpoint,
 			},
 		},
+		ID: azidentity.ClientID(config.KeyvaultClientID),
 	}
-
-	cred, err := azidentity.NewClientSecretCredential(config.TenantID, config.AzureClientID, config.AzureClientSecret, opts)
+	cred, err := azidentity.NewManagedIdentityCredential(opts)
 	Expect(err).To(BeNil())
 
 	c, err := azsecrets.NewClient(getVaultURL(config.KeyvaultName), cred, nil)
