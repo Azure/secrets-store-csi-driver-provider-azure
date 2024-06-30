@@ -59,13 +59,18 @@ steps:
         --load-balancer-sku standard \
         --network-plugin azure \
         --max-pods $(MAX_PODS) \
-        --load-balancer-managed-outbound-ip-count 6
+        --load-balancer-managed-outbound-ip-count 6 \
+        --enable-oidc-issuer
         MASTERIP=$(az aks show \
           -g ${AZURE_CLUSTER_NAME} \
           -n ${AZURE_CLUSTER_NAME} \
           --query 'fqdn' -o tsv)
         echo "##vso[task.setvariable variable=MASTERIP]${MASTERIP}"
         echo "##vso[task.setvariable variable=MASTERINTERNALIP]${MASTERIP}"
+      
+      OIDC_ISSUER_URL=$(az aks show -g ${AZURE_CLUSTER_NAME} -n ${AZURE_CLUSTER_NAME} --query "oidcIssuerProfile.issuerUrl" -otsv)
+      echo "##vso[task.setvariable variable=OIDC_ISSUER_URL]${OIDC_ISSUER_URL}"
+      echo "OIDC_ISSUER_URL=${OIDC_ISSUER_URL}"
 
       if [[ "$(OS_TYPE)" == "windows" ]]; then
         az aks nodepool add -g ${AZURE_CLUSTER_NAME} --cluster-name ${AZURE_CLUSTER_NAME} --os-type Windows --name win --node-count 1 ${EXTRA_ARGS:-} > /dev/null

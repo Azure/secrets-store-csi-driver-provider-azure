@@ -43,7 +43,7 @@ var _ = Describe("[ObjectVersionHistory] Test auto rotation of mount contents an
 			Skip("functionality not yet supported in release version")
 		}
 
-		ns = namespace.Create(namespace.CreateInput{
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
 		})
@@ -58,18 +58,10 @@ var _ = Describe("[ObjectVersionHistory] Test auto rotation of mount contents an
 		})
 	})
 
-	It("should auto rotate mount contents with service principal", func() {
+	It("should auto rotate mount contents with workload identity", func() {
 		if config.IsKindCluster {
 			Skip("test case not supported for kind cluster")
 		}
-
-		nodePublishSecretRef := secret.Create(secret.CreateInput{
-			Creator:   kubeClient,
-			Name:      "secrets-store-creds",
-			Namespace: ns.Name,
-			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
-			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
-		})
 
 		secretName := fmt.Sprintf("secret-sp-%s", utilrand.String(multipleSecretsRandomLength))
 		// create secret in keyvault
@@ -124,17 +116,17 @@ var _ = Describe("[ObjectVersionHistory] Test auto rotation of mount contents an
 					"objects":              string(objects),
 					"usePodIdentity":       "false",
 					"useVMManagedIdentity": "false",
+					"clientID":             config.AzureClientID,
 				},
 			},
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{

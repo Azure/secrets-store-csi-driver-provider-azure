@@ -39,7 +39,7 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 	)
 
 	BeforeEach(func() {
-		ns = namespace.Create(namespace.CreateInput{
+		ns = namespace.CreateWithName(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    specName,
 		})
@@ -54,20 +54,12 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 		})
 	})
 
-	It("should auto rotate mount contents with service principal", func() {
+	It("should auto rotate mount contents with workload identity", func() {
 		if config.IsKindCluster {
 			Skip("test case not supported for kind cluster")
 		}
 
-		nodePublishSecretRef := secret.Create(secret.CreateInput{
-			Creator:   kubeClient,
-			Name:      "secrets-store-creds",
-			Namespace: ns.Name,
-			Data:      map[string][]byte{"clientid": []byte(config.AzureClientID), "clientsecret": []byte(config.AzureClientSecret)},
-			Labels:    map[string]string{"secrets-store.csi.k8s.io/used": "true"},
-		})
-
-		secretName := fmt.Sprintf("secret-sp-%s", utilrand.String(randomLength))
+		secretName := fmt.Sprintf("secret-wi-%s", utilrand.String(randomLength))
 		// create secret in keyvault
 		err := kvClient.SetSecret(secretName, "secret")
 		Expect(err).To(BeNil())
@@ -119,17 +111,17 @@ var _ = Describe("Test auto rotation of mount contents and K8s secrets", func() 
 					types.ObjectsParameter:              string(objects),
 					types.UsePodIdentityParameter:       "false",
 					types.UseVMManagedIdentityParameter: "false",
+					types.ClientIDParameter:             config.AzureClientID,
 				},
 			},
 		})
 
 		p = pod.Create(pod.CreateInput{
-			Creator:                  kubeClient,
-			Config:                   config,
-			Name:                     "busybox-secrets-store-inline",
-			Namespace:                ns.Name,
-			SecretProviderClassName:  spc.Name,
-			NodePublishSecretRefName: nodePublishSecretRef.Name,
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
 		})
 
 		pod.WaitFor(pod.WaitForInput{
