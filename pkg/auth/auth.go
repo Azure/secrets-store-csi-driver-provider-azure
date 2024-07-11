@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/date"
+
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
 )
@@ -28,7 +29,7 @@ const (
 
 	// For Azure AD Workload Identity, the audience recommended for use is
 	// "api://AzureADTokenExchange"
-	DefaultTokenAudience = "api://AzureADTokenExchange" //nolint
+	DefaultTokenAudience = "api://AzureADTokenExchange" // nolint
 )
 
 var (
@@ -50,11 +51,23 @@ type Token struct {
 	Type     string `json:"token_type"`
 }
 
+// Expires returns the time.Time when the Token expires.
+func (t Token) Expires() time.Time {
+	s, err := t.ExpiresOn.Float64()
+	if err != nil {
+		s = -3600
+	}
+
+	expiration := date.NewUnixTimeFromSeconds(s)
+
+	return time.Time(expiration).UTC()
+}
+
 // PodIdentityResponse is the response received from aad-pod-identity when requesting token
 // on behalf of the pod
 type PodIdentityResponse struct {
-	Token    adal.Token `json:"token"`
-	ClientID string     `json:"clientid"`
+	Token    Token  `json:"token"`
+	ClientID string `json:"clientid"`
 }
 
 // Config is the required parameters for auth config
