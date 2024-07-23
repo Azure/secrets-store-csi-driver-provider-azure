@@ -83,7 +83,7 @@ spec:
             {{- end }}
         # Telegraf
         - name: telegraf
-          image: "mcr.microsoft.com/mirror/docker/library/telegraf:1.28"
+          image: "mcr.microsoft.com/cbl-mariner/base/telegraf:1.29"
           imagePullPolicy: IfNotPresent
           resources:
             {{- toYaml .Values.telegraf.resources | nindent 12 }}
