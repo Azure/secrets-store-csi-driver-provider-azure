@@ -242,7 +242,7 @@ Azure:
 
 # Arc monitoring
 arc:
-  enableMonitoring: true
+  enableMonitoring: false
 
 # Port that serves metrics
 metricsAddr: "8898"
