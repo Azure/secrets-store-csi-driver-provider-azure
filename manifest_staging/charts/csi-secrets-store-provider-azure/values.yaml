@@ -13,6 +13,7 @@ logFormatJSON: false
 logVerbosity: 0
 
 enableArcExtension: false
+hostNetwork: true
 
 linux:
   image:
