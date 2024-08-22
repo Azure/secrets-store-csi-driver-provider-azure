@@ -19,7 +19,6 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
-	"github.com/Azure/go-autorest/autorest/adal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	logsapi "k8s.io/component-base/logs/api/v1"
@@ -98,11 +97,7 @@ func main() {
 	if *writeCertAndKeyInSeparateFiles {
 		klog.Infof("write cert and key in separate files feature enabled")
 	}
-	// Add csi-secrets-store user agent to adal requests
-	if err := adal.AddToUserAgent(version.GetUserAgent()); err != nil {
-		klog.ErrorS(err, "failed to add user agent to adal")
-		os.Exit(1)
-	}
+
 	// Initialize and run the gRPC server
 	proto, addr, err := utils.ParseEndpoint(*endpoint)
 	if err != nil {
