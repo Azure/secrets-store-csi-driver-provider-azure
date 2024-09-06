@@ -117,8 +117,7 @@ build-darwin:
 
 .PHONY: container
 container: build
-	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain . --load
-	echo $(IMAGE_TAG)
+	docker buildx build --platform="linux/$(ARCH)" --no-cache -t $(IMAGE_TAG) -f Dockerfile --progress=plain .
 
 .PHONY: arc-conformance-container
 arc-conformance-container: docker-buildx-builder build-e2e-test
