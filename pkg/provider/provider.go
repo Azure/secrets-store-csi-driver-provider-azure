@@ -70,8 +70,14 @@ type keyvaultObject struct {
 
 // NewProvider creates a new provider
 func NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles bool, defaultCloudEnvironment azure.Environment) Interface {
+	sr, err := metrics.NewStatsReporter()
+	if err != nil {
+		klog.ErrorS(err, "failed to create stats reporter")
+		return nil
+	}
+
 	return &provider{
-		reporter:                       metrics.NewStatsReporter(),
+		reporter:                       sr,
 		constructPEMChain:              constructPEMChain,
 		writeCertAndKeyInSeparateFiles: writeCertAndKeyInSeparateFiles,
 		defaultCloudEnvironment:        defaultCloudEnvironment,

@@ -28,7 +28,12 @@ func ParseEndpoint(ep string) (string, string, error) {
 func LogInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
-		reporter := metrics.NewStatsReporter()
+
+		reporter, err := metrics.NewStatsReporter()
+		if err != nil {
+			klog.ErrorS(err, "failed to create stats reporter")
+			return nil, err
+		}
 
 		ctxDeadline, _ := ctx.Deadline()
 		klog.V(5).InfoS("request", "method", info.FullMethod, "deadline", time.Until(ctxDeadline).String())
