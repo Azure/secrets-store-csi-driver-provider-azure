@@ -19,9 +19,9 @@ const (
 )
 
 func initPrometheusExporter(port int) error {
-	exporter, err := prometheus.New(
-		prometheus.WithRegisterer(metrics.Registry.(*crprometheus.Registry)), // using the controller-runtime prometheus metrics registry
-	)
+	reg := metrics.Registry.(*crprometheus.Registry)
+
+	exporter, err := prometheus.New(prometheus.WithRegisterer(reg))
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func initPrometheusExporter(port int) error {
 
 	otel.SetMeterProvider(meterProvider)
 
-	http.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
+	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 	go func() {
 		server := &http.Server{
 			Addr:              fmt.Sprintf(":%v", port),
