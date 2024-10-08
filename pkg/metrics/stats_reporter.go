@@ -4,9 +4,9 @@ import (
 	"context"
 	"runtime"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 )
 
 var (
@@ -20,12 +20,11 @@ var (
 	grpcMethodKey   = "grpc_method"
 	grpcCodeKey     = "grpc_code"
 	grpcMessageKey  = "grpc_message"
-	keyvaultRequest metric.Float64ValueRecorder
-	grpcRequest     metric.Float64ValueRecorder
 )
 
 type reporter struct {
-	meter metric.Meter
+	keyvaultRequestDuration metric.Float64Histogram
+	grpcRequestDuration     metric.Float64Histogram
 }
 
 // StatsReporter is the interface for reporting metrics
@@ -35,12 +34,20 @@ type StatsReporter interface {
 }
 
 // NewStatsReporter creates a new StatsReporter
-func NewStatsReporter() StatsReporter {
-	meter := global.Meter("csi-secrets-store-provider-azure")
+func NewStatsReporter() (StatsReporter, error) {
+	var err error
+	meter := otel.Meter("csi-secrets-store-provider-azure")
+	r := &reporter{}
 
-	keyvaultRequest = metric.Must(meter).NewFloat64ValueRecorder("keyvault_request", metric.WithDescription("Distribution of how long it took to get from keyvault"))
-	grpcRequest = metric.Must(meter).NewFloat64ValueRecorder("grpc_request", metric.WithDescription("Distribution of how long it took for the gRPC requests"))
-	return &reporter{meter: meter}
+	if r.keyvaultRequestDuration, err = meter.Float64Histogram("keyvault_request", metric.WithDescription("Distribution of how long it took to get from keyvault")); err != nil {
+		return nil, err
+	}
+
+	if r.grpcRequestDuration, err = meter.Float64Histogram("grpc_request", metric.WithDescription("Distribution of how long it took for the gRPC requests")); err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
 
 // ReportKeyvaultRequest reports the duration of the keyvault request
@@ -55,10 +62,8 @@ func (r *reporter) ReportKeyvaultRequest(ctx context.Context, duration float64, 
 		attribute.String(objectNameKey, objectName),
 		attribute.String(errorKey, err),
 	}
-	r.meter.RecordBatch(ctx,
-		attributes,
-		keyvaultRequest.Measurement(duration),
-	)
+
+	r.keyvaultRequestDuration.Record(ctx, duration, metric.WithAttributes(attributes...))
 }
 
 // ReportGRPCRequest reports the duration of the gRPC request
@@ -72,8 +77,6 @@ func (r *reporter) ReportGRPCRequest(ctx context.Context, duration float64, meth
 		attribute.String(grpcCodeKey, code),
 		attribute.String(grpcMessageKey, message),
 	}
-	r.meter.RecordBatch(ctx,
-		attributes,
-		grpcRequest.Measurement(duration),
-	)
+
+	r.grpcRequestDuration.Record(ctx, duration, metric.WithAttributes(attributes...))
 }
