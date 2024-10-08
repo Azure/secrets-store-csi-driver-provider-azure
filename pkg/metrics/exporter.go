@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 const prometheusExporter = "prometheus"
 const otlpExporter = "otlp"
 
-func InitMetricsExporter(metricsBackend string, prometheusPort int) error {
+func InitMetricsExporter(ctx context.Context, metricsBackend string, prometheusPort int, otlpMetricsGRPCEndpoint string, arcExtensionResourceID string, tlsCertificatePath string) error {
 	mb := strings.ToLower(metricsBackend)
 	klog.InfoS("intializing metrics backend", "backend", mb)
 	switch mb {
@@ -18,7 +19,7 @@ func InitMetricsExporter(metricsBackend string, prometheusPort int) error {
 	case prometheusExporter:
 		return initPrometheusExporter(prometheusPort)
 	case otlpExporter:
-		return initOTLPExporter()
+		return initOTLPExporter(ctx, otlpMetricsGRPCEndpoint, arcExtensionResourceID, tlsCertificatePath)
 	default:
 		return fmt.Errorf("unsupported metrics backend %v", metricsBackend)
 	}

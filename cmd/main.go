@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -47,6 +48,10 @@ var (
 	metricsBackend = flag.String("metrics-backend", "Prometheus", "Backend used for metrics")
 	prometheusPort = flag.Int("prometheus-port", 8898, "Prometheus port for metrics backend")
 
+	otlpMetricsGRPCEndpoint = flag.String("otlp-metrics-grpc-endpoint", "", "OTLP gRPC endpoint for metrics backend")
+	arcExtensionResourceID  = flag.String("arc-extension-resource-id", "", "Resource ID for Azure Arc extension")
+	tlsCertificatePath      = flag.String("tls-certificate-path", "/certs/root-certs.pem", "Path to the TLS certificate for OTLP gRPC endpoint")
+
 	constructPEMChain              = flag.Bool("construct-pem-chain", true, "explicitly reconstruct the pem chain in the order: SERVER, INTERMEDIATE, ROOT")
 	writeCertAndKeyInSeparateFiles = flag.Bool("write-cert-and-key-in-separate-files", false,
 		"Write cert and key in separate files. The individual files will be named as <secret-name>.crt and <secret-name>.key. These files will be created in addition to the single file.")
@@ -60,6 +65,8 @@ func main() {
 	defer klog.Flush()
 
 	flag.Parse()
+
+	ctx := context.Background()
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
@@ -96,7 +103,7 @@ func main() {
 		}()
 	}
 	// initialize metrics exporter before creating measurements
-	if err = metrics.InitMetricsExporter(*metricsBackend, *prometheusPort); err != nil {
+	if err = metrics.InitMetricsExporter(ctx, *metricsBackend, *prometheusPort, *otlpMetricsGRPCEndpoint, *arcExtensionResourceID, *tlsCertificatePath); err != nil {
 		klog.ErrorS(err, "failed to initialize metrics exporter")
 		os.Exit(1)
 	}
