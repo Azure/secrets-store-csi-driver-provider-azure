@@ -75,7 +75,7 @@ func TestLogInterceptor(t *testing.T) {
 	b := new(bytes.Buffer)
 	klog.SetOutput(b)
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	info := &grpc.UnaryServerInfo{
@@ -112,7 +112,7 @@ func TestLogInterceptor_Error(t *testing.T) {
 	b := new(bytes.Buffer)
 	klog.SetOutput(b)
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(_ context.Context, _ interface{}) (interface{}, error) {
 		return nil, status.Error(codes.Internal, "bad request")
 	}
 	info := &grpc.UnaryServerInfo{
