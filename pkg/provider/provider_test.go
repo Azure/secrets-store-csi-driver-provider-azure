@@ -661,6 +661,7 @@ func TestFormatKeyVaultObject(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			formatKeyVaultObject(&tc.keyVaultObject)
 			if !reflect.DeepEqual(tc.keyVaultObject, tc.expectedKeyVaultObject) {
@@ -792,7 +793,7 @@ fpTPteqfpl8iGQIhAOo8tpUYiREVSYZu130fN0Gvy4WmJMFAi7JrVeSnZ7uP
 				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
 			}
 			if string(certChain) != expectedCertChain {
-				t.Fatalf(cmp.Diff(expectedCertChain, string(certChain)))
+				t.Fatalf("%s", cmp.Diff(expectedCertChain, string(certChain)))
 			}
 		})
 	}
@@ -1038,7 +1039,7 @@ z9rzlA+Co/z78Wn/LtvjVrxJj4QHcfXhiIltAaAUnJP+kZ0+3I0=
 				t.Fatalf("expected error: %v, got error: %v", tc.expectedErr, err)
 			}
 			if string(certChain) != expectedCertChain {
-				t.Fatalf(cmp.Diff(expectedCertChain, string(certChain)))
+				t.Fatalf("%s", cmp.Diff(expectedCertChain, string(certChain)))
 			}
 		})
 	}
@@ -1098,7 +1099,7 @@ kzqEt441cQasPp5ohL5U4cJN6lAuwA==
 		t.Fatalf("fetchCertChains() error = %v, expected nil", err)
 	}
 	if string(certChain) != expectedCert {
-		t.Fatalf(cmp.Diff(expectedCert, string(certChain)))
+		t.Fatalf("%s", cmp.Diff(expectedCert, string(certChain)))
 	}
 
 	klog.Flush()
