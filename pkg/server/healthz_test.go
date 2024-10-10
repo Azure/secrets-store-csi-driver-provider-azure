@@ -26,7 +26,7 @@ func TestServe(t *testing.T) {
 	}{
 		{
 			desc:                   "failed health check",
-			setupServer:            func(socketPath string) {},
+			setupServer:            func(_ string) {},
 			expectedHTTPStatusCode: http.StatusServiceUnavailable,
 		},
 		{

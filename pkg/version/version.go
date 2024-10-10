@@ -38,7 +38,7 @@ func PrintVersion() (err error) {
 		return
 	}
 
-	fmt.Printf(string(res) + "\n")
+	fmt.Printf("%s\n", res)
 	return
 }
 

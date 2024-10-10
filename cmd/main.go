@@ -145,7 +145,7 @@ func main() {
 
 	healthz := &server.HealthZ{
 		HealthCheckURL: &url.URL{
-			Host: net.JoinHostPort("", strconv.FormatUint(uint64(*healthzPort), 10)),
+			Host: net.JoinHostPort("", strconv.Itoa(*healthzPort)),
 			Path: *healthzPath,
 		},
 		UnixSocketPath: listener.Addr().String(),
