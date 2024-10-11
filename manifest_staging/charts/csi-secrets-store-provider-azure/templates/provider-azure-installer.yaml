@@ -41,7 +41,7 @@ spec:
 {{ toYaml .Values.imagePullSecrets | indent 8 }}
       {{- end }}
       serviceAccountName: csi-secrets-store-provider-azure
-      hostNetwork: true
+      hostNetwork: {{ .Values.hostNetwork }}
       {{- if .Values.linux.dnsPolicy }}
       dnsPolicy: {{ .Values.linux.dnsPolicy }}
       {{- end }}
