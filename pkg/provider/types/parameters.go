@@ -30,6 +30,15 @@ func GetUsePodIdentity(parameters map[string]string) (bool, error) {
 	return strconv.ParseBool(str)
 }
 
+// GetUsePodServiceAccountAnnotation returns if pod service account annotation is enabled
+func GetUsePodServiceAccountAnnotation(parameters map[string]string) (bool, error) {
+	str := strings.TrimSpace(parameters[UsePodServiceAccountAnnotationParameter])
+	if str == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(str)
+}
+
 // GetUseVMManagedIdentity returns if VM managed identity is enabled
 func GetUseVMManagedIdentity(parameters map[string]string) (bool, error) {
 	str := strings.TrimSpace(parameters[UseVMManagedIdentityParameter])
@@ -78,6 +87,11 @@ func GetClientID(parameters map[string]string) string {
 // GetServiceAccountTokens returns the service account tokens
 func GetServiceAccountTokens(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributeServiceAccountTokens])
+}
+
+// GetServiceAccountName returns the service account name
+func GetServiceAccountName(parameters map[string]string) string {
+	return strings.TrimSpace(parameters[CSIAttributeServiceAccountName])
 }
 
 // GetObjects returns the key vault objects
