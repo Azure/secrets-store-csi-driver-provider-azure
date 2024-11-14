@@ -138,6 +138,7 @@ func (kv KeyVaultObject) GetFileName() string {
 // GetFilePermission returns the file permission and error if any
 func (kv KeyVaultObject) GetFilePermission(defaultFilePermission os.FileMode) (int32, error) {
 	if kv.FilePermission == "" {
+		//nolint:gosec // Safe to cast, file permissions fit within int32 range
 		return int32(defaultFilePermission), nil
 	}
 	permission, err := strconv.ParseInt(kv.FilePermission, 8, 32)
