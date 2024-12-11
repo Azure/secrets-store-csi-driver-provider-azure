@@ -665,10 +665,12 @@ func fetchCertChains(data []byte) ([]byte, error) {
 	var pemData []byte
 	nodes := make([]*node, 0)
 
+	currData := data
+
 	for {
 		// decode pem to der first
-		block, rest := pem.Decode(data)
-		data = rest
+		block, rest := pem.Decode(currData)
+		currData = rest
 
 		if block == nil {
 			break
@@ -743,6 +745,8 @@ func fetchCertChains(data []byte) ([]byte, error) {
 
 	if len(nodes) != len(newCertChain) {
 		klog.Warning("certificate chain is not complete due to missing intermediate/root certificates in the cert from key vault")
+		// if we're unable to construct the full chain, return the original order we got from the key vault
+		return data, nil
 	}
 
 	for _, cert := range newCertChain {
