@@ -290,10 +290,10 @@ func getCredential(secrets map[string]string) (string, string, error) {
 	}
 
 	if clientID == "" {
-		return "", "", fmt.Errorf("could not find clientid in secrets(%v)", secrets)
+		return "", "", fmt.Errorf("could not find clientid in secrets")
 	}
 	if clientSecret == "" {
-		return "", "", fmt.Errorf("could not find clientsecret in secrets(%v)", secrets)
+		return "", "", fmt.Errorf("could not find clientsecret in secrets")
 	}
 	return clientID, clientSecret, nil
 }
