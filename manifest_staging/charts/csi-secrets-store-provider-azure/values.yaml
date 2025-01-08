@@ -134,8 +134,8 @@ secrets-store-csi-driver:
       pullPolicy: IfNotPresent
     crds:
       image:
-        repository: mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.4.7
+        repository: mcr.microsoft.com/oss/kubernetes/kubectl
+        tag: v1.29.4
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
 
