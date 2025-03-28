@@ -8,7 +8,6 @@ jobs:
     cancelTimeoutInMinutes: 5
     dependsOn:
     - lint
-    - scan_images
     - unit_test
     - build
     workspace:
