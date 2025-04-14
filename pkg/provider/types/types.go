@@ -28,6 +28,7 @@ const (
 	CSIAttributePodName              = "csi.storage.k8s.io/pod.name"
 	CSIAttributePodNamespace         = "csi.storage.k8s.io/pod.namespace"
 	CSIAttributeServiceAccountTokens = "csi.storage.k8s.io/serviceAccount.tokens" // nolint
+	CSIAttributeServiceAccountName   = "csi.storage.k8s.io/serviceAccount.name"
 
 	// KeyVaultNameParameter is the name of the key vault name parameter
 	KeyVaultNameParameter = "keyvaultName"
@@ -35,6 +36,8 @@ const (
 	CloudNameParameter = "cloudName"
 	// UsePodIdentityParameter is the name of the use pod identity parameter
 	UsePodIdentityParameter = "usePodIdentity"
+	// UsePodServiceAccountAnnotationParameter is the name of the use pod service account annotation parameter
+	UsePodServiceAccountAnnotationParameter = "usePodServiceAccountAnnotation"
 	// UseVMManagedIdentityParameter is the name of the use VM managed identity parameter
 	UseVMManagedIdentityParameter = "useVMManagedIdentity"
 	// UserAssignedIdentityIDParameter is the name of the user assigned identity ID parameter
