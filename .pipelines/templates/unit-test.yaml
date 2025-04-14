@@ -1,10 +1,4 @@
 jobs:
-  - job: scan_images
-    timeoutInMinutes: 10
-    workspace:
-      clean: all
-    steps:
-      - template: scan-images.yaml
   - job: lint
     timeoutInMinutes: 5
     workspace:

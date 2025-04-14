@@ -1,0 +1,76 @@
+name: scan_vulns
+
+on:
+  push:
+    paths-ignore:
+    - "docs/**"
+    - "website/**"
+    - "**.md"
+  pull_request:
+    paths-ignore:
+    - "docs/**"
+    - "website/**"
+    - "**.md"
+
+permissions: read-all
+
+jobs:
+  govulncheck:
+    name: "Run govulncheck"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: "1.23"
+          check-latest: true
+      - uses: golang/govulncheck-action@3a32958c2706f7048305d5a2e53633d7e37e97d0 # v1.0.2
+
+  scan_vulnerabilities:
+    name: "[Trivy] Scan for vulnerabilities"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Download trivy
+        run: |
+          pushd $(mktemp -d)
+          wget https://github.com/aquasecurity/trivy/releases/download/v${{ env.TRIVY_VERSION }}/trivy_${{ env.TRIVY_VERSION }}_Linux-64bit.tar.gz
+          tar zxvf trivy_${{ env.TRIVY_VERSION }}_Linux-64bit.tar.gz
+          echo "$(pwd)" >> $GITHUB_PATH
+        env:
+          TRIVY_VERSION: "0.57.0"
+
+      - name: Download trivy db
+        run: |
+          trivy image \
+            --download-db-only \
+            --db-repository=ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db,docker.io/aquasec/trivy-db
+
+      - name: Run trivy on git repository
+        run: |
+          trivy fs --format table --ignore-unfixed --skip-dirs website --scanners vuln .
+
+      - name: Build docker images
+        run: |
+          make container
+        env:
+          REGISTRY: e2e
+          IMAGE_VERSION: test
+          OUTPUT_TYPE: docker
+
+      - name: Run trivy on image
+        run: |
+          trivy image --exit-code 1 --ignore-unfixed --severity MEDIUM,HIGH,CRITICAL --ignore-unfixed --pkg-types="os,library" "e2e/provider-azure:test"
