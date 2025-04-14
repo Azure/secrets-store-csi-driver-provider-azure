@@ -6,10 +6,10 @@ jobs:
       - ImageOverride -equals azcu-agent-amd64-mariner-2-cgv2-img
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
-    dependsOn:
-    - lint
-    - unit_test
-    - build
+    # dependsOn:
+    # - lint
+    # - unit_test
+    # - build
     workspace:
       clean: all
     variables:
