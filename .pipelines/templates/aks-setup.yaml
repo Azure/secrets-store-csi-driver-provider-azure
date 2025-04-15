@@ -23,7 +23,7 @@ steps:
 
   - script: |
       # Run test with latest non-preview aks version available
-      aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query 'values[?!(contains(capabilities.supportPlan, 'AKSLongTermSupport')) && isPreview==null].patchVersions | []' | jq '[.[] | to_entries[] | .key ] | max')
+      aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) -o json | jq -r '.values[] | select(.capabilities.supportPlan | index("AKSLongTermSupport") | not) | .patchVersions | to_entries[] | .key' | sort -V | tail -n 1)
       echo "AKS Install version - $aksVersion"
 
       echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
@@ -34,7 +34,7 @@ steps:
     # Overrride AKS_INSTALL_VERSION if testing with k8s upgrade
     # If we are running test with cluster upgrade, start with minimum possible non preview version.
     - script: |
-        aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) --query 'values[?!(contains(capabilities.supportPlan, 'AKSLongTermSupport')) && isPreview==null].patchVersions | []' | jq '[.[] | to_entries[] | .key ] | min')
+        aksVersion=$(az aks get-versions -l $(AZURE_LOCATION) -o json | jq -r '.values[] | select(.capabilities.supportPlan | index("AKSLongTermSupport") | not) | .patchVersions | to_entries[] | .key' | sort -V | head -n 1)
         echo "AKS Install version - $aksVersion"
 
         echo "##vso[task.setvariable variable=AKS_INSTALL_VERSION]$aksVersion"
