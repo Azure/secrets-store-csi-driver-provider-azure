@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       # pinning to the sha 331ce1d993939866bb63c32c6cbbfd48fa76fc57 from https://github.com/actions/setup-go/releases/tag/v2.1.4
-      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
         with:
           go-version: "^1.20"
       - name: Unit test
