@@ -16,7 +16,7 @@ enableArcExtension: false
 
 linux:
   image:
-    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
+    repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
     tag: v1.6.2
     pullPolicy: IfNotPresent
   nodeSelector: {}
@@ -64,7 +64,7 @@ linux:
 
 windows:
   image:
-    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
+    repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
     tag: v1.6.2
     pullPolicy: IfNotPresent
   nodeSelector: {}

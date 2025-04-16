@@ -15,7 +15,7 @@ type Config struct {
 	AzureClientID                     string `envconfig:"AZURE_CLIENT_ID"`
 	TenantID                          string `envconfig:"TENANT_ID"`
 	KeyvaultName                      string `envconfig:"KEYVAULT_NAME"`
-	Registry                          string `envconfig:"REGISTRY" default:"mcr.microsoft.com/oss/azure/secrets-store"`
+	Registry                          string `envconfig:"REGISTRY" default:"mcr.microsoft.com/oss/v2/azure/secrets-store"`
 	ImageName                         string `envconfig:"IMAGE_NAME" default:"provider-azure"`
 	ImageVersion                      string `envconfig:"IMAGE_VERSION" default:"v1.6.2"`
 	IsSoakTest                        bool   `envconfig:"IS_SOAK_TEST" default:"false"`
@@ -46,9 +46,9 @@ func (c *Config) DeepCopy() *Config {
 	copy.AzureClientID = c.AzureClientID
 	copy.TenantID = c.TenantID
 	copy.KeyvaultName = c.KeyvaultName
-	copy.Registry = c.Registry
+	copy.Registry = "mcr.microsoft.com/oss/v2/azure/secrets-store" // testing only
 	copy.ImageName = c.ImageName
-	copy.ImageVersion = c.ImageVersion
+	copy.ImageVersion = "v1.6.2" // testing only
 	copy.IsSoakTest = c.IsSoakTest
 	copy.IsWindowsTest = c.IsWindowsTest
 	copy.IsGPUTest = c.IsGPUTest
