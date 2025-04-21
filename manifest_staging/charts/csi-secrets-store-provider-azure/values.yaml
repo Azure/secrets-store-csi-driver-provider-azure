@@ -16,8 +16,8 @@ enableArcExtension: false
 
 linux:
   image:
-    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.6.2
+    repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
+    tag: v1.7.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -64,8 +64,8 @@ linux:
 
 windows:
   image:
-    repository: mcr.microsoft.com/oss/azure/secrets-store/provider-azure
-    tag: v1.6.2
+    repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
+    tag: v1.7.0
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
