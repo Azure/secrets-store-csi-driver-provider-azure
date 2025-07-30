@@ -36,6 +36,9 @@ jobs:
           IS_HELM_TEST: false
 
     steps:
+      - task: GoTool@0
+        inputs:
+          version: '1.24.5'
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
       - template: az-login.yaml
