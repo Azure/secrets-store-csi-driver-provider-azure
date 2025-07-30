@@ -4,6 +4,9 @@ jobs:
     workspace:
       clean: all
     steps:
+      - task: GoTool@0
+        inputs:
+          version: '1.24.5'
       - script: make lint
         displayName: golangci-lint
       - script: make helm-lint
@@ -15,6 +18,9 @@ jobs:
     workspace:
       clean: all
     steps:
+      - task: GoTool@0
+        inputs:
+          version: '1.24.5'
       - script: make build build-windows
         displayName: build
   - job: unit_test
@@ -22,5 +28,8 @@ jobs:
     workspace:
       clean: all
     steps:
+      - task: GoTool@0
+        inputs:
+          version: '1.24.5'
       - script: make unit-test
         displayName: unit test
