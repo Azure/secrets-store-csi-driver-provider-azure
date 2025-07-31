@@ -17,7 +17,7 @@ type Config struct {
 	KeyvaultName                      string `envconfig:"KEYVAULT_NAME"`
 	Registry                          string `envconfig:"REGISTRY" default:"mcr.microsoft.com/oss/v2/azure/secrets-store"`
 	ImageName                         string `envconfig:"IMAGE_NAME" default:"provider-azure"`
-	ImageVersion                      string `envconfig:"IMAGE_VERSION" default:"v1.7.0"`
+	ImageVersion                      string `envconfig:"IMAGE_VERSION" default:"v1.7.1"`
 	IsSoakTest                        bool   `envconfig:"IS_SOAK_TEST" default:"false"`
 	IsWindowsTest                     bool   `envconfig:"TEST_WINDOWS" default:"false"`
 	IsGPUTest                         bool   `envconfig:"TEST_GPU" default:"false"`
