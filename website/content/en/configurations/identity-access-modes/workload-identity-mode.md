@@ -117,7 +117,7 @@ Get the AKS cluster OIDC issuer URL:
 
 ```bash
 # Output the OIDC issuer URL
-az aks show --resource-group <resource_group> --name <cluster_name> --query "oidcIssuerProfile.issuerUrl" -otsv
+export SERVICE_ACCOUNT_ISSUER=$(az aks show --resource-group <resource_group> --name <cluster_name> --query "oidcIssuerProfile.issuerUrl" -otsv)
 ```
 
 > If the URL is empty, ensure the oidc issuer is enabled in the cluster by following these [steps](https://learn.microsoft.com/en-us/azure/aks/cluster-configuration#oidc-issuer).
