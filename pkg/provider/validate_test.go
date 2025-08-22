@@ -2,7 +2,10 @@ package provider
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 )
 
 func TestValidateObjectFormat(t *testing.T) {
@@ -141,6 +144,158 @@ func TestValidateFilePath(t *testing.T) {
 			err := validateFileName(tc.fileName)
 			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
 				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestValidateNoInvisibleCharacters(t *testing.T) {
+	cases := []struct {
+		desc        string
+		input       string
+		fieldName   string
+		expectedErr error
+	}{
+		{
+			desc:        "empty string",
+			input:       "",
+			fieldName:   "testField",
+			expectedErr: nil,
+		},
+		{
+			desc:        "normal string",
+			input:       "secret1",
+			fieldName:   "objectName",
+			expectedErr: nil,
+		},
+		{
+			desc:        "string with zero width space (U+200B)",
+			input:       "secret1\u200B",
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible character Zero Width Space (U+200B) at position 7"),
+		},
+		{
+			desc:        "string with zero width non-joiner (U+200C)",
+			input:       "secret\u200C1",
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible character Zero Width Non-Joiner (U+200C) at position 6"),
+		},
+		{
+			desc:        "string with zero width joiner (U+200D)",
+			input:       "\u200Dsecret1",
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible character Zero Width Joiner (U+200D) at position 0"),
+		},
+		{
+			desc:        "string with BOM (U+FEFF)",
+			input:       "\uFEFFsecret1",
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible character Zero Width No-Break Space/BOM (U+FEFF) at position 0"),
+		},
+		{
+			desc:        "string with word joiner (U+2060)",
+			input:       "sec\u2060ret1",
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible character Word Joiner (U+2060) at position 3"),
+		},
+		{
+			desc:        "string with other format character",
+			input:       "secret\u200E1", // Left-to-Right Mark
+			fieldName:   "objectName",
+			expectedErr: fmt.Errorf("field objectName contains invisible format character (U+200E) at position 6"),
+		},
+		{
+			desc:        "string with allowed soft hyphen",
+			input:       "secret\u00AD1", // Soft hyphen (should be allowed)
+			fieldName:   "objectName",
+			expectedErr: nil,
+		},
+		{
+			desc:        "string with visible unicode characters",
+			input:       "secret-测试-1",
+			fieldName:   "objectName",
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validateNoInvisibleCharacters(tc.input, tc.fieldName)
+			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
+				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestValidateIntegration(t *testing.T) {
+	cases := []struct {
+		desc        string
+		kv          types.KeyVaultObject
+		expectedErr string
+	}{
+		{
+			desc: "valid key vault object",
+			kv: types.KeyVaultObject{
+				ObjectName:    "secret1",
+				ObjectType:    "secret",
+				ObjectFormat:  "pem",
+				ObjectVersion: "v1",
+			},
+			expectedErr: "",
+		},
+		{
+			desc: "object name with zero width space",
+			kv: types.KeyVaultObject{
+				ObjectName:    "secret\u200B1",
+				ObjectType:    "secret",
+				ObjectFormat:  "pem",
+				ObjectVersion: "v1",
+			},
+			expectedErr: "field objectName contains invisible character Zero Width Space (U+200B) at position 6",
+		},
+		{
+			desc: "object alias with invisible character",
+			kv: types.KeyVaultObject{
+				ObjectName:    "secret1",
+				ObjectAlias:   "alias\u200C1",
+				ObjectType:    "secret",
+				ObjectFormat:  "pem",
+				ObjectVersion: "v1",
+			},
+			expectedErr: "field objectAlias contains invisible character Zero Width Non-Joiner (U+200C) at position 5",
+		},
+		{
+			desc: "object type with invisible character",
+			kv: types.KeyVaultObject{
+				ObjectName:    "secret1",
+				ObjectType:    "sec\u200Dret",
+				ObjectFormat:  "pem",
+				ObjectVersion: "v1",
+			},
+			expectedErr: "field objectType contains invisible character Zero Width Joiner (U+200D) at position 3",
+		},
+		{
+			desc: "file permission with invisible character",
+			kv: types.KeyVaultObject{
+				ObjectName:     "secret1",
+				ObjectType:     "secret",
+				ObjectFormat:   "pem",
+				ObjectVersion:  "v1",
+				FilePermission: "0644\u2060",
+			},
+			expectedErr: "field filePermission contains invisible character Word Joiner (U+2060) at position 4",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validate(tc.kv)
+			if tc.expectedErr == "" && err != nil {
+				t.Fatalf("expected no error, got: %+v", err)
+			}
+			if tc.expectedErr != "" && (err == nil || !strings.Contains(err.Error(), tc.expectedErr)) {
+				t.Fatalf("expected err containing: %s, got: %+v", tc.expectedErr, err)
 			}
 		})
 	}
