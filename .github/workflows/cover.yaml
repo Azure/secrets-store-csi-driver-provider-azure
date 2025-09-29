@@ -28,6 +28,6 @@ jobs:
       - name: Unit test
         run: make unit-test
       # pinning to the sha f32b3a3741e1053eb607407145bc9619351dc93b from https://github.com/codecov/codecov-action/releases/tag/v2.1.0
-      - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7
         with:
           files: ./coverage.txt
