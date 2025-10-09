@@ -38,7 +38,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.24.6'
+          version: '1.24.7'
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
       - template: az-login.yaml
