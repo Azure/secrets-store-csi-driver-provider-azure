@@ -25,7 +25,7 @@ jobs:
       steps:
       - task: GoTool@0
         inputs:
-          version: '1.24.6'
+          version: '1.24.7'
 
       - script: |
           OS_TYPE=$(echo ${{ osType }} | cut -d '_' -f1 | tr -d '[:space:]')
