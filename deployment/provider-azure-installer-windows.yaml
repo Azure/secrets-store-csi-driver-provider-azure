@@ -23,7 +23,7 @@ spec:
       serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
-          image: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure:v1.7.1
+          image: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure:v1.7.2
           imagePullPolicy: IfNotPresent
           args:
             - --endpoint=unix://C:\\provider\\azure.sock
