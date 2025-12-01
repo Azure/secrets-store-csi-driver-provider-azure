@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rsa"
@@ -27,7 +28,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/pkcs12"
-	"golang.org/x/net/context"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 )
