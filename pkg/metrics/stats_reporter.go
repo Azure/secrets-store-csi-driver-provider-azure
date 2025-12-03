@@ -4,9 +4,9 @@ import (
 	"context"
 	"runtime"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 )
 
 var (
@@ -20,8 +20,8 @@ var (
 	grpcMethodKey   = "grpc_method"
 	grpcCodeKey     = "grpc_code"
 	grpcMessageKey  = "grpc_message"
-	keyvaultRequest metric.Float64ValueRecorder
-	grpcRequest     metric.Float64ValueRecorder
+	keyvaultRequest metric.Float64Histogram
+	grpcRequest     metric.Float64Histogram
 )
 
 type reporter struct {
@@ -36,10 +36,17 @@ type StatsReporter interface {
 
 // NewStatsReporter creates a new StatsReporter
 func NewStatsReporter() StatsReporter {
-	meter := global.Meter("csi-secrets-store-provider-azure")
+	meter := otel.GetMeterProvider().Meter("csi-secrets-store-provider-azure")
 
-	keyvaultRequest = metric.Must(meter).NewFloat64ValueRecorder("keyvault_request", metric.WithDescription("Distribution of how long it took to get from keyvault"))
-	grpcRequest = metric.Must(meter).NewFloat64ValueRecorder("grpc_request", metric.WithDescription("Distribution of how long it took for the gRPC requests"))
+	var err error
+	keyvaultRequest, err = meter.Float64Histogram("keyvault_request", metric.WithDescription("Distribution of how long it took to get from keyvault"))
+	if err != nil {
+		panic(err)
+	}
+	grpcRequest, err = meter.Float64Histogram("grpc_request", metric.WithDescription("Distribution of how long it took for the gRPC requests"))
+	if err != nil {
+		panic(err)
+	}
 	return &reporter{meter: meter}
 }
 
@@ -55,9 +62,8 @@ func (r *reporter) ReportKeyvaultRequest(ctx context.Context, duration float64, 
 		attribute.String(objectNameKey, objectName),
 		attribute.String(errorKey, err),
 	}
-	r.meter.RecordBatch(ctx,
-		attributes,
-		keyvaultRequest.Measurement(duration),
+	keyvaultRequest.Record(ctx, duration,
+		metric.WithAttributes(attributes...),
 	)
 }
 
@@ -72,8 +78,8 @@ func (r *reporter) ReportGRPCRequest(ctx context.Context, duration float64, meth
 		attribute.String(grpcCodeKey, code),
 		attribute.String(grpcMessageKey, message),
 	}
-	r.meter.RecordBatch(ctx,
-		attributes,
-		grpcRequest.Measurement(duration),
+	grpcRequest.Record(ctx,
+		duration,
+		metric.WithAttributes(attributes...),
 	)
 }
