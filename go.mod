@@ -1,6 +1,6 @@
 module github.com/Azure/secrets-store-csi-driver-provider-azure
 
-go 1.24.9
+go 1.25.5
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
