@@ -50,7 +50,7 @@ To provide identity to access Key Vault, refer to the following [section](#provi
           - |
             objectName: secret1
             objectAlias: SECRET_1           # [OPTIONAL available for version > 0.0.4] object alias
-            objectType: secret              # object types: secret, key or cert. For Key Vault certificates, refer to https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/getting-certs-and-keys/ for the object type to use
+            objectType: secret              # object types: secret, key or cert. For Key Vault certificates, refer to https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/getting-certs-and-keys/ for the object type to use
             objectVersion: ""               # [OPTIONAL] object versions, default to latest if empty
             objectVersionHistory: 5         # [OPTIONAL] if greater than 1, the number of versions to sync starting at the specified version.
             filePermission: 0755                # [OPTIONAL] permission for secret file being mounted into the pod, default is 0644 if not specified.
