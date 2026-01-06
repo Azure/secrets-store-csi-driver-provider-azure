@@ -8,7 +8,10 @@ schedules:
       include:
         - master
 
-pool: staging-pool-amd64-mariner-2
+pool:
+  name: staging-pool-amd64-mariner-2
+  demands:
+  - ImageOverride -equals 1es-azlinux-3-amd64-custom-disk
 
 jobs:
   # to get image scan results on nightly runs

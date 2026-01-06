@@ -12,7 +12,10 @@ pr:
       - README.md
       - .github/*
 
-pool: staging-pool-amd64-mariner-2
+pool:
+  name: staging-pool-amd64-mariner-2
+  demands:
+  - ImageOverride -equals 1es-azlinux-3-amd64-custom-disk
 
 jobs:
   - template: .pipelines/templates/unit-test.yaml
