@@ -1,0 +1,10 @@
+steps:
+- bash: |
+    for i in {1..10}; do
+      if sudo tdnf install -y kernel-headers make gcc glibc-devel binutils; then
+        exit 0
+      fi
+      echo "waiting until rpm lock is free"
+      sleep 5
+    done
+    exit 1

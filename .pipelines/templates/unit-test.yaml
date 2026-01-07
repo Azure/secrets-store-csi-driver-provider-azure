@@ -7,6 +7,7 @@ jobs:
       - task: GoTool@0
         inputs:
           version: '1.25.5'
+      - template: prepare-deps.yaml
       - script: make lint
         displayName: golangci-lint
       - script: make helm-lint
@@ -21,6 +22,7 @@ jobs:
       - task: GoTool@0
         inputs:
           version: '1.25.5'
+      - template: prepare-deps.yaml
       - script: make build build-windows
         displayName: build
   - job: unit_test
@@ -31,5 +33,6 @@ jobs:
       - task: GoTool@0
         inputs:
           version: '1.25.5'
+      - template: prepare-deps.yaml
       - script: make unit-test
         displayName: unit test

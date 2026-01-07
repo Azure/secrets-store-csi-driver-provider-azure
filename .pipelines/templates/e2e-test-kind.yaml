@@ -1,9 +1,5 @@
 jobs:
   - job:
-    pool:
-      name: staging-pool-amd64-mariner-2
-      demands:
-      - ImageOverride -equals azcu-agent-amd64-mariner-2-cgv2-img
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     dependsOn:
@@ -39,6 +35,7 @@ jobs:
       - task: GoTool@0
         inputs:
           version: '1.25.5'
+      - template: prepare-deps.yaml
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
       - template: az-login.yaml
