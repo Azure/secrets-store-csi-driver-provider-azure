@@ -24,7 +24,7 @@ jobs:
         kind_v1_33_4_deployment_manifest:
           KIND_K8S_VERSION: v1.33.4
           IS_HELM_TEST: false
-        kind_v1_34_0_deployment_manifest::
+        kind_v1_34_0_deployment_manifest:
           KIND_K8S_VERSION: v1.34.0
           IS_HELM_TEST: false
         kind_v1_35_0_deployment_manifest:
