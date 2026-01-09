@@ -125,11 +125,15 @@ func main() {
 		}
 	}
 
+	// Temporarily set a restrictive umask (0077) while creating the Unix domain socket
+	// to strip group and other permissions, limiting access to the owning user (root).
+	oldmask, _ := utils.Umask(0077)
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		klog.ErrorS(err, "failed to listen", "proto", proto, "addr", addr)
 		os.Exit(1)
 	}
+	utils.Umask(oldmask)
 
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(utils.LogInterceptor()),

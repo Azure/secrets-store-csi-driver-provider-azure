@@ -1127,98 +1127,131 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 		desc        string
 		parameters  map[string]string
 		secrets     map[string]string
-		expectedErr bool
+		expectedErr string
 	}{
 		{
-			desc:        "keyvault name not provided",
+			desc:        "pod name not provided",
 			parameters:  map[string]string{},
-			expectedErr: true,
+			expectedErr: "pod name is not provided",
+		},
+		{
+			desc: "pod namespace not provided",
+			parameters: map[string]string{
+				"csi.storage.k8s.io/pod.name": "pod1",
+			},
+			expectedErr: "pod namespace is not provided",
+		},
+		{
+			desc: "keyvault name not provided",
+			parameters: map[string]string{
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
+			},
+			expectedErr: "keyvaultName is not provided",
 		},
 		{
 			desc: "tenantID not provided",
 			parameters: map[string]string{
-				"keyvaultName": "testKV",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
+				"keyvaultName":                     "testKV",
 			},
-			expectedErr: true,
+			expectedErr: "tenantId is not provided",
 		},
 		{
 			desc: "usePodIdentity not a boolean as expected",
 			parameters: map[string]string{
-				"keyvaultName":   "testKV",
-				"tenantId":       "tid",
-				"usePodIdentity": "tru",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"usePodIdentity":                   "tru",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 			},
-			expectedErr: true,
+			expectedErr: `failed to parse usePodIdentity flag, error: strconv.ParseBool: parsing "tru": invalid syntax`,
 		},
 		{
 			desc: "useVMManagedIdentity not a boolean as expected",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"usePodIdentity":       "false",
-				"useVMManagedIdentity": "tru",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"usePodIdentity":                   "false",
+				"useVMManagedIdentity":             "tru",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 			},
-			expectedErr: true,
+			expectedErr: `failed to parse useVMManagedIdentity flag, error: strconv.ParseBool: parsing "tru": invalid syntax`,
 		},
 		{
 			desc: "invalid cloud name",
 			parameters: map[string]string{
-				"keyvaultName": "testKV",
-				"tenantId":     "tid",
-				"cloudName":    "AzureCloud",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"cloudName":                        "AzureCloud1",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 			},
-			expectedErr: true,
+			expectedErr: "cloudName AzureCloud1 is not valid",
 		},
 		{
 			desc: "check azure cloud env file path is set",
 			parameters: map[string]string{
-				"keyvaultName":     "testKV",
-				"tenantId":         "tid",
-				"cloudName":        "AzureStackCloud",
-				"cloudEnvFileName": "/etc/kubernetes/akscustom.json",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"cloudName":                        "AzureStackCloud",
+				"cloudEnvFileName":                 "/etc/kubernetes/akscustom.json",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 			},
-			expectedErr: true,
+			expectedErr: `cloudName AzureStackCloud is not valid, error: open /etc/kubernetes/akscustom.json: no such file or directory`,
 		},
 		{
 			desc: "objects array not set",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"useVMManagedIdentity": "true",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"useVMManagedIdentity":             "true",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 			},
-			expectedErr: true,
+			expectedErr: "objects is not set",
 		},
 		{
 			desc: "objects not configured as an array",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"useVMManagedIdentity": "true",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"useVMManagedIdentity":             "true",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 				"objects": `
         - |
           objectName: secret1
           objectType: secret
           objectVersion: ""`,
 			},
-			expectedErr: true,
+			expectedErr: "failed to yaml unmarshal objects, error: yaml: unmarshal errors",
 		},
 		{
 			desc: "objects array is empty",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"useVMManagedIdentity": "true",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"useVMManagedIdentity":             "true",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 				"objects": `
       array:`,
 			},
-			expectedErr: false,
+			expectedErr: "",
 		},
 		{
 			desc: "invalid object format",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"useVMManagedIdentity": "true",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"useVMManagedIdentity":             "true",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 				"objects": `
       array:
         - |
@@ -1227,14 +1260,16 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
           objectFormat: pkcs
           objectVersion: ""`,
 			},
-			expectedErr: true,
+			expectedErr: `failed to get objectType:secret, objectName:secret1, objectVersion:: invalid objectFormat: pkcs, should be PEM or PFX`,
 		},
 		{
 			desc: "invalid object encoding",
 			parameters: map[string]string{
-				"keyvaultName":         "testKV",
-				"tenantId":             "tid",
-				"useVMManagedIdentity": "true",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
+				"useVMManagedIdentity":             "true",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
 				"objects": `
       array:
         - |
@@ -1243,13 +1278,15 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
           objectEncoding: utf-16
           objectVersion: ""`,
 			},
-			expectedErr: true,
+			expectedErr: `failed to get objectType:secret, objectName:secret1, objectVersion:: invalid objectEncoding: utf-16, should be hex, base64 or utf-8`,
 		},
 		{
 			desc: "error fetching from keyvault",
 			parameters: map[string]string{
-				"keyvaultName": "testKV",
-				"tenantId":     "tid",
+				"csi.storage.k8s.io/pod.name":      "pod1",
+				"csi.storage.k8s.io/pod.namespace": "ns1",
+				"keyvaultName":                     "testKV",
+				"tenantId":                         "tid",
 				"objects": `
       array:
         - |
@@ -1261,7 +1298,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 				"clientid":     "AADClientID",
 				"clientsecret": "AADClientSecret",
 			},
-			expectedErr: true,
+			expectedErr: `failed to get objectType:secret, objectName:secret1, objectVersion:: Get "https://testKV.vault.azure.net/secrets/secret1/?api-version=7.4": dial tcp: lookup testKV.vault.azure.net`,
 		},
 	}
 
@@ -1270,8 +1307,8 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 			p := NewProvider(false, false, azure.PublicCloud)
 
 			_, err := p.GetSecretsStoreObjectContent(testContext(t), tc.parameters, tc.secrets, 0420)
-			if tc.expectedErr {
-				assert.NotNil(t, err)
+			if len(tc.expectedErr) > 0 {
+				assert.Contains(t, err.Error(), tc.expectedErr)
 			} else {
 				assert.Nil(t, err)
 			}
