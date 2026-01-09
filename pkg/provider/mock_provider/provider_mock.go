@@ -5,12 +5,12 @@
 package mock_provider
 
 import (
+	context "context"
 	os "os"
 	reflect "reflect"
 
 	types "github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	gomock "github.com/golang/mock/gomock"
-	context "golang.org/x/net/context"
 )
 
 // MockInterface is a mock of Interface interface.

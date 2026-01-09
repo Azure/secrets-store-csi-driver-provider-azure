@@ -97,6 +97,12 @@ func (s *CSIDriverProviderServer) Check(_ context.Context, _ *grpc_health_v1.Hea
 	}, nil
 }
 
+// List provides a non-atomic snapshot of the health of all the available
+// services.
+func (s *CSIDriverProviderServer) List(_ context.Context, _ *grpc_health_v1.HealthListRequest) (*grpc_health_v1.HealthListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "List is not supported")
+}
+
 // Watch for the serving status of the requested service.
 func (s *CSIDriverProviderServer) Watch(_ *grpc_health_v1.HealthCheckRequest, _ grpc_health_v1.Health_WatchServer) error {
 	return status.Error(codes.Unimplemented, "Watch is not supported")

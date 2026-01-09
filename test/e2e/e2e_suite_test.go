@@ -4,6 +4,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -17,14 +18,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 	e2eframework "k8s.io/kubernetes/test/e2e/framework"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
-	testutils "k8s.io/kubernetes/test/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -50,7 +49,7 @@ func TestE2E(t *testing.T) {
 	RunSpecs(t, "sscdproviderazure")
 }
 
-var _ = BeforeSuite(func() {
+var _ = BeforeSuite(func(ctx context.Context) {
 	By("Parsing test configuration")
 	var err error
 	config, err = framework.ParseConfig()
@@ -94,10 +93,9 @@ var _ = BeforeSuite(func() {
 	driverAndProviderLabels, err := labels.NewRequirement("app", selection.In, []string{"secrets-store-csi-driver", "csi-secrets-store-provider-azure"})
 	Expect(err).To(BeNil())
 
-	listOpts := metav1.ListOptions{
-		LabelSelector: driverAndProviderLabels.String(),
-	}
-	if _, err := e2epod.WaitForAllPodsCondition(clientSet, framework.NamespaceKubeSystem, listOpts, 1, "running and ready", podStartTimeout, testutils.PodRunningReady); err != nil {
+	podSelector := labels.NewSelector().Add(*driverAndProviderLabels)
+
+	if _, err := e2epod.WaitForPodsWithLabelRunningReady(ctx, clientSet, framework.NamespaceKubeSystem, podSelector, 1, podStartTimeout); err != nil {
 		e2eframework.Failf("error waiting for driver and provider pods to be running and ready: %v", err)
 	}
 })

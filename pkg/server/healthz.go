@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -80,11 +79,6 @@ func (h *HealthZ) checkRPC(ctx context.Context, client grpc_health_v1.HealthClie
 }
 
 func (h *HealthZ) dialUnixSocket() (*grpc.ClientConn, error) {
-	return grpc.Dial(
-		h.UnixSocketPath,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, target string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", target)
-		}),
-	)
+	return grpc.NewClient("unix://"+h.UnixSocketPath,
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
