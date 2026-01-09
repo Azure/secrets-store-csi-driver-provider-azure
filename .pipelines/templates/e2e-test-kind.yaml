@@ -1,9 +1,5 @@
 jobs:
   - job:
-    pool:
-      name: staging-pool-amd64-mariner-2
-      demands:
-      - ImageOverride -equals azcu-agent-amd64-mariner-2-cgv2-img
     timeoutInMinutes: 20
     cancelTimeoutInMinutes: 5
     dependsOn:
@@ -16,29 +12,30 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     strategy:
       matrix:
-        kind_v1_30_10_helm:
-          KIND_K8S_VERSION: v1.30.10
+        kind_v1_33_4_helm:
+          KIND_K8S_VERSION: v1.33.4
           IS_HELM_TEST: true
-        kind_v1_31_6_helm:
-          KIND_K8S_VERSION: v1.31.6
+        kind_v1_34_0_helm:
+          KIND_K8S_VERSION: v1.34.0
           IS_HELM_TEST: true
-        kind_v1_32_3_helm:
-          KIND_K8S_VERSION: v1.32.3
+        kind_v1_35_0_helm:
+          KIND_K8S_VERSION: v1.35.0
           IS_HELM_TEST: true
-        kind_v1_30_10_deployment_manifest:
-          KIND_K8S_VERSION: v1.30.10
+        kind_v1_33_4_deployment_manifest:
+          KIND_K8S_VERSION: v1.33.4
           IS_HELM_TEST: false
-        kind_v1_31_6_deployment_manifest:
-          KIND_K8S_VERSION: v1.31.6
+        kind_v1_34_0_deployment_manifest:
+          KIND_K8S_VERSION: v1.34.0
           IS_HELM_TEST: false
-        kind_v1_32_3_deployment_manifest:
-          KIND_K8S_VERSION: v1.32.3
+        kind_v1_35_0_deployment_manifest:
+          KIND_K8S_VERSION: v1.35.0
           IS_HELM_TEST: false
 
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.24.9'
+          version: '1.25.5'
+      - template: prepare-deps.yaml
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
       - template: az-login.yaml

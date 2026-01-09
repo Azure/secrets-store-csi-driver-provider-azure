@@ -25,7 +25,8 @@ jobs:
       steps:
       - task: GoTool@0
         inputs:
-          version: '1.24.9'
+          version: '1.25.5'
+      - template: prepare-deps.yaml
 
       - script: |
           OS_TYPE=$(echo ${{ osType }} | cut -d '_' -f1 | tr -d '[:space:]')

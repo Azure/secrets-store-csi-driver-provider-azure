@@ -1,4 +1,6 @@
 steps:
+  - script:
+      az --version || sudo tdnf install -y azure-cli
   - script: |
       az login -i > /dev/null
       az account set -s=$(SUBSCRIPTION_ID)

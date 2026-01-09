@@ -2,8 +2,6 @@ jobs:
   - job: e2e_arc_kind
     pool:
       name: staging-pool-amd64-mariner-2
-      demands:
-      - ImageOverride -equals azcu-agent-amd64-mariner-2-cgv2-img
     variables:
     - name: AZURE_ENVIRONMENT_FILEPATH
       value: /etc/kubernetes/custom_environment.json
