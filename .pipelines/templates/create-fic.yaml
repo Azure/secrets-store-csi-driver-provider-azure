@@ -21,5 +21,6 @@ steps:
       # set the user-assigned managed identity client id as a variable
       AZURE_CLIENT_ID=$(az identity show -g ${CLUSTER_RESOURCE_GROUP} -n $user_msi_name --subscription $(SUBSCRIPTION_ID) --query clientId -otsv)
       echo "##vso[task.setvariable variable=AZURE_CLIENT_ID]$AZURE_CLIENT_ID"
+      echo "##vso[task.setvariable variable=USER_MSI_PRINCIPAL_ID]$user_msi_principal_id"
 
     displayName: "Create managed identity and FICs"
