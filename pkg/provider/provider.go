@@ -123,6 +123,13 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	podName := types.GetPodName(attrib)
 	podNamespace := types.GetPodNamespace(attrib)
 
+	if len(podName) == 0 {
+		return nil, fmt.Errorf("pod name is not provided")
+	}
+	if len(podNamespace) == 0 {
+		return nil, fmt.Errorf("pod namespace is not provided")
+	}
+
 	usePodIdentity, err := types.GetUsePodIdentity(attrib)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse usePodIdentity flag, error: %w", err)
@@ -137,10 +144,10 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	saTokens := types.GetServiceAccountTokens(attrib)
 
 	if keyvaultName == "" {
-		return nil, fmt.Errorf("keyvaultName is not set")
+		return nil, fmt.Errorf("keyvaultName is not provided")
 	}
 	if tenantID == "" {
-		return nil, fmt.Errorf("tenantId is not set")
+		return nil, fmt.Errorf("tenantId is not provided")
 	}
 
 	err = setAzureEnvironmentFilePath(cloudEnvFileName)
