@@ -6,7 +6,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.25.5'
+          version: '1.25.7'
       - template: prepare-deps.yaml
       - script: make lint
         displayName: golangci-lint
@@ -21,7 +21,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.25.5'
+          version: '1.25.7'
       - template: prepare-deps.yaml
       - script: make build build-windows
         displayName: build
@@ -32,7 +32,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.25.5'
+          version: '1.25.7'
       - template: prepare-deps.yaml
       - script: make unit-test
         displayName: unit test

@@ -25,7 +25,7 @@ jobs:
       steps:
       - task: GoTool@0
         inputs:
-          version: '1.25.5'
+          version: '1.25.7'
       - template: prepare-deps.yaml
 
       - script: |
