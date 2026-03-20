@@ -1,64 +1,14 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/website"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "chore"
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "chore"
-
-  - package-ecosystem: "docker"
-    directory: "/manifest_staging/charts/csi-secrets-store-provider-azure"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: docker
-    directory: /.devcontainer
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: docker
-    directory: /arc/conformance/plugin
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: gomod
-    directory: /
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: gomod
-    directory: /test/e2e
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
-
-  - package-ecosystem: gomod
-    directory: /tools
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "chore"
+    groups:
+      all:
+        patterns:
+          - "*"
+    labels:
+      - "area/dependency"
