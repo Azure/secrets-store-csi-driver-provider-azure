@@ -79,6 +79,6 @@ func (h *HealthZ) checkRPC(ctx context.Context, client grpc_health_v1.HealthClie
 }
 
 func (h *HealthZ) dialUnixSocket() (*grpc.ClientConn, error) {
-	return grpc.NewClient("unix://"+h.UnixSocketPath,
+	return grpc.NewClient("unix:"+h.UnixSocketPath,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
