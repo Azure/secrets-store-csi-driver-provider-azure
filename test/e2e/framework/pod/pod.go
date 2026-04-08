@@ -38,6 +38,13 @@ func List(input ListInput) *corev1.PodList {
 	return pods
 }
 
+// AdditionalVolume specifies an additional CSI volume to mount on the pod.
+type AdditionalVolume struct {
+	SecretProviderClassName string
+	VolumeName              string
+	MountPath               string
+}
+
 // CreateInput is the input for Create.
 type CreateInput struct {
 	Creator                  framework.Creator
@@ -47,7 +54,9 @@ type CreateInput struct {
 	SecretProviderClassName  string
 	NodePublishSecretRefName string
 	Labels                   map[string]string
+	Annotations              map[string]string
 	ServiceAccountName       string
+	AdditionalVolumes        []AdditionalVolume
 }
 
 // Create creates a Pod resource.
@@ -63,9 +72,10 @@ func Create(input CreateInput) *corev1.Pod {
 	readOnly := true
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      input.Name,
-			Namespace: input.Namespace,
-			Labels:    input.Labels,
+			Name:        input.Name,
+			Namespace:   input.Namespace,
+			Labels:      input.Labels,
+			Annotations: input.Annotations,
 		},
 		Spec: corev1.PodSpec{
 			TerminationGracePeriodSeconds: to.Int64Ptr(int64(0)),
@@ -103,6 +113,25 @@ func Create(input CreateInput) *corev1.Pod {
 		for idx := range pod.Spec.Volumes {
 			pod.Spec.Volumes[idx].CSI.NodePublishSecretRef = &corev1.LocalObjectReference{Name: input.NodePublishSecretRefName}
 		}
+	}
+
+	// Append additional CSI volumes and mounts
+	for _, av := range input.AdditionalVolumes {
+		pod.Spec.Volumes = append(pod.Spec.Volumes, corev1.Volume{
+			Name: av.VolumeName,
+			VolumeSource: corev1.VolumeSource{
+				CSI: &corev1.CSIVolumeSource{
+					Driver:           "secrets-store.csi.k8s.io",
+					ReadOnly:         &readOnly,
+					VolumeAttributes: map[string]string{"secretProviderClass": av.SecretProviderClassName},
+				},
+			},
+		})
+		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      av.VolumeName,
+			MountPath: av.MountPath,
+			ReadOnly:  true,
+		})
 	}
 
 	if input.Config.IsWindowsTest {

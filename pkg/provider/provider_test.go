@@ -1908,3 +1908,101 @@ func testContext(t *testing.T) context.Context {
 	t.Cleanup(cancel)
 	return ctx
 }
+
+func TestGetSecretsStoreObjectContent_IdentityBinding_MissingClientID(t *testing.T) {
+	p := NewProvider(false, false, azure.PublicCloud)
+
+	attrib := map[string]string{
+		types.UseAzureTokenProxyParameter:      "true",
+		"tenantId":                             "test-tenant",
+		"keyvaultName":                         "test-vault",
+		"objects":                              "array:\n  - |\n    objectName: secret1\n    objectType: secret",
+		types.CSIAttributePodName:              "test-pod",
+		types.CSIAttributePodNamespace:         "default",
+		types.CSIAttributeServiceAccountTokens: `{"api://AKSIdentityBinding":{"token":"test-token","expirationTimestamp":"2099-01-01T00:00:00Z"}}`,
+	}
+
+	ctx := testContext(t)
+	_, err := p.GetSecretsStoreObjectContent(ctx, attrib, nil, 0644)
+
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
+	if !strings.Contains(err.Error(), "clientID is required") {
+		t.Errorf("expected 'clientID is required' error, got: %v", err)
+	}
+}
+
+func TestGetSecretsStoreObjectContent_IdentityBinding_InvalidParameter(t *testing.T) {
+	p := NewProvider(false, false, azure.PublicCloud)
+
+	attrib := map[string]string{
+		types.UseAzureTokenProxyParameter: "invalid-value",
+		"clientID":                        "test-client-id",
+		"tenantId":                        "test-tenant",
+		"keyvaultName":                    "test-vault",
+		"objects":                         "array:\n  - |\n    objectName: secret1\n    objectType: secret",
+		types.CSIAttributePodName:         "test-pod",
+		types.CSIAttributePodNamespace:    "default",
+	}
+
+	ctx := testContext(t)
+	_, err := p.GetSecretsStoreObjectContent(ctx, attrib, nil, 0644)
+
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to parse useAzureTokenProxy") {
+		t.Errorf("expected 'failed to parse useAzureTokenProxy' error, got: %v", err)
+	}
+}
+
+func TestGetSecretsStoreObjectContent_IdentityBinding_MissingServiceAccountToken(t *testing.T) {
+	p := NewProvider(false, false, azure.PublicCloud)
+
+	attrib := map[string]string{
+		types.UseAzureTokenProxyParameter: "true",
+		"clientID":                        "test-client-id",
+		"tenantId":                        "test-tenant",
+		"keyvaultName":                    "test-vault",
+		"objects":                         "array:\n  - |\n    objectName: secret1\n    objectType: secret",
+		types.CSIAttributePodName:         "test-pod",
+		types.CSIAttributePodNamespace:    "default",
+		// Missing CSIAttributeServiceAccountTokens
+	}
+
+	ctx := testContext(t)
+	_, err := p.GetSecretsStoreObjectContent(ctx, attrib, nil, 0644)
+
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
+	if !strings.Contains(err.Error(), "service account tokens are required for identity binding") {
+		t.Errorf("expected identity binding SA tokens required error, got: %v", err)
+	}
+}
+
+func TestGetSecretsStoreObjectContent_MutualExclusivity(t *testing.T) {
+	p := NewProvider(false, false, azure.PublicCloud)
+
+	attrib := map[string]string{
+		types.UsePodIdentityParameter:     "true",
+		types.UseAzureTokenProxyParameter: "true",
+		"clientID":                        "test-client-id",
+		"tenantId":                        "test-tenant",
+		"keyvaultName":                    "test-vault",
+		"objects":                         "array:\n  - |\n    objectName: secret1\n    objectType: secret",
+		types.CSIAttributePodName:         "test-pod",
+		types.CSIAttributePodNamespace:    "default",
+	}
+
+	ctx := testContext(t)
+	_, err := p.GetSecretsStoreObjectContent(ctx, attrib, nil, 0644)
+
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
+	if !strings.Contains(err.Error(), "only one identity mode") {
+		t.Errorf("expected 'only one identity mode' error, got: %v", err)
+	}
+}

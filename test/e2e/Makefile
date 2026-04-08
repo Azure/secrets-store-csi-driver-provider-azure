@@ -13,8 +13,8 @@ GINKGO_JUNIT_REPORT := $(shell echo $(JUNIT_OUTPUT_FILEPATH) | sed 's/\/$$//')/j
 run:
 	mkdir -p $(JUNIT_OUTPUT_FILEPATH)
 	cd $(TEST_E2E_DIR); go test -tags=e2e -timeout=90m -v -ginkgo.v \
-		-ginkgo.focus=$(GINKGO_FOCUS) \
-		-ginkgo.skip=$(GINKGO_SKIP) \
+		-ginkgo.focus="$(GINKGO_FOCUS)" \
+		-ginkgo.skip="$(GINKGO_SKIP)" \
 		-ginkgo.fail-fast=$(GINKGO_FAIL_FAST) \
 		-ginkgo.dry-run=$(GINKGO_DRY_RUN) \
 		-ginkgo.junit-report=$(GINKGO_JUNIT_REPORT)

@@ -112,6 +112,52 @@ func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
 	return &vaultURI, nil
 }
 
+// authConfigInput holds the input parameters for building auth configuration
+type authConfigInput struct {
+	identityMode             auth.IdentityMode
+	userAssignedIdentityID   string
+	workloadIdentityClientID string
+	saTokens                 string
+	secrets                  map[string]string
+}
+
+// buildAuthConfig creates the authentication configuration based on the input parameters.
+// This function extracts the auth configuration logic to reduce complexity of GetSecretsStoreObjectContent.
+func buildAuthConfig(input authConfigInput) (auth.Config, error) {
+	// Validate identity binding requirements
+	if input.identityMode == auth.IdentityModeAzureTokenProxy {
+		if input.workloadIdentityClientID == "" {
+			return auth.Config{}, fmt.Errorf("clientID is required for identity binding")
+		}
+		if input.saTokens == "" {
+			return auth.Config{}, fmt.Errorf("service account tokens are required for identity binding")
+		}
+	}
+
+	var serviceAccountToken string
+	var err error
+
+	if input.identityMode == auth.IdentityModeAzureTokenProxy {
+		// For identity binding, parse the token with the identity binding audience
+		if serviceAccountToken, err = auth.ParseIdentityBindingToken(input.saTokens); err != nil {
+			return auth.Config{}, fmt.Errorf("failed to parse service account token for identity binding, error: %w", err)
+		}
+	} else if input.workloadIdentityClientID != "" {
+		// For workload identity, parse the token with the workload identity audience
+		if serviceAccountToken, err = auth.ParseServiceAccountToken(input.saTokens); err != nil {
+			return auth.Config{}, fmt.Errorf("failed to parse workload identity tokens, error: %w", err)
+		}
+	}
+
+	return auth.NewConfig(
+		input.identityMode,
+		input.userAssignedIdentityID,
+		input.workloadIdentityClientID,
+		serviceAccountToken,
+		input.secrets,
+	)
+}
+
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
 // to the CSI driver. The driver will write the content to the file system.
 func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, secrets map[string]string, defaultFilePermission os.FileMode) ([]types.SecretFile, error) {
@@ -138,6 +184,29 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse useVMManagedIdentity flag, error: %w", err)
 	}
+	useAzureTokenProxy, err := types.GetUseAzureTokenProxy(attrib)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse useAzureTokenProxy flag, error: %w", err)
+	}
+
+	// Determine identity mode and validate mutual exclusivity
+	identityMode := auth.IdentityModeNone
+	modesEnabled := 0
+	if usePodIdentity {
+		identityMode = auth.IdentityModePodIdentity
+		modesEnabled++
+	}
+	if useVMManagedIdentity {
+		identityMode = auth.IdentityModeVMManagedIdentity
+		modesEnabled++
+	}
+	if useAzureTokenProxy {
+		identityMode = auth.IdentityModeAzureTokenProxy
+		modesEnabled++
+	}
+	if modesEnabled > 1 {
+		return nil, fmt.Errorf("only one identity mode can be enabled at a time: usePodIdentity, useVMManagedIdentity, or useAzureTokenProxy")
+	}
 
 	// attributes for workload identity
 	workloadIdentityClientID := types.GetClientID(attrib)
@@ -159,17 +228,16 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		return nil, fmt.Errorf("cloudName %s is not valid, error: %w", cloudName, err)
 	}
 
-	// parse bound service account tokens for workload identity only if the clientID is set
-	var workloadIdentityToken string
-	if workloadIdentityClientID != "" {
-		if workloadIdentityToken, err = auth.ParseServiceAccountToken(saTokens); err != nil {
-			return nil, fmt.Errorf("failed to parse workload identity tokens, error: %w", err)
-		}
-	}
-
-	authConfig, err := auth.NewConfig(usePodIdentity, useVMManagedIdentity, userAssignedIdentityID, workloadIdentityClientID, workloadIdentityToken, secrets)
+	// Build auth configuration using helper function
+	authConfig, err := buildAuthConfig(authConfigInput{
+		identityMode:             identityMode,
+		userAssignedIdentityID:   userAssignedIdentityID,
+		workloadIdentityClientID: workloadIdentityClientID,
+		saTokens:                 saTokens,
+		secrets:                  secrets,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create auth config, error: %w", err)
+		return nil, fmt.Errorf("failed to build auth config for mode %s: %w", identityMode, err)
 	}
 
 	mc := &mountConfig{

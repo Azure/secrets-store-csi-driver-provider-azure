@@ -75,6 +75,15 @@ func GetClientID(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[ClientIDParameter])
 }
 
+// GetUseAzureTokenProxy returns if azure token proxy is enabled
+func GetUseAzureTokenProxy(parameters map[string]string) (bool, error) {
+	str := strings.TrimSpace(parameters[UseAzureTokenProxyParameter])
+	if str == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(str)
+}
+
 // GetServiceAccountTokens returns the service account tokens
 func GetServiceAccountTokens(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributeServiceAccountTokens])

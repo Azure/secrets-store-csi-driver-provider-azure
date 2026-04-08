@@ -56,6 +56,8 @@ jobs:
 
       - template: create-fic.yaml
 
+      - template: create-identity-binding.yaml
+
       # Run e2e tests with Released Version
       - template: e2e-test.yaml
         parameters:
