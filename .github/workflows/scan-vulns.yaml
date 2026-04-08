@@ -12,7 +12,8 @@ on:
     - "website/**"
     - "**.md"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   govulncheck:
@@ -29,7 +30,13 @@ jobs:
         with:
           go-version: "1.25"
           check-latest: true
-      - uses: golang/govulncheck-action@3a32958c2706f7048305d5a2e53633d7e37e97d0 # v1.0.2
+      - uses: golang/govulncheck-action@31f7c5463448f83528bd771c2d978d940080c9fd # v1.0.4
+
+      - name: Golang vulncheck - tools
+        uses: golang/govulncheck-action@31f7c5463448f83528bd771c2d978d940080c9fd # v1.0.4
+        with:
+          repo-checkout: false
+          work-dir: tools
 
   scan_vulnerabilities:
     name: "[Trivy] Scan for vulnerabilities"
@@ -42,7 +49,9 @@ jobs:
           egress-policy: audit
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Download trivy
         run: |
@@ -51,7 +60,7 @@ jobs:
           tar zxvf trivy_${{ env.TRIVY_VERSION }}_Linux-64bit.tar.gz
           echo "$(pwd)" >> $GITHUB_PATH
         env:
-          TRIVY_VERSION: "0.57.0"
+          TRIVY_VERSION: "0.69.3"
 
       - name: Download trivy db
         run: |

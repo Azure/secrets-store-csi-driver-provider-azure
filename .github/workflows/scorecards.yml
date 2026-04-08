@@ -15,7 +15,8 @@ on:
     branches: ["master"]
 
 # Declare default permissions as read only.
-permissions: read-all
+# Remove all permissions by default, these get overridden in the job spec
+permissions: {}
 
 jobs:
   analysis:

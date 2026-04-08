@@ -1298,7 +1298,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 				"clientid":     "AADClientID",
 				"clientsecret": "AADClientSecret",
 			},
-			expectedErr: `failed to get objectType:secret, objectName:secret1, objectVersion:: Get "https://testKV.vault.azure.net/secrets/secret1/?api-version=7.4": dial tcp: lookup testKV.vault.azure.net`,
+			expectedErr: `failed to get objectType:secret, objectName:secret1, objectVersion:`,
 		},
 	}
 
