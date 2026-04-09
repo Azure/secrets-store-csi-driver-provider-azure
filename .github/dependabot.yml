@@ -10,6 +10,3 @@ updates:
       all:
         patterns:
           - "*"
-    labels:
-      - "area/dependency"
-      - "ok-to-test"
