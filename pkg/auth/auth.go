@@ -30,12 +30,29 @@ const (
 	// For Azure AD Workload Identity, the audience recommended for use is
 	// "api://AzureADTokenExchange"
 	DefaultTokenAudience = "api://AzureADTokenExchange" // nolint
+
+	// For AKS Identity Binding, the audience is "api://AKSIdentityBinding"
+	IdentityBindingTokenAudience = "api://AKSIdentityBinding" // nolint:gosec
 )
 
 var (
 	// ErrServiceAccountTokensNotFound is returned when the service account token is not found
 	ErrServiceAccountTokensNotFound = errors.New("service account tokens not found")
+
+	// proxyTransport is the transport for identity binding proxy.
+	// Set via SetProxyTransport during initialization; error is checked
+	// lazily when identity binding is actually used.
+	proxyTransport    policy.Transporter
+	proxyTransportErr error
 )
+
+// SetProxyTransport sets the identity binding proxy transport.
+// This must be called exactly once from main() before the gRPC server starts.
+// It is not goroutine-safe; the single-write-at-init pattern ensures safety.
+func SetProxyTransport(t policy.Transporter, err error) {
+	proxyTransport = t
+	proxyTransportErr = err
+}
 
 // Token encapsulates the access token used to authorize Azure requests.
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/v1-oauth2-client-creds-grant-flow#service-to-service-access-token-response
@@ -70,34 +87,62 @@ type PodIdentityResponse struct {
 	ClientID string `json:"clientid"`
 }
 
+// IdentityMode represents the authentication mode used to access Azure resources.
+// Only one mode can be active at a time.
+type IdentityMode int
+
+const (
+	// IdentityModeNone indicates no explicit identity mode is set.
+	// Falls back to workload identity (if clientID+token are present) or service principal.
+	IdentityModeNone IdentityMode = iota
+	// IdentityModePodIdentity uses aad-pod-identity via NMI.
+	IdentityModePodIdentity
+	// IdentityModeVMManagedIdentity uses VM/VMSS managed identity.
+	IdentityModeVMManagedIdentity
+	// IdentityModeAzureTokenProxy uses identity binding via the Azure token proxy.
+	IdentityModeAzureTokenProxy
+)
+
+// String returns a human-readable name for the identity mode.
+func (m IdentityMode) String() string {
+	switch m {
+	case IdentityModeNone:
+		return "None"
+	case IdentityModePodIdentity:
+		return "PodIdentity"
+	case IdentityModeVMManagedIdentity:
+		return "VMManagedIdentity"
+	case IdentityModeAzureTokenProxy:
+		return "AzureTokenProxy"
+	default:
+		return fmt.Sprintf("Unknown(%d)", int(m))
+	}
+}
+
 // Config is the required parameters for auth config
 type Config struct {
-	// UsePodIdentity is set to true if access mode is using aad-pod-identity
-	UsePodIdentity bool
-	// UseVMManagedIdentity is set to true if access mode is using managed identity
-	UseVMManagedIdentity bool
+	// IdentityMode specifies which authentication mode to use.
+	IdentityMode IdentityMode
 	// UserAssignedIdentityID is the user-assigned managed identity clientID
 	UserAssignedIdentityID string
 	// AADClientSecret is the client secret for SP access mode
 	AADClientSecret string
 	// AADClientID is the clientID for SP access mode
 	AADClientID string
-	// WorkloadIdentityClientID is the clientID for workload identity
-	// this clientID can be an Azure AD Application or a Managed identity
-	// NOTE: workload identity federation with managed identity is currently not supported
+	// WorkloadIdentityClientID is the clientID used for both workload identity and identity binding.
+	// This clientID can be an Azure AD Application or a Managed identity.
 	WorkloadIdentityClientID string
-	// WorkloadIdentityToken is the service account token for workload identity
-	// this token will be exchanged for an Azure AD Token based on the federated identity credential
-	// this service account token is associated with the workload requesting the volume mount
-	WorkloadIdentityToken string
+	// ServiceAccountToken is the service account token for workload identity or identity binding.
+	// For workload identity, this is the token with audience "api://AzureADTokenExchange".
+	// For identity binding, this is the token with audience "api://AKSIdentityBinding".
+	// The token will be exchanged for an Azure AD Token.
+	ServiceAccountToken string
 }
 
-// SATokens represents the service account tokens sent as part of the MountRequest
-type SATokens struct {
-	APIAzureADTokenExchange struct {
-		Token               string    `json:"token"`
-		ExpirationTimestamp time.Time `json:"expirationTimestamp"`
-	} `json:"api://AzureADTokenExchange"`
+// saToken represents a single service account token entry in the CSI token request.
+type saToken struct {
+	Token               string    `json:"token"`
+	ExpirationTimestamp time.Time `json:"expirationTimestamp"`
 }
 
 type workloadIdentityCredential struct {
@@ -107,6 +152,7 @@ type workloadIdentityCredential struct {
 
 type workloadIdentityCredentialOptions struct {
 	azcore.ClientOptions
+	DisableInstanceDiscovery bool
 }
 
 type podIdentityCredential struct {
@@ -119,55 +165,62 @@ type podIdentityCredential struct {
 
 // NewConfig returns new auth config
 func NewConfig(
-	usePodIdentity,
-	useVMManagedIdentity bool,
+	mode IdentityMode,
 	userAssignedIdentityID,
 	workloadIdentityClientID,
-	workloadIdentityToken string,
+	serviceAccountToken string,
 	secrets map[string]string) (Config, error) {
-	config := Config{}
-	// aad-pod-identity and user assigned managed identity modes are currently mutually exclusive
-	if usePodIdentity && useVMManagedIdentity {
-		return config, fmt.Errorf("cannot enable both pod identity and user-assigned managed identity")
+	config := Config{
+		IdentityMode:             mode,
+		UserAssignedIdentityID:   userAssignedIdentityID,
+		WorkloadIdentityClientID: workloadIdentityClientID,
+		ServiceAccountToken:      serviceAccountToken,
 	}
-	useWorkloadIdentity := len(workloadIdentityClientID) > 0 && len(workloadIdentityToken) > 0
 
-	if !usePodIdentity && !useVMManagedIdentity && !useWorkloadIdentity {
+	useWorkloadIdentity := len(workloadIdentityClientID) > 0 && len(serviceAccountToken) > 0
+
+	if mode == IdentityModeNone && !useWorkloadIdentity {
 		var err error
 		if config.AADClientID, config.AADClientSecret, err = getCredential(secrets); err != nil {
 			return config, err
 		}
 	}
 
-	config.UsePodIdentity = usePodIdentity
-	config.UseVMManagedIdentity = useVMManagedIdentity
-	config.UserAssignedIdentityID = userAssignedIdentityID
-	config.WorkloadIdentityClientID = workloadIdentityClientID
-	config.WorkloadIdentityToken = workloadIdentityToken
-
 	return config, nil
 }
 
 // GetCredential returns the azure credential to use based on the auth config
 func (c Config) GetCredential(podName, podNamespace, resource, aadEndpoint, tenantID, nmiPort string) (azcore.TokenCredential, error) {
-	// use switch case to ensure only one of the identity modes is enabled
-	switch {
-	case c.UsePodIdentity:
+	switch c.IdentityMode {
+	case IdentityModePodIdentity:
 		return getPodIdentityTokenCredential(podName, podNamespace, resource, tenantID, nmiPort)
-	case c.UseVMManagedIdentity:
+	case IdentityModeVMManagedIdentity:
 		return getManagedIdentityTokenCredential(c.UserAssignedIdentityID)
-	case len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0:
-		return getServicePrincipalTokenCredential(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
-	case len(c.WorkloadIdentityClientID) > 0 && len(c.WorkloadIdentityToken) > 0:
-		return getWorkloadIdentityTokenCredential(c.WorkloadIdentityClientID, c.WorkloadIdentityToken, aadEndpoint, tenantID)
-	default:
+	case IdentityModeAzureTokenProxy:
+		if len(c.WorkloadIdentityClientID) == 0 || len(c.ServiceAccountToken) == 0 {
+			return nil, fmt.Errorf("workload identity client ID and service account token are required for identity binding")
+		}
+		return getIdentityBindingTokenCredential(c.WorkloadIdentityClientID, c.ServiceAccountToken, aadEndpoint, tenantID)
+	case IdentityModeNone:
+		// Try workload identity, then service principal
+		if len(c.WorkloadIdentityClientID) > 0 && len(c.ServiceAccountToken) > 0 {
+			return getWorkloadIdentityTokenCredential(c.WorkloadIdentityClientID, c.ServiceAccountToken, aadEndpoint, tenantID)
+		}
+		if len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0 {
+			return getServicePrincipalTokenCredential(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
+		}
 		return nil, fmt.Errorf("no identity mode is enabled")
+	default:
+		return nil, fmt.Errorf("unknown identity mode: %s", c.IdentityMode)
 	}
 }
 
 func newWorkloadIdentityCredential(tenantID, clientID, assertion string, options *workloadIdentityCredentialOptions) (azcore.TokenCredential, error) {
 	w := &workloadIdentityCredential{assertion: assertion}
-	cred, err := azidentity.NewClientAssertionCredential(tenantID, clientID, w.getAssertion, &azidentity.ClientAssertionCredentialOptions{ClientOptions: options.ClientOptions})
+	cred, err := azidentity.NewClientAssertionCredential(tenantID, clientID, w.getAssertion, &azidentity.ClientAssertionCredentialOptions{
+		ClientOptions:            options.ClientOptions,
+		DisableInstanceDiscovery: options.DisableInstanceDiscovery,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +244,34 @@ func getWorkloadIdentityTokenCredential(clientID, signedAssertion, aadEndpoint, 
 			},
 		},
 	}
+	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
+}
+
+func getIdentityBindingTokenCredential(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+	klog.V(5).InfoS("using identity binding (azure token proxy) to retrieve token", "clientID", clientID)
+
+	// Check if the proxy transport was successfully initialized
+	if proxyTransportErr != nil {
+		return nil, fmt.Errorf("proxy transport not available: %w", proxyTransportErr)
+	}
+	if proxyTransport == nil {
+		return nil, fmt.Errorf("identity binding proxy transport not initialized (call SetProxyTransport during startup)")
+	}
+
+	opts := &workloadIdentityCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: cloud.Configuration{
+				ActiveDirectoryAuthorityHost: aadEndpoint,
+			},
+		},
+		// DisableInstanceDiscovery must be true when using the proxy to avoid
+		// unnecessary instance discovery calls that don't work through the proxy
+		DisableInstanceDiscovery: true,
+	}
+
+	// Use the proxy transport extracted from the SDK via reflect
+	opts.ClientOptions.Transport = proxyTransport
+
 	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
@@ -298,32 +379,37 @@ func getCredential(secrets map[string]string) (string, string, error) {
 	return clientID, clientSecret, nil
 }
 
-// ParseServiceAccountToken parses the bound service account token from the tokens
-// passed from driver as part of MountRequest.
+// ParseServiceAccountToken parses the bound service account token for the
+// workload identity audience from the tokens passed from driver as part of MountRequest.
 // ref: https://kubernetes-csi.github.io/docs/token-requests.html
 func ParseServiceAccountToken(saTokens string) (string, error) {
-	klog.V(5).InfoS("parsing service account token for workload identity")
+	return parseTokenForAudience(saTokens, DefaultTokenAudience)
+}
+
+// ParseIdentityBindingToken parses the service account token for the
+// identity binding audience from the tokens passed from driver as part of MountRequest.
+func ParseIdentityBindingToken(saTokens string) (string, error) {
+	return parseTokenForAudience(saTokens, IdentityBindingTokenAudience)
+}
+
+// parseTokenForAudience extracts a service account token for a specific audience
+// from the JSON-encoded token map sent by the CSI driver.
+func parseTokenForAudience(saTokens, audience string) (string, error) {
+	klog.V(5).InfoS("parsing service account token", "audience", audience)
 	if len(saTokens) == 0 {
 		return "", ErrServiceAccountTokensNotFound
 	}
 
-	// Bound token is of the format:
-	// "csi.storage.k8s.io/serviceAccount.tokens": {
-	//  <audience>: {
-	//    'token': <token>,
-	//    'expirationTimestamp': <expiration timestamp in RFC3339 format>,
-	//  },
-	//  ...
-	// }
-	tokens := SATokens{}
+	var tokens map[string]saToken
 	if err := json.Unmarshal([]byte(saTokens), &tokens); err != nil {
 		return "", fmt.Errorf("failed to unmarshal service account tokens, error: %w", err)
 	}
-	klog.V(5).InfoS("successfully unmarshaled service account tokens")
-	if tokens.APIAzureADTokenExchange.Token == "" {
-		return "", fmt.Errorf("token for audience %s not found", DefaultTokenAudience)
+
+	entry, ok := tokens[audience]
+	if !ok || entry.Token == "" {
+		return "", fmt.Errorf("token for audience %s not found", audience)
 	}
-	return tokens.APIAzureADTokenExchange.Token, nil
+	return entry.Token, nil
 }
 
 func getScope(resource string) string {

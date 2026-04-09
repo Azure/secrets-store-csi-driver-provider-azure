@@ -72,5 +72,6 @@ steps:
         IS_ARC_TEST: ${{ parameters.isArcTest }}
       # If the image is a released versions (i.e <= v1.3), it still doesn't support the
       # split cert/key feature, so we need to skip tests for those versions.
+      # Identity binding is also only supported in newer versions.
       ${{ if parameters.testReleasedVersion }}:
-        GINKGO_SKIP: WriteCertAndKeyInSeparateFiles
+        GINKGO_SKIP: "WriteCertAndKeyInSeparateFiles|identity binding"

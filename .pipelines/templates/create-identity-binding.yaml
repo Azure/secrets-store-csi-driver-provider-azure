@@ -1,0 +1,18 @@
+steps:
+  - script: |
+      echo "Creating identity binding for e2e tests"
+
+      # Get the managed identity resource ID
+      user_msi_name="${AZURE_CLUSTER_NAME}-msi-for-wi"
+      MI_RESOURCE_ID=$(az identity show -g ${CLUSTER_RESOURCE_GROUP} -n $user_msi_name --subscription ${SUBSCRIPTION_ID} --query id -otsv)
+      echo "Managed Identity Resource ID: $MI_RESOURCE_ID"
+
+      # Create the identity binding
+      az aks identity-binding create \
+        --resource-group ${AZURE_CLUSTER_NAME} \
+        --cluster-name ${AZURE_CLUSTER_NAME} \
+        --name "${user_msi_name}-ib" \
+        --managed-identity-resource-id $MI_RESOURCE_ID
+
+      echo "Identity binding created successfully"
+    displayName: "Create identity binding"

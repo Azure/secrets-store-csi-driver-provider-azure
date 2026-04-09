@@ -60,7 +60,9 @@ linux:
             values:
             - virtual-kubelet
   # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
-  dnsPolicy: ""
+  # ClusterFirstWithHostNet is required because the linux provider uses hostNetwork: true
+  # and needs to resolve cluster DNS names (e.g. kubernetes.default.svc)
+  dnsPolicy: "ClusterFirstWithHostNet"
 
 windows:
   image:
@@ -167,6 +169,7 @@ secrets-store-csi-driver:
 
   tokenRequests:
   - audience: api://AzureADTokenExchange
+  - audience: api://AKSIdentityBinding
 
 ## Install default service account
 rbac:

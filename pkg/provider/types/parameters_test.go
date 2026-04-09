@@ -812,3 +812,90 @@ func TestGetFilePermissionError(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUseAzureTokenProxy(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    bool
+		expectError bool
+	}{
+		{
+			name:        "true",
+			value:       "true",
+			expected:    true,
+			expectError: false,
+		},
+		{
+			name:        "false",
+			value:       "false",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "empty",
+			value:       "",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "True (capital)",
+			value:       "True",
+			expected:    true,
+			expectError: false,
+		},
+		{
+			name:        "FALSE (capital)",
+			value:       "FALSE",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "invalid",
+			value:       "invalid",
+			expected:    false,
+			expectError: true,
+		},
+		{
+			name:        "1",
+			value:       "1",
+			expected:    true,
+			expectError: false,
+		},
+		{
+			name:        "0",
+			value:       "0",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "trim spaces",
+			value:       " true ",
+			expected:    true,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params := map[string]string{
+				UseAzureTokenProxyParameter: tt.value,
+			}
+
+			result, err := GetUseAzureTokenProxy(params)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("GetUseAzureTokenProxy() error = nil, expected error")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("GetUseAzureTokenProxy() unexpected error = %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("GetUseAzureTokenProxy() = %v, expected %v", result, tt.expected)
+				}
+			}
+		})
+	}
+}

@@ -48,6 +48,9 @@ const (
 	// ClientIDParameter is the name of the client ID parameter
 	// This clientID is used for workload identity
 	ClientIDParameter = "clientID"
+	// UseAzureTokenProxyParameter is the name of the use azure token proxy parameter
+	// When set to true, enables identity binding via Azure Token Proxy
+	UseAzureTokenProxyParameter = "useAzureTokenProxy"
 	// ObjectsParameter is the name of the objects parameter
 	ObjectsParameter = "objects"
 )

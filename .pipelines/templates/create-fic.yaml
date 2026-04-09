@@ -14,6 +14,7 @@ steps:
       az identity federated-credential create --name fic-custom-cloud-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:custom-cloud-test:default" --audiences api://AzureADTokenExchange
       az identity federated-credential create --name fic-certificates-test --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:certificates-test:default" --audiences api://AzureADTokenExchange
       az identity federated-credential create --name fic-autorotation --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:autorotation:default" --audiences api://AzureADTokenExchange
+      az identity federated-credential create --name fic-identitybindingwithwi --identity-name $user_msi_name -g ${CLUSTER_RESOURCE_GROUP} --issuer ${OIDC_ISSUER_URL} --subject "system:serviceaccount:identitybindingwithwi:dual-identity-sa" --audiences api://AzureADTokenExchange
       
       # Create role assignment for the user-assigned managed identity
       az keyvault set-policy -n ${KEYVAULT_NAME} --object-id $user_msi_principal_id --secret-permissions get list set --key-permissions get list --certificate-permissions get list

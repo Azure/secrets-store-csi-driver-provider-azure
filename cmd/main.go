@@ -16,6 +16,8 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/azure"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/internal/identitybinding"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/auth"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/server"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
@@ -53,6 +55,9 @@ var (
 
 	cloudName = flag.String("cloud-name", "AzurePublicCloud", "default cloud environment to use for Azure SDK if not provided in the SecretProviderClass. "+
 		"Allowed values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud or AzureStackCloud")
+
+	tokenProxyURL = flag.String("token-proxy-url", "", "URL of the token proxy endpoint for identity binding. If not set, defaults to the in-cluster Kubernetes API server endpoint.")
+	sniName       = flag.String("sni-name", "", "TLS server name for identity binding proxy connection. If not set, it is computed from the API server's serving certificate.")
 )
 
 func main() {
@@ -78,6 +83,14 @@ func main() {
 		os.Exit(0)
 	}
 	klog.InfoS("Starting Azure Key Vault Provider", "version", version.BuildVersion)
+
+	// Initialize identity binding proxy transport.
+	// If flags are not provided, values are computed from the cluster environment.
+	// Errors are stored and checked lazily when identity binding is actually used.
+	auth.SetProxyTransport(identitybinding.CreateProxyTransport(identitybinding.Config{
+		TokenProxyURL: *tokenProxyURL,
+		SNIName:       *sniName,
+	}))
 
 	cloudEnv, err := azure.EnvironmentFromName(*cloudName)
 	if err != nil {

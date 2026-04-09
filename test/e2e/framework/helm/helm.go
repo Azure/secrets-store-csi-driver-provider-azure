@@ -44,40 +44,41 @@ func Install(input InstallInput) {
 	chartDir := input.Config.HelmChartDir
 	// if chartDir is the official helm repo, then add the repo and update so the latest package is used
 	if chartDir == providerChartsRepo {
-		args := append([]string{"repo", "add", "csi-secrets-store-provider-azure", providerChartsRepo})
+		args := []string{"repo", "add", "csi-secrets-store-provider-azure", providerChartsRepo}
 		err := helm(args)
 		Expect(err).To(BeNil())
 
-		args = append([]string{"repo", "update"})
+		args = []string{"repo", "update"}
 		err = helm(args)
 		Expect(err).To(BeNil())
 		chartDir = "csi-secrets-store-provider-azure/csi-secrets-store-provider-azure"
 	}
 
-	args := append([]string{
+	args := []string{
 		"install",
 		chartName,
 		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
-		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
-		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
-		fmt.Sprintf("--set=secrets-store-csi-driver.syncSecret.enabled=true"),
-		fmt.Sprintf(`--set=secrets-store-csi-driver.tokenRequests[0].audience=api://AzureADTokenExchange`),
-		fmt.Sprintf(`--set=linux.podAnnotations.foo=bar`),
-		fmt.Sprintf("--set=logVerbosity=5"),
-		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
-		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
-		fmt.Sprintf("--set=writeCertAndKeyInSeparateFiles=true"),
+		"--set=secrets-store-csi-driver.enableSecretRotation=true",
+		"--set=secrets-store-csi-driver.rotationPollInterval=30s",
+		"--set=secrets-store-csi-driver.syncSecret.enabled=true",
+		`--set=secrets-store-csi-driver.tokenRequests[0].audience=api://AzureADTokenExchange`,
+		`--set=secrets-store-csi-driver.tokenRequests[1].audience=api://AKSIdentityBinding`,
+		`--set=linux.podAnnotations.foo=bar`,
+		"--set=logVerbosity=5",
+		"--set=linux.customUserAgent=csi-e2e",
+		"--set=windows.customUserAgent=csi-e2e",
+		"--set=writeCertAndKeyInSeparateFiles=true",
 		"--dependency-update",
 		"--wait",
 		"--timeout=5m",
 		"--debug",
-	})
+	}
 
 	if input.Config.IsWindowsTest {
 		args = append(args,
-			fmt.Sprintf("--set=windows.enabled=true"),
-			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
+			"--set=windows.enabled=true",
+			"--set=secrets-store-csi-driver.windows.enabled=true")
 	}
 
 	args = append(args, generateValueArgs(input.Config)...)
@@ -106,38 +107,39 @@ func Upgrade(input UpgradeInput) {
 	chartDir := input.Config.HelmChartDir
 
 	//resolve helm dependency
-	dependencyArgs := append([]string{
+	dependencyArgs := []string{
 		"dependency",
 		"update",
 		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		"--debug",
-	})
+	}
 	err = helm(dependencyArgs)
 	Expect(err).To(BeNil())
 
-	args := append([]string{
+	args := []string{
 		"upgrade",
 		chartName,
 		chartDir,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
-		fmt.Sprintf("--set=secrets-store-csi-driver.enableSecretRotation=true"),
-		fmt.Sprintf("--set=secrets-store-csi-driver.rotationPollInterval=30s"),
-		fmt.Sprintf("--set=secrets-store-csi-driver.syncSecret.enabled=true"),
-		fmt.Sprintf(`--set=secrets-store-csi-driver.tokenRequests[0].audience=api://AzureADTokenExchange`),
-		fmt.Sprintf("--set=logVerbosity=1"),
-		fmt.Sprintf("--set=linux.customUserAgent=csi-e2e"),
-		fmt.Sprintf("--set=windows.customUserAgent=csi-e2e"),
-		fmt.Sprintf("--set=writeCertAndKeyInSeparateFiles=true"),
+		"--set=secrets-store-csi-driver.enableSecretRotation=true",
+		"--set=secrets-store-csi-driver.rotationPollInterval=30s",
+		"--set=secrets-store-csi-driver.syncSecret.enabled=true",
+		`--set=secrets-store-csi-driver.tokenRequests[0].audience=api://AzureADTokenExchange`,
+		`--set=secrets-store-csi-driver.tokenRequests[1].audience=api://AKSIdentityBinding`,
+		"--set=logVerbosity=1",
+		"--set=linux.customUserAgent=csi-e2e",
+		"--set=windows.customUserAgent=csi-e2e",
+		"--set=writeCertAndKeyInSeparateFiles=true",
 		"--wait",
 		"--timeout=5m",
 		"--debug",
-	})
+	}
 
 	if input.Config.IsWindowsTest {
 		args = append(args,
-			fmt.Sprintf("--set=windows.enabled=true"),
-			fmt.Sprintf("--set=secrets-store-csi-driver.windows.enabled=true"))
+			"--set=windows.enabled=true",
+			"--set=secrets-store-csi-driver.windows.enabled=true")
 	}
 
 	args = append(args, generateValueArgs(input.Config)...)
@@ -206,26 +208,26 @@ func helm(args []string) error {
 // InstallPodIdentity installs aad-pod-identity via Helm3
 func InstallPodIdentity() {
 	// add aad-pod-identity chart repo
-	args := append([]string{
+	args := []string{
 		"repo", "add", "aad-pod-identity", "https://raw.githubusercontent.com/Azure/aad-pod-identity/master/charts",
-	})
+	}
 	err := helm(args)
 	Expect(err).To(BeNil())
 
 	// update helm repo
-	args = append([]string{
+	args = []string{
 		"repo", "update",
-	})
+	}
 	err = helm(args)
 	Expect(err).To(BeNil())
 
 	// Install aad-pod-identity helm chart
-	args = append([]string{
+	args = []string{
 		"install",
 		podIdentityChartName,
 		fmt.Sprintf("--namespace=%s", framework.NamespaceKubeSystem),
 		"aad-pod-identity/aad-pod-identity", "--set", "nmi.allowNetworkPluginKubenet=true", "--wait", "--timeout=5m", "--debug",
-	})
+	}
 	err = helm(args)
 	Expect(err).To(BeNil())
 }
