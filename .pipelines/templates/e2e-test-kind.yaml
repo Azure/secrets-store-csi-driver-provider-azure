@@ -34,7 +34,7 @@ jobs:
     steps:
       - task: GoTool@0
         inputs:
-          version: '1.25.8'
+          version: '1.25.9'
       - template: prepare-deps.yaml
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
