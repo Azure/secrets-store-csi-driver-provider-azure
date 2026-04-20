@@ -69,7 +69,8 @@ To provide identity to access Key Vault, refer to the following [section](#provi
   | usePodIdentity         | no       | set to true for using aad-pod-identity to access keyvault                                                                                                                                                              | "false"       |
   | useVMManagedIdentity   | no       | [__*available for version > 0.0.4*__] specify access mode to enable use of User-assigned managed identity                                                                                                              | "false"       |
   | userAssignedIdentityID | no       | [__*available for version > 0.0.4*__] the user assigned identity ID is required for User-assigned Managed Identity mode                                                                                                | ""            |
-  | clientID | no       | [__*available for version > 1.1.0*__] client id of the Azure AD Application or managed identity to use for workload identity                                                                                                | ""            |
+  | clientID | no       | client id of the managed identity or Azure AD Application for workload identity; must be a managed identity client id for identity binding                                                                                                | ""            |
+  | useAzureTokenProxy     | no       | set to true for using identity binding to access keyvault (AKS only)                                                                                                                                                   | "false"       |
   | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                           | ""            |
   | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                                     | ""            |
   | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](../../configurations/custom-environments). | ""            |
@@ -86,13 +87,14 @@ To provide identity to access Key Vault, refer to the following [section](#provi
 
 #### Provide Identity to Access Key Vault
 
-The Azure Key Vault Provider offers five modes for accessing a Key Vault instance:
+The Azure Key Vault Provider offers six modes for accessing a Key Vault instance:
 
-1. [Service Principal](../../configurations/identity-access-modes/service-principal-mode) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
-2. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode)
-3. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
-4. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
-5. [Workload Identity](../../configurations/identity-access-modes/workload-identity-mode)
+1. [Identity Binding](../../configurations/identity-access-modes/identity-binding-mode) **RECOMMENDED for AKS** - Only a single FIC on the managed identity needed instead of one per workload.
+2. [Workload Identity](../../configurations/identity-access-modes/workload-identity-mode) **RECOMMENDED** - Works on any Kubernetes cluster with an OIDC issuer.
+3. [Service Principal](../../configurations/identity-access-modes/service-principal-mode) ** This is currently the only way to connect to Azure Key Vault from a non Azure environment.
+4. [Pod Identity](../../configurations/identity-access-modes/pod-identity-mode) **DEPRECATED**
+5. [User-assigned Managed Identity](../../configurations/identity-access-modes/user-assigned-msi-mode)
+6. [System-assigned Managed Identity](../../configurations/identity-access-modes/system-assigned-msi-mode)
 
 #### Update your Deployment Yaml
 
