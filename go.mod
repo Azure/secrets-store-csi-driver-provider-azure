@@ -25,7 +25,7 @@ require (
 	google.golang.org/grpc v1.79.3
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/component-base v0.34.2
-	k8s.io/klog/v2 v2.130.1
+	k8s.io/klog/v2 v2.140.0
 	sigs.k8s.io/secrets-store-csi-driver v1.5.4
 )
 

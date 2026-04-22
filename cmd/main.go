@@ -65,6 +65,18 @@ func main() {
 	klog.InitFlags(nil)
 	defer klog.Flush()
 
+	// Opt into the new klog behavior so that -stderrthreshold is honored even
+	// when -logtostderr=true (the default).
+	// Ref: kubernetes/klog#212, kubernetes/klog#432
+	if err := flag.CommandLine.Set("legacy_stderr_threshold_behavior", "false"); err != nil {
+		klog.ErrorS(err, "failed to set legacy_stderr_threshold_behavior flag")
+		os.Exit(1)
+	}
+	if err := flag.CommandLine.Set("stderrthreshold", "INFO"); err != nil {
+		klog.ErrorS(err, "failed to set stderrthreshold flag")
+		os.Exit(1)
+	}
+
 	flag.Parse()
 
 	signalChan := make(chan os.Signal, 1)
