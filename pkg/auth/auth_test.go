@@ -336,3 +336,31 @@ func TestGetCredential_IdentityBinding_MissingFields(t *testing.T) {
 		})
 	}
 }
+
+func TestGetManagedIdentityTokenCredential(t *testing.T) {
+	tests := []struct {
+		name             string
+		identityClientID string
+	}{
+		{
+			name:             "system-assigned identity with empty client ID",
+			identityClientID: "",
+		},
+		{
+			name:             "user-assigned identity with client ID",
+			identityClientID: "user-assigned-client-id",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cred, err := getManagedIdentityTokenCredential(tt.identityClientID)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if cred == nil {
+				t.Fatal("expected non-nil credential")
+			}
+		})
+	}
+}
