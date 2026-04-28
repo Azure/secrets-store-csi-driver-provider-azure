@@ -23,6 +23,7 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/utils"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/version"
 
+	"github.com/go-logr/logr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	logsapi "k8s.io/component-base/logs/api/v1"
@@ -70,8 +71,7 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 
 	if *logFormatJSON {
-		jsonFactory := json.Factory{}
-		logger, _ := jsonFactory.Create(logsapi.LoggingConfiguration{Format: "json"}, logsapi.LoggingOptions{})
+		logger := newJSONLogger()
 		klog.SetLogger(logger)
 	}
 
@@ -174,4 +174,16 @@ func main() {
 	// gracefully stop the grpc server
 	klog.Infof("terminating the server")
 	s.GracefulStop()
+}
+
+// newJSONLogger creates a JSON logger with proper stream configuration.
+// ErrorStream and InfoStream must be set explicitly to avoid nil pointer
+// dereference in component-base's json.Factory.Create.
+func newJSONLogger() logr.Logger {
+	jsonFactory := json.Factory{}
+	logger, _ := jsonFactory.Create(logsapi.LoggingConfiguration{Format: "json"}, logsapi.LoggingOptions{
+		ErrorStream: os.Stderr,
+		InfoStream:  os.Stdout,
+	})
+	return logger
 }
