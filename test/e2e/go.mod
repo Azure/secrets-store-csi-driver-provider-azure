@@ -19,7 +19,7 @@ require (
 	k8s.io/client-go v0.34.2
 	k8s.io/kubernetes v1.34.2
 	sigs.k8s.io/controller-runtime v0.14.6
-	sigs.k8s.io/secrets-store-csi-driver v1.5.4
+	sigs.k8s.io/secrets-store-csi-driver v1.5.6
 )
 
 require (
