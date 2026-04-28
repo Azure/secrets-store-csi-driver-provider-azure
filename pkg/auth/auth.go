@@ -287,8 +287,9 @@ func getServicePrincipalTokenCredential(clientID, secret, aadEndpoint, tenantID 
 }
 
 func getManagedIdentityTokenCredential(identityClientID string) (azcore.TokenCredential, error) {
-	opts := &azidentity.ManagedIdentityCredentialOptions{
-		ID: azidentity.ClientID(identityClientID),
+	opts := &azidentity.ManagedIdentityCredentialOptions{}
+	if len(identityClientID) > 0 {
+		opts.ID = azidentity.ClientID(identityClientID)
 	}
 	return azidentity.NewManagedIdentityCredential(opts)
 }
