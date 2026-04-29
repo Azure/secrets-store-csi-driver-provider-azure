@@ -41,6 +41,11 @@ var (
 	providerResources = []string{
 		"provider-azure-installer.yaml",
 	}
+
+	// clusterScopedResources are resources that don't need DS image updates
+	clusterScopedResources = []string{
+		"validatingadmissionpolicy.yaml",
+	}
 )
 
 // InstallManifest install driver and provider manifests from yaml files.
@@ -117,6 +122,12 @@ func InstallManifest(kubeconfigPath string, config *framework.Config) {
 
 		// Update DS with new configuration
 		err = exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/updated-%s", providerResourceAbsolutePath, resource)})
+		Expect(err).To(BeNil())
+	}
+
+	// Install cluster-scoped resources (e.g. ValidatingAdmissionPolicy)
+	for _, resource := range clusterScopedResources {
+		err := exec.KubectlApply(kubeconfigPath, framework.NamespaceKubeSystem, []string{"-f", fmt.Sprintf("%s/%s", providerResourceAbsolutePath, resource)})
 		Expect(err).To(BeNil())
 	}
 }
