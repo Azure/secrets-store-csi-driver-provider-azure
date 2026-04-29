@@ -64,7 +64,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("missing-kvname", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("keyvaultName"))
+		Expect(err.Error()).To(ContainSubstring("keyvaultName is required and must be 3-24 alphanumeric/hyphen characters"))
 	})
 
 	It("should reject SecretProviderClass with invalid keyvaultName (too short)", func() {
@@ -73,7 +73,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("short-kvname", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("keyvaultName"))
+		Expect(err.Error()).To(ContainSubstring("keyvaultName is required and must be 3-24 alphanumeric/hyphen characters"))
 	})
 
 	It("should reject SecretProviderClass with invalid keyvaultName (too long)", func() {
@@ -82,7 +82,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("long-kvname", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("keyvaultName"))
+		Expect(err.Error()).To(ContainSubstring("keyvaultName is required and must be 3-24 alphanumeric/hyphen characters"))
 	})
 
 	It("should reject SecretProviderClass with invalid keyvaultName (special chars)", func() {
@@ -91,7 +91,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("invalid-chars-kvname", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("keyvaultName"))
+		Expect(err.Error()).To(ContainSubstring("keyvaultName is required and must be 3-24 alphanumeric/hyphen characters"))
 	})
 
 	It("should reject SecretProviderClass with missing tenantId", func() {
@@ -100,7 +100,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("missing-tenantid", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("tenantId"))
+		Expect(err.Error()).To(ContainSubstring("tenantId or tenantID is required"))
 	})
 
 	It("should reject SecretProviderClass with invalid usePodIdentity value", func() {
@@ -109,7 +109,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("invalid-podidentity", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("usePodIdentity"))
+		Expect(err.Error()).To(ContainSubstring("usePodIdentity must be 'true' or 'false'"))
 	})
 
 	It("should reject SecretProviderClass with invalid useVMManagedIdentity value", func() {
@@ -118,7 +118,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("invalid-vmmi", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("useVMManagedIdentity"))
+		Expect(err.Error()).To(ContainSubstring("useVMManagedIdentity must be 'true' or 'false'"))
 	})
 
 	It("should reject SecretProviderClass with multiple identity modes enabled", func() {
@@ -128,7 +128,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("multiple-identity", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("only one identity mode"))
+		Expect(err.Error()).To(ContainSubstring("only one identity mode can be enabled at a time: usePodIdentity, useVMManagedIdentity, or useAzureTokenProxy"))
 	})
 
 	It("should reject SecretProviderClass with useAzureTokenProxy but no clientID", func() {
@@ -138,7 +138,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("tokenproxy-no-clientid", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("clientID"))
+		Expect(err.Error()).To(ContainSubstring("clientID is required when useAzureTokenProxy is true"))
 	})
 
 	It("should reject SecretProviderClass with invalid cloudName", func() {
@@ -147,7 +147,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 		spc := validSPC("invalid-cloudname", params)
 		err := kubeClient.Create(context.TODO(), spc)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("cloudName"))
+		Expect(err.Error()).To(ContainSubstring("cloudName must be one of: AzurePublicCloud, AzureChinaCloud, AzureGermanCloud, AzureUSGovernmentCloud, AzureStackCloud"))
 	})
 
 	It("should accept SecretProviderClass with valid cloudName", func() {
