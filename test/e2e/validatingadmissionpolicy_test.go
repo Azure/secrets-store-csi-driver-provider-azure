@@ -22,7 +22,7 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 	)
 
 	BeforeEach(func() {
-		ns = namespace.CreateWithName(namespace.CreateInput{
+		ns = namespace.Create(namespace.CreateInput{
 			Creator: kubeClient,
 			Name:    "vap-test",
 		})
@@ -48,8 +48,8 @@ var _ = Describe("ValidatingAdmissionPolicy for Azure SecretProviderClass", func
 	baseParams := func() map[string]string {
 		return map[string]string{
 			types.KeyVaultNameParameter: "my-test-keyvault",
-			types.TenantIDParameter:     config.TenantID,
-			types.ClientIDParameter:     config.AzureClientID,
+			types.TenantIDParameter:     "00000000-0000-0000-0000-000000000000",
+			types.ClientIDParameter:     "00000000-0000-0000-0000-000000000001",
 		}
 	}
 

@@ -3,8 +3,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
   name: azure-secretproviderclass-validation
-  labels:
-    {{- include "sscdpa.labels" . | nindent 4 }}
+{{ include "sscdpa.labels" . | indent 2 }}
 spec:
   failurePolicy: Fail
   matchConstraints:
@@ -65,8 +64,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
   name: azure-secretproviderclass-validation
-  labels:
-    {{- include "sscdpa.labels" . | nindent 4 }}
+{{ include "sscdpa.labels" . | indent 2 }}
 spec:
   policyName: azure-secretproviderclass-validation
   validationActions:
