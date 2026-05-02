@@ -17,7 +17,7 @@ enableArcExtension: false
 linux:
   image:
     repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
-    tag: v1.7.2
+    tag: v1.8.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -60,12 +60,14 @@ linux:
             values:
             - virtual-kubelet
   # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
-  dnsPolicy: ""
+  # ClusterFirstWithHostNet is required because the linux provider uses hostNetwork: true
+  # and needs to resolve cluster DNS names (e.g. kubernetes.default.svc)
+  dnsPolicy: "ClusterFirstWithHostNet"
 
 windows:
   image:
     repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure
-    tag: v1.7.2
+    tag: v1.8.1
     pullPolicy: IfNotPresent
   nodeSelector: {}
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -122,7 +124,7 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/v2/kubernetes-csi/secrets-store/driver
-      tag: v1.5.4
+      tag: v1.5.6
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/v2/kubernetes-csi/csi-node-driver-registrar
@@ -135,7 +137,7 @@ secrets-store-csi-driver:
     crds:
       image:
         repository: mcr.microsoft.com/oss/v2/kubernetes-csi/secrets-store/driver-crds
-        tag: v1.5.4
+        tag: v1.5.6
         pullPolicy: IfNotPresent
     providersDir: /var/run/secrets-store-csi-providers
 
@@ -146,7 +148,7 @@ secrets-store-csi-driver:
     priorityClassName: ""
     image:
       repository: mcr.microsoft.com/oss/v2/kubernetes-csi/secrets-store/driver
-      tag: v1.5.4
+      tag: v1.5.6
       pullPolicy: IfNotPresent
     registrarImage:
       repository: mcr.microsoft.com/oss/v2/kubernetes-csi/csi-node-driver-registrar
@@ -167,6 +169,7 @@ secrets-store-csi-driver:
 
   tokenRequests:
   - audience: api://AzureADTokenExchange
+  - audience: api://AKSIdentityBinding
 
 ## Install default service account
 rbac:
