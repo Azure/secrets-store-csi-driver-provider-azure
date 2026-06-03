@@ -33,8 +33,14 @@ type Config struct {
 	HelmChartDir                      string `envconfig:"HELM_CHART_DIR" default:"manifest_staging/charts/csi-secrets-store-provider-azure"`
 	IsClusterUpgraded                 bool   `envconfig:"IS_CLUSTER_UPGRADED"`
 	IsBackwardCompatibilityTest       bool   `envconfig:"IS_BACKWARD_COMPATIBILITY_TEST"`
-	AzureEnvironmentFilePath          string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
-	IsArcTest                         bool   `envconfig:"IS_ARC_TEST" default:"false"`
+	// IsReleasedVersionTest is true when the suite is running against a
+	// previously-published helm chart (i.e. testReleasedVersion=true in
+	// the ADO pipeline). The post-suite stability check uses this to
+	// avoid failing CI on liveness/healthz bugs already shipped in a
+	// released version.
+	IsReleasedVersionTest    bool   `envconfig:"IS_RELEASED_VERSION_TEST"`
+	AzureEnvironmentFilePath string `envconfig:"AZURE_ENVIRONMENT_FILEPATH"`
+	IsArcTest                bool   `envconfig:"IS_ARC_TEST" default:"false"`
 }
 
 func (c *Config) DeepCopy() *Config {
@@ -60,6 +66,7 @@ func (c *Config) DeepCopy() *Config {
 	copy.HelmChartDir = c.HelmChartDir
 	copy.IsClusterUpgraded = c.IsClusterUpgraded
 	copy.IsBackwardCompatibilityTest = c.IsBackwardCompatibilityTest
+	copy.IsReleasedVersionTest = c.IsReleasedVersionTest
 	copy.AzureEnvironmentFilePath = c.AzureEnvironmentFilePath
 	copy.IsHelmTest = c.IsHelmTest
 	copy.IsArcTest = c.IsArcTest
