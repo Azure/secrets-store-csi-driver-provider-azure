@@ -65,6 +65,24 @@ func KubectlLogs(kubeconfigPath, podName, containerName, namespace string) (stri
 	return kubectl(args)
 }
 
+// KubectlLogsPrevious executes "kubectl logs --previous" to fetch logs from
+// the prior container instance. Useful for debugging crash-looping containers.
+func KubectlLogsPrevious(kubeconfigPath, podName, containerName, namespace string) (string, error) {
+	args := []string{
+		"logs",
+		"--previous",
+		fmt.Sprintf("--kubeconfig=%s", kubeconfigPath),
+		fmt.Sprintf("--namespace=%s", namespace),
+		podName,
+	}
+
+	if containerName != "" {
+		args = append(args, fmt.Sprintf("-c=%s", containerName))
+	}
+
+	return kubectl(args)
+}
+
 // KubectlDescribe executes "kubectl describe" given a list of arguments.
 func KubectlDescribe(kubeconfigPath, podName, namespace string) (string, error) {
 	args := []string{
