@@ -6,6 +6,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -37,17 +38,50 @@ var (
 	coreNamespaces = []string{
 		framework.NamespaceKubeSystem,
 	}
+	// anySpecFailed is set to true by an AfterEach hook whenever a spec
+	// fails. The post-suite stability check uses this to avoid burying
+	// the real failure under cascading assertions.
+	anySpecFailed bool
 )
 
 const (
 	// podStartTimeout is how long to wait for the pod to be started.
 	podStartTimeout = 5 * time.Minute
+
+	// defaultPostSuiteSoak is the soak window applied after all specs
+	// complete before re-asserting that driver and provider pods are
+	// still healthy with zero container restarts. The window covers the
+	// default Windows livenessProbe cadence (failureThreshold 3 x
+	// periodSeconds 30 = ~90s) plus headroom, so a probe regression like
+	// issue #2029 surfaces here even if it does not fire during the
+	// regular suite.
+	defaultPostSuiteSoak = 2 * time.Minute
+
+	// postSuiteSoakEnv overrides defaultPostSuiteSoak. Accepts any
+	// time.ParseDuration value. Set to "0" to skip the soak entirely
+	// (useful for local iteration).
+	postSuiteSoakEnv = "E2E_POST_SUITE_SOAK"
 )
+
+// providerAndDriverAppLabels is the set of `app` label values used by the
+// driver and Azure provider DaemonSets. Kept as a package var so the
+// BeforeSuite readiness wait and the AfterSuite stability check stay in
+// sync.
+var providerAndDriverAppLabels = []string{
+	"secrets-store-csi-driver",
+	"csi-secrets-store-provider-azure",
+}
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "sscdproviderazure")
 }
+
+var _ = AfterEach(func() {
+	if CurrentSpecReport().Failed() {
+		anySpecFailed = true
+	}
+})
 
 var _ = BeforeSuite(func(ctx context.Context) {
 	By("Parsing test configuration")
@@ -90,7 +124,7 @@ var _ = BeforeSuite(func(ctx context.Context) {
 
 	// Ensure driver and provider pods are running and ready before starting tests
 	By("Waiting for driver and provider pods to be running and ready before starting tests.")
-	driverAndProviderLabels, err := labels.NewRequirement("app", selection.In, []string{"secrets-store-csi-driver", "csi-secrets-store-provider-azure"})
+	driverAndProviderLabels, err := labels.NewRequirement("app", selection.In, providerAndDriverAppLabels)
 	Expect(err).To(BeNil())
 
 	podSelector := labels.NewSelector().Add(*driverAndProviderLabels)
@@ -100,7 +134,11 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	}
 })
 
-var _ = AfterSuite(func() {
+var _ = AfterSuite(func(ctx context.Context) {
+	// Run uninstall LAST and dumpLogs SECOND-TO-LAST so they execute
+	// even if the post-suite stability check fails — otherwise a
+	// regression like issue #2029 would tear down the cluster before
+	// we capture the evidence needed to debug it.
 	defer func() {
 		// uninstall if it's not Soak Test, not backward compatibility test and if cluster is already upgraded or it's not cluster upgrade test
 		if !config.IsSoakTest && !config.IsArcTest && !config.IsBackwardCompatibilityTest && (!config.IsUpgradeTest || config.IsClusterUpgraded) {
@@ -110,9 +148,72 @@ var _ = AfterSuite(func() {
 			}
 		}
 	}()
+	defer dumpLogs()
 
-	dumpLogs()
+	runPostSuiteStabilityCheck(ctx)
 })
+
+// runPostSuiteStabilityCheck asserts that the driver and provider
+// DaemonSets remained healthy across the suite and stay healthy through
+// a short soak window. It is the safety net for liveness/readiness
+// regressions (see issue #2029, where the provider's healthz dial was
+// broken on Windows and crash-looped the pod every ~90s).
+//
+// It deliberately skips:
+//   - runs where a spec already failed (the real failure is upstream,
+//     and we do not want to bury it with cascading assertions);
+//   - test modes that legitimately churn provider pods (soak, cluster
+//     upgrade) or do not install the provider in the usual shape (arc);
+//   - runs against a previously-published chart (IsReleasedVersionTest),
+//     since we do not want a known bug shipped in v1.x to permanently
+//     red-light this safety net on every PR. Regressions on the
+//     candidate change are still caught by the "Run e2e test with New
+//     Version" invocation, which does not set IS_RELEASED_VERSION_TEST.
+func runPostSuiteStabilityCheck(ctx context.Context) {
+	if anySpecFailed {
+		By("Skipping post-suite stability check: at least one spec already failed")
+		return
+	}
+	if config.IsSoakTest || config.IsArcTest || config.IsReleasedVersionTest || config.IsUpgradeTest {
+		By("Skipping post-suite stability check: not applicable for this test mode")
+		return
+	}
+
+	soak := defaultPostSuiteSoak
+	if v, ok := os.LookupEnv(postSuiteSoakEnv); ok {
+		parsed, err := time.ParseDuration(v)
+		Expect(err).To(BeNil(), "invalid %s=%q", postSuiteSoakEnv, v)
+		soak = parsed
+	}
+
+	By("Verifying driver and provider pods have zero container restarts after the suite")
+	pod.AssertNoRestarts(pod.AssertNoRestartsInput{
+		Lister:         kubeClient,
+		KubeconfigPath: kubeconfigPath,
+		Namespace:      framework.NamespaceKubeSystem,
+		AppLabels:      providerAndDriverAppLabels,
+	})
+
+	if soak <= 0 {
+		return
+	}
+
+	By(fmt.Sprintf("Soaking for %s to catch slow-burn liveness/healthz regressions", soak))
+	select {
+	case <-time.After(soak):
+	case <-ctx.Done():
+		return
+	}
+
+	By("Verifying driver and provider pods are still Ready with zero container restarts after soak")
+	pod.AssertNoRestarts(pod.AssertNoRestartsInput{
+		Lister:         kubeClient,
+		KubeconfigPath: kubeconfigPath,
+		Namespace:      framework.NamespaceKubeSystem,
+		AppLabels:      providerAndDriverAppLabels,
+		VerifyReady:    true,
+	})
+}
 
 func initScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
