@@ -1,6 +1,13 @@
+parameters:
+  - name: serviceConnection
+    type: string
+    default: ''
+
 steps:
+  - template: az-login.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
   - script: |
-      az login -i > /dev/null
       echo "deleting '${AZURE_CLUSTER_NAME}' resource group"
       az group delete -n ${AZURE_CLUSTER_NAME} --subscription $(SUBSCRIPTION_ID) --yes --no-wait
     displayName: "Teardown cluster"
