@@ -1,8 +1,48 @@
+# Logs in to Azure for use by subsequent az / kubectl / helm commands.
+#
+# Prefers Workload Identity Federation (WIF) when a `serviceConnection`
+# name is supplied. Falls back to `az login --identity` for pools that
+# still have a Managed Identity assigned. Pipelines whose pool MI was
+# removed must pass a WIF-capable service connection; without one the
+# MI path will fail.
+parameters:
+  - name: serviceConnection
+    type: string
+    default: ''
+
 steps:
-  - script:
-      az --version || sudo tdnf install -y azure-cli
-  - script: |
-      az login -i > /dev/null
-      az account set -s=$(SUBSCRIPTION_ID)
-    displayName: "az login"
-    condition: succeeded()
+  - script: az --version || sudo tdnf install -y azure-cli
+    displayName: "Install azure-cli (if missing)"
+
+  - ${{ if ne(parameters.serviceConnection, '') }}:
+      - task: AzureCLI@2
+        displayName: "Extract WIF identity"
+        inputs:
+          azureSubscription: ${{ parameters.serviceConnection }}
+          addSpnToEnvironment: true
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            set -u
+            echo "servicePrincipalId set: ${servicePrincipalId:+yes} (len=${#servicePrincipalId})"
+            echo "tenantId set:           ${tenantId:+yes} (len=${#tenantId})"
+            echo "idToken set:            ${idToken:+yes} (len=${#idToken})"
+            echo "##vso[task.setvariable variable=ARM_CLIENT_ID]$servicePrincipalId"
+            echo "##vso[task.setvariable variable=ARM_ID_TOKEN;issecret=true]$idToken"
+            echo "##vso[task.setvariable variable=ARM_TENANT_ID]$tenantId"
+
+      - bash: |
+          set -eu
+          az login \
+            --service-principal \
+            -u "$(ARM_CLIENT_ID)" \
+            --tenant "$(ARM_TENANT_ID)" \
+            --allow-no-subscriptions \
+            --federated-token "$(ARM_ID_TOKEN)" > /dev/null
+          az account set -s=$(SUBSCRIPTION_ID)
+        displayName: "az login (WIF)"
+  - ${{ else }}:
+      - script: |
+          az login -i > /dev/null
+          az account set -s=$(SUBSCRIPTION_ID)
+        displayName: "az login (managed identity)"

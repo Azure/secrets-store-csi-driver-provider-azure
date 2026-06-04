@@ -1,6 +1,9 @@
 parameters:
   - name: clusterConfigs
     type: object
+  - name: serviceConnection
+    type: string
+    default: ''
 
 jobs:
   - ${{ each clusterConfig in parameters.clusterConfigs }}:
@@ -26,11 +29,12 @@ jobs:
             sudo mv kubectl /usr/local/bin/
           displayName: "Install kubectl"
 
+        - template: az-login.yaml
+          parameters:
+            serviceConnection: ${{ parameters.serviceConnection }}
+
         - script: |
             # Download kubeconfig for soak cluster
-            az login -i > /dev/null
-            az account set -s=$(SUBSCRIPTION_ID)
-
             az aks get-credentials \
               --resource-group $(CLUSTER_RESOURCE_GROUP) \
               --name $(CLUSTER_CONFIG)
