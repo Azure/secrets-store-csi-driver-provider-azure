@@ -6,6 +6,7 @@ package pod
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo/v2"
@@ -15,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
 )
 
 // ListInput is the input of List.
@@ -195,4 +197,93 @@ func WaitFor(input WaitForInput) {
 		}
 		return false
 	}, framework.Timeout, framework.Polling).Should(BeTrue())
+}
+
+// AssertNoRestartsInput is the input for AssertNoRestarts.
+type AssertNoRestartsInput struct {
+	Lister         framework.Lister
+	KubeconfigPath string
+	Namespace      string
+	// AppLabels is the set of "app" label values to match. Pods matching any
+	// of these values are checked. Logical OR.
+	AppLabels []string
+	// VerifyReady additionally asserts that every matched pod has the Ready
+	// condition set to True.
+	VerifyReady bool
+}
+
+// AssertNoRestarts fails the current spec if any container in any pod
+// matching one of input.AppLabels has restartCount > 0. When VerifyReady
+// is true, also fails if any matched pod is not Ready.
+//
+// On failure, dumps `kubectl describe pod` for offending pods and
+// `kubectl logs --previous` for offending containers so the CI artifacts
+// contain enough state to debug the regression (e.g. liveness flap, OOM,
+// startup panic) without needing to reproduce it.
+func AssertNoRestarts(input AssertNoRestartsInput) {
+	Expect(input.Lister).NotTo(BeNil(), "input.Lister is required for Pod.AssertNoRestarts")
+	Expect(input.KubeconfigPath).NotTo(BeEmpty(), "input.KubeconfigPath is required for Pod.AssertNoRestarts")
+	Expect(input.Namespace).NotTo(BeEmpty(), "input.Namespace is required for Pod.AssertNoRestarts")
+	Expect(input.AppLabels).NotTo(BeEmpty(), "input.AppLabels is required for Pod.AssertNoRestarts")
+
+	var allPods []corev1.Pod
+	for _, app := range input.AppLabels {
+		podList := List(ListInput{
+			Lister:    input.Lister,
+			Namespace: input.Namespace,
+			Labels:    map[string]string{"app": app},
+		})
+		allPods = append(allPods, podList.Items...)
+	}
+	Expect(allPods).NotTo(BeEmpty(),
+		"expected at least one pod in namespace %q matching app labels %v", input.Namespace, input.AppLabels)
+
+	var problems []string
+	offenders := map[string]bool{}
+	for _, p := range allPods {
+		for _, cs := range p.Status.ContainerStatuses {
+			if cs.RestartCount > 0 {
+				problems = append(problems,
+					fmt.Sprintf("pod %s/%s container %q restarted %d time(s)", p.Namespace, p.Name, cs.Name, cs.RestartCount))
+				offenders[p.Name] = true
+			}
+		}
+		if input.VerifyReady {
+			ready := false
+			for _, c := range p.Status.Conditions {
+				if c.Type == corev1.PodReady && c.Status == corev1.ConditionTrue {
+					ready = true
+					break
+				}
+			}
+			if !ready {
+				problems = append(problems,
+					fmt.Sprintf("pod %s/%s is not Ready (phase=%s)", p.Namespace, p.Name, p.Status.Phase))
+				offenders[p.Name] = true
+			}
+		}
+	}
+
+	if len(problems) == 0 {
+		return
+	}
+
+	for _, p := range allPods {
+		if !offenders[p.Name] {
+			continue
+		}
+		if describe, err := exec.KubectlDescribe(input.KubeconfigPath, p.Name, p.Namespace); err == nil {
+			By(fmt.Sprintf("kubectl describe pod %s/%s:\n%s", p.Namespace, p.Name, describe))
+		}
+		for _, cs := range p.Status.ContainerStatuses {
+			if cs.RestartCount == 0 {
+				continue
+			}
+			if prev, err := exec.KubectlLogsPrevious(input.KubeconfigPath, p.Name, cs.Name, p.Namespace); err == nil {
+				By(fmt.Sprintf("Previous container logs for pod %s/%s container %q:\n%s", p.Namespace, p.Name, cs.Name, prev))
+			}
+		}
+	}
+
+	Fail("post-suite stability check failed:\n  - " + strings.Join(problems, "\n  - "))
 }

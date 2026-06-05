@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -79,6 +80,16 @@ func (h *HealthZ) checkRPC(ctx context.Context, client grpc_health_v1.HealthClie
 }
 
 func (h *HealthZ) dialUnixSocket() (*grpc.ClientConn, error) {
-	return grpc.NewClient("unix://"+h.UnixSocketPath,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Use the passthrough resolver and an explicit context dialer so the
+	// socket path is never parsed as a URL authority. This matters on
+	// Windows, where UnixSocketPath looks like `C:\provider\azure.sock`
+	// and the drive-letter colon makes `unix://C:\...` fail target
+	// parsing with "too many colons in address".
+	return grpc.NewClient(
+		"passthrough:"+h.UnixSocketPath,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+			return (&net.Dialer{}).DialContext(ctx, "unix", h.UnixSocketPath)
+		}),
+	)
 }
