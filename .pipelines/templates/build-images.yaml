@@ -5,9 +5,14 @@ parameters:
   - name: ciKindCluster
     type: boolean
     default: false
+  - name: serviceConnection
+    type: string
+    default: ''
 
 steps:
   - template: az-login.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
   - script: |
       if [[ ${{ parameters.ciKindCluster }} == True ]]; then
         export CI_KIND_CLUSTER=true

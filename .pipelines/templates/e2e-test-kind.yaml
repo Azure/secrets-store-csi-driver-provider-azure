@@ -1,3 +1,12 @@
+parameters:
+  - name: serviceConnection
+    type: string
+    # Default to the staging WIF service connection so the template works
+    # both as an entry pipeline (ADO-registered) and when called from
+    # nightly.yaml. Pass an empty string explicitly to force the
+    # managed-identity branch.
+    default: 'Upstream-CI-Service-Connection'
+
 jobs:
   - job:
     timeoutInMinutes: 20
@@ -39,6 +48,8 @@ jobs:
       # logging in to download the sa.pub and sa.key used for creating the kind cluster
       # with OIDC issuer enabled
       - template: az-login.yaml
+        parameters:
+          serviceConnection: ${{ parameters.serviceConnection }}
       - script: |
           export REGISTRY="e2e"
           export IMAGE_VERSION=e2e-$(git rev-parse --short HEAD)

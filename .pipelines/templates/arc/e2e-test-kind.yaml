@@ -1,3 +1,12 @@
+parameters:
+  - name: serviceConnection
+    type: string
+    # Default to the staging WIF service connection so the template works
+    # both as an entry pipeline (ADO-registered) and when called from
+    # nightly.yaml. Pass an empty string explicitly to force the
+    # managed-identity branch.
+    default: 'Upstream-CI-Service-Connection'
+
 jobs:
   - job: e2e_arc_kind
     pool:
@@ -10,6 +19,8 @@ jobs:
     - group: csi-secrets-store-e2e-kind
     steps:
     - template: ../az-login.yaml
+      parameters:
+        serviceConnection: ${{ parameters.serviceConnection }}
     - template: setup.yaml
     - script: |
         make install-helm install-kubectl setup-kind
@@ -37,3 +48,5 @@ jobs:
         ciKindCluster: true
         isArcTest: true
     - template: ../teardown.yaml
+      parameters:
+        serviceConnection: ${{ parameters.serviceConnection }}

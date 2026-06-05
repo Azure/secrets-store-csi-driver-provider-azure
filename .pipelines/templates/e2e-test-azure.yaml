@@ -7,6 +7,9 @@ parameters:
   - name: testWithGPU
     type: boolean
     default: false
+  - name: serviceConnection
+    type: string
+    default: ''
 
 jobs:
   - ${{ each osType in parameters.osTypes }}:
@@ -42,6 +45,8 @@ jobs:
         displayName: 'Install kubectl'
 
       - template: build-images.yaml
+        parameters:
+          serviceConnection: ${{ parameters.serviceConnection }}
 
       - template: aks-setup.yaml
         parameters:
@@ -103,6 +108,8 @@ jobs:
 
       - template: cleanup-role-assignments.yaml
       - template: teardown.yaml
+        parameters:
+          serviceConnection: ${{ parameters.serviceConnection }}
       - template: cleanup-images.yaml
         parameters:
           imageVersion: $(IMAGE_VERSION)

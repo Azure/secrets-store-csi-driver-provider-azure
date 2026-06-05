@@ -16,12 +16,18 @@ pool:
   demands:
   - ImageOverride -equals 1es-azlinux-3-amd64-custom-disk
 
+parameters:
+  - name: serviceConnection
+    type: string
+    default: 'Upstream-CI-Service-Connection'
+
 jobs:
   - template: templates/e2e-test-azure.yaml
     parameters:
       osTypes:
       - "linux"
       - "windows"
+      serviceConnection: ${{ parameters.serviceConnection }}
   # TODO: re-enable this job after implementing automated ext release process
   # using https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/1382 for tracking
   # this will ensure any changes to provider works on arc extension too.

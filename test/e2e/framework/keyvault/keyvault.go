@@ -9,8 +9,6 @@ import (
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -32,15 +30,10 @@ type client struct {
 }
 
 func NewClient(config *framework.Config) Client {
-	opts := &azidentity.ManagedIdentityCredentialOptions{
-		ClientOptions: azcore.ClientOptions{
-			Cloud: cloud.Configuration{
-				ActiveDirectoryAuthorityHost: azure.PublicCloud.ActiveDirectoryEndpoint,
-			},
-		},
-		ID: azidentity.ClientID(config.KeyvaultClientID),
-	}
-	cred, err := azidentity.NewManagedIdentityCredential(opts)
+	// Use Azure CLI credential so the test reuses the `az login` (WIF) session
+	// performed by the pipeline. This avoids depending on a pool-level managed
+	// identity, which is no longer available on the CI agents.
+	cred, err := azidentity.NewAzureCLICredential(nil)
 	Expect(err).To(BeNil())
 
 	c, err := azsecrets.NewClient(getVaultURL(config.KeyvaultName), cred, nil)

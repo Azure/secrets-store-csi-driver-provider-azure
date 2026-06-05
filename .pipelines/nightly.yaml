@@ -13,10 +13,17 @@ pool:
   demands:
   - ImageOverride -equals 1es-azlinux-3-amd64-custom-disk
 
+parameters:
+  - name: serviceConnection
+    type: string
+    default: 'Upstream-CI-Service-Connection'
+
 jobs:
   # to get image scan results on nightly runs
   - template: templates/unit-test.yaml
   - template: templates/e2e-test-kind.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
   - template: templates/load-test.yaml
   - template: templates/e2e-test-azure.yaml
     parameters:
@@ -24,14 +31,19 @@ jobs:
       - "linux"
       - "windows"
       testClusterUpgrade: true
+      serviceConnection: ${{ parameters.serviceConnection }}
   - template: templates/e2e-test-azure.yaml
     parameters:
       osTypes:
       - "linux"
       testWithGPU: true
+      serviceConnection: ${{ parameters.serviceConnection }}
   - template: templates/soak-test.yaml
     parameters:
       clusterConfigs:
       - "csi-secrets-store-soak-linux-aks"
       - "csi-secrets-store-soak-win-aks"
+      serviceConnection: ${{ parameters.serviceConnection }}
   - template: templates/arc/e2e-test-kind.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
