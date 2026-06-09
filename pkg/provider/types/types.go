@@ -63,7 +63,10 @@ type KeyVaultObject struct {
 	ObjectAlias string `json:"objectAlias" yaml:"objectAlias"`
 	// the version of the Azure Key Vault objects
 	ObjectVersion string `json:"objectVersion" yaml:"objectVersion"`
+	// Ignore versions created after this RFC3339/ISO8601 timestamp
+	ObjectNotAfter time.Time `json:"objectNotAfter" yaml:"objectNotAfter"`
 	// The number of versions to load for this secret starting at the latest version
+	// or starting at the first version matched by objectNotAfter or objectVersion if specified.
 	ObjectVersionHistory int32 `json:"objectVersionHistory" yaml:"objectVersionHistory"`
 	// the type of the Azure Key Vault objects
 	ObjectType string `json:"objectType" yaml:"objectType"`
@@ -75,6 +78,11 @@ type KeyVaultObject struct {
 	ObjectEncoding string `json:"objectEncoding" yaml:"objectEncoding"`
 	// FilePermission is the file permissions
 	FilePermission string `json:"filePermission" yaml:"filePermission"`
+}
+
+func (k KeyVaultObject) WithVersion(version string) KeyVaultObject {
+	k.ObjectVersion = version
+	return k
 }
 
 // SecretFile holds content and metadata of a secret file that is sent

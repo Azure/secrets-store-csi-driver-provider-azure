@@ -4,7 +4,10 @@
 package e2e
 
 import (
+	"fmt"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/test/e2e/framework/exec"
@@ -17,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"sigs.k8s.io/secrets-store-csi-driver/apis/v1alpha1"
 )
 
@@ -194,5 +198,148 @@ var _ = Describe("[ObjectVersionHistory] When deploying SecretProviderClass CRD 
 		})
 		Expect(opaqueSecret).NotTo(BeNil())
 		Expect(opaqueSecret.Data["opaque-secret"]).NotTo(BeNil())
+	})
+})
+
+var _ = Describe("[ObjectNotAfter] When deploying SecretProviderClass CRD with secrets", func() {
+	var (
+		specName = "objectnotaftersecret"
+		ns       *corev1.Namespace
+		p        *corev1.Pod
+	)
+
+	BeforeEach(func() {
+		if config.ImageVersion < "1.3.0" {
+			Skip("functionality not yet supported in release version")
+		}
+
+		ns = namespace.CreateWithName(namespace.CreateInput{
+			Creator: kubeClient,
+			Name:    specName,
+		})
+	})
+
+	AfterEach(func() {
+		Cleanup(CleanupInput{
+			Namespace: ns,
+			Getter:    kubeClient,
+			Lister:    kubeClient,
+			Deleter:   kubeClient,
+		})
+	})
+
+	It("should read latest secret version created not after timestamp", func() {
+		if config.IsKindCluster {
+			Skip("test case not supported for kind cluster")
+		}
+
+		secretName := fmt.Sprintf("secret-na-%s", utilrand.String(5))
+		err := kvClient.SetSecret(secretName, "old")
+		Expect(err).To(BeNil())
+		defer func() {
+			err = kvClient.DeleteSecret(secretName)
+			Expect(err).To(BeNil())
+		}()
+
+		err = kvClient.SetSecret(secretName, "selected")
+		Expect(err).To(BeNil())
+
+		var versions []types.KeyVaultObjectVersion
+		Eventually(func() int {
+			versions, err = kvClient.GetSecretVersions(secretName)
+			Expect(err).To(BeNil())
+			return len(versions)
+		}, 1*time.Minute, 5*time.Second).Should(Equal(2))
+		Expect(versions).To(HaveLen(2))
+		sort.Sort(types.KeyVaultObjectVersionList(versions))
+		objectNotAfter := versions[0].Created
+
+		time.Sleep(2 * time.Second)
+
+		err = kvClient.SetSecret(secretName, "too-new")
+		Expect(err).To(BeNil())
+
+		Eventually(func() bool {
+			versions, err = kvClient.GetSecretVersions(secretName)
+			if err != nil || len(versions) != 3 {
+				return false
+			}
+
+			sort.Sort(types.KeyVaultObjectVersionList(versions))
+			return versions[0].Created.After(objectNotAfter)
+		}, 1*time.Minute, 5*time.Second).Should(BeTrue())
+
+		keyVaultObjects := []types.KeyVaultObject{
+			{
+				ObjectName:     secretName,
+				ObjectType:     types.VaultObjectTypeSecret,
+				ObjectAlias:    "not-after-single",
+				ObjectNotAfter: objectNotAfter,
+			},
+			{
+				ObjectName:           secretName,
+				ObjectType:           types.VaultObjectTypeSecret,
+				ObjectAlias:          "not-after-history",
+				ObjectNotAfter:       objectNotAfter,
+				ObjectVersionHistory: 2,
+			},
+		}
+
+		yamlArray := types.StringArray{Array: []string{}}
+		for _, object := range keyVaultObjects {
+			obj, err := yaml.Marshal(object)
+			Expect(err).To(BeNil())
+			yamlArray.Array = append(yamlArray.Array, string(obj))
+		}
+
+		objects, err := yaml.Marshal(yamlArray)
+		Expect(err).To(BeNil())
+
+		spc := secretproviderclass.Create(secretproviderclass.CreateInput{
+			Creator:   kubeClient,
+			Config:    config,
+			Name:      "azure",
+			Namespace: ns.Name,
+			Spec: v1alpha1.SecretProviderClassSpec{
+				Provider: "azure",
+				Parameters: map[string]string{
+					"keyvaultName": config.KeyvaultName,
+					"tenantId":     config.TenantID,
+					"objects":      string(objects),
+					"clientID":     config.AzureClientID,
+				},
+			},
+		})
+
+		p = pod.Create(pod.CreateInput{
+			Creator:                 kubeClient,
+			Config:                  config,
+			Name:                    "busybox-secrets-store-inline-crd",
+			Namespace:               ns.Name,
+			SecretProviderClassName: spc.Name,
+		})
+
+		pod.WaitFor(pod.WaitForInput{
+			Getter:         kubeClient,
+			KubeconfigPath: kubeconfigPath,
+			Config:         config,
+			PodName:        p.Name,
+			Namespace:      ns.Name,
+		})
+
+		cmd := getPodExecCommand("cat /mnt/secrets-store/not-after-single")
+		secret, err := exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(secret).To(Equal("selected"))
+
+		cmd = getPodExecCommand("cat /mnt/secrets-store/not-after-history/0")
+		secret, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(secret).To(Equal("selected"))
+
+		cmd = getPodExecCommand("cat /mnt/secrets-store/not-after-history/1")
+		secret, err = exec.KubectlExec(kubeconfigPath, p.Name, p.Namespace, strings.Split(cmd, " "))
+		Expect(err).To(BeNil())
+		Expect(secret).To(Equal("old"))
 	})
 })

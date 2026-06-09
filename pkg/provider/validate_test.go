@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestValidateObjectFormat(t *testing.T) {
@@ -139,6 +140,49 @@ func TestValidateFilePath(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := validateFileName(tc.fileName)
+			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
+				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestValidateObjectVersionAndNotAfter(t *testing.T) {
+	cases := []struct {
+		desc           string
+		objectVersion  string
+		objectNotAfter time.Time
+		expectedErr    error
+	}{
+		{
+			desc:           "no objectNotAfter and no objectVersion",
+			objectVersion:  "",
+			objectNotAfter: time.Time{},
+			expectedErr:    nil,
+		},
+		{
+			desc:           "objectNotAfter set with no objectVersion",
+			objectVersion:  "",
+			objectNotAfter: time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+			expectedErr:    nil,
+		},
+		{
+			desc:           "objectNotAfter set with seconds",
+			objectVersion:  "",
+			objectNotAfter: time.Date(2026, time.June, 5, 19, 41, 30, 0, time.UTC),
+			expectedErr:    nil,
+		},
+		{
+			desc:           "objectVersion and objectNotAfter are mutually exclusive",
+			objectVersion:  "latest",
+			objectNotAfter: time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+			expectedErr:    fmt.Errorf("objectVersion and objectNotAfter are mutually exclusive"),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validateObjectVersionAndNotAfter(tc.objectVersion, tc.objectNotAfter)
 			if tc.expectedErr != nil && err.Error() != tc.expectedErr.Error() || tc.expectedErr == nil && err != nil {
 				t.Fatalf("expected err: %+v, got: %+v", tc.expectedErr, err)
 			}

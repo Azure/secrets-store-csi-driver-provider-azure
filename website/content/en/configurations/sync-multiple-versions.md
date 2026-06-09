@@ -29,6 +29,7 @@ spec:
           objectType: secret                     # object types: secret, key or cert
           objectAlias: secretalias
           objectVersion: $SECRET_VERSION         # [OPTIONAL] object versions, default to latest if empty
+          objectNotAfter: ""                     # [OPTIONAL] RFC3339 timestamp. Select the latest version created at or before this timestamp. Mutually exclusive with objectVersion.
           objectVersionHistory: 5                # The number of versions to sync (including the specified version)
         - |
           objectName: $KEY_NAME
@@ -70,6 +71,8 @@ In some cases, you may need to sync the latest N versions of a secret. Use the o
 When you do this, the provider will treat the object name/alias as a folder and place the top N (where N is `objectVersionHistory`) versions of the secret (sorted by secret creation date) into that folder. The file name for each version will be an integer, starting with `0` for the specified version, `1` for the next most recent, and so on.
 
 > NOTE: If you specify a version, the provider will sync the top N starting with that specified version. If you do not specify a version, or specify `latest`, then it will sync the most recent N as determined by the secret creation date.
+
+> NOTE: If you specify `objectNotAfter`, the provider will ignore versions created after that RFC3339 timestamp and start with the newest version created at or before the timestamp. `objectNotAfter` and `objectVersion` are mutually exclusive.
 
 > NOTE: If you are syncing this secret with a Kubernetes secret, make sure the `objectName` in `secretObjects` also indicates which version of the secret to sync (i.e., `foosecret/0` instead of just `foosecret`)
 

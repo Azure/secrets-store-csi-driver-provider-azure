@@ -341,7 +341,7 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 }
 
 func (p *provider) resolveObjectVersions(ctx context.Context, kvClient KeyVault, kvObject types.KeyVaultObject) (versions []types.KeyVaultObject, err error) {
-	if kvObject.IsSyncingSingleVersion() {
+	if kvObject.IsSyncingSingleVersion() && kvObject.ObjectNotAfter.IsZero() {
 		// version history less than or equal to 1 means only sync the latest and
 		// don't add anything to the file name
 		return []types.KeyVaultObject{kvObject}, nil
@@ -352,7 +352,30 @@ func (p *provider) resolveObjectVersions(ctx context.Context, kvClient KeyVault,
 		return nil, err
 	}
 
+	if kvObject.IsSyncingSingleVersion() && !kvObject.ObjectNotAfter.IsZero() {
+		version, err := getLatestVersionNotAfter(kvObjectVersions, kvObject.ObjectNotAfter)
+		if err != nil {
+			return nil, err
+		}
+
+		return []types.KeyVaultObject{kvObject.WithVersion(version.Version)}, nil
+	}
+
 	return getLatestNKeyVaultObjects(kvObject, kvObjectVersions), nil
+}
+
+func getLatestVersionNotAfter(kvObjectVersions types.KeyVaultObjectVersionList, objectNotAfter time.Time) (types.KeyVaultObjectVersion, error) {
+	sort.Sort(kvObjectVersions)
+
+	for _, objectVersion := range kvObjectVersions {
+		if objectVersion.Created.After(objectNotAfter) {
+			continue
+		}
+
+		return objectVersion, nil
+	}
+
+	return types.KeyVaultObjectVersion{}, errors.Errorf("no versions found before objectNotAfter: %s", objectNotAfter)
 }
 
 /*
@@ -373,6 +396,10 @@ func getLatestNKeyVaultObjects(kvObject types.KeyVaultObject, kvObjectVersions t
 	foundFirst := kvObject.ObjectVersion == "" || kvObject.ObjectVersion == "latest"
 
 	for _, objectVersion := range kvObjectVersions {
+		if !kvObject.ObjectNotAfter.IsZero() && objectVersion.Created.After(kvObject.ObjectNotAfter) {
+			continue
+		}
+
 		foundFirst = foundFirst || objectVersion.Version == kvObject.ObjectVersion
 
 		if foundFirst {
