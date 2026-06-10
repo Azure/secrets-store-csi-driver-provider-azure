@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 )
@@ -16,7 +17,18 @@ func validate(kv types.KeyVaultObject) error {
 	if err := validateObjectEncoding(kv.ObjectEncoding, kv.ObjectType); err != nil {
 		return err
 	}
+	if err := validateObjectVersionAndNotAfter(kv.ObjectVersion, kv.ObjectNotAfter); err != nil {
+		return err
+	}
 	return validateFileName(kv.GetFileName())
+}
+
+func validateObjectVersionAndNotAfter(objectVersion string, objectNotAfter time.Time) error {
+	if objectVersion != "" && !objectNotAfter.IsZero() {
+		return fmt.Errorf("objectVersion and objectNotAfter are mutually exclusive")
+	}
+
+	return nil
 }
 
 // validateObjectFormat checks if the object format is valid and is supported

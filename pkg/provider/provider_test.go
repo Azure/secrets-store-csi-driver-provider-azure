@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/klog/v2"
 
+	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/metrics"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/mock_keyvault"
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 )
@@ -586,6 +587,55 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "ignores versions created after objectNotAfter",
+			kvObject: types.KeyVaultObject{
+				ObjectName:           "secret1",
+				ObjectVersionHistory: 3,
+				ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+			},
+			versions: types.KeyVaultObjectVersionList{
+				types.KeyVaultObjectVersion{
+					Version: "a",
+					Created: time.Date(2026, 6, 5, 19, 42, 0, 0, time.UTC),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "b",
+					Created: time.Date(2026, 6, 5, 19, 41, 0, 0, time.UTC),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "c",
+					Created: time.Date(2026, 6, 5, 19, 40, 0, 0, time.UTC),
+				},
+				types.KeyVaultObjectVersion{
+					Version: "d",
+					Created: time.Date(2026, 6, 5, 19, 39, 0, 0, time.UTC),
+				},
+			},
+			expectedObjects: []types.KeyVaultObject{
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "0"),
+					ObjectVersion:        "b",
+					ObjectVersionHistory: 3,
+					ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "1"),
+					ObjectVersion:        "c",
+					ObjectVersionHistory: 3,
+					ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+				},
+				{
+					ObjectName:           "secret1",
+					ObjectAlias:          filepath.Join("secret1", "2"),
+					ObjectVersion:        "d",
+					ObjectVersionHistory: 3,
+					ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -599,6 +649,52 @@ func TestGetLatestNKeyVaultObjects(t *testing.T) {
 	}
 }
 
+func TestResolveObjectVersionsWithObjectNotAfter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockKvClient := mock_keyvault.NewMockKeyVault(ctrl)
+	ctx := context.Background()
+
+	kvObject := types.KeyVaultObject{
+		ObjectName:           "secret1",
+		ObjectType:           types.VaultObjectTypeSecret,
+		ObjectVersionHistory: 1,
+		ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+	}
+
+	mockKvClient.EXPECT().GetSecretVersions(ctx, "secret1").Return([]types.KeyVaultObjectVersion{
+		{
+			Version: "too-new",
+			Created: time.Date(2026, 6, 5, 19, 42, 0, 0, time.UTC),
+		},
+		{
+			Version: "eligible",
+			Created: time.Date(2026, 6, 5, 19, 41, 0, 0, time.UTC),
+		},
+	}, nil)
+
+	p := &provider{reporter: metrics.NewStatsReporter()}
+	resolved, err := p.resolveObjectVersions(ctx, mockKvClient, kvObject)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	expected := []types.KeyVaultObject{
+		{
+			ObjectName:           "secret1",
+			ObjectType:           types.VaultObjectTypeSecret,
+			ObjectVersion:        "eligible",
+			ObjectVersionHistory: 1,
+			ObjectNotAfter:       time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
+		},
+	}
+
+	if !reflect.DeepEqual(expected, resolved) {
+		t.Fatalf("expected %+v, got %+v", expected, resolved)
+	}
+}
+
 func TestFormatKeyVaultObject(t *testing.T) {
 	cases := []struct {
 		desc                   string
@@ -606,10 +702,11 @@ func TestFormatKeyVaultObject(t *testing.T) {
 		expectedKeyVaultObject types.KeyVaultObject
 	}{
 		{
-			desc: "leading and trailing whitespace trimmed from all fields",
+			desc: "leading and trailing whitespace trimmed from all string fields",
 			keyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1     ",
 				ObjectVersion:  "",
+				ObjectNotAfter: time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
 				ObjectEncoding: "base64   ",
 				ObjectType:     "  secret",
 				ObjectAlias:    "",
@@ -617,6 +714,7 @@ func TestFormatKeyVaultObject(t *testing.T) {
 			expectedKeyVaultObject: types.KeyVaultObject{
 				ObjectName:     "secret1",
 				ObjectVersion:  "",
+				ObjectNotAfter: time.Date(2026, time.June, 5, 19, 41, 0, 0, time.UTC),
 				ObjectEncoding: "base64",
 				ObjectType:     "secret",
 				ObjectAlias:    "",
