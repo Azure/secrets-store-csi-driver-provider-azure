@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -110,6 +111,47 @@ func getTempTestDir(t *testing.T) string {
 		t.Fatalf("expected err to be nil, got: %+v", err)
 	}
 	return tmpDir
+}
+
+// TestDialUnixSocket_WindowsStylePath is a regression test for
+// https://github.com/Azure/secrets-store-csi-driver-provider-azure/issues/2029.
+//
+// On Windows the provider's --endpoint is `unix://C:\provider\azure.sock`,
+// so HealthZ.UnixSocketPath ends up as `C:\provider\azure.sock`. Previously
+// dialUnixSocket prefixed that with `unix://` and handed it to gRPC, which
+// parses the target as a URI; the drive-letter colon was misread as a port
+// separator and every probe failed with "too many colons in address",
+// causing the liveness probe to flap and the pod to restart every ~90s.
+//
+// This test runs on any OS: it constructs the same target string the
+// Windows code path produces and asserts that the dial error (the socket
+// of course does not exist on the CI host) is NOT a target/URI parsing
+// error from gRPC.
+func TestDialUnixSocket_WindowsStylePath(t *testing.T) {
+	healthz := &HealthZ{
+		UnixSocketPath: `C:\provider\azure.sock`,
+	}
+
+	conn, err := healthz.dialUnixSocket()
+	if err != nil {
+		t.Fatalf("dialUnixSocket failed to construct client: %v", err)
+	}
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	_, err = grpc_health_v1.NewHealthClient(conn).Check(ctx, &grpc_health_v1.HealthCheckRequest{})
+	if err == nil {
+		// Highly unlikely (no socket exists), but not the regression we're guarding against.
+		return
+	}
+	msg := err.Error()
+	for _, bad := range []string{"too many colons", "invalid target address"} {
+		if strings.Contains(msg, bad) {
+			t.Fatalf("Windows-style UnixSocketPath produced gRPC target parsing error %q: %v", bad, err)
+		}
+	}
 }
 
 func doHealthCheck(t *testing.T, url string) (int, []byte) {

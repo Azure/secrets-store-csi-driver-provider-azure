@@ -70,6 +70,8 @@ steps:
         CI_KIND_CLUSTER: ${{ parameters.ciKindCluster }}
       ${{ if parameters.isArcTest }}:
         IS_ARC_TEST: ${{ parameters.isArcTest }}
+      ${{ if parameters.testReleasedVersion }}:
+        IS_RELEASED_VERSION_TEST: ${{ parameters.testReleasedVersion }}
       # If the image is a released versions (i.e <= v1.3), it still doesn't support the
       # split cert/key feature, so we need to skip tests for those versions.
       # Identity binding is also only supported in newer versions.
