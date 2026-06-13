@@ -1,0 +1,68 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: azure-secretproviderclass-validation
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["secrets-store.csi.x-k8s.io"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["secretproviderclasses"]
+  matchConditions:
+    - name: is-azure-provider
+      expression: "object.spec.provider == 'azure'"
+  validations:
+    # keyvaultName required, 3-24 chars, alphanumeric + hyphens
+    - expression: >-
+        has(object.spec.parameters.keyvaultName) &&
+        size(object.spec.parameters.keyvaultName.trim()) >= 3 &&
+        size(object.spec.parameters.keyvaultName.trim()) <= 24 &&
+        object.spec.parameters.keyvaultName.trim().matches('^[-A-Za-z0-9]+$')
+      message: "keyvaultName is required and must be 3-24 alphanumeric/hyphen characters"
+    # tenantId or tenantID required and non-empty
+    - expression: >-
+        (has(object.spec.parameters.tenantId) && size(object.spec.parameters.tenantId.trim()) > 0) ||
+        (has(object.spec.parameters.tenantID) && size(object.spec.parameters.tenantID.trim()) > 0)
+      message: "tenantId or tenantID is required"
+    # usePodIdentity must be valid boolean string
+    - expression: >-
+        !has(object.spec.parameters.usePodIdentity) ||
+        object.spec.parameters.usePodIdentity.trim() in ['true', 'false', '']
+      message: "usePodIdentity must be 'true' or 'false'"
+    # useVMManagedIdentity must be valid boolean string
+    - expression: >-
+        !has(object.spec.parameters.useVMManagedIdentity) ||
+        object.spec.parameters.useVMManagedIdentity.trim() in ['true', 'false', '']
+      message: "useVMManagedIdentity must be 'true' or 'false'"
+    # useAzureTokenProxy must be valid boolean string
+    - expression: >-
+        !has(object.spec.parameters.useAzureTokenProxy) ||
+        object.spec.parameters.useAzureTokenProxy.trim() in ['true', 'false', '']
+      message: "useAzureTokenProxy must be 'true' or 'false'"
+    # At most one identity mode boolean flag enabled
+    - expression: >-
+        (has(object.spec.parameters.usePodIdentity) && object.spec.parameters.usePodIdentity.trim() == 'true' ? 1 : 0) +
+        (has(object.spec.parameters.useVMManagedIdentity) && object.spec.parameters.useVMManagedIdentity.trim() == 'true' ? 1 : 0) +
+        (has(object.spec.parameters.useAzureTokenProxy) && object.spec.parameters.useAzureTokenProxy.trim() == 'true' ? 1 : 0) <= 1
+      message: "only one identity mode can be enabled at a time: usePodIdentity, useVMManagedIdentity, or useAzureTokenProxy"
+    # clientID required when useAzureTokenProxy is true
+    - expression: >-
+        !(has(object.spec.parameters.useAzureTokenProxy) && object.spec.parameters.useAzureTokenProxy.trim() == 'true') ||
+        (has(object.spec.parameters.clientID) && size(object.spec.parameters.clientID.trim()) > 0)
+      message: "clientID is required when useAzureTokenProxy is true"
+    # cloudName must be a known value
+    - expression: >-
+        !has(object.spec.parameters.cloudName) ||
+        object.spec.parameters.cloudName.trim() in ['', 'AzurePublicCloud', 'AzureChinaCloud', 'AzureGermanCloud', 'AzureUSGovernmentCloud', 'AzureStackCloud']
+      message: "cloudName must be one of: AzurePublicCloud, AzureChinaCloud, AzureGermanCloud, AzureUSGovernmentCloud, AzureStackCloud"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: azure-secretproviderclass-validation
+spec:
+  policyName: azure-secretproviderclass-validation
+  validationActions:
+    - Deny
