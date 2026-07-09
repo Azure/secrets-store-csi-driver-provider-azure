@@ -101,5 +101,22 @@ cat << EOF
 EOF
 ```
 
+## Disabling authentication challenge resource verification
+
+The underlying Key Vault SDK validates that the resource requested in the authentication challenge returned by Key Vault/Managed HSM matches the vault's domain, to protect against a malicious or misconfigured server redirecting authentication to an unexpected resource. On some non-standard vault URIs (for example, some Azure Stack Hub deployments), this validation can fail with an error similar to:
+
+```
+challenge resource "https://vault.<fqdn>/<tenant-id>" doesn't match the requested domain. Set DisableChallengeResourceVerification to true in your client options to disable.
+```
+
+If you hit this error and have verified the vault endpoint is trusted (e.g. via the custom cloud environment file above), set `disableChallengeResourceVerification: "true"` in the `SecretProviderClass` parameters to skip the check:
+
+```yaml
+parameters:
+  cloudName: "AzureStackCloud"
+  cloudEnvFileName: "/path/to/custom/environment.json"
+  disableChallengeResourceVerification: "true"
+```
+
 [adfs]: https://learn.microsoft.com/windows-server/identity/active-directory-federation-services
 [ash-dns]: https://learn.microsoft.com/azure-stack/operator/azure-stack-integrate-dns?#azure-stack-hub-dns-namespace

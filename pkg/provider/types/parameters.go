@@ -84,6 +84,16 @@ func GetUseAzureTokenProxy(parameters map[string]string) (bool, error) {
 	return strconv.ParseBool(str)
 }
 
+// GetDisableChallengeResourceVerification returns if the authentication challenge
+// resource verification against the Key Vault/Managed HSM domain should be disabled
+func GetDisableChallengeResourceVerification(parameters map[string]string) (bool, error) {
+	str := strings.TrimSpace(parameters[DisableChallengeResourceVerificationParameter])
+	if str == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(str)
+}
+
 // GetServiceAccountTokens returns the service account tokens
 func GetServiceAccountTokens(parameters map[string]string) string {
 	return strings.TrimSpace(parameters[CSIAttributeServiceAccountTokens])

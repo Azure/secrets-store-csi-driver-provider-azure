@@ -899,3 +899,60 @@ func TestGetUseAzureTokenProxy(t *testing.T) {
 		})
 	}
 }
+
+func TestGetDisableChallengeResourceVerification(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    bool
+		expectError bool
+	}{
+		{
+			name:        "true",
+			value:       "true",
+			expected:    true,
+			expectError: false,
+		},
+		{
+			name:        "false",
+			value:       "false",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "empty",
+			value:       "",
+			expected:    false,
+			expectError: false,
+		},
+		{
+			name:        "invalid",
+			value:       "invalid",
+			expected:    false,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params := map[string]string{
+				DisableChallengeResourceVerificationParameter: tt.value,
+			}
+
+			result, err := GetDisableChallengeResourceVerification(params)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("GetDisableChallengeResourceVerification() error = nil, expected error")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("GetDisableChallengeResourceVerification() unexpected error = %v", err)
+				}
+				if result != tt.expected {
+					t.Errorf("GetDisableChallengeResourceVerification() = %v, expected %v", result, tt.expected)
+				}
+			}
+		})
+	}
+}

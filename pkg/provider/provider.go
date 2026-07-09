@@ -60,6 +60,9 @@ type mountConfig struct {
 	podName string
 	// podNamespace is the pod namespace
 	podNamespace string
+	// disableChallengeResourceVerification disables verification that the auth
+	// challenge resource matches the Key Vault/Managed HSM domain
+	disableChallengeResourceVerification bool
 }
 
 type keyvaultObject struct {
@@ -93,7 +96,7 @@ func (mc *mountConfig) initializeKvClient(vaultURI string) (KeyVault, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClient(cred, vaultURI)
+	return NewClient(cred, vaultURI, mc.disableChallengeResourceVerification)
 }
 
 func (mc *mountConfig) getVaultURL() (vaultURL *string, err error) {
@@ -188,6 +191,10 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse useAzureTokenProxy flag, error: %w", err)
 	}
+	disableChallengeResourceVerification, err := types.GetDisableChallengeResourceVerification(attrib)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse disableChallengeResourceVerification flag, error: %w", err)
+	}
 
 	// Determine identity mode and validate mutual exclusivity
 	identityMode := auth.IdentityModeNone
@@ -241,12 +248,13 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 	}
 
 	mc := &mountConfig{
-		keyvaultName:          keyvaultName,
-		azureCloudEnvironment: azureCloudEnv,
-		authConfig:            authConfig,
-		tenantID:              tenantID,
-		podName:               podName,
-		podNamespace:          podNamespace,
+		keyvaultName:                         keyvaultName,
+		azureCloudEnvironment:                azureCloudEnv,
+		authConfig:                           authConfig,
+		tenantID:                             tenantID,
+		podName:                              podName,
+		podNamespace:                         podNamespace,
+		disableChallengeResourceVerification: disableChallengeResourceVerification,
 	}
 
 	objectsStrings := types.GetObjects(attrib)

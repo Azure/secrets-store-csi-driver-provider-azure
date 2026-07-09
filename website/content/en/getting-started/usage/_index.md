@@ -45,6 +45,7 @@ To provide identity to access Key Vault, refer to the following [section](#provi
       keyvaultName: "kvname"                # the name of the KeyVault
       cloudName: ""                         # [OPTIONAL available for version > 0.0.4] if not provided, azure environment will default to AzurePublicCloud
       cloudEnvFileName: ""                  # [OPTIONAL available for version > 0.0.7] use to define path to file for populating azure environment
+      disableChallengeResourceVerification: "false"  # [OPTIONAL] set to true to disable verification that the auth challenge resource matches the Key Vault/Managed HSM domain, required for some non-standard vault URIs (e.g. Azure Stack Hub)
       objects:  |
         array:
           - |
@@ -74,6 +75,7 @@ To provide identity to access Key Vault, refer to the following [section](#provi
   | keyvaultName           | yes      | name of a Key Vault instance                                                                                                                                                                                           | ""            |
   | cloudName              | no       | [__*available for version > 0.0.4*__] name of the azure cloud based on azure go sdk (AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud, AzureStackCloud)                                     | ""            |
   | cloudEnvFileName       | no       | [__*available for version > 0.0.7*__] path to the file to be used while populating the Azure Environment (required if target cloud is AzureStackCloud). More details [here](../../configurations/custom-environments). | ""            |
+  | disableChallengeResourceVerification | no | set to true to disable verification that the auth challenge resource returned by Key Vault matches the vault/HSM domain; needed for some non-standard vault URIs, e.g. Azure Stack Hub. See [this doc](https://aka.ms/azsdk/blog/vault-uri) for more details. | "false" |
   | objects                | yes      | a string of arrays of strings                                                                                                                                                                                          | ""            |
   | objectName             | yes      | name of a Key Vault object                                                                                                                                                                                             | ""            |
   | objectAlias            | no       | [__*available for version > 0.0.4*__] specify the filename of the object when written to disk - defaults to objectName if not provided                                                                                 | ""            |
