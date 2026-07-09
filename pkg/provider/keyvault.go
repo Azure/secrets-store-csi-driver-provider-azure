@@ -29,16 +29,22 @@ type client struct {
 }
 
 // NewClient creates a new KeyVault client
-func NewClient(cred azcore.TokenCredential, vaultURI string) (KeyVault, error) {
-	secrets, err := azsecrets.NewClient(vaultURI, cred, nil)
+func NewClient(cred azcore.TokenCredential, vaultURI string, disableChallengeResourceVerification bool) (KeyVault, error) {
+	secrets, err := azsecrets.NewClient(vaultURI, cred, &azsecrets.ClientOptions{
+		DisableChallengeResourceVerification: disableChallengeResourceVerification,
+	})
 	if err != nil {
 		return nil, err
 	}
-	keys, err := azkeys.NewClient(vaultURI, cred, nil)
+	keys, err := azkeys.NewClient(vaultURI, cred, &azkeys.ClientOptions{
+		DisableChallengeResourceVerification: disableChallengeResourceVerification,
+	})
 	if err != nil {
 		return nil, err
 	}
-	certs, err := azcertificates.NewClient(vaultURI, cred, nil)
+	certs, err := azcertificates.NewClient(vaultURI, cred, &azcertificates.ClientOptions{
+		DisableChallengeResourceVerification: disableChallengeResourceVerification,
+	})
 	if err != nil {
 		return nil, err
 	}

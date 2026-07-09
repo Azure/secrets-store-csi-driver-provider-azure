@@ -53,6 +53,11 @@ const (
 	UseAzureTokenProxyParameter = "useAzureTokenProxy"
 	// ObjectsParameter is the name of the objects parameter
 	ObjectsParameter = "objects"
+	// DisableChallengeResourceVerificationParameter is the name of the parameter that disables
+	// verification that the authentication challenge resource matches the Key Vault or
+	// Managed HSM domain. This is required for non-standard vault URIs, e.g. Azure Stack Hub.
+	// ref: https://aka.ms/azsdk/blog/vault-uri
+	DisableChallengeResourceVerificationParameter = "disableChallengeResourceVerification"
 )
 
 // KeyVaultObject holds keyvault object related config
