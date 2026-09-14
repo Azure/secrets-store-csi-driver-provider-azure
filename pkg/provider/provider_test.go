@@ -31,6 +31,30 @@ import (
 	"github.com/Azure/secrets-store-csi-driver-provider-azure/pkg/provider/types"
 )
 
+func TestBuildAuthConfigInstanceDiscovery(test *testing.T) {
+	for _, disabled := range []bool{false, true} {
+		for _, identity := range []string{"workload identity", "service principal"} {
+			test.Run(fmt.Sprintf("disabled=%t/%s", disabled, identity), func(test *testing.T) {
+				instance := NewProvider(false, false, disabled, azure.PublicCloud).(*provider)
+				input := authConfigInput{disableInstanceDiscovery: instance.disableInstanceDiscovery}
+				if identity == "workload identity" {
+					input.workloadIdentityClientID = "test-client"
+					input.saTokens = `{"api://AzureADTokenExchange":{"token":"test-assertion"}}`
+				} else {
+					input.secrets = map[string]string{"clientid": "test-client", "clientsecret": "test-secret"}
+				}
+				config, err := buildAuthConfig(input)
+				if err != nil {
+					test.Fatal(err)
+				}
+				if config.DisableInstanceDiscovery != disabled {
+					test.Fatalf("expected DisableInstanceDiscovery=%t, got %t", disabled, config.DisableInstanceDiscovery)
+				}
+			})
+		}
+	}
+}
+
 func TestGetVaultURL(t *testing.T) {
 	testEnvs := []string{"", "AZUREPUBLICCLOUD", "AZURECHINACLOUD", "AZUREGERMANCLOUD", "AZUREUSGOVERNMENTCLOUD"}
 	vaultDNSSuffix := []string{"vault.azure.net", "vault.azure.net", "vault.azure.cn", "vault.microsoftazure.de", "vault.usgovcloudapi.net"}
@@ -1304,7 +1328,7 @@ func TestGetSecretsStoreObjectContent(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			p := NewProvider(false, false, azure.PublicCloud)
+			p := NewProvider(false, false, false, azure.PublicCloud)
 
 			_, err := p.GetSecretsStoreObjectContent(testContext(t), tc.parameters, tc.secrets, 0420)
 			if len(tc.expectedErr) > 0 {
@@ -1910,7 +1934,7 @@ func testContext(t *testing.T) context.Context {
 }
 
 func TestGetSecretsStoreObjectContent_IdentityBinding_MissingClientID(t *testing.T) {
-	p := NewProvider(false, false, azure.PublicCloud)
+	p := NewProvider(false, false, false, azure.PublicCloud)
 
 	attrib := map[string]string{
 		types.UseAzureTokenProxyParameter:      "true",
@@ -1934,7 +1958,7 @@ func TestGetSecretsStoreObjectContent_IdentityBinding_MissingClientID(t *testing
 }
 
 func TestGetSecretsStoreObjectContent_IdentityBinding_InvalidParameter(t *testing.T) {
-	p := NewProvider(false, false, azure.PublicCloud)
+	p := NewProvider(false, false, false, azure.PublicCloud)
 
 	attrib := map[string]string{
 		types.UseAzureTokenProxyParameter: "invalid-value",
@@ -1958,7 +1982,7 @@ func TestGetSecretsStoreObjectContent_IdentityBinding_InvalidParameter(t *testin
 }
 
 func TestGetSecretsStoreObjectContent_IdentityBinding_MissingServiceAccountToken(t *testing.T) {
-	p := NewProvider(false, false, azure.PublicCloud)
+	p := NewProvider(false, false, false, azure.PublicCloud)
 
 	attrib := map[string]string{
 		types.UseAzureTokenProxyParameter: "true",
@@ -1983,7 +2007,7 @@ func TestGetSecretsStoreObjectContent_IdentityBinding_MissingServiceAccountToken
 }
 
 func TestGetSecretsStoreObjectContent_MutualExclusivity(t *testing.T) {
-	p := NewProvider(false, false, azure.PublicCloud)
+	p := NewProvider(false, false, false, azure.PublicCloud)
 
 	attrib := map[string]string{
 		types.UsePodIdentityParameter:     "true",

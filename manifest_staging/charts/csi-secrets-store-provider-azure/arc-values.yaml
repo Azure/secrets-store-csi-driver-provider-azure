@@ -12,6 +12,12 @@ logFormatJSON: true
 # log level. Uses V logs (klog)
 logVerbosity: 0
 
+# Cloud settings overrides
+cloud:
+  name: ""
+  environment: {}
+  disableInstanceDiscovery: false
+
 linux:
   image:
     repository: mcr.microsoft.com/oss/v2/azure/secrets-store/provider-azure

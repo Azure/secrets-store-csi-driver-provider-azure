@@ -42,6 +42,7 @@ type provider struct {
 
 	constructPEMChain              bool
 	writeCertAndKeyInSeparateFiles bool
+	disableInstanceDiscovery       bool
 
 	defaultCloudEnvironment azure.Environment
 }
@@ -69,11 +70,12 @@ type keyvaultObject struct {
 }
 
 // NewProvider creates a new provider
-func NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles bool, defaultCloudEnvironment azure.Environment) Interface {
+func NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles, disableInstanceDiscovery bool, defaultCloudEnvironment azure.Environment) Interface {
 	return &provider{
 		reporter:                       metrics.NewStatsReporter(),
 		constructPEMChain:              constructPEMChain,
 		writeCertAndKeyInSeparateFiles: writeCertAndKeyInSeparateFiles,
+		disableInstanceDiscovery:       disableInstanceDiscovery,
 		defaultCloudEnvironment:        defaultCloudEnvironment,
 	}
 }
@@ -119,6 +121,7 @@ type authConfigInput struct {
 	workloadIdentityClientID string
 	saTokens                 string
 	secrets                  map[string]string
+	disableInstanceDiscovery bool
 }
 
 // buildAuthConfig creates the authentication configuration based on the input parameters.
@@ -149,13 +152,15 @@ func buildAuthConfig(input authConfigInput) (auth.Config, error) {
 		}
 	}
 
-	return auth.NewConfig(
+	config, err := auth.NewConfig(
 		input.identityMode,
 		input.userAssignedIdentityID,
 		input.workloadIdentityClientID,
 		serviceAccountToken,
 		input.secrets,
 	)
+	config.DisableInstanceDiscovery = input.disableInstanceDiscovery
+	return config, err
 }
 
 // GetSecretsStoreObjectContent gets the objects (secret, key, certificate) from keyvault and returns the content
@@ -235,6 +240,7 @@ func (p *provider) GetSecretsStoreObjectContent(ctx context.Context, attrib, sec
 		workloadIdentityClientID: workloadIdentityClientID,
 		saTokens:                 saTokens,
 		secrets:                  secrets,
+		disableInstanceDiscovery: p.disableInstanceDiscovery,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to build auth config for mode %s: %w", identityMode, err)

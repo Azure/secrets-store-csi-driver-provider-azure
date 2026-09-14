@@ -1,0 +1,11 @@
+{{- if and (or .Values.linux.enabled .Values.windows.enabled) .Values.cloud.environment }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "sscdpa.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+{{ include "sscdpa.labels" . | indent 2 }}
+data:
+  environment.json: |-
+{{ include "sscdpa.cloudEnvironment" . | indent 4 }}
+{{- end }}

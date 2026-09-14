@@ -1,8 +1,15 @@
 package main
 
 import (
+	"flag"
 	"testing"
 )
+
+func TestInstanceDiscoveryEnabledByDefault(test *testing.T) {
+	if option := flag.Lookup("disable-instance-discovery"); option == nil || option.DefValue != "false" {
+		test.Fatal("instance discovery must remain enabled unless explicitly disabled")
+	}
+}
 
 func TestNewJSONLogger(t *testing.T) {
 	// newJSONLogger must not panic. Before the fix, passing empty

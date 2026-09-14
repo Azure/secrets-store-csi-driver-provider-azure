@@ -17,10 +17,13 @@ spec:
 {{- if .Values.linux.podLabels }}
 {{- toYaml .Values.linux.podLabels | nindent 8 }}
 {{- end }}
-{{- if or .Values.linux.podAnnotations .Values.enableArcExtension }}
+{{- if or .Values.linux.podAnnotations .Values.enableArcExtension .Values.cloud.environment }}
       annotations:
 {{- if .Values.linux.podAnnotations}}
 {{- toYaml .Values.linux.podAnnotations | nindent 8 }}
+{{- end }}
+{{- if .Values.cloud.environment }}
+        checksum/cloud-environment: {{ include "sscdpa.cloudEnvironment" . | sha256sum }}
 {{- end }}
 {{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
@@ -63,6 +66,12 @@ spec:
             {{- if .Values.linux.customUserAgent }}
             - --custom-user-agent={{ .Values.linux.customUserAgent }}
             {{- end }}
+            {{- if .Values.cloud.name }}
+            - {{ printf "--cloud-name=%s" .Values.cloud.name | quote }}
+            {{- end }}
+            {{- if .Values.cloud.disableInstanceDiscovery }}
+            - --disable-instance-discovery={{ .Values.cloud.disableInstanceDiscovery }}
+            {{- end }}
             - --healthz-port={{ .Values.linux.healthzPort }}
             - --healthz-path={{ .Values.linux.healthzPath }}
             - --healthz-timeout={{ .Values.linux.healthzTimeout }}
@@ -95,6 +104,11 @@ spec:
           {{- if .Values.linux.privileged }}
             privileged: true
           {{- end }}
+          {{- if .Values.cloud.environment }}
+          env:
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: /etc/kubernetes/azure-cloud-environment/environment.json
+          {{- end }}
           {{- if .Values.enableArcExtension }}
           {{- if .Values.Azure.proxySettings.isProxyEnabled }}
           envFrom:
@@ -105,6 +119,11 @@ spec:
           volumeMounts:
             - name: provider-vol
               mountPath: /provider
+            {{- if .Values.cloud.environment }}
+            - name: azure-cloud-environment
+              mountPath: /etc/kubernetes/azure-cloud-environment
+              readOnly: true
+            {{- end }}
             {{- if .Values.linux.volumeMounts }}
             {{- toYaml .Values.linux.volumeMounts | nindent 12 }}
             {{- end}}
@@ -124,6 +143,11 @@ spec:
         - name: provider-vol
           hostPath:
             path: {{ .Values.linux.providersDir }}
+        {{- if .Values.cloud.environment }}
+        - name: azure-cloud-environment
+          configMap:
+            name: {{ template "sscdpa.fullname" . }}
+        {{- end }}
         {{- if .Values.linux.volumes }}
         {{- toYaml .Values.linux.volumes | nindent 8 }}
         {{- end}}

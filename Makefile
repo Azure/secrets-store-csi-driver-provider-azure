@@ -251,6 +251,14 @@ helm-lint: install-helm
 	# run lint on helm charts
 	helm lint --strict charts/csi-secrets-store-provider-azure
 	helm lint --strict manifest_staging/charts/csi-secrets-store-provider-azure
+	@for disable_discovery in false true; do \
+		values=$$(jq -e --argjson disableDiscovery "$$disable_discovery" '{cloud: {name: .name, environment: ., disableInstanceDiscovery: $$disableDiscovery}, windows: {enabled: true}}' test/custom_environment.json) || exit 1; \
+		printf '%s\n' "$$values" | helm lint --strict manifest_staging/charts/csi-secrets-store-provider-azure --values - || exit 1; \
+		rendered=$$(printf '%s\n' "$$values" | helm template manifest_staging/charts/csi-secrets-store-provider-azure --values -) || exit 1; \
+		expected=0; [ "$$disable_discovery" != true ] || expected=2; \
+		actual=$$(printf '%s\n' "$$rendered" | grep -c -- '--disable-instance-discovery=true' || true); \
+		if [ "$$actual" -ne "$$expected" ]; then echo "Expected $$expected instance discovery flags, got $$actual" >&2; exit 1; fi; \
+	done
 
 ## --------------------------------------
 ## Release
