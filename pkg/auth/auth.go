@@ -137,6 +137,8 @@ type Config struct {
 	// For identity binding, this is the token with audience "api://AKSIdentityBinding".
 	// The token will be exchanged for an Azure AD Token.
 	ServiceAccountToken string
+
+	DisableInstanceDiscovery bool
 }
 
 // saToken represents a single service account token entry in the CSI token request.
@@ -150,7 +152,7 @@ type workloadIdentityCredential struct {
 	cred      *azidentity.ClientAssertionCredential
 }
 
-type workloadIdentityCredentialOptions struct {
+type credentialOptions struct {
 	azcore.ClientOptions
 	DisableInstanceDiscovery bool
 }
@@ -204,10 +206,10 @@ func (c Config) GetCredential(podName, podNamespace, resource, aadEndpoint, tena
 	case IdentityModeNone:
 		// Try workload identity, then service principal
 		if len(c.WorkloadIdentityClientID) > 0 && len(c.ServiceAccountToken) > 0 {
-			return getWorkloadIdentityTokenCredential(c.WorkloadIdentityClientID, c.ServiceAccountToken, aadEndpoint, tenantID)
+			return newWorkloadIdentityCredential(tenantID, c.WorkloadIdentityClientID, c.ServiceAccountToken, c.credentialOptions(aadEndpoint))
 		}
 		if len(c.AADClientSecret) > 0 && len(c.AADClientID) > 0 {
-			return getServicePrincipalTokenCredential(c.AADClientID, c.AADClientSecret, aadEndpoint, tenantID)
+			return getServicePrincipalTokenCredential(c.AADClientID, c.AADClientSecret, tenantID, c.credentialOptions(aadEndpoint))
 		}
 		return nil, fmt.Errorf("no identity mode is enabled")
 	default:
@@ -215,7 +217,7 @@ func (c Config) GetCredential(podName, podNamespace, resource, aadEndpoint, tena
 	}
 }
 
-func newWorkloadIdentityCredential(tenantID, clientID, assertion string, options *workloadIdentityCredentialOptions) (azcore.TokenCredential, error) {
+func newWorkloadIdentityCredential(tenantID, clientID, assertion string, options *credentialOptions) (azcore.TokenCredential, error) {
 	w := &workloadIdentityCredential{assertion: assertion}
 	cred, err := azidentity.NewClientAssertionCredential(tenantID, clientID, w.getAssertion, &azidentity.ClientAssertionCredentialOptions{
 		ClientOptions:            options.ClientOptions,
@@ -236,15 +238,15 @@ func (w *workloadIdentityCredential) getAssertion(context.Context) (string, erro
 	return w.assertion, nil
 }
 
-func getWorkloadIdentityTokenCredential(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
-	opts := &workloadIdentityCredentialOptions{
+func (c Config) credentialOptions(aadEndpoint string) *credentialOptions {
+	return &credentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
 				ActiveDirectoryAuthorityHost: aadEndpoint,
 			},
 		},
+		DisableInstanceDiscovery: c.DisableInstanceDiscovery,
 	}
-	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
 func getIdentityBindingTokenCredential(clientID, signedAssertion, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
@@ -258,7 +260,7 @@ func getIdentityBindingTokenCredential(clientID, signedAssertion, aadEndpoint, t
 		return nil, fmt.Errorf("identity binding proxy transport not initialized (call SetProxyTransport during startup)")
 	}
 
-	opts := &workloadIdentityCredentialOptions{
+	opts := &credentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: cloud.Configuration{
 				ActiveDirectoryAuthorityHost: aadEndpoint,
@@ -275,13 +277,10 @@ func getIdentityBindingTokenCredential(clientID, signedAssertion, aadEndpoint, t
 	return newWorkloadIdentityCredential(tenantID, clientID, signedAssertion, opts)
 }
 
-func getServicePrincipalTokenCredential(clientID, secret, aadEndpoint, tenantID string) (azcore.TokenCredential, error) {
+func getServicePrincipalTokenCredential(clientID, secret, tenantID string, options *credentialOptions) (azcore.TokenCredential, error) {
 	opts := &azidentity.ClientSecretCredentialOptions{
-		ClientOptions: azcore.ClientOptions{
-			Cloud: cloud.Configuration{
-				ActiveDirectoryAuthorityHost: aadEndpoint,
-			},
-		},
+		ClientOptions:            options.ClientOptions,
+		DisableInstanceDiscovery: options.DisableInstanceDiscovery,
 	}
 	return azidentity.NewClientSecretCredential(tenantID, clientID, secret, opts)
 }

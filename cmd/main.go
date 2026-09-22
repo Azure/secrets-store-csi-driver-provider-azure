@@ -57,6 +57,8 @@ var (
 	cloudName = flag.String("cloud-name", "AzurePublicCloud", "default cloud environment to use for Azure SDK if not provided in the SecretProviderClass. "+
 		"Allowed values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud or AzureStackCloud")
 
+	disableInstanceDiscovery = flag.Bool("disable-instance-discovery", false, "disable instance discovery for workload identity and service principal authentication. Enable only for a trusted authority in a disconnected or private cloud")
+
 	tokenProxyURL = flag.String("token-proxy-url", "", "URL of the token proxy endpoint for identity binding. If not set, defaults to the in-cluster Kubernetes API server endpoint.")
 	sniName       = flag.String("sni-name", "", "TLS server name for identity binding proxy connection. If not set, it is computed from the API server's serving certificate.")
 )
@@ -152,7 +154,7 @@ func main() {
 		grpc.UnaryInterceptor(utils.LogInterceptor()),
 	}
 	s := grpc.NewServer(opts...)
-	csiDriverProviderServer := server.New(*constructPEMChain, *writeCertAndKeyInSeparateFiles, cloudEnv)
+	csiDriverProviderServer := server.New(*constructPEMChain, *writeCertAndKeyInSeparateFiles, *disableInstanceDiscovery, cloudEnv)
 	k8spb.RegisterCSIDriverProviderServer(s, csiDriverProviderServer)
 	// Register the health service.
 	grpc_health_v1.RegisterHealthServer(s, csiDriverProviderServer)

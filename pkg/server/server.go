@@ -26,9 +26,9 @@ type CSIDriverProviderServer struct {
 }
 
 // New returns an instance of CSIDriverProviderServer
-func New(constructPEMChain, writeCertAndKeyInSeparateFiles bool, defaultCloudEnvironment azure.Environment) *CSIDriverProviderServer {
+func New(constructPEMChain, writeCertAndKeyInSeparateFiles, disableInstanceDiscovery bool, defaultCloudEnvironment azure.Environment) *CSIDriverProviderServer {
 	return &CSIDriverProviderServer{
-		provider: provider.NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles, defaultCloudEnvironment),
+		provider: provider.NewProvider(constructPEMChain, writeCertAndKeyInSeparateFiles, disableInstanceDiscovery, defaultCloudEnvironment),
 	}
 }
 

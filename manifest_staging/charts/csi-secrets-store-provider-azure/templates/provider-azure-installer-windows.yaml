@@ -17,10 +17,13 @@ spec:
 {{- if .Values.windows.podLabels }}
 {{- toYaml .Values.windows.podLabels | nindent 8 }}
 {{- end }}
-{{- if or .Values.windows.podAnnotations .Values.enableArcExtension }}
+{{- if or .Values.windows.podAnnotations .Values.enableArcExtension .Values.cloud.environment }}
       annotations:
 {{- if .Values.windows.podAnnotations}}
 {{- toYaml .Values.windows.podAnnotations | nindent 8 }}
+{{- end }}
+{{- if .Values.cloud.environment }}
+        checksum/cloud-environment: {{ include "sscdpa.cloudEnvironment" . | sha256sum }}
 {{- end }}
 {{- if .Values.enableArcExtension }}
 {{- if .Values.arc.enableMonitoring }}
@@ -53,6 +56,12 @@ spec:
             {{- if .Values.windows.customUserAgent }}
             - --custom-user-agent={{ .Values.windows.customUserAgent }}
             {{- end }}
+            {{- if .Values.cloud.name }}
+            - {{ printf "--cloud-name=%s" .Values.cloud.name | quote }}
+            {{- end }}
+            {{- if .Values.cloud.disableInstanceDiscovery }}
+            - --disable-instance-discovery={{ .Values.cloud.disableInstanceDiscovery }}
+            {{- end }}
             - --healthz-port={{ .Values.windows.healthzPort }}
             - --healthz-path={{ .Values.windows.healthzPath }}
             - --healthz-timeout={{ .Values.windows.healthzTimeout }}
@@ -69,6 +78,11 @@ spec:
             periodSeconds: 30
           resources:
 {{ toYaml .Values.windows.resources | indent 12 }}
+          {{- if .Values.cloud.environment }}
+          env:
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: "C:\\etc\\kubernetes\\azure-cloud-environment\\environment.json"
+          {{- end }}
           {{- if .Values.enableArcExtension }}
           {{- if .Values.Azure.proxySettings.isProxyEnabled }}
           envFrom:
@@ -83,6 +97,11 @@ spec:
           volumeMounts:
             - name: provider-vol
               mountPath: "C:\\provider"
+            {{- if .Values.cloud.environment }}
+            - name: azure-cloud-environment
+              mountPath: "C:\\etc\\kubernetes\\azure-cloud-environment"
+              readOnly: true
+            {{- end }}
             {{- if .Values.windows.volumeMounts }}
             {{- toYaml .Values.windows.volumeMounts | nindent 12 }}
             {{- end}}
@@ -96,6 +115,11 @@ spec:
           hostPath:
             path: {{ .Values.windows.providersDir }}
             type: DirectoryOrCreate
+        {{- if .Values.cloud.environment }}
+        - name: azure-cloud-environment
+          configMap:
+            name: {{ template "sscdpa.fullname" . }}
+        {{- end }}
         {{- if .Values.windows.volumes }}
         {{- toYaml .Values.windows.volumes | nindent 8 }}
         {{- end}}

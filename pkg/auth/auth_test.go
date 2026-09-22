@@ -1,10 +1,17 @@
 package auth
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 )
 
 // mockTransporter is a simple mock that satisfies policy.Transporter for tests.
@@ -12,6 +19,65 @@ type mockTransporter struct{}
 
 func (m *mockTransporter) Do(_ *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: http.StatusOK}, nil
+}
+
+type recordingTransporter struct {
+	requests []*url.URL
+}
+
+func (transport *recordingTransporter) Do(request *http.Request) (*http.Response, error) {
+	transport.requests = append(transport.requests, request.URL)
+	return nil, errors.New("network request blocked by test")
+}
+
+func TestCredentialInstanceDiscovery(test *testing.T) {
+	for _, scenario := range []struct {
+		name                     string
+		authority                string
+		disableInstanceDiscovery bool
+	}{
+		{name: "custom authority defaults", authority: "https://login.custom.example/"},
+		{name: "custom authority opt in", authority: "https://login.custom.example/", disableInstanceDiscovery: true},
+		{name: "public cloud defaults", authority: cloud.AzurePublic.ActiveDirectoryAuthorityHost},
+	} {
+		for _, identity := range []string{"workload identity", "service principal"} {
+			test.Run(scenario.name+"/"+identity, func(test *testing.T) {
+				config := Config{DisableInstanceDiscovery: scenario.disableInstanceDiscovery}
+				options := config.credentialOptions(scenario.authority)
+				transport := &recordingTransporter{}
+				options.Transport = transport
+				options.Retry.MaxRetries = -1
+				var credential azcore.TokenCredential
+				var err error
+				if identity == "workload identity" {
+					credential, err = newWorkloadIdentityCredential("test-tenant", "test-client", "test-assertion", options)
+				} else {
+					credential, err = getServicePrincipalTokenCredential("test-client", "test-secret", "test-tenant", options)
+				}
+				if err != nil {
+					test.Fatal(err)
+				}
+				_, err = credential.GetToken(context.Background(), policy.TokenRequestOptions{
+					Scopes: []string{"https://vault.custom.example/.default"},
+				})
+				if err == nil || len(transport.requests) == 0 {
+					test.Fatalf("expected a blocked authentication request, got %d requests and error %v", len(transport.requests), err)
+				}
+				firstRequest := transport.requests[0]
+				if scenario.disableInstanceDiscovery {
+					authority, err := url.Parse(scenario.authority)
+					if err != nil {
+						test.Fatal(err)
+					}
+					if firstRequest.Host != authority.Host || firstRequest.Path != "/test-tenant/v2.0/.well-known/openid-configuration" {
+						test.Fatalf("expected tenant metadata from the configured authority, got %s", firstRequest)
+					}
+				} else if firstRequest.Path != "/common/discovery/instance" {
+					test.Fatalf("instance discovery must remain enabled by default, got %s", firstRequest)
+				}
+			})
+		}
+	}
 }
 
 func TestNewConfig(t *testing.T) {
